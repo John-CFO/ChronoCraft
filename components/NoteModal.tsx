@@ -1,3 +1,7 @@
+// Custom modal for notes
+
+// Todoo anderen background einbauen
+
 import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import React, { useState, useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";

@@ -1,5 +1,7 @@
 ///////////////////////////login screen with firebase registry/////////////////////////////////
 
+// Todoo funktion einbauen, dass man passwort sichbar machen kann
+
 import {
   View,
   TextInput,
@@ -8,47 +10,32 @@ import {
   ActivityIndicator,
   StatusBar,
   ImageBackground,
-  Keyboard,
   KeyboardAvoidingView,
-  Alert,
   TouchableOpacity,
 } from "react-native";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import {
   getAuth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   Auth,
-  onAuthStateChanged,
-  User,
 } from "firebase/auth";
 import {
   ALERT_TYPE,
   Toast,
   AlertNotificationRoot,
 } from "react-native-alert-notification";
-import PopupDialog, {
-  DialogContent,
-  SlideAnimation,
-} from "react-native-popup-dialog";
 import { LinearGradient } from "expo-linear-gradient";
-import {
-  setDoc,
-  doc,
-  getDoc,
-  collection,
-  onSnapshot,
-  getFirestore,
-} from "firebase/firestore";
-import messaging from "@react-native-firebase/messaging";
+import { setDoc, doc } from "firebase/firestore";
+
 import { FIREBASE_APP, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import AppLogo from "../components/AppLogo";
 import AnimatedText from "../components/AnimatedText";
+import { showNotification } from "../components/services/PushNotifications";
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-type UnsubscribeFunction = (() => void) | null;
 const LoginScreen: React.FC = () => {
   // declaire the navigation to user get in after logein
   const navigation = useNavigation();
@@ -61,15 +48,6 @@ const LoginScreen: React.FC = () => {
   // inizialize firebase authentication
   const auth: Auth = getAuth(FIREBASE_APP);
 
-  // states for success dialog
-  const [successDialogVisible, setSuccessDialogVisible] = useState(false);
-
-  // state for usersnapshot to verify if user is logget in or not
-  const [userDocUnsubscribe, setUserDocUnsubscribe] =
-    useState<UnsubscribeFunction>(null);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  //const [userLoggedIn, setUserLoggedIn] = useState(false);
-
   // function to handle the login process
   const handleLogin = async () => {
     setLoading(true);
@@ -80,7 +58,7 @@ const LoginScreen: React.FC = () => {
       console.log("Login successfully");
     } catch (error) {
       console.log("Login failed:", error);
-      //alert("something went wrong, try again!");
+
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: "Login failed",
@@ -103,9 +81,16 @@ const LoginScreen: React.FC = () => {
       console.log("Registration successfully:", response);
       await createUserDocument(response.user.uid, { email: email });
       //alert("Check your emails!");
+
+      await showNotification(
+        "Welcome! 🎉 ",
+        "Congratulations. Registration successful!"
+      );
+
+      console.log("Success message should be visible now");
     } catch (error) {
       console.log("Registration failed:", error);
-      //alert("choose email and password and then click “Register”!");
+
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: "Registration failed",
@@ -115,39 +100,6 @@ const LoginScreen: React.FC = () => {
       setLoading(false);
     }
   };
-  useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        //console.log("User logged in:", user);
-        setCurrentUser(user);
-        console.log("User logged in:", user);
-        const userDocRef = doc(getFirestore(), "users", user.uid);
-        const unsubscribe = onSnapshot(userDocRef, (docSnapshot) => {
-          if (docSnapshot.exists()) {
-            console.log("User document exists:", docSnapshot.data());
-            setSuccessDialogVisible(true);
-          } else {
-            console.log("User document does not exist.");
-          }
-        });
-        setUserDocUnsubscribe(() => unsubscribe);
-      } else {
-        setCurrentUser(null);
-        console.log("User logged out");
-        if (userDocUnsubscribe) {
-          userDocUnsubscribe();
-          setUserDocUnsubscribe(null);
-        }
-      }
-    });
-
-    return () => {
-      unsubscribeAuth();
-      if (userDocUnsubscribe) {
-        userDocUnsubscribe();
-      }
-    };
-  }, []);
 
   // function to create user document in firestore
   const createUserDocument = async (userId: string, userData: any) => {
@@ -155,8 +107,6 @@ const LoginScreen: React.FC = () => {
       const userRef = doc(FIREBASE_FIRESTORE, "users", userId);
       await setDoc(userRef, userData, { merge: true });
       console.log("User document created successfully");
-
-      //await verifyUserDocument(userId);
     } catch (error) {
       console.error("Error creating user document:", error);
     }
@@ -343,18 +293,6 @@ const LoginScreen: React.FC = () => {
               backgroundColor={"transparent"}
             />
           </ImageBackground>
-          {/* registration success dialog */}
-
-          <PopupDialog
-            visible={successDialogVisible}
-            onTouchOutside={() => setSuccessDialogVisible(false)}
-            dialogAnimation={new SlideAnimation({ slideFrom: "bottom" })}
-          >
-            <DialogContent>
-              <Text>Registration Success</Text>
-              <Text>{`Success Dialog Visible: ${successDialogVisible}`}</Text>
-            </DialogContent>
-          </PopupDialog>
         </View>
       </KeyboardAvoidingView>
     </AlertNotificationRoot>
