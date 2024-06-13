@@ -1,73 +1,143 @@
+////////////////////////////////////modal to edit user profile////////////////////////////////////////
+
 import {
   View,
   Text,
-  Modal,
   TextInput,
   TouchableOpacity,
   ImageBackground,
   Image,
-  KeyboardAvoidingView,
-  Keyboard,
+  Alert,
 } from "react-native";
 import React, { useEffect, useState } from "react";
-
 import { LinearGradient } from "expo-linear-gradient";
-//import { firebase } from "@react-native-firebase/firestore";
 import { doc, updateDoc } from "firebase/firestore";
+import { User } from "firebase/auth";
+import * as ImagePicker from "expo-image-picker";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
-import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
+import {
+  FIREBASE_FIRESTORE,
+  FIREBASE_AUTH,
+  FIREBASE_APP,
+} from "../firebaseConfig";
 
-/////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 interface EditProfileModalProps {
+  user: User;
   userId: string;
   onClose: () => void;
   visible: boolean;
   navigation: any;
 }
 
-/////////////////////////////////////////////////////////////////////////
-
-export const updateUserProfile = async (
-  userId: string,
-  newName: string,
-  newPersonalID: string
-) => {
-  const userRef = doc(FIREBASE_FIRESTORE, "Users", userId);
-  console.log("User document reference path:", userRef.path);
-
-  try {
-    await updateDoc(userRef, {
-      displayName: newName,
-      personalID: newPersonalID,
-    });
-    console.log("User profile updated successfully");
-  } catch (error) {
-    console.error("Error updating user profile:", error);
-  }
-};
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const EditProfileModal: React.FC<EditProfileModalProps> = ({
-  userId,
   onClose,
+  user,
 }) => {
+  // state declaration for edit properties
   const [newName, setNewName] = useState("");
   const [newPersonalID, setNewPersonalID] = useState("");
+  const [imageUri, setImageUri] = useState<string | null>(null);
 
+  if (!user) {
+    return null;
+  }
+
+  // useEffect to render image in EditProfileModal component
+  useEffect(() => {
+    const requestMediaLibraryPermissions = async () => {
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        alert("Sorry, we need camera roll permissions to make this work!");
+      }
+    };
+
+    requestMediaLibraryPermissions();
+  }, []);
+
+  // function to pick image from device gallery with expo image picker
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+    if (!result.canceled) {
+      setImageUri(result.assets[0].uri);
+      console.log("Image selected:", result.assets[0].uri);
+    } else {
+      Alert.alert("You did not select any image.");
+    }
+  };
+
+  // initialize Firebase Storage
+  const storage = getStorage(FIREBASE_APP);
+
+  // uploade user-image to Firestore
+  const uploadImage = async (uri: string, userId: string) => {
+    try {
+      console.log("Fetching the image from the URI:", uri);
+      const response = await fetch(uri);
+      console.log("Image fetched, converting to blob...");
+      const blob = await response.blob();
+      console.log("Blob created successfully:", blob);
+      const storageRef = ref(storage, `profilePictures/${userId}`);
+      console.log("Storage reference created:", storageRef.fullPath);
+
+      console.log("Uploading the image to Firebase Storage...");
+      const uploadResult = await uploadBytes(storageRef, blob);
+      console.log("Image uploaded, getting download URL...");
+      const downloadURL = await getDownloadURL(uploadResult.ref);
+      console.log("Image uploaded successfully, download URL:", downloadURL);
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      throw error; // Propagate the error
+    }
+  };
+
+  // handleSave function to check user auth and save data from current user in Firestore and then close modal
   const handleSave = async () => {
-    if (!userId) {
+    const currentUser = FIREBASE_AUTH.currentUser;
+    if (!currentUser || !currentUser.uid) {
       console.log("Invalid user ID provided");
       return;
     }
 
-    console.log("Trying to save user-dates...");
-    console.log("Users:", newName, newPersonalID);
-    const userRef = doc(FIREBASE_FIRESTORE, "Users", userId);
-    console.log("User document reference path:", userRef.path);
+    let imageUrl: string | undefined = "";
+    try {
+      if (imageUri) {
+        console.log("Uploading image with URI:", imageUri);
+        imageUrl = await uploadImage(imageUri as string, currentUser.uid);
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      return; // Stop execution if image upload fails
+    }
 
-    await updateUserProfile(userId, newName, newPersonalID);
-    console.log("data saved");
-    onClose();
+    try {
+      const userRef = doc(FIREBASE_FIRESTORE, "users", currentUser.uid);
+      await updateDoc(userRef, {
+        displayName: newName || currentUser.displayName || "",
+        personalID: newPersonalID || "",
+        photoURL: imageUrl || currentUser.photoURL || "",
+      });
+      console.log("Profile data saved", {
+        displayName: newName || currentUser.displayName || "",
+        personalID: newPersonalID || "",
+        photoURL: imageUrl || currentUser.photoURL || "",
+      });
+
+      onClose();
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+    }
   };
 
   return (
@@ -123,7 +193,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
           {/*user profile image upload */}
 
           <ImageBackground>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={pickImage}>
               <View
                 style={{
                   zIndex: 5,
@@ -148,7 +218,11 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 </Text>
               </View>
               <Image
-                source={require("../assets/profile_avatar.png")}
+                source={
+                  imageUri
+                    ? { uri: imageUri }
+                    : require("../assets/profile_avatar.png")
+                }
                 style={{
                   height: 135,
                   width: 130,
@@ -288,6 +362,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
               </Text>
             </LinearGradient>
           </TouchableOpacity>
+
           <View
             style={{
               height: 45,
@@ -297,6 +372,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
               alignItems: "center",
             }}
           >
+            {/*navigation tip */}
             <Text
               style={{
                 fontSize: 18,
@@ -314,6 +390,3 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
 };
 
 export default EditProfileModal;
-/*function updateUserDisplayName(userId: string, newName: string) {
-  throw new Error("Function not implemented.");
-}*/
