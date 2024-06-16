@@ -1,5 +1,9 @@
 ////////////////////////////////////modal to edit user profile////////////////////////////////////////
 
+// this component is used to edit user profile
+// users can change their name, personal ID and profile picture
+// name and personal ID are stored in Firestore while the profile picture is stored in Firebase Storage
+
 import {
   View,
   Text,
@@ -24,6 +28,7 @@ import {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// interface for edit profile modal component props
 interface EditProfileModalProps {
   user: User;
   userId: string;
@@ -38,7 +43,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   onClose,
   user,
 }) => {
-  // state declaration for edit properties
+  // state declaration for the edit properties
   const [newName, setNewName] = useState("");
   const [newPersonalID, setNewPersonalID] = useState("");
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -47,7 +52,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     return null;
   }
 
-  // useEffect to render image in EditProfileModal component
+  // request media library permissions on component mount
   useEffect(() => {
     const requestMediaLibraryPermissions = async () => {
       const { status } =
@@ -60,7 +65,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     requestMediaLibraryPermissions();
   }, []);
 
-  // function to pick image from device gallery with expo image picker
+  // function to pick image from device gallery with expo ImagePicker
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -70,7 +75,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     });
     if (!result.canceled) {
       setImageUri(result.assets[0].uri);
-      console.log("Image selected:", result.assets[0].uri);
+      // console.log("Image selected:", result.assets[0].uri);
     } else {
       Alert.alert("You did not select any image.");
     }
@@ -79,25 +84,25 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   // initialize Firebase Storage
   const storage = getStorage(FIREBASE_APP);
 
-  // uploade user-image to Firestore
+  // uploade user-image to Fiorebase Storage and get the download URL
   const uploadImage = async (uri: string, userId: string) => {
     try {
-      console.log("Fetching the image from the URI:", uri);
+      // console.log("Fetching the image from the URI:", uri);
       const response = await fetch(uri);
-      console.log("Image fetched, converting to blob...");
+      // console.log("Image fetched, converting to blob...");
       const blob = await response.blob();
-      console.log("Blob created successfully:", blob);
+      // console.log("Blob created successfully:", blob);
       const storageRef = ref(storage, `profilePictures/${userId}`);
-      console.log("Storage reference created:", storageRef.fullPath);
+      // console.log("Storage reference created:", storageRef.fullPath);
 
-      console.log("Uploading the image to Firebase Storage...");
+      // console.log("Uploading the image to Firebase Storage...");
       const uploadResult = await uploadBytes(storageRef, blob);
-      console.log("Image uploaded, getting download URL...");
+      // console.log("Image uploaded, getting download URL...");
       const downloadURL = await getDownloadURL(uploadResult.ref);
-      console.log("Image uploaded successfully, download URL:", downloadURL);
+      // console.log("Image uploaded successfully, download URL:", downloadURL);
       return downloadURL;
     } catch (error) {
-      console.error("Error uploading image:", error);
+      // console.error("Error uploading image:", error);
       throw error; // Propagate the error
     }
   };
@@ -106,18 +111,18 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   const handleSave = async () => {
     const currentUser = FIREBASE_AUTH.currentUser;
     if (!currentUser || !currentUser.uid) {
-      console.log("Invalid user ID provided");
+      // console.log("Invalid user ID provided");
       return;
     }
 
     let imageUrl: string | undefined = "";
     try {
       if (imageUri) {
-        console.log("Uploading image with URI:", imageUri);
+        //  console.log("Uploading image with URI:", imageUri);
         imageUrl = await uploadImage(imageUri as string, currentUser.uid);
       }
     } catch (error) {
-      console.error("Error uploading image:", error);
+      // console.error("Error uploading image:", error);
       return; // Stop execution if image upload fails
     }
 
@@ -128,21 +133,21 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
         personalID: newPersonalID || "",
         photoURL: imageUrl || currentUser.photoURL || "",
       });
-      console.log("Profile data saved", {
+      /* console.log("Profile data saved", {
         displayName: newName || currentUser.displayName || "",
         personalID: newPersonalID || "",
         photoURL: imageUrl || currentUser.photoURL || "",
-      });
+      }); */
 
       onClose();
     } catch (error) {
-      console.error("Error updating user profile:", error);
+      // console.error("Error updating user profile:", error);
     }
   };
 
   return (
     <View>
-      {/*modal settings */}
+      {/* modal settings */}
 
       <View
         style={{
@@ -155,7 +160,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
           borderColor: "lightgrey",
         }}
       >
-        {/* header*/}
+        {/* header */}
 
         <View
           style={{
@@ -190,7 +195,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
             alignItems: "center",
           }}
         >
-          {/*user profile image upload */}
+          {/* user profile image upload */}
 
           <ImageBackground>
             <TouchableOpacity onPress={pickImage}>
@@ -236,7 +241,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
           </ImageBackground>
         </View>
 
-        {/* change user name*/}
+        {/* change user name */}
 
         <View
           style={{
@@ -287,7 +292,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
             backgroundColor: "transparent",
           }}
         >
-          {/* change user personal-ID*/}
+          {/* change user personal-ID */}
 
           <View
             style={{
@@ -327,7 +332,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
             alignItems: "center",
           }}
         >
-          {/* update button*/}
+          {/* update button */}
           <TouchableOpacity
             onPress={handleSave}
             style={{
@@ -372,7 +377,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
               alignItems: "center",
             }}
           >
-            {/*navigation tip */}
+            {/* navigation tip */}
             <Text
               style={{
                 fontSize: 18,

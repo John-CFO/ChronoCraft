@@ -1,5 +1,8 @@
 //////////////////////////////////////custom drawer component//////////////////////////////////////////
 
+// this coponent is used to create the custom  user-specific drawer
+// it includes the Edit Profile modal, the FAQ bottom sheet, the drawer item list as component and the logout function
+
 import {
   View,
   Text,
@@ -24,7 +27,6 @@ import { Feather } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
 import Modal from "react-native-modal";
 import { getDoc, doc } from "firebase/firestore";
-import { Auth } from "firebase/auth";
 
 import EditProfileModal from "./EditProfileModal";
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
@@ -39,28 +41,27 @@ interface CustomDrawerProps extends DrawerContentComponentProps {}
 ////////////////////////////////////////////////////////////////////////////////////////
 
 const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
-  // declaire state for edit profile modal
+  // declare state for edit profile modal visibility
   const [profileModalVisible, setProfileModalVisible] = useState(false);
 
-  // declaire state for user
+  // declare state for user data
   const [user, setUser] = useState<CustomUser | null>(null);
 
   // BottomSheetModal settings
-  // ref
+  // reference to the bottom sheet modal
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-
-  // variables
+  // snap points for the bottom sheet modal
   const snapPoints = useMemo(() => ["25%", "50%"], []);
-
-  // callbacks
+  // callback to handle the presentation of the bottom sheet modal
   const handlePresentModalPress = useCallback(() => {
     bottomSheetModalRef.current?.present();
   }, []);
+  // callback to handle changes in the bottom sheet modal
   const handleSheetChanges = useCallback((index: number) => {
-    console.log("handleSheetChanges", index);
+    // console.log("handleSheetChanges", index);
   }, []);
 
-  // fetching user profile data
+  // function to fetch user profile data from Firestore
   const fetchUserProfile = async () => {
     try {
       const currentUser = FIREBASE_AUTH.currentUser;
@@ -69,28 +70,29 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         const userDoc = await getDoc(userRef);
         if (userDoc.exists()) {
           setUser({ uid: currentUser.uid, ...userDoc.data() } as CustomUser);
-          console.log("User data retrieved:", {
+          /* console.log("User data retrieved:", {
             uid: currentUser.uid,
             ...userDoc.data(),
-          });
+          }); */
         } else {
-          console.log("User document not found");
+          // console.log("User document not found");
         }
       } else {
-        console.log("User not logged in");
+        // console.log("User not logged in");
       }
     } catch (error) {
-      console.error("Error fetching user profile:", error);
+      // console.error("Error fetching user profile:", error);
     }
   };
 
+  // useeffect to fetch user profile data when component mounts
   useEffect(() => {
     fetchUserProfile();
   }, []);
 
   // function to close edit profile modal and update user profile
   const closeProfileModal = () => {
-    console.log("Edit modal closed");
+    // console.log("Edit modal closed");
     setProfileModalVisible(false);
     fetchUserProfile();
   };
@@ -101,7 +103,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
       <TouchableOpacity
         onPress={() => {
           setProfileModalVisible(true);
-          console.log("EditProfileModal opened");
+          // console.log("EditProfileModal opened");
         }}
       >
         <View
@@ -135,13 +137,13 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
             user={user}
           />
         ) : (
-          // if user is not logged in, render null
+          // if user is not logged in, render null (empty fragment)
           <></>
         )}
       </Modal>
 
       <ImageBackground>
-        {/*user profile image */}
+        {/* user profile image */}
         <Image
           source={
             user?.photoURL // render user image or default image
@@ -159,9 +161,9 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
           }}
         />
       </ImageBackground>
-      {/*employee-name and personal-ID */}
+      {/* employee-name and personal-ID */}
       <View style={{ margin: 20 }}>
-        {/*render user name or unknown */}
+        {/* render user name or unknown */}
         <Text
           style={{
             color: "white",
@@ -172,7 +174,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
           Employee: {user?.displayName || "Unknown"}
         </Text>
 
-        {/*render user personal-ID or unknown */}
+        {/* render user personal-ID or unknown */}
         <Text
           style={{
             color: "white",
@@ -183,7 +185,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
           Personal-ID: {user?.personalID || "Unknown"}
         </Text>
       </View>
-      {/*custom drawer section */}
+      {/* custom drawer section */}
       <ScrollView
         style={{ flex: 1 }}
         {...props}
@@ -192,7 +194,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         <DrawerItemList {...props} />
       </ScrollView>
 
-      {/*drawer bottom section witch implemates FAQ and Logout */}
+      {/* drawer bottom section witch implemates FAQ and Logout */}
       <View
         style={{
           position: "absolute",
@@ -207,7 +209,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
           borderWidth: 0.5,
         }}
       >
-        {/*FAQ Modal */}
+        {/* FAQ Modal */}
         <BottomSheetModal
           ref={bottomSheetModalRef}
           index={1}
@@ -217,7 +219,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         >
           <FAQBottomSheet />
         </BottomSheetModal>
-        {/*FAQ button */}
+        {/* FAQ button */}
         <TouchableOpacity onPress={handlePresentModalPress}>
           <View
             style={{
@@ -238,12 +240,12 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
               FAQ
             </Text>
           </View>
-          {/*Logout button */}
+          {/* Logout button */}
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => {
             FIREBASE_AUTH.signOut();
-            console.log("User logged out");
+            // console.log("User logged out");
           }}
         >
           <View
@@ -273,11 +275,11 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
 
 export default CustomDrawer;
 
-/*function userAuthState(FIREBASE_AUTH: Auth): [any] {
+/* function userAuthState(FIREBASE_AUTH: Auth): [any] {
   throw new Error("Function not implemented.");
 }
 // wrap the menue in this, if you need the menuelist is scrollable
-/*<DrawerContentScrollView
+/* <DrawerContentScrollView
         {...props}
         contentContainerStyle={{ backgroundColor: "black" }}
-      ></DrawerContentScrollView>*/
+      ></DrawerContentScrollView> */
