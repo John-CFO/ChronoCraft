@@ -4,12 +4,14 @@
     "target": "esnext",
     "module": "commonjs",
     "jsx": "react-native",
+    "lib": ["esnext"],
+    "outDir": "lib",
     "strict": true,
     "esModuleInterop": true,
     "paths": {
       "@firebase/auth": ["./node_modules/@firebase/auth/dist/index.rn.d.ts"]
     }
   },
-
-  "include": ["**/*.ts", "**/*.tsx"]
+  "include": ["**/*.ts", "**/*.tsx"],
+  "rootDir": "./"
 }

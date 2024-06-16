@@ -57,41 +57,48 @@ const NoteModal: React.FC<NoteModalProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // set comment in project notes
-  const handleSubmitComment = async (projectId: string) => {
+  // function to handle comment submission
+  const handleSubmitComment = async (projectId: string, comment: string) => {
+    console.log("Submitting comment with projectId:", projectId);
     try {
-      console.log("Trying to save comment...");
-      console.log("Comment:", comment);
-      if (comment.trim() !== "") {
-        const db = FIREBASE_FIRESTORE;
-        const user = FIREBASE_AUTH.currentUser;
-        if (!user) {
-          throw new Error("User not authenticated");
-        }
-        const projectDocRef = doc(db, "users", user.uid, "projects", projectId);
-        const projectSnap = await getDoc(projectDocRef);
-        if (!projectSnap.exists()) {
-          const notesCollection = collection(projectDocRef, "Notes");
-          //const notesCollection = collection(db, `projects/${projectId}/notes`);
-          // set the comment to "notes" collection
+      if (!projectId) {
+        console.error("Invalid projectId:", projectId);
+        return;
+      }
 
-          const newNoteRef = await addDoc(notesCollection, {
-            comment: comment, // Der Kommentarinhalt
-            createdAt: serverTimestamp(), // Das aktuelle Datum und die aktuelle Uhrzeit als Erstellungszeitstempel
+      const user = FIREBASE_AUTH.currentUser;
+      if (user) {
+        const projectRef = doc(
+          FIREBASE_FIRESTORE,
+          "Services",
+          "AczkjyWoOxdPAIRVxjy3",
+          "Projects",
+          projectId
+        );
+
+        const projectSnapshot = await getDoc(projectRef);
+
+        if (projectSnapshot.exists()) {
+          const projectNotesRef = collection(
+            FIREBASE_FIRESTORE,
+            `Services/AczkjyWoOxdPAIRVxjy3/Projects/${projectId}/Notes`
+          );
+          await addDoc(projectNotesRef, {
+            uid: user.uid,
+            comment: comment,
+            createdAt: serverTimestamp(),
           });
-          console.log("New note reference:", newNoteRef.id); // Log-Nachricht: Ausgabe der ID der neuen Notiz
-          console.log("Comment saved"); // Log-Nachricht: Erfolgreiche Speicherung des Kommentars
-          setComment(""); // Zurücksetzen des Kommentarfelds
+          console.log("Comment saved");
+          setComment("");
+          onClose();
         } else {
-          // Das Projekt existiert nicht
-          console.log("Project with ID:", projectId, "does not exist."); // Log-Nachricht: Projekt mit der angegebenen ID existiert nicht
+          console.error("Project does not exist:", projectId);
         }
       } else {
-        // Der Kommentar ist leer
-        console.log("Comment is empty"); // Log-Nachricht: Der Kommentar ist leer
+        console.log("User not authenticated");
       }
     } catch (error) {
-      console.error("Saving comment failed", error); // Log-Nachricht: Fehler beim Speichern des Kommentars
+      console.error("Saving comment failed", error);
     }
   };
 
@@ -166,7 +173,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
             onChangeText={handleCommentChange}
           />
           <TouchableOpacity
-            onPress={() => handleSubmitComment(projectId)}
+            onPress={() => handleSubmitComment(projectId, comment)}
             style={{
               marginTop: 30,
               height: 45,

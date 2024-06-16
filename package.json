@@ -34,6 +34,8 @@
     "expo-notifications": "^0.28.9",
     "expo-status-bar": "^1.11.1",
     "firebase": "^10.9.0",
+    "firebase-admin": "^12.1.1",
+    "firebase-functions": "^5.0.1",
     "formik": "^2.4.5",
     "install": "^0.13.0",
     "link": "^2.1.0",

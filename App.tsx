@@ -64,12 +64,12 @@ const MyHeaderComponent = ({ navigation }: { navigation: any }) => {
   const [isHelpMenuVisible, setHelpMenuVisible] = useState(false);
 
   const openDropdown = () => {
-    console.log("open dropdown help menu");
+    // console.log("open dropdown help menu");
     setHelpMenuVisible(true);
   };
 
   const closeDropdown = () => {
-    console.log("close dropdown help menu");
+    // console.log("close dropdown help menu");
     setHelpMenuVisible(false);
   };
 
@@ -203,7 +203,7 @@ const App = () => {
   // useeffect to navigate use after login to an other screen
   useEffect(() => {
     onAuthStateChanged(FIREBASE_AUTH, (user) => {
-      console.log("user", user);
+      // console.log("user", user);
       setUser(user);
     });
   }, []);

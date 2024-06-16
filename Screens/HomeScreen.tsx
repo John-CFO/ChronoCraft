@@ -91,7 +91,7 @@ const HomeScreen: React.FC<HomeScreenNavigationProps> = () => {
   const scrollY = useRef(new Animated.Value(0)).current;
   const [averageItemHeight, setAverageItemHeight] = useState(ITEM_HEIGHT);
 
-  // function to load data from firestoredu solltest untersuchen ob die fetch funktion daran schuld ist dass m
+  // function to load data from firestore
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -129,27 +129,31 @@ const HomeScreen: React.FC<HomeScreenNavigationProps> = () => {
   // function to add projects
   const handleAddProject = async () => {
     try {
-      const db = FIREBASE_FIRESTORE;
-      //const projectsCollection = collection(db, "Projects");
-      const projectsCollection = collection(
-        db,
-        "Services",
-        "AczkjyWoOxdPAIRVxjy3",
-        "Projects"
-      );
-      const newProjectRef = await addDoc(projectsCollection, {
-        name: newProjectName,
-        createdAt: serverTimestamp(),
-      });
-      const newProject = {
-        id: newProjectRef.id,
-        name: newProjectName,
-        createdAt: new Date(), // oder dayjs().format("DD.MM.YYYY") je nachdem, wie Sie das Datum formatieren möchten
-        notes: [], // Hinzufügen einer leeren Notizliste
-      };
-      setProjects((prevProjects) => [...prevProjects, newProject]);
-      setNewProjectName("");
-      setRefresh(!refresh);
+      const user = FIREBASE_AUTH.currentUser;
+      if (user) {
+        const db = FIREBASE_FIRESTORE;
+        const projectsCollection = collection(
+          db,
+          "Services",
+          "AczkjyWoOxdPAIRVxjy3",
+          "Projects"
+        );
+        const newProjectRef = await addDoc(projectsCollection, {
+          uid: user.uid,
+          name: newProjectName,
+          createdAt: serverTimestamp(),
+        });
+        const newProject = {
+          id: newProjectRef.id,
+          name: newProjectName,
+          createdAt: new Date(), // oder dayjs().format("DD.MM.YYYY") je nachdem, wie Sie das Datum formatieren möchten
+          notes: [], // Hinzufügen einer leeren Notizliste
+        };
+        setProjects((prevProjects) => [...prevProjects, newProject]);
+        setNewProjectName("");
+        setRefresh(!refresh);
+        Keyboard.dismiss();
+      }
     } catch (error) {
       console.error("Error adding project", error);
     }
@@ -158,6 +162,7 @@ const HomeScreen: React.FC<HomeScreenNavigationProps> = () => {
   // function to delete projects
   const handleDeleteProject = async (projectId: string) => {
     try {
+      // part to delete project
       const db = FIREBASE_FIRESTORE;
       const projectDocRef = doc(
         db,
@@ -171,7 +176,23 @@ const HomeScreen: React.FC<HomeScreenNavigationProps> = () => {
       setProjects((prevProjects) =>
         prevProjects.filter((project) => project.id !== projectId)
       );
-      console.log("Project deleted ID:", projectId);
+
+      // part to delete project notes
+      const noteCollection = collection(
+        db,
+        "Services",
+        "AczkjyWoOxdPAIRVxjy3",
+        "Projects",
+        projectId,
+        "Notes"
+      );
+      const notesSnapshot = await getDocs(noteCollection);
+      const deleteNotesPromises = notesSnapshot.docs.map(async (doc) => {
+        await deleteDoc(doc.ref);
+      });
+      await Promise.all(deleteNotesPromises);
+
+      // console.log("Project deleted ID:", projectId);
       setRefresh(!refresh);
     } catch (error) {
       console.error("Delete project failed", error);
@@ -187,6 +208,7 @@ const HomeScreen: React.FC<HomeScreenNavigationProps> = () => {
   // function to show the note-modal
   const openNoteModal = (projectId: string) => {
     console.log("Note modal opened with ID:", projectId);
+    setSelectedProjectId(projectId);
     setNoteModalVisible(true);
   };
 
@@ -334,8 +356,6 @@ const HomeScreen: React.FC<HomeScreenNavigationProps> = () => {
           width: "100%",
           height: 50,
           marginBottom: 20,
-          paddingLeft: 100,
-          paddingRight: 100,
           backgroundColor: "transparent",
           justifyContent: "center",
           alignItems: "center",
