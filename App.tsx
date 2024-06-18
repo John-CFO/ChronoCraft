@@ -60,7 +60,7 @@ interface CustomDrawerLabelProps {
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
 
-const MyHeaderComponent = ({ navigation }: { navigation: any }) => {
+const HeaderHelpComponent = ({ navigation }: { navigation: any }) => {
   const [isHelpMenuVisible, setHelpMenuVisible] = useState(false);
 
   const openDropdown = () => {
@@ -74,14 +74,16 @@ const MyHeaderComponent = ({ navigation }: { navigation: any }) => {
   };
 
   return (
-    <TouchableOpacity onPress={openDropdown} style={{ marginRight: 10 }}>
-      <MaterialIcons name="live-help" size={36} color="white" />
+    <View>
+      <TouchableOpacity onPress={openDropdown} style={{ marginRight: 10 }}>
+        <MaterialIcons name="live-help" size={36} color="white" />
+      </TouchableOpacity>
       {isHelpMenuVisible && (
         <View style={{ position: "absolute", right: 0 }}>
           <HelpMenu onClose={closeDropdown} />
         </View>
       )}
-    </TouchableOpacity>
+    </View>
   );
 };
 
@@ -96,7 +98,7 @@ const AppDrawerNavigator = () => {
         },
 
         /*--Help-Button--*/
-        headerRight: () => <MyHeaderComponent navigation={undefined} />,
+        headerRight: () => <HeaderHelpComponent navigation={undefined} />,
         headerLeft: () => <CustomMenuBTN />,
         headerStyle: {
           backgroundColor: "black",
@@ -153,7 +155,7 @@ const AppDrawerNavigator = () => {
           ),
           drawerActiveTintColor: "white",
           drawerInactiveTintColor: "darkgrey",
-          drawerIcon: ({ focused, color }) => (
+          drawerIcon: ({ focused }) => (
             <Fontisto
               name="island"
               size={24}
@@ -184,7 +186,7 @@ const CustomDrawerLabel: React.FC<CustomDrawerLabelProps> = ({
 // drawer navigation for the app
 const App = () => {
   // statusbar content color
-  const statusBarStyle: StatusBarStyle = "light-content";
+  // const statusBarStyle: StatusBarStyle = "light-content";
 
   setTimeout(() => {
     StatusBar.setBarStyle("light-content");
@@ -258,12 +260,29 @@ const App = () => {
                 <Stack.Screen
                   name="Details"
                   component={DetailsScreen as never}
-                  options={{
+                  options={({ navigation }) => ({
                     headerShown: true,
                     presentation: "modal",
                     animationTypeForReplace: "push",
-                    title: "Details",
-                  }}
+                    headerRight: () => (
+                      <HeaderHelpComponent navigation={navigation} />
+                    ),
+                    headerLeft: () => (
+                      <TouchableOpacity
+                        onPress={() => navigation.goBack()}
+                        style={{ marginLeft: 20 }}
+                      >
+                        <AntDesign name="doubleleft" size={28} color="white" />
+                      </TouchableOpacity>
+                    ),
+                    headerStyle: {
+                      backgroundColor: "black",
+                    },
+                    headerTintColor: "black",
+                    headerTitleStyle: {
+                      fontSize: 24,
+                    },
+                  })}
                 />
               </Stack.Navigator>
             )}

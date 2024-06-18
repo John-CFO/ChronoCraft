@@ -202,12 +202,12 @@ const HomeScreen: React.FC<HomeScreenNavigationProps> = () => {
   // function to navigate to the details screen if user pressed an a listed project
   const handleProjectPress = (projectsId: string) => {
     navigation.navigate("Details", { projectsId });
-    console.log("navigate to details screen", projectsId);
+    // console.log("navigate to details screen", projectsId);
   };
 
   // function to show the note-modal
   const openNoteModal = (projectId: string) => {
-    console.log("Note modal opened with ID:", projectId);
+    // console.log("Note modal opened with ID:", projectId);
     setSelectedProjectId(projectId);
     setNoteModalVisible(true);
   };

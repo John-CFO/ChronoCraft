@@ -1,4 +1,4 @@
-import { View, Text, TextInput, Button } from "react-native";
+import { View, Text, TextInput, Button, TouchableOpacity } from "react-native";
 import React, { useState } from "react";
 import { FIREBASE_APP, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import {
@@ -13,6 +13,7 @@ import {
 } from "firebase/firestore";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RouteProp } from "@react-navigation/native";
+import { AntDesign } from "@expo/vector-icons";
 
 interface DetailsScreenProps {
   route: RouteProp<RootStackParamList, "Details"> & {
@@ -49,8 +50,27 @@ const DetailsScreen: React.FC<DetailsScreenProps> = ({ route, navigation }) => {
   };
 
   return (
-    <View>
-      <Text>Details</Text>
+    <View style={{ flex: 1, width: "100%", backgroundColor: "black" }}>
+      <View
+        style={{
+          width: "100%",
+          height: 50,
+          marginBottom: 20,
+          backgroundColor: "transparent",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Text
+          style={{
+            fontFamily: "MPLUSLatin_Bold",
+            fontSize: 25,
+            color: "white",
+          }}
+        >
+          - Project Tracking -
+        </Text>
+      </View>
     </View>
   );
 };

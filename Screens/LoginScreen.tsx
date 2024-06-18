@@ -1,7 +1,5 @@
 ///////////////////////////login screen with firebase registry/////////////////////////////////
 
-// Todoo funktion einbauen, dass man passwort sichbar machen kann
-
 import {
   View,
   TextInput,
@@ -21,13 +19,14 @@ import {
   createUserWithEmailAndPassword,
   Auth,
 } from "firebase/auth";
+import { setDoc, doc } from "firebase/firestore";
 import {
   ALERT_TYPE,
   Toast,
   AlertNotificationRoot,
 } from "react-native-alert-notification";
 import { LinearGradient } from "expo-linear-gradient";
-import { setDoc, doc } from "firebase/firestore";
+import { FontAwesome5 } from "@expo/vector-icons";
 
 import { FIREBASE_APP, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import AppLogo from "../components/AppLogo";
@@ -43,9 +42,10 @@ const LoginScreen: React.FC = () => {
   // states for registry and login
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [secureTextEntry, setSecureTextEntry] = useState(true);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // inizialize firebase authentication
+  // declaire the firebase authentication
   const auth: Auth = getAuth(FIREBASE_APP);
 
   // function to handle the login process
@@ -59,6 +59,7 @@ const LoginScreen: React.FC = () => {
     } catch (error) {
       console.log("Login failed:", error);
 
+      // react-native-alert-notification toast
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: "Login failed",
@@ -80,8 +81,8 @@ const LoginScreen: React.FC = () => {
       );
       console.log("Registration successfully:", response);
       await createUserDocument(response.user.uid, { email: email });
-      //alert("Check your emails!");
 
+      // Welcome notification from expo-push-notifications
       await showNotification(
         "Welcome! 🎉 ",
         "Congratulations. Registration successful!"
@@ -91,6 +92,7 @@ const LoginScreen: React.FC = () => {
     } catch (error) {
       console.log("Registration failed:", error);
 
+      // react-native-alert-notification toast
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: "Registration failed",
@@ -99,6 +101,11 @@ const LoginScreen: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // function to handle password visibility
+  const toggleSecureTextEntry = () => {
+    setSecureTextEntry(!secureTextEntry);
   };
 
   // function to create user document in firestore
@@ -119,6 +126,7 @@ const LoginScreen: React.FC = () => {
         style={{ flex: 1 }}
       >
         <View style={{ flex: 1 }}>
+          {/* background image */}
           <ImageBackground
             source={require("../assets/Holo_GIF.gif")}
             style={{
@@ -135,6 +143,7 @@ const LoginScreen: React.FC = () => {
                 width: "100%",
               }}
             >
+              {/* app logo */}
               <AppLogo />
               <View
                 style={{
@@ -146,6 +155,7 @@ const LoginScreen: React.FC = () => {
                   height: 30,
                 }}
               >
+                {/* text animation */}
                 <AnimatedText />
               </View>
             </View>
@@ -164,6 +174,7 @@ const LoginScreen: React.FC = () => {
                   alignItems: "center",
                 }}
               >
+                {/* email input */}
                 <TextInput
                   style={{
                     borderColor: "black",
@@ -182,27 +193,41 @@ const LoginScreen: React.FC = () => {
                   onChangeText={(text) => setEmail(text)}
                   value={email}
                 />
-
-                <TextInput
-                  style={{
-                    borderColor: "black",
-                    borderWidth: 2,
-                    borderRadius: 10,
-                    paddingLeft: 15,
-                    padding: 5,
-                    fontSize: 22,
-                    height: 40,
-                    width: 270,
-                    backgroundColor: "white",
-                    fontFamily: "MPLUSLatin_Regular",
-                  }}
-                  placeholder="Password"
-                  autoCapitalize="none"
-                  secureTextEntry={true}
-                  onChangeText={(text) => setPassword(text)}
-                  value={password}
-                />
+                <View style={{ position: "relative", width: 270, height: 40 }}>
+                  {/* password input */}
+                  <TextInput
+                    style={{
+                      borderColor: "black",
+                      borderWidth: 2,
+                      borderRadius: 10,
+                      paddingLeft: 15,
+                      paddingRight: 40,
+                      padding: 5,
+                      fontSize: 22,
+                      height: "100%",
+                      backgroundColor: "white",
+                      fontFamily: "MPLUSLatin_Regular",
+                    }}
+                    placeholder="Password"
+                    autoCapitalize="none"
+                    secureTextEntry={secureTextEntry}
+                    onChangeText={(text) => setPassword(text)}
+                    value={password}
+                  />
+                  {/* visibility eye button */}
+                  <TouchableOpacity
+                    onPress={toggleSecureTextEntry}
+                    style={{ position: "absolute", right: 15, top: 10 }}
+                  >
+                    <FontAwesome5
+                      name={secureTextEntry ? "eye" : "eye-slash"}
+                      size={20}
+                      color="darkgrey"
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
+              {/* loading spinner */}
               {loading ? (
                 <ActivityIndicator
                   size="large"
@@ -211,6 +236,7 @@ const LoginScreen: React.FC = () => {
               ) : (
                 <>
                   <View style={{ flexDirection: "row", margin: 20 }}>
+                    {/* login button */}
                     <TouchableOpacity
                       onPress={handleLogin}
                       style={{
@@ -247,6 +273,7 @@ const LoginScreen: React.FC = () => {
                       </LinearGradient>
                     </TouchableOpacity>
 
+                    {/* register button */}
                     <TouchableOpacity
                       onPress={handleRegister}
                       style={{
@@ -287,6 +314,7 @@ const LoginScreen: React.FC = () => {
               )}
             </View>
 
+            {/* status bar */}
             <StatusBar
               barStyle="light-content"
               translucent

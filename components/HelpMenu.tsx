@@ -1,5 +1,7 @@
 ////////////////////////////Help Menu Component////////////////////////////////
 
+// this is the help menu component and contains a little text with the social media buttons
+
 import {
   View,
   Text,
@@ -10,7 +12,6 @@ import {
 import React from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Foundation } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -48,12 +49,12 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
         borderRadius: 17,
         overflow: "hidden",
         borderWidth: 2,
-        borderColor: "lightgrey",
+        borderColor: "aqua",
       }}
     >
       <ImageBackground
         source={require("../assets/black-image.jpg")}
-        blurRadius={15}
+        blurRadius={10}
         style={{
           flex: 1,
           width: "100%",
