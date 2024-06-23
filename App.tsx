@@ -1,23 +1,17 @@
 /////////////////////app navigator and stack navigator///////////////////////
 
 import { Text, TouchableOpacity, View } from "react-native";
-import React, {
-  useEffect,
-  useState,
-  useRef,
-  useCallback,
-  useMemo,
-} from "react";
+import React, { useEffect, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { StatusBar, StatusBarStyle } from "react-native";
+import { StatusBar } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import {
   createDrawerNavigator,
-  DrawerNavigationProp,
+  // DrawerNavigationProp,
 } from "@react-navigation/drawer";
 import {
   createStackNavigator,
-  TransitionPresets,
+  // TransitionPresets,
 } from "@react-navigation/stack";
 import {
   Fontisto,
@@ -34,21 +28,19 @@ import FlexAccountScreen from "./Screens/FlexAccountScreen";
 import VacationScreen from "./Screens/VacationScreen";
 import { FIREBASE_AUTH } from "./firebaseConfig";
 import CustomDrawer from "./components/CustomDrawer";
-import { AlertNotificationRoot } from "react-native-alert-notification";
-import { Color } from "react-native-alert-notification/lib/typescript/service";
-import { useNavigation } from "@react-navigation/native";
-import {
-  BottomSheetModalProvider,
-  BottomSheetModal,
-} from "@gorhom/bottom-sheet";
+//import { AlertNotificationRoot } from "react-native-alert-notification";
+//import { Color } from "react-native-alert-notification/lib/typescript/service";
+//import { useNavigation } from "@react-navigation/native";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-import FAQBottomSheet from "./components/FAQBottomSheet";
+//import FAQBottomSheet from "./components/FAQBottomSheet";
 import CustomMenuBTN from "./components/CustomMenuBTN";
 import HelpMenu from "./components/HelpMenu";
 
 ////////////////////////////////////////////////////////////////////////
 
+// interface for custom drawer label
 interface CustomDrawerLabelProps {
   focused: boolean;
   title: string;
@@ -97,8 +89,9 @@ const AppDrawerNavigator = () => {
           width: 280,
         },
 
-        /*--Help-Button--*/
+        // help button
         headerRight: () => <HeaderHelpComponent navigation={undefined} />,
+        // custom hamburger menu
         headerLeft: () => <CustomMenuBTN />,
         headerStyle: {
           backgroundColor: "black",
@@ -115,6 +108,7 @@ const AppDrawerNavigator = () => {
       <Drawer.Screen
         name="Home"
         component={HomeScreen as any}
+        // function to change the icon color when focused
         options={{
           drawerLabel: ({ focused }) => (
             <CustomDrawerLabel focused={focused} title="Home" />
@@ -131,6 +125,7 @@ const AppDrawerNavigator = () => {
         name="Flex"
         component={FlexAccountScreen}
         options={{
+          // function to change the icon color when focused
           drawerActiveTintColor: "white",
           drawerInactiveTintColor: "darkgrey",
 
@@ -150,6 +145,7 @@ const AppDrawerNavigator = () => {
         name="Vacation"
         component={VacationScreen}
         options={{
+          // function to change the icon color when focused
           drawerLabel: ({ focused }) => (
             <CustomDrawerLabel focused={focused} title="Vacation" />
           ),
@@ -168,6 +164,7 @@ const AppDrawerNavigator = () => {
   );
 };
 
+// function to change the color of the drawer label based on focus
 const CustomDrawerLabel: React.FC<CustomDrawerLabelProps> = ({
   focused,
   title,
@@ -186,7 +183,6 @@ const CustomDrawerLabel: React.FC<CustomDrawerLabelProps> = ({
 // drawer navigation for the app
 const App = () => {
   // statusbar content color
-  // const statusBarStyle: StatusBarStyle = "light-content";
 
   setTimeout(() => {
     StatusBar.setBarStyle("light-content");
@@ -212,7 +208,7 @@ const App = () => {
 
   return (
     <SafeAreaProvider>
-      {/*<GestureHandlerRootView style={{ flex: 1 }}> important to set the bottomsheetmodal in the app, not the drawer */}
+      {/* <GestureHandlerRootView style={{ flex: 1 }}> important to set the bottomsheetmodal in the app, not the drawer */}
       <GestureHandlerRootView style={{ flex: 1 }}>
         <BottomSheetModalProvider>
           <NavigationContainer>
@@ -220,14 +216,14 @@ const App = () => {
               <Stack.Navigator
                 screenOptions={{
                   headerShown: false,
-                  //This part is used to slide the stack from the right into the screen
+                  // This part is used to slide the stack from the right into the screen
                   gestureEnabled: true,
                   gestureDirection: "horizontal",
                   transitionSpec: {
                     open: { animation: "timing", config: { duration: 300 } },
                     close: { animation: "timing", config: { duration: 300 } },
                   },
-                  cardStyleInterpolator: ({ current, next, layouts }) => {
+                  cardStyleInterpolator: ({ current, layouts }) => {
                     return {
                       cardStyle: {
                         transform: [
@@ -243,6 +239,7 @@ const App = () => {
                   },
                 }}
               >
+                {/* Login navigation when user is logged in or logged out */}
                 {user ? (
                   <Stack.Screen
                     name="Inside"
@@ -260,6 +257,7 @@ const App = () => {
                 <Stack.Screen
                   name="Details"
                   component={DetailsScreen as never}
+                  // custom header config. for Details Screen
                   options={({ navigation }) => ({
                     headerShown: true,
                     presentation: "modal",

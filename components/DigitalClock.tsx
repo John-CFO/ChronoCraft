@@ -23,13 +23,13 @@ const DigitalClock = () => {
         alignItems: "center",
         width: 220,
         height: 80,
-        backgroundColor: "black",
-        borderWidth: 6,
+        // backgroundColor: "black",
+        // borderWidth: 6,
         borderRadius: 14,
         borderColor: "aqua",
       }}
     >
-      <Text style={{ fontSize: 46, fontWeight: "bold", color: "white" }}>
+      <Text style={{ fontSize: 46, fontWeight: "bold", color: "grey" }}>
         {currentTime.format("HH:mm:ss")}
       </Text>
     </View>

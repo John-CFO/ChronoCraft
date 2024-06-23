@@ -44,7 +44,7 @@ import dayjs from "dayjs";
 
 type RootStackParamList = {
   Home: undefined;
-  Details: { projectsId: string };
+  Details: { projectsId: string; projectName: string };
 };
 
 type HomeScreenNavigationProp = StackNavigationProp<
@@ -200,8 +200,8 @@ const HomeScreen: React.FC<HomeScreenNavigationProps> = () => {
   };
 
   // function to navigate to the details screen if user pressed an a listed project
-  const handleProjectPress = (projectsId: string) => {
-    navigation.navigate("Details", { projectsId });
+  const handleProjectPress = (projectsId: string, projectName: string) => {
+    navigation.navigate("Details", { projectsId, projectName });
     // console.log("navigate to details screen", projectsId);
   };
 
@@ -295,7 +295,7 @@ const HomeScreen: React.FC<HomeScreenNavigationProps> = () => {
         onLayout={mesureItemHeight}
       >
         <TouchableOpacity
-          onPress={() => handleProjectPress(item.id)}
+          onPress={() => handleProjectPress(item.id as string, item.name)}
           style={{ alignItems: "center", justifyContent: "center", flex: 1 }}
         >
           <View
