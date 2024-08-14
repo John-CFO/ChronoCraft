@@ -31,21 +31,23 @@ type RootStackParamList = {
   Details: { projectId: string };
 };
 
+/*
 interface ProjectTrackingStatus {
   isTracking: boolean;
   trackingProjectName: string;
-}
+} */
 
 type EarningsCalculatorRouteProp = RouteProp<RootStackParamList, "Details">;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const EarningsCalculatorCard = (/*{ projectId }: { projectId: string }*/) => {
+const EarningsCalculatorCard = () => {
   const route = useRoute<EarningsCalculatorRouteProp>();
+  const navigation = useNavigation();
   const { projectId } = route.params;
-  console.log("route.params:", route.params);
+  // console.log("route.params:", route.params);
 
-  console.log("EarningsCalculatorCard - projectId:", projectId);
+  // console.log("EarningsCalculatorCard - projectId:", projectId);
 
   const { setHourlyRate, getProjectState } = useStore();
 
@@ -54,16 +56,12 @@ const EarningsCalculatorCard = (/*{ projectId }: { projectId: string }*/) => {
     totalEarnings: 0,
   };
 
-  // const { hourlyRate, totalEarnings } = projectState;
+  const [rateInput, setRateInput] = useState<string>("");
 
-  const [rateInput, setRateInput] = useState<string>(
-    projectState.hourlyRate.toString() || "0"
-  );
-
+  // function to set hourly rate from firestore to the UI
   useEffect(() => {
-    if (projectId) {
-      setRateInput(projectState.hourlyRate.toString());
-      const fetchHourlyRate = async () => {
+    const fetchHourlyRate = async () => {
+      if (projectId && rateInput === "") {
         try {
           const docRef = doc(
             FIREBASE_FIRESTORE,
@@ -76,53 +74,57 @@ const EarningsCalculatorCard = (/*{ projectId }: { projectId: string }*/) => {
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             const data = docSnap.data();
-            setHourlyRate(projectId, data.hourlyRate || 0);
+            const fetchedRate = data.hourlyRate || 0;
+
+            console.log("fetchHourlyRate - fetchedRate:", fetchedRate);
           }
         } catch (error) {
           console.error("Error fetching hourly rate:", error);
         }
-      };
-      fetchHourlyRate();
-    } else {
-      console.error("projectId is not defined");
-    }
-  }, [projectId, setHourlyRate]);
+      }
+    };
 
-  /*const [rateInput, setRateInput] = useState<string | null>(
-    hourlyRate > 0 ? hourlyRate.toString() : null
-  );
+    fetchHourlyRate();
+  }, [projectId]);
 
-  // useEffect to update the input field with the hourly rate
+  // function to set the hourlyRate value in the textInput to empty if user navigates away from the screen
   useEffect(() => {
-    setRateInput(hourlyRate > 0 ? hourlyRate.toString() : "");
-  }, [hourlyRate]);
+    const resetRateInput = () => {
+      setRateInput(""); // Clear input field when screen is re-entered
+    };
 
-  // useEffect to update the input field with the hourly rate
-  useEffect(() => {
-    if (hourlyRate > 0) {
-      setRateInput(hourlyRate.toString());
-    }
-  }, [hourlyRate]); */
+    const unsubscribe = navigation.addListener("focus", resetRateInput);
+
+    return () => {
+      unsubscribe();
+    };
+  }, [navigation]);
 
   // Funktion zum Umgang mit der Eingabeänderung
   const handleRateChange = (text: string) => {
     setRateInput(text);
-    const rate = parseFloat(text);
-    if (!isNaN(rate)) {
-      setHourlyRate(projectId, rate);
-    }
   };
 
   // function to save the hourly rate in firestore
   const handleSave = async () => {
-    try {
-      console.log("Saving hourly rate in Firestore with projectId:", projectId);
-      await updateProjectData(projectId, {
-        hourlyRate: projectState.hourlyRate,
-      });
-      setRateInput(""); // Eingabefeld leeren
-    } catch (error) {
-      console.error("Fehler beim Speichern des Stundenlohns: ", error);
+    const rate = parseFloat(rateInput);
+    if (!isNaN(rate)) {
+      try {
+        console.log(
+          "Saving hourly rate in Firestore with projectId:",
+          projectId
+        );
+        await updateProjectData(projectId, {
+          hourlyRate: rate,
+        });
+        setHourlyRate(projectId, rate);
+
+        setRateInput(""); // Eingabefeld leeren
+      } catch (error) {
+        console.error("Fehler beim Speichern des Stundenlohns: ", error);
+      }
+    } else {
+      Alert.alert("Error", "Please enter a valid number.");
     }
   };
 
@@ -169,7 +171,7 @@ const EarningsCalculatorCard = (/*{ projectId }: { projectId: string }*/) => {
               textAlign: "center",
             }}
           >
-            ${projectState.totalEarnings || "0.00"}
+            ${Number(projectState.totalEarnings || 0).toFixed(2)}
           </Text>
         </View>
         <View
@@ -195,7 +197,7 @@ const EarningsCalculatorCard = (/*{ projectId }: { projectId: string }*/) => {
               placeholder="Enter your hourly rate"
               placeholderTextColor="grey"
               keyboardType="numeric"
-              value={rateInput !== null ? rateInput : ""}
+              value={rateInput}
               onChangeText={handleRateChange}
               style={{
                 marginBottom: 10,
@@ -255,7 +257,7 @@ const EarningsCalculatorCard = (/*{ projectId }: { projectId: string }*/) => {
               }}
             >
               <Text style={{ color: "grey" }}>Your Hourly Rate: </Text>
-              {projectState.hourlyRate.toFixed(2)}
+              {projectState?.hourlyRate}
             </Text>
           </View>
         </View>
