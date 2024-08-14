@@ -20,7 +20,7 @@ import {
   LayoutChangeEvent,
 } from "react-native";
 import React, { useState, useEffect, ReactNode, useRef } from "react";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import Modal from "react-native-modal";
 import {
@@ -37,31 +37,33 @@ import { LinearGradient } from "expo-linear-gradient";
 import { AntDesign } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
 import { number, string } from "yup";
+import dayjs from "dayjs";
 
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
+import { useStore } from "../components/TimeTrackingState";
 import NoteModal from "../components/NoteModal";
-import dayjs from "dayjs";
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 type RootStackParamList = {
   Home: undefined;
-  Details: { projectsId: string; projectName: string };
+  Details: { projectId: string; projectName: string };
 };
 
-type HomeScreenNavigationProp = StackNavigationProp<
-  RootStackParamList,
-  "Details"
->;
+type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, "Home">;
 
-interface HomeScreenNavigationProps {
+/*interface HomeScreenNavigationProps {
   navigate(arg0: string, arg1: { projectsId: string }): unknown;
-  navigation: unknown;
-}
-
+  navigation: StackNavigationProp<RootStackParamList, "Home">;
+} */
 ///////////////////////////////////////////////////////////////////////////
 
-const HomeScreen: React.FC<HomeScreenNavigationProps> = () => {
+const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
   // navigation declaration to navigate from any project to DetailsScreen
   const navigation = useNavigation<HomeScreenNavigationProp>();
+
+  // initialize the project id globally to reset all components in the details screen
+  const { setProjectId } = useStore();
 
   // handle project state with props title, id and name
   const [projects, setProjects] = useState<
@@ -82,7 +84,6 @@ const HomeScreen: React.FC<HomeScreenNavigationProps> = () => {
   const [noteModalVisible, setNoteModalVisible] = useState(false);
   // Note ID state
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
-
   // handle refresh state to update the date
   const [refresh, setRefresh] = useState(false);
 
@@ -142,12 +143,18 @@ const HomeScreen: React.FC<HomeScreenNavigationProps> = () => {
           uid: user.uid,
           name: newProjectName,
           createdAt: serverTimestamp(),
+          startTime: null,
+          endTime: null,
+          pauseTime: null,
+          elapsedTime: 0,
+          hourlyRate: 0.0,
+          totalEarnings: 0,
         });
         const newProject = {
           id: newProjectRef.id,
           name: newProjectName,
-          createdAt: new Date(), // oder dayjs().format("DD.MM.YYYY") je nachdem, wie Sie das Datum formatieren möchten
-          notes: [], // Hinzufügen einer leeren Notizliste
+          createdAt: new Date(), // or dayjs().format('YYYY-MM-DD HH:mm:ss')
+          notes: [], // create a empty array for notes
         };
         setProjects((prevProjects) => [...prevProjects, newProject]);
         setNewProjectName("");
@@ -200,9 +207,10 @@ const HomeScreen: React.FC<HomeScreenNavigationProps> = () => {
   };
 
   // function to navigate to the details screen if user pressed an a listed project
-  const handleProjectPress = (projectsId: string, projectName: string) => {
-    navigation.navigate("Details", { projectsId, projectName });
-    // console.log("navigate to details screen", projectsId);
+  const handleProjectPress = (projectId: string, projectName: string) => {
+    console.log("navigate to details screen", projectId);
+    setProjectId(projectId); // to send it global to the details screen to reset all components in the details screen
+    navigation.navigate("Details", { projectId, projectName });
   };
 
   // function to show the note-modal
@@ -218,7 +226,7 @@ const HomeScreen: React.FC<HomeScreenNavigationProps> = () => {
     setNoteModalVisible(false);
   };
 
-  // dot animation
+  // dot animation for TextInput
   const [dots, setDots] = useState(".");
 
   useEffect(() => {
@@ -518,7 +526,3 @@ const HomeScreen: React.FC<HomeScreenNavigationProps> = () => {
 };
 
 export default HomeScreen;
-
-function setAverageItemHeight(height: any) {
-  throw new Error("Function not implemented.");
-}

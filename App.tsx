@@ -256,7 +256,7 @@ const App = () => {
                 {/* Details Screen direkt im Stack Navigator */}
                 <Stack.Screen
                   name="Details"
-                  component={DetailsScreen as never}
+                  component={DetailsScreen}
                   // custom header config. for Details Screen
                   options={({ navigation }) => ({
                     headerShown: true,

@@ -11,16 +11,22 @@
       "resizeMode": "cover",
       "backgroundColor": "#ffffff"
     },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourcompany.yourapp"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.ChronoCraft_Android"
+
+      "package": "com.ChronoCraft_Android",
+      "permissions": ["RECEIVE_BOOT_COMPLETED", "WAKE_LOCK"]
     },
 
     "web": {

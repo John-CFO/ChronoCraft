@@ -1,21 +1,17 @@
 import {
   View,
   Text,
-  TextInput,
-  TouchableOpacity,
   ScrollView,
   Dimensions,
+  AppState,
+  AppStateStatus,
+  ActivityIndicator,
+  FlatList,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+//import { useAppState } from "../AppStateStore";
+import React, { useEffect, useState, useRef } from "react";
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
-import {
-  getDoc,
-  doc,
-  setDoc,
-  deleteDoc,
-  updateDoc,
-  collection,
-} from "firebase/firestore";
+import { getDoc, doc, updateDoc, DocumentData } from "firebase/firestore";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { PieChart } from "react-native-chart-kit";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
@@ -24,96 +20,183 @@ import { Color } from "react-native-alert-notification/lib/typescript/service";
 import { LinearGradient } from "expo-linear-gradient";
 import DigitalClock from "../components/DigitalClock";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import DetailsProjectCard from "../components/DetailsProjectCard";
+import TimeTrackerCard from "../components/TimeTrackerCard";
+import EarningsCalculatorCard from "../components/EarningsCalculatorCard";
+import { fetchProjectData } from "../components/services/ChartDataService";
+import { getChartData } from "../components/PieChartProgressUtils";
+import { User as User } from "firebase/auth";
+import NoteModal from "../components/NoteModal";
+import { useStore } from "../components/TimeTrackingState";
 
-interface Project {
-  name: string;
-  description: string;
-  startDate: string;
-  plannedHours: number;
-}
-
-interface DetailsScreenProps {
+/*interface DetailsScreenProps {
   route: RouteProp<RootStackParamList, "Details">;
-}
+  navigation: StackNavigationProp<RootStackParamList, "Details">;
+  projectId: string;
+} */
+
+type DetailsScreenRouteProp = RouteProp<RootStackParamList, "Details">;
 
 type RootStackParamList = {
   Home: undefined;
-  Details: { projectsId: string; projectName: string };
+  Details: { projectId: string; projectName: string };
 };
 
-const DetailsScreen: React.FC<DetailsScreenProps> = () => {
-  const route = useRoute<RouteProp<RootStackParamList, "Details">>();
+interface ChartData {
+  name: string;
+  hours: number;
+  color: string;
+}
+
+const DetailsScreen: React.FC = () => {
+  const route = useRoute<DetailsScreenRouteProp>();
   const navigation = useNavigation();
-  const { projectsId, projectName } = route.params;
+  const { projectId = "No ID received", projectName = "No Name received" } =
+    route.params || {};
+  const { setProjectId } = useStore();
 
-  const [project, setProject] = useState<any>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [startTime, setStartTime] = useState<string | null>(null);
-  const [endTime, setEndTime] = useState<string | null>(null);
-  const [pauseTime, setPauseTime] = useState<string | null>(null);
+  useEffect(() => {
+    setProjectId(projectId);
+  }, [projectId, setProjectId]);
+
+  // const [project, setProject] = useState<any>(null);
+  // console.log("Project ID:", projectsId);
+  // console.log("Project Name:", projectName);
+
   const [hourlyRate, setHourlyRate] = useState<string>("0.00");
-  const [savedHourlyRate, setSavedHourlyRate] = useState<number>(0);
-  const [elapsedTime, setElapsedTime] = useState<number>(0);
-  const [isTracking, setIsTracking] = useState<boolean>(false);
   const [totalEarnings, setTotalEarnings] = useState<number>(0);
+  //const { projectData, updateElapsedTime } = useAppState();
+  // const [appState, setAppState] = useState(AppState.currentState);
 
-  /*const fetchProjectDetails = async ({ projectId }: { projectId: string }) => {
+  const [projectData, setProjectData] = useState<DocumentData | null>(null);
+  const [chartData, setChartData] = useState<ChartData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchProjectData = async (projectId: string) => {
     try {
-      console.log(`Fetching project details for project ID: ${projectId}`);
-      const projectDocRef = doc(
+      const docRef = doc(
         FIREBASE_FIRESTORE,
         "Services",
         "AczkjyWoOxdPAIRVxjy3",
         "Projects",
         projectId
       );
-      const projectDoc = await getDoc(projectDocRef);
-
-      if (projectDoc.exists()) {
-        console.log("Project document fetched: true");
-        const projectData = projectDoc.data();
-        console.log("Project data:", projectData);
-
-        // Set state with fallback values
-        setProject(projectData);
-        setStartTime(projectData?.startTime ?? "N/A");
-        setEndTime(projectData?.endTime ?? "N/A");
-        setPauseTime(projectData?.pauseTime ?? "N/A");
-        setHourlyRate(projectData?.hourlyRate ?? "0.00");
-        setTotalEarnings(projectData?.totalEarnings ?? 0);
-
-        console.log("startTime:", projectData?.startTime ?? "N/A");
-        console.log("endTime:", projectData?.endTime ?? "N/A");
-        console.log("pauseTime:", projectData?.pauseTime ?? "N/A");
-        console.log("hourlyRate:", projectData?.hourlyRate ?? "0.00");
-        console.log("totalEarnings:", projectData?.totalEarnings ?? 0);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        return docSnap.data();
       } else {
-        console.log("Project document fetched: false");
+        console.warn("No such document for projectId:", projectId);
+        return null;
       }
     } catch (error) {
-      console.error("Error fetching project details:", error);
-      // Hier könnten Sie state setzen, um einen Fehlerzustand zu behandeln oder eine Benachrichtigung anzuzeigen
-    } finally {
-      setLoading(false); // Setzen Sie loading auf false, wenn der Ladevorgang abgeschlossen ist
+      console.error("Error fetching project data:", error);
+      throw error; // optional, to handle it where the function is called
     }
   };
 
-  useEffect(() => {
-    const loadDetails = async () => {
+  /*useEffect(() => {
+    const fetchProject = async () => {
       try {
-        await fetchProjectDetails({ projectId: projectsId });
-        console.log("Project details successfully fetched");
+        const docRef = doc(
+          FIREBASE_FIRESTORE,
+          "Services",
+          "AczkjyWoOxdPAIRVxjy3",
+          "Projects",
+          projectsId
+        );
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setProject(docSnap.data());
+          setHourlyRate(docSnap.data().hourlyRate.toString());
+          setTotalEarnings(docSnap.data().totalEarnings || 0);
+        } else {
+          console.warn("No such document!");
+        }
       } catch (error) {
-        console.error("Error loading project details:", error);
+        console.error("Error fetching project: ", error);
       }
     };
 
-    loadDetails();
+    fetchProject();
   }, [projectsId]); */
 
+  /* const saveTrackingData = async (
+    startTime: string | null,
+    endTime: string | null,
+    elapsedTime: number,
+    isTracking: boolean
+  ) => {
+    try {
+      const projectDocRef = doc(
+        FIREBASE_FIRESTORE,
+        "Services",
+        "AczkjyWoOxdPAIRVxjy3",
+        "Projects",
+        projectsId
+      );
+      await updateDoc(projectDocRef, {
+        startTime,
+        endTime,
+        elapsedTime,
+        totalEarnings,
+        hourlyRate: parseFloat(hourlyRate),
+        isTracking,
+      });
+      console.log("Tracking data saved successfully");
+    } catch (error) {
+      console.error("Error saving tracking data:", error);
+    }
+  };
+
+  const formatElapsedTime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    return `${h.toString().padStart(2, "0")}:${m
+      .toString()
+      .padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  }; */
+
+  /*useEffect(() => {
+    const loadData = async () => {
+      const projectData = await fetchProjectData(projectId);
+      if (projectData) {
+        setChartData(getChartData(projectData));
+      }
+    };
+
+    loadData();
+  }, [projectId]); */
+
+  /*
+  // function to show the chart-data
   useEffect(() => {
+    const loadData = async () => {
+      if (!projectsId || projectsId === "No ID received") {
+        console.warn("Project ID is not defined");
+        return;
+      }
+      console.log("Loading data for Project ID:", projectsId);
+
+      try {
+        const data = await fetchProjectData(projectsId);
+        if (data) {
+          setProjectData(data);
+          setChartData(getChartData(data));
+        }
+      } catch (error) {
+        console.error("Error loading project data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [projectsId]);  */
+
+  /*useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
-    if (isTracking && startTime !== "N/A") {
+    if (isTracking && startTime !== "N/A" && startTime !== null) {
       timer = setInterval(() => {
         setElapsedTime((prev) => prev + 1);
       }, 1000);
@@ -140,8 +223,8 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
           endTime,
           pauseTime,
           elapsedTime,
-          hourlyRate,
           totalEarnings,
+          hourlyRate: parseFloat(hourlyRate),
         });
         console.log("Tracking data saved successfully");
       } else {
@@ -149,10 +232,10 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
       }
     } catch (error) {
       console.error("Error saving tracking data:", error);
-      // Hier könnten Sie state setzen, um einen Fehlerzustand zu behandeln oder eine Benachrichtigung anzuzeigen
     }
-  };
+  }; */
 
+  /*
   // function to handle start, pause, and end tracking
   const handleStart = () => {
     if (!isTracking) {
@@ -214,9 +297,29 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
     } catch (error) {
       console.error("Error saving hourly rate:", error);
     }
-  };
+  }; */
 
-  const data = [
+  /*useEffect(() => {
+    const fetchProject = async () => {
+      const docRef = doc(
+        FIREBASE_FIRESTORE,
+        "Services",
+        "AczkjyWoOxdPAIRVxjy3",
+        "Projects",
+        projectsId
+      );
+
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setProject(docSnap.data());
+        setElapsedTime(docSnap.data().elapsedTime || 0);
+      }
+    };
+
+    fetchProject();
+  }, [projectsId]); */
+
+  /* const data = [
     {
       name: "Erreichte Stunden",
       hours: elapsedTime / 3600,
@@ -231,314 +334,43 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
       legendFontColor: "#7F7F7F",
       legendFontSize: 15,
     },
-  ];
+  ];  */
 
-  return (
-    <ScrollView style={{ backgroundColor: "black" }}>
+  /*
+  // loading indicator when data is loading from firebase
+  if (loading) {
+    return (
       <View
         style={{
           flex: 1,
-          paddingHorizontal: 20,
-          paddingBottom: 20,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "black",
         }}
       >
-        <View
-          style={{
-            alignItems: "center",
-            justifyContent: "center",
-            width: "100%",
-            height: 80,
-            backgroundColor: "transparent",
-          }}
-        >
-          <Text
-            style={{
-              fontFamily: "MPLUSLatin_Bold",
-              fontSize: 25,
-              color: "white",
-              marginBottom: 20,
-            }}
-          >
-            - Project Details -
-          </Text>
-        </View>
-        <View
-          style={{
-            marginBottom: 20,
-            backgroundColor: "#191919",
-            borderWidth: 1,
-            borderColor: "aqua",
-            borderRadius: 8,
-            minHeight: 150,
-            padding: 10,
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Text
-            style={{
-              fontFamily: "MPLUSLatin_Bold",
-              fontSize: 32,
-              color: "white",
-              marginBottom: 10,
-            }}
-          >
-            {projectName}
-          </Text>
+        <ActivityIndicator size="large" color="#00ff00" />
+      </View>
+    );
+  }
 
-          {/*
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "flex-start",
-                width: "100%",
-              }}
-            >
-              
-              <Text style={{ fontSize: 18, color: "black", marginBottom: 5 }}>
-                Description: {project.description}
-              </Text>
-              <Text
-                style={{
-                  fontSize: 18,
-                  color: "white",
-                  marginBottom: 5,
-                  flex: 1,
-                  textAlign: "left",
-                }}
-              >
-                Start Date: {project.startDate}
-              </Text>
-              <Text style={{ fontSize: 18, color: "black", marginBottom: 5 }}>
-                Planned Hours per Week: {project.plannedHours}
-              </Text>
-            </View> */}
-          <Text
-            style={{
-              fontFamily: "MPLUSLatin_ExtraLight",
-              fontSize: 18,
-              color: "lightgrey",
-              marginTop: 30,
-            }}
-          >
-            Current Time
-          </Text>
-          <DigitalClock />
-        </View>
+  console.log("Rendering component with chartData:", chartData);
+*/
 
-        <View
-          style={{
-            height: 400,
-            marginBottom: 20,
-            backgroundColor: "#191919",
-            borderWidth: 1,
-            borderColor: "aqua",
-            borderRadius: 8,
-            padding: 20,
-            alignItems: "center",
-          }}
-        >
-          <Text
-            style={{
-              fontFamily: "MPLUSLatin_Bold",
-              fontSize: 25,
-              color: "white",
-              marginBottom: 20,
-              textAlign: "center",
-            }}
-          >
-            Time Tracker
-          </Text>
+  return (
+    <ScrollView style={{ backgroundColor: "black" }}>
+      <View style={{ flex: 1, paddingHorizontal: 20, paddingBottom: 20 }}>
+        {/* Project-Card */}
+        <DetailsProjectCard />
+        {/* Time-Tracker */}
+        <TimeTrackerCard />
+        {/* Earn-Calculator-Card */}
+        <EarningsCalculatorCard />
+        <Text style={{ color: "white" }}>
+          Project ID: {projectId ? projectId : "No ID received"}
+        </Text>
+        <Text style={{ color: "white" }}>Project Name: {projectName}</Text>
 
-          <View
-            style={{
-              width: "80%",
-              height: 100,
-              backgroundColor: "#191919",
-              borderColor: "aqua",
-              borderRadius: 8,
-            }}
-          >
-            <Text
-              style={{
-                fontWeight: "bold",
-                fontSize: 55,
-                color: "white",
-                marginBottom: 5,
-                textAlign: "center",
-              }}
-            >
-              {formatElapsedTime(elapsedTime)}
-            </Text>
-          </View>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-evenly",
-              alignItems: "center",
-              marginBottom: 10,
-              marginTop: 30,
-              width: "100%",
-            }}
-          >
-            <TouchableOpacity onPress={handlePause}>
-              <FontAwesome6 name="pause" size={52} color="lightgrey" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleStart}>
-              <FontAwesome5 name="play" size={85} color="lightgrey" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleEnd}>
-              <FontAwesome5 name="stop" size={52} color="lightgrey" />
-            </TouchableOpacity>
-          </View>
-
-          <View
-            style={{
-              width: "100%",
-              height: 80,
-              alignItems: "flex-start",
-              justifyContent: "flex-end",
-            }}
-          >
-            <Text
-              style={{
-                fontFamily: "MPLUSLatin_Bold",
-                fontSize: 16,
-                color: "white",
-                marginBottom: 5,
-              }}
-            >
-              <Text style={{ color: "grey" }}>Last Session:</Text>{" "}
-              {endTime ? new Date(endTime).toLocaleString() : "N/A"}
-            </Text>
-            <Text
-              style={{
-                fontFamily: "MPLUSLatin_Bold",
-                fontSize: 16,
-                color: "white",
-                marginBottom: 5,
-              }}
-            >
-              <Text style={{ color: "grey" }}>Tracking Started:</Text>{" "}
-              {startTime ? new Date(startTime).toLocaleString() : "N/A"}
-            </Text>
-          </View>
-        </View>
-
-        <View
-          style={{
-            marginBottom: 20,
-            backgroundColor: "#191919",
-            borderRadius: 8,
-            borderWidth: 1,
-            borderColor: "aqua",
-            padding: 20,
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Text
-            style={{
-              fontFamily: "MPLUSLatin_Bold",
-              fontSize: 25,
-              color: "white",
-              marginBottom: 50,
-              textAlign: "center",
-            }}
-          >
-            Price Orientation
-          </Text>
-          <View
-            style={{
-              backgroundColor: "lightgrey",
-              width: 280,
-              height: 50,
-
-              borderWidth: 2,
-              borderColor: "white",
-              borderRadius: 12,
-              marginBottom: 20,
-            }}
-          >
-            <TextInput
-              placeholder="Hourly Rate"
-              placeholderTextColor="grey"
-              value={hourlyRate}
-              onChangeText={setHourlyRate}
-              keyboardType="numeric"
-              style={{
-                marginBottom: 10,
-                height: 40,
-                paddingHorizontal: 10,
-                fontSize: 22,
-              }}
-            />
-          </View>
-          <TouchableOpacity
-            onPress={handlePress}
-            style={{
-              width: 280,
-              borderRadius: 12,
-              overflow: "hidden",
-              borderWidth: 3,
-              borderColor: "white",
-              marginBottom: 30,
-            }}
-          >
-            <LinearGradient
-              colors={["#00FFFF", "#FFFFFF"]}
-              style={{
-                alignItems: "center",
-                justifyContent: "center",
-                height: 45,
-                width: 280,
-              }}
-            >
-              <Text
-                style={{
-                  fontFamily: "MPLUSLatin_Bold",
-                  fontSize: 20,
-                  color: "grey",
-                  marginBottom: 5,
-                }}
-              >
-                Save Hourly Rate
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
-          <View
-            style={{
-              width: "100%",
-              height: 80,
-              alignItems: "flex-start",
-              justifyContent: "flex-end",
-            }}
-          >
-            <Text
-              style={{
-                fontFamily: "MPLUSLatin_Bold",
-                fontSize: 16,
-                color: "white",
-                marginBottom: 5,
-              }}
-            >
-              <Text style={{ color: "grey" }}>Total Hours:</Text>{" "}
-              {(elapsedTime / 3600).toFixed(2)}
-            </Text>
-            <Text
-              style={{
-                fontFamily: "MPLUSLatin_Bold",
-                fontSize: 16,
-                color: "white",
-                marginBottom: 5,
-              }}
-            >
-              <Text style={{ color: "grey" }}>Total Earnings:</Text>{" "}
-              {totalEarnings.toFixed(2)}
-            </Text>
-          </View>
-        </View>
-
+        {/* Success Chart */}
         <View
           style={{
             marginBottom: 20,
@@ -560,7 +392,7 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
             Success Chart
           </Text>
           <PieChart
-            data={data}
+            data={chartData}
             width={Dimensions.get("window").width}
             height={160}
             chartConfig={{
@@ -572,10 +404,32 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
               useShadowColorFromDataset: false,
             }}
             accessor="hours"
-            backgroundColor="red"
+            backgroundColor="transparent"
             paddingLeft="15"
             absolute
           />
+        </View>
+        {/* Success Chart */}
+        <View
+          style={{
+            marginBottom: 20,
+            backgroundColor: "#191919",
+            borderRadius: 8,
+            borderWidth: 1,
+            borderColor: "aqua",
+            padding: 5,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "MPLUSLatin_Bold",
+              fontSize: 25,
+              color: "white",
+              marginBottom: 10,
+            }}
+          >
+            Your Notes from {projectName}
+          </Text>
         </View>
       </View>
     </ScrollView>
@@ -583,6 +437,7 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
 };
 
 export default DetailsScreen;
-function saveTrackingData() {
+/*function saveTrackingData() {
   throw new Error("Function not implemented.");
 }
+*/
