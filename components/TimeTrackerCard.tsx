@@ -119,18 +119,9 @@ const TimeTrackerCard = () => {
   };
 
   const handleReset = async () => {
-    resetTimer(projectId);
-    setLocalTimer(0);
-    await updateProjectData(projectId, {
-      elapsedTime: 0,
-      startTime: null,
-      endTime: null,
-      hourlyRate: 0,
-      totalEarnings: 0,
-      isTracking: false,
-    });
+    await resetAll(projectId);
 
-    resetAll(projectId);
+    setLocalTimer(0);
   };
 
   function formatTime(timeInSeconds: number): string {
