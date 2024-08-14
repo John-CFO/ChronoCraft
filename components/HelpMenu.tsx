@@ -54,7 +54,7 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
     >
       <ImageBackground
         source={require("../assets/black-image.jpg")}
-        blurRadius={10}
+        blurRadius={3}
         style={{
           flex: 1,
           width: "100%",
