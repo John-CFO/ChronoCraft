@@ -2,12 +2,14 @@
 
 // in this component we manage the state of the time tracker, earnings calculator and update firestore data
 
-// Todoooo: startTime wird bei jedem start in firestore gesetzt, soll aber nur gesetzt werden wenn elapledTime nicht "0:00" ist
+// TODO: startTime wird bei jedem start in firestore gesetzt, soll aber nur gesetzt werden wenn elapledTime nicht "0:00" ist
 // und elapsedTime wird wenn man reset drück nicht in firestore zurück gesetzt
 
 import { create } from "zustand";
-import { updateProjectData } from "../components/FirestoreService";
 import { Alert } from "react-native";
+
+import { updateProjectData } from "../components/FirestoreService";
+///////////////////////////////////////////////////////////////////////////////////////////
 
 interface ProjectState {
   timer: number;
@@ -35,6 +37,8 @@ interface TimeTrackingState {
   resetAll: (projectId: string) => void;
   getProjectState: (projectId: string) => ProjectState | undefined;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////
 
 export const useStore = create<TimeTrackingState>((set, get) => ({
   projects: {},
@@ -279,6 +283,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
         pauseTime: null,
         endTime: null,
         hourlyRate: 0,
+        elapsedTime: 0,
         totalEarnings: 0,
       });
     } catch (error) {
