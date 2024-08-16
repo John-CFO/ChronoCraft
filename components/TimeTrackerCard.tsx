@@ -21,9 +21,9 @@ import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
+import { number } from "yup";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
-import { number } from "yup";
 import { useStore } from "./TimeTrackingState";
 import { updateProjectData } from "../components/FirestoreService";
 ////////////////////////////////////////////////////////////////////////////////////////////////////////

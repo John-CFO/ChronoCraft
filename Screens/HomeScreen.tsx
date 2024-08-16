@@ -1,4 +1,5 @@
-// HomeSceen component to show and manage the projects.
+///////////////////////////////////// HomeSceen Component////////////////////////////////////////////
+
 // This component shows a list of projects and enabled the user to add and delete his projects.
 // The user can also write notes to every project in the list wich is also visible in the DetailsScreen.
 
@@ -43,7 +44,7 @@ import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { useStore } from "../components/TimeTrackingState";
 import NoteModal from "../components/NoteModal";
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
 
 type RootStackParamList = {
   Home: undefined;
@@ -56,7 +57,7 @@ type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, "Home">;
   navigate(arg0: string, arg1: { projectsId: string }): unknown;
   navigation: StackNavigationProp<RootStackParamList, "Home">;
 } */
-///////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////
 
 const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
   // navigation declaration to navigate from any project to DetailsScreen

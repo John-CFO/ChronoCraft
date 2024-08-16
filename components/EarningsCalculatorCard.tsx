@@ -4,8 +4,6 @@
 // the user can set the hourly rate and the component will calculate the earnings based on the time tracked by the time tracker card
 // it used ProjectContext.tsx to get the project id to save the background task and let the Tracker work in the background
 
-// TODOS!!!! Your Hourly Rate soll erst übergeben werden wenn ich save drücke, nicht beim eintippen.
-
 import {
   View,
   Text,
@@ -20,9 +18,9 @@ import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
+import { number } from "yup";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
-import { number } from "yup";
 import { updateProjectData } from "../components/FirestoreService";
 import { useStore } from "./TimeTrackingState";
 

@@ -1,3 +1,5 @@
+///////////////////////////////////// DetailsScreen Component////////////////////////////////////////////
+
 import {
   View,
   Text,
@@ -8,26 +10,29 @@ import {
   ActivityIndicator,
   FlatList,
 } from "react-native";
-//import { useAppState } from "../AppStateStore";
 import React, { useEffect, useState, useRef } from "react";
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { getDoc, doc, updateDoc, DocumentData } from "firebase/firestore";
+import { User as User } from "firebase/auth";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { PieChart } from "react-native-chart-kit";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { Color } from "react-native-alert-notification/lib/typescript/service";
 import { LinearGradient } from "expo-linear-gradient";
-import DigitalClock from "../components/DigitalClock";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+
 import DetailsProjectCard from "../components/DetailsProjectCard";
 import TimeTrackerCard from "../components/TimeTrackerCard";
 import EarningsCalculatorCard from "../components/EarningsCalculatorCard";
 import { fetchProjectData } from "../components/services/ChartDataService";
 import { getChartData } from "../components/PieChartProgressUtils";
-import { User as User } from "firebase/auth";
 import NoteModal from "../components/NoteModal";
 import { useStore } from "../components/TimeTrackingState";
+import DigitalClock from "../components/DigitalClock";
+//import { useAppState } from "../AppStateStore";
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /*interface DetailsScreenProps {
   route: RouteProp<RootStackParamList, "Details">;
@@ -47,6 +52,8 @@ interface ChartData {
   hours: number;
   color: string;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const DetailsScreen: React.FC = () => {
   const route = useRoute<DetailsScreenRouteProp>();
@@ -437,7 +444,3 @@ const DetailsScreen: React.FC = () => {
 };
 
 export default DetailsScreen;
-/*function saveTrackingData() {
-  throw new Error("Function not implemented.");
-}
-*/
