@@ -150,6 +150,9 @@ const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
           elapsedTime: 0,
           hourlyRate: 0.0,
           totalEarnings: 0,
+          originalStartTime: null,
+          lastStartTime: null,
+          timer: 0,
         });
         const newProject = {
           id: newProjectRef.id,

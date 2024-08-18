@@ -2,7 +2,7 @@
 
 // in this component we manage the state of the time tracker, earnings calculator and update firestore data
 
-// NOTE: "timer" is in the gobalState management the same like "elapsedTime" in the other files (to handle the calculation)
+// NOTE: "timer" is in the gobalState management the same like "elapsedTime" in the other files (it is only usedto handle the calculation and timer logic management)
 
 import { create } from "zustand";
 import { Alert } from "react-native";
@@ -22,6 +22,8 @@ interface ProjectState {
   elapsedTime: number;
   totalEarnings: number;
   projectName: string;
+  originalStartTime: Date | null;
+  lastStartTime: Date | null;
 }
 
 interface TimeTrackingState {
@@ -71,10 +73,8 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
   },
 
   // function to start the timer and inform the user when a project is already being tracked
-
   startTimer: async (projectId: string) => {
-    const state = get(); // Verwende get() um den aktuellen Zustand zu bekommen, statt set()
-
+    const state = get(); // Aktuellen Zustand holen
     const project = state.projects[projectId];
 
     if (!project) {
@@ -82,113 +82,129 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
       return;
     }
 
-    // Prüfe, ob das aktuelle Projekt bereits läuft
-    if (project.isTracking) {
-      console.warn("Project is already being tracked.");
-      return;
+    // Wenn der Timer zum ersten Mal gestartet wird, setze originalStartTime
+    let updatedOriginalStartTime = project.originalStartTime;
+    if (!project.originalStartTime) {
+      updatedOriginalStartTime = new Date();
     }
 
-    // Prüfe, ob es ein anderes Projekt gibt, das bereits getrackt wird
-    const activeProjectId = Object.keys(state.projects).find(
-      (id) => state.projects[id].isTracking
-    );
+    // lastStartTime wird nur gesetzt, wenn der Timer erneut gestartet wird (also wenn timer > 0 ist)
+    const updatedLastStartTime = project.timer > 0 ? new Date() : null;
 
-    if (activeProjectId && activeProjectId !== projectId) {
-      const activeProject = state.projects[activeProjectId];
-      const activeProjectName = activeProject
-        ? activeProject.projectName
-        : "Unknown Project";
+    // Update Firestore mit den neuen Werten
+    await updateProjectData(projectId, {
+      startTime: new Date(),
+      originalStartTime: updatedOriginalStartTime,
+      lastStartTime: updatedLastStartTime,
+      isTracking: true,
+    });
 
-      Alert.alert(
-        "Tracking in Progress",
-        `Please stop or pause the current project "${activeProjectName}" before starting a new one.`,
-        [{ text: "OK" }]
-      );
-
-      return;
-    }
-
-    // Falls elapsedTime 0 ist, setze den Startzeitpunkt in Firestore
-    if (project.timer === 0) {
-      const newStartTime = new Date();
-      try {
-        await updateProjectData(projectId, {
-          startTime: newStartTime,
+    // Aktualisiere den Zustand des Projekts im State
+    set((state) => ({
+      projects: {
+        ...state.projects,
+        [projectId]: {
+          ...project,
+          startTime: new Date(),
+          originalStartTime: updatedOriginalStartTime,
+          lastStartTime: updatedLastStartTime,
           isTracking: true,
-        });
-        console.log("Firestore successfully updated with new startTime.");
-
-        // Zustand erst aktualisieren nachdem Firestore Update abgeschlossen ist
-        set((state) => ({
-          projects: {
-            ...state.projects,
-            [projectId]: {
-              ...project,
-              isTracking: true,
-              startTime: newStartTime,
-            },
-          },
-        }));
-      } catch (error) {
-        console.error("Error updating Firestore:", error);
-      }
-    } else {
-      const newStartTime = project.startTime || new Date();
-      set((state) => ({
-        projects: {
-          ...state.projects,
-          [projectId]: {
-            ...project,
-            isTracking: true,
-            startTime: newStartTime,
-          },
         },
-      }));
-    }
+      },
+    }));
   },
 
+  // NOTE: Stop ist soweit aktuell und koreckt.
   // function to stop the timer and calculate the elapsed time
-
+  /*
   stopTimer: async (projectId: string) => {
-    const state = get(); // Verwende get() um den aktuellen Zustand zu bekommen, statt set()
-
+    const state = get(); // Aktuellen Zustand holen
     const project = state.projects[projectId];
 
-    if (!project.startTime) {
+    if (!project || !project.isTracking) {
+      console.warn("Project not found or not tracking.");
+      return;
+    }
+
+    const currentTime = new Date();
+
+    // Berechne die seit dem letzten Start vergangene Zeit
+    const elapsedSinceLastStart =
+      (currentTime.getTime() - new Date(project.lastStartTime).getTime()) /
+      1000;
+
+    // Summiere die bisherige und die seit dem letzten Start vergangene Zeit
+    const totalElapsedTime = project.elapsedTime + elapsedSinceLastStart;
+
+    // Berechne das verdiente Geld basierend auf der verstrichenen Zeit und dem Stundensatz
+    const earnings = (totalElapsedTime / 3600) * project.hourlyRate;
+
+    // Update Firestore mit den neuen Werten
+    await updateProjectData(projectId, {
+      endTime: currentTime,
+      timer: totalElapsedTime,
+      elapsedTime: totalElapsedTime,
+      totalEarnings: earnings,
+      isTracking: false,
+      startTime: null, // Setze startTime zurück, da der Timer gestoppt wurde
+    });
+
+    // Aktualisiere den Zustand des Projekts im State
+    set((state) => ({
+      projects: {
+        ...state.projects,
+        [projectId]: {
+          ...project,
+          endTime: currentTime,
+          timer: totalElapsedTime,
+          elapsedTime: totalElapsedTime,
+          totalEarnings: earnings,
+          isTracking: false,
+          startTime: null,
+        },
+      },
+    }));
+  }, */
+
+  stopTimer: async (projectId: string) => {
+    const state = get(); // Aktuellen Zustand holen
+    const project = state.projects[projectId];
+
+    if (!project || !project.startTime) {
       console.warn("Start time is not set. Cannot stop timer.");
       return;
     }
 
+    // Berechne die verstrichene Zeit seit dem letzten Start
     const elapsedTime =
-      (new Date().getTime() - project.startTime.getTime()) / 1000;
+      (new Date().getTime() - project.startTime.getTime()) / 1000; // in Sekunden
 
-    // Stop the timer and update Firestore asynchronously
-    try {
-      await updateProjectData(projectId, {
-        isTracking: false,
-        timer: elapsedTime,
-        endTime: new Date(),
-        startTime: null,
-        pauseTime: null,
-      });
+    // Setze den neuen Timer-Wert auf die verstrichene Zeit
+    const updatedTimer = elapsedTime;
 
-      // Zustand erst aktualisieren nachdem Firestore Update abgeschlossen ist
-      set((state) => ({
-        projects: {
-          ...state.projects,
-          [projectId]: {
-            ...project,
-            isTracking: false,
-            timer: elapsedTime,
-            endTime: new Date(),
-            startTime: null,
-            pauseTime: null,
-          },
+    // Update Firestore, um den Timer und den Tracking-Status zu speichern
+    await updateProjectData(projectId, {
+      timer: updatedTimer,
+      isTracking: false,
+      endTime: new Date(),
+      startTime: null, // Setze startTime zurück, da der Timer gestoppt wurde
+      pauseTime: null,
+    });
+
+    // Aktualisiere den Zustand des Projekts im State
+    set((state) => ({
+      projects: {
+        ...state.projects,
+        [projectId]: {
+          ...project,
+          isTracking: false,
+          timer: updatedTimer, // Verwende die verstrichene Zeit als neuen Timer-Wert
+          endTime: new Date(),
+          startTime: null,
+          pauseTime: null,
         },
-      }));
-    } catch (error) {
-      console.error("Error stopping timer:", error);
-    }
+      },
+    }));
   },
 
   // function to pause the timer and calculate the elapsed time
@@ -220,6 +236,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
     });
   },
 
+  // NOTE: Reset ist soweit aktuell und koreckt.
   // function to reset the timer and calculator in UI and firestore
   resetTimer: (projectId) => {
     set((state) => ({
@@ -232,6 +249,9 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
           pauseTime: null,
           endTime: null,
           elapsedTime: 0,
+          timer: 0,
+          lastStartTime: null,
+          originalStartTime: null,
         },
       },
     }));
@@ -242,6 +262,9 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
       pauseTime: null,
       endTime: null,
       elapsedTime: 0,
+      timer: 0,
+      lastStartTime: null,
+      originalStartTime: null,
     });
   },
 
@@ -328,6 +351,8 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
             elapsedTime: 0,
             totalEarnings: 0,
             timer: 0,
+            lastStartTime: null,
+            originalStartTime: null,
           },
         },
       };
@@ -341,6 +366,9 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
         hourlyRate: 0,
         elapsedTime: 0,
         totalEarnings: 0,
+        timer: 0,
+        lastStartTime: null,
+        originalStartTime: null,
       });
     } catch (error) {
       console.error("Error resetting project data:", error);

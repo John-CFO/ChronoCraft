@@ -58,7 +58,8 @@ const TimeTrackerCard = () => {
   const projectState = getProjectState(projectId) || {
     timer: 0,
     isTracking: false,
-    startTime: null,
+    lastStartTime: null,
+    originalStartTime: null,
     pauseTime: null,
     endTime: null,
     hourlyRate: 0,
@@ -140,7 +141,7 @@ const TimeTrackerCard = () => {
     <View>
       <View
         style={{
-          height: 500,
+          height: 580,
           marginBottom: 20,
           backgroundColor: "#191919",
           borderWidth: 1,
@@ -252,7 +253,7 @@ const TimeTrackerCard = () => {
         <View
           style={{
             width: "100%",
-            height: 80,
+            height: 150,
             alignItems: "flex-start",
             justifyContent: "flex-end",
           }}
@@ -265,7 +266,8 @@ const TimeTrackerCard = () => {
               marginBottom: 5,
             }}
           >
-            <Text style={{ color: "grey" }}>Last Session:</Text>{" "}
+            <Text style={{ color: "grey" }}>Last Session:</Text>
+            {" \n"}
             {projectState.endTime
               ? new Date(projectState.endTime).toLocaleString()
               : "N/A"}
@@ -278,9 +280,23 @@ const TimeTrackerCard = () => {
               marginBottom: 5,
             }}
           >
-            <Text style={{ color: "grey" }}>Tracking Started:</Text>{" "}
-            {projectState.startTime
-              ? new Date(projectState.startTime).toLocaleString()
+            <Text style={{ color: "grey" }}>Last Tracking Started:</Text> {"\n"}
+            {projectState.lastStartTime
+              ? new Date(projectState.lastStartTime).toLocaleString()
+              : "N/A"}
+          </Text>
+          <Text
+            style={{
+              fontFamily: "MPLUSLatin_Bold",
+              fontSize: 16,
+              color: "white",
+              marginBottom: 5,
+            }}
+          >
+            <Text style={{ color: "grey" }}>Original Tracking Started:</Text>
+            {"\n"}
+            {projectState.originalStartTime
+              ? new Date(projectState.originalStartTime).toLocaleString()
               : "N/A"}
           </Text>
         </View>
