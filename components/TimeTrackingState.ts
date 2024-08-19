@@ -2,7 +2,8 @@
 
 // in this component we manage the state of the time tracker, earnings calculator and update firestore data
 
-// NOTE: "timer" is in the gobalState management the same like "elapsedTime" in the other files (it is only usedto handle the calculation and timer logic management)
+// NOTE: "timer" is in the gobalState management the same like "elapsedTime" in the other files (it is only used to handle the calculation and timer logic management)
+// the combination of timer and elapsedTime is necessary to correctly track time across multiple sessions. without timer, you would not be able to accumulate total running time properly if the timer is stopped and started multiple times.
 
 import { create } from "zustand";
 import { Alert } from "react-native";
@@ -48,7 +49,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
   projects: {},
   currentProjectId: null,
 
-  calculateearnings: (projectId: string | number) => {
+  calculateEarnings: (projectId: string | number) => {
     const project = get().projects[projectId];
     if (project && project.startTime) {
       const elapsedTime =
@@ -114,58 +115,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
     }));
   },
 
-  // NOTE: Stop ist soweit aktuell und koreckt.
   // function to stop the timer and calculate the elapsed time
-  /*
-  stopTimer: async (projectId: string) => {
-    const state = get(); // Aktuellen Zustand holen
-    const project = state.projects[projectId];
-
-    if (!project || !project.isTracking) {
-      console.warn("Project not found or not tracking.");
-      return;
-    }
-
-    const currentTime = new Date();
-
-    // Berechne die seit dem letzten Start vergangene Zeit
-    const elapsedSinceLastStart =
-      (currentTime.getTime() - new Date(project.lastStartTime).getTime()) /
-      1000;
-
-    // Summiere die bisherige und die seit dem letzten Start vergangene Zeit
-    const totalElapsedTime = project.elapsedTime + elapsedSinceLastStart;
-
-    // Berechne das verdiente Geld basierend auf der verstrichenen Zeit und dem Stundensatz
-    const earnings = (totalElapsedTime / 3600) * project.hourlyRate;
-
-    // Update Firestore mit den neuen Werten
-    await updateProjectData(projectId, {
-      endTime: currentTime,
-      timer: totalElapsedTime,
-      elapsedTime: totalElapsedTime,
-      totalEarnings: earnings,
-      isTracking: false,
-      startTime: null, // Setze startTime zurück, da der Timer gestoppt wurde
-    });
-
-    // Aktualisiere den Zustand des Projekts im State
-    set((state) => ({
-      projects: {
-        ...state.projects,
-        [projectId]: {
-          ...project,
-          endTime: currentTime,
-          timer: totalElapsedTime,
-          elapsedTime: totalElapsedTime,
-          totalEarnings: earnings,
-          isTracking: false,
-          startTime: null,
-        },
-      },
-    }));
-  }, */
-
   stopTimer: async (projectId: string) => {
     const state = get(); // Aktuellen Zustand holen
     const project = state.projects[projectId];
@@ -236,7 +186,6 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
     });
   },
 
-  // NOTE: Reset ist soweit aktuell und koreckt.
   // function to reset the timer and calculator in UI and firestore
   resetTimer: (projectId) => {
     set((state) => ({
@@ -268,29 +217,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
     });
   },
 
-  /*
-  updateTimer: (projectId, time) => {
-    set((state) => {
-      const project = state.projects[projectId];
-      const updatedTimer = time;
-
-      // Calculate earnings based on updated timer and hourly rate
-      const earnings = ((updatedTimer / 3600) * project.hourlyRate).toFixed(2);
-
-      return {
-        projects: {
-          ...state.projects,
-          [projectId]: {
-            ...project,
-            timer: updatedTimer,
-            totalEarnings: parseFloat(earnings),
-          },
-        },
-      };
-    });
-  }, */
-
-  // statefunction to update the timer in the state
+  // statefunction to update the timer in the TimeTrackerCard
   updateTimer: (projectId, time) => {
     set((state) => ({
       projects: {
@@ -303,7 +230,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
     }));
   },
 
-  // statefunction to set the hourly rate in the state
+  // statefunction to set the hourly rate in the EarningsCalculatorCard
   setHourlyRate: (projectId, rate) => {
     set((state) => ({
       projects: {
@@ -316,7 +243,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
     }));
   },
 
-  // statefunction to set the total earnings in the state
+  // statefunction to set the total earnings in the EarningsCalculatorCard
   setTotalEarnings: (projectId, earnings) => {
     set((state) => ({
       projects: {
