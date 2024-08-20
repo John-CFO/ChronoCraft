@@ -48,7 +48,7 @@ const TimeTrackerCard = () => {
     startTimer,
     pauseTimer,
     stopTimer,
-    resetTimer,
+    // resetTimer,
     updateTimer,
     setTotalEarnings,
     getProjectState,
