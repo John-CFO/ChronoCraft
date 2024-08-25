@@ -1,6 +1,4 @@
-// Custom modal for notes
-
-// Todoo anderen background einbauen
+//////////////////////////////////// Note Modal Component //////////////////////////////
 
 import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import React, { useState, useEffect } from "react";
@@ -10,16 +8,18 @@ import {
   doc,
   getDoc,
   addDoc,
-  setDoc,
   serverTimestamp,
   collection,
 } from "firebase/firestore";
-import { User as User } from "firebase/auth";
+
+//////////////////////////////////////////////////////////////////////////////////////////
 
 interface NoteModalProps {
   projectId: string;
   onClose: () => void;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
 
 const NoteModal: React.FC<NoteModalProps> = ({
   projectId,
@@ -59,10 +59,10 @@ const NoteModal: React.FC<NoteModalProps> = ({
 
   // function to handle comment submission
   const handleSubmitComment = async (projectId: string, comment: string) => {
-    console.log("Submitting comment with projectId:", projectId);
+    // console.log("Submitting comment with projectId:", projectId);
     try {
       if (!projectId) {
-        console.error("Invalid projectId:", projectId);
+        // console.error("Invalid projectId:", projectId);
         return;
       }
 
@@ -88,7 +88,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
             comment: comment,
             createdAt: serverTimestamp(),
           });
-          console.log("Comment saved");
+          // console.log("Comment saved");
           setComment("");
           onClose();
         } else {
@@ -109,7 +109,6 @@ const NoteModal: React.FC<NoteModalProps> = ({
   return (
     <View>
       {/*modal settings */}
-
       <View
         style={{
           width: "90%",
@@ -122,7 +121,6 @@ const NoteModal: React.FC<NoteModalProps> = ({
         }}
       >
         {/* header*/}
-
         <View
           style={{
             width: 350,
@@ -172,6 +170,8 @@ const NoteModal: React.FC<NoteModalProps> = ({
             value={comment}
             onChangeText={handleCommentChange}
           />
+
+          {/*submit button*/}
           <TouchableOpacity
             onPress={() => handleSubmitComment(projectId, comment)}
             style={{
@@ -208,6 +208,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
             </LinearGradient>
           </TouchableOpacity>
         </View>
+        {/*navigation tip*/}
         <View
           style={{
             height: 45,
@@ -233,41 +234,3 @@ const NoteModal: React.FC<NoteModalProps> = ({
 };
 
 export default NoteModal;
-
-/*try {
-  console.log("Trying to save comment...");
-  console.log("Comment:", comment);
-  // trim the comment if it is not empty
-  if (comment.trim() !== "") {
-    // call the firebase firestore
-    const db = FIREBASE_FIRESTORE;
-    // call active user
-    const user = FIREBASE_AUTH.currentUser;
-    // check if user is logged in
-    if (!user) {
-      throw new Error("User not authenticated");
-    }
-
-    // reference to the user project
-    const projectRef = doc(db, "Projects", projectId);
-    console.log("Project reference:", projectRef);
-
-    // build the undercollcetion "notes"
-    const notesCollection = collection(projectRef, "Notes");
-
-    // set the comment to "notes" collection
-    const newNoteRef = await addDoc(notesCollection, {
-      comment: comment,
-      createdAt: serverTimestamp(),
-      projectId: projectId,
-    });
-    console.log("New note reference:", newNoteRef); // Hier wird die gesamte Referenz geloggt
-    console.log("New note ID:", newNoteRef.id); // Hier wird nur die ID geloggt
-    console.log("Comment saved");
-    setComment("");
-  } else {
-    console.log("Comment is empty");
-  }
-} catch (error) {
-  console.error("Saving comment failed", error);
-}*/
