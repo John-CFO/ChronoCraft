@@ -40,23 +40,29 @@ type EarningsCalculatorRouteProp = RouteProp<RootStackParamList, "Details">;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const EarningsCalculatorCard = () => {
+  // navigation
   const route = useRoute<EarningsCalculatorRouteProp>();
   const navigation = useNavigation();
+
+  // route params
   const { projectId } = route.params;
   // console.log("route.params:", route.params);
 
   // console.log("EarningsCalculatorCard - projectId:", projectId);
 
+  // global state
   const { setHourlyRate, getProjectState } = useStore();
 
+  // local state
   const projectState = getProjectState(projectId) || {
     hourlyRate: 0,
     totalEarnings: 0,
   };
 
+  // initialize local hourly rate to save the state when user navigates away from the screen
   const [rateInput, setRateInput] = useState<string>("");
 
-  // function to set hourly rate from firestore to the UI
+  // function to set hourly rate from firestore to the UI using snapshot
   useEffect(() => {
     const fetchHourlyRate = async () => {
       if (projectId && rateInput === "") {
@@ -74,14 +80,13 @@ const EarningsCalculatorCard = () => {
             const data = docSnap.data();
             const fetchedRate = data.hourlyRate || 0;
 
-            console.log("fetchHourlyRate - fetchedRate:", fetchedRate);
+            // console.log("fetchHourlyRate - fetchedRate:", fetchedRate);
           }
         } catch (error) {
           console.error("Error fetching hourly rate:", error);
         }
       }
     };
-
     fetchHourlyRate();
   }, [projectId]);
 
@@ -90,15 +95,13 @@ const EarningsCalculatorCard = () => {
     const resetRateInput = () => {
       setRateInput(""); // Clear input field when screen is re-entered
     };
-
     const unsubscribe = navigation.addListener("focus", resetRateInput);
-
     return () => {
       unsubscribe();
     };
   }, [navigation]);
 
-  // Funktion zum Umgang mit der Eingabeänderung
+  // function to set RateInput value as text
   const handleRateChange = (text: string) => {
     setRateInput(text);
   };
@@ -108,29 +111,31 @@ const EarningsCalculatorCard = () => {
     const rate = parseFloat(rateInput);
     if (!isNaN(rate)) {
       try {
-        console.log(
+        /* console.log(
           "Saving hourly rate in Firestore with projectId:",
           projectId
-        );
+        );*/
         await updateProjectData(projectId, {
           hourlyRate: rate,
         });
         setHourlyRate(projectId, rate);
 
-        setRateInput(""); // Eingabefeld leeren
+        setRateInput(""); // clean input field
       } catch (error) {
         console.error("Fehler beim Speichern des Stundenlohns: ", error);
       }
+      // alert to inform user what he has to do first before pressed the save button
     } else {
-      Alert.alert("Error", "Please enter a valid number.");
+      Alert.alert("Sorry", "Please enter a hourly rate first.");
     }
   };
 
   return (
     <View>
+      {/* Earnings Calculator Card */}
       <View
         style={{
-          height: 405,
+          height: 420,
           marginBottom: 20,
           backgroundColor: "#191919",
           borderWidth: 1,
@@ -140,6 +145,7 @@ const EarningsCalculatorCard = () => {
           alignItems: "center",
         }}
       >
+        {/* title */}
         <Text
           style={{
             fontFamily: "MPLUSLatin_Bold",
@@ -151,7 +157,7 @@ const EarningsCalculatorCard = () => {
         >
           Earnings Calculator
         </Text>
-
+        {/* Total Earnings viewport */}
         <View
           style={{
             width: "80%",
@@ -169,9 +175,11 @@ const EarningsCalculatorCard = () => {
               textAlign: "center",
             }}
           >
-            ${Number(projectState.totalEarnings || 0).toFixed(2)}
+            ${Number(projectState.totalEarnings || 0).toFixed(2)}{" "}
+            {/* toFixed(2) rounds to 2 decimal places */}
           </Text>
         </View>
+        {/* Hourly Rate TextInput field*/}
         <View
           style={{
             marginTop: 30,
@@ -205,6 +213,7 @@ const EarningsCalculatorCard = () => {
               }}
             />
           </View>
+          {/* Save button */}
           <TouchableOpacity
             onPress={handleSave}
             style={{
@@ -213,7 +222,7 @@ const EarningsCalculatorCard = () => {
               overflow: "hidden",
               borderWidth: 3,
               borderColor: "white",
-              marginBottom: 30,
+              marginBottom: 20,
             }}
           >
             <LinearGradient
@@ -237,24 +246,42 @@ const EarningsCalculatorCard = () => {
               </Text>
             </LinearGradient>
           </TouchableOpacity>
-
+          {/* Hourly Rate info container */}
           <View
             style={{
               width: "100%",
-              height: 30,
+              height: 50,
               alignItems: "flex-start",
-              justifyContent: "flex-end",
+              justifyContent: "center",
+              paddingLeft: 10,
+              borderRadius: 10,
+              //shadow options for android
+              shadowColor: "#ffffff",
+              elevation: 5,
+              //shadow options for ios
+              shadowOffset: { width: 2, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 3,
+              backgroundColor: "#191919",
             }}
           >
             <Text
               style={{
-                fontFamily: "MPLUSLatin_Bold",
-                fontSize: 16,
+                fontSize: 30,
+                fontWeight: "bold",
                 color: "white",
                 marginBottom: 5,
               }}
             >
-              <Text style={{ color: "grey" }}>Your Hourly Rate: </Text>
+              <Text
+                style={{
+                  color: "grey",
+                  fontSize: 16,
+                  fontFamily: "MPLUSLatin_Bold",
+                }}
+              >
+                Your Hourly Rate:{" "}
+              </Text>
               {projectState?.hourlyRate}
             </Text>
           </View>
