@@ -31,11 +31,6 @@ type RootStackParamList = {
   Details: { projectId: string };
 };
 
-/*interface ProjectTrackingStatus {
-  isTracking: boolean;
-  trackingProjectName: string;
-} */
-
 type TimeTrackerRouteProp = RouteProp<RootStackParamList, "Details">;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -44,17 +39,18 @@ const TimeTrackerCard = () => {
   const route = useRoute<TimeTrackerRouteProp>();
   const { projectId } = route.params;
 
+  // global state
   const {
     startTimer,
-    pauseTimer,
+    // pauseTimer,
     stopTimer,
-    // resetTimer,
     updateTimer,
     setTotalEarnings,
     getProjectState,
     resetAll,
   } = useStore();
 
+  // local state
   const projectState = getProjectState(projectId) || {
     timer: 0,
     isTracking: false,
@@ -66,8 +62,10 @@ const TimeTrackerCard = () => {
     totalEarnings: 0,
   };
 
+  // initialize local timer with project state
   const [localTimer, setLocalTimer] = useState(projectState.timer);
 
+  // useEffect to update the timer and calculate the total earnings in the TimeTrackerCard
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (projectState.isTracking) {
@@ -87,6 +85,7 @@ const TimeTrackerCard = () => {
     return () => clearInterval(interval);
   }, [projectState.isTracking, projectState.hourlyRate]);
 
+  // functions to start, pause, stop and reset the timer
   const handleStart = async () => {
     startTimer(projectId);
     await updateProjectData(projectId, {
@@ -125,9 +124,10 @@ const TimeTrackerCard = () => {
     setLocalTimer(0);
   };
 
+  // function to format and round the time in the TimeTrackerCard
   function formatTime(timeInSeconds: number): string {
     if (timeInSeconds === undefined || isNaN(timeInSeconds)) {
-      return "00:00:00"; // Fallback-Wert
+      return "00:00:00"; // Fallback-Value
     }
     const roundedTime = Math.round(timeInSeconds);
 
@@ -139,9 +139,10 @@ const TimeTrackerCard = () => {
 
   return (
     <View>
+      {/* Time Tracker Card */}
       <View
         style={{
-          height: 580,
+          height: 600,
           marginBottom: 20,
           backgroundColor: "#191919",
           borderWidth: 1,
@@ -171,6 +172,7 @@ const TimeTrackerCard = () => {
             borderColor: "aqua",
           }}
         >
+          {/* Timer */}
           <Text
             style={{
               fontWeight: "bold",
@@ -183,6 +185,8 @@ const TimeTrackerCard = () => {
             {formatTime(localTimer)}
           </Text>
         </View>
+
+        {/* Start, Pause, Stop Buttons */}
         <View
           style={{
             flexDirection: "row",
@@ -215,6 +219,7 @@ const TimeTrackerCard = () => {
             alignItems: "center",
           }}
         >
+          {/* Reset Button */}
           <TouchableOpacity
             onPress={handleReset}
             style={{
@@ -249,15 +254,28 @@ const TimeTrackerCard = () => {
             </LinearGradient>
           </TouchableOpacity>
         </View>
-
+        {/* info container */}
         <View
           style={{
             width: "100%",
-            height: 150,
+            height: 165,
+            marginBottom: 20,
+            padding: 5,
+            paddingLeft: 15,
+            borderRadius: 10,
+            backgroundColor: "#191919",
             alignItems: "flex-start",
-            justifyContent: "flex-end",
+            justifyContent: "flex-start",
+            //shadow options for android
+            shadowColor: "#ffffff",
+            elevation: 5,
+            //shadow options for ios
+            shadowOffset: { width: 2, height: 2 },
+            shadowOpacity: 0.3,
+            shadowRadius: 3,
           }}
         >
+          {/*last session info*/}
           <Text
             style={{
               fontFamily: "MPLUSLatin_Bold",
@@ -272,6 +290,7 @@ const TimeTrackerCard = () => {
               ? new Date(projectState.endTime).toLocaleString()
               : "N/A"}
           </Text>
+          {/*last tracking info*/}
           <Text
             style={{
               fontFamily: "MPLUSLatin_Bold",
@@ -285,6 +304,7 @@ const TimeTrackerCard = () => {
               ? new Date(projectState.lastStartTime).toLocaleString()
               : "N/A"}
           </Text>
+          {/*original tracking info*/}
           <Text
             style={{
               fontFamily: "MPLUSLatin_Bold",
