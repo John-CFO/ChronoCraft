@@ -24,6 +24,7 @@ import React, { useState, useEffect, ReactNode, useRef } from "react";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import Modal from "react-native-modal";
+import { Alert } from "react-native";
 import {
   collection,
   DocumentData,
@@ -130,6 +131,11 @@ const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
 
   // function to add projects
   const handleAddProject = async () => {
+    // check if project name is empty
+    if (!newProjectName.trim()) {
+      Alert.alert("Sorry", "Add a project title first to continue.");
+      return;
+    }
     try {
       const user = FIREBASE_AUTH.currentUser;
       if (user) {
