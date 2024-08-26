@@ -1,6 +1,6 @@
 //////////////////////////////////// Note Modal Component //////////////////////////////
 
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import React, { useState, useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -60,6 +60,15 @@ const NoteModal: React.FC<NoteModalProps> = ({
 
   // function to handle comment submission
   const handleSubmitComment = async (projectId: string, comment: string) => {
+    // alert to inform user what he has to do first before pressed the send button
+    if (!comment.trim()) {
+      Alert.alert(
+        "Sorry",
+        "Please write a comment first before pressing send."
+      );
+      return;
+    }
+
     // console.log("Submitting comment with projectId:", projectId);
     try {
       if (!projectId) {
