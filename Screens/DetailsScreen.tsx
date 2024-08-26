@@ -1,5 +1,8 @@
 ///////////////////////////////////// DetailsScreen Component////////////////////////////////////////////
 
+// This component shows the project details in the DetailsScreen.
+// It includes the project details card, time tracker card, earnings calculator card success chart and the project notes.
+
 import {
   View,
   Text,
@@ -11,7 +14,6 @@ import {
   FlatList,
 } from "react-native";
 import React, { useEffect, useState, useRef } from "react";
-import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import {
   getDoc,
   updateDoc,
@@ -29,6 +31,7 @@ import { Color } from "react-native-alert-notification/lib/typescript/service";
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 
+import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import DetailsProjectCard from "../components/DetailsProjectCard";
 import TimeTrackerCard from "../components/TimeTrackerCard";
 import EarningsCalculatorCard from "../components/EarningsCalculatorCard";

@@ -1,10 +1,15 @@
+///////////////////////////////////DigitalDate Component//////////////////////////////////
+
 import { View, Text } from "react-native";
 import React, { useState, useEffect } from "react";
 import dayjs from "dayjs";
 
+//////////////////////////////////////////////////////////////////////////////////////////
 const DigitalDate = () => {
+  // current date state with dayjs
   const [currentDate, setCurrentDate] = useState(dayjs());
 
+  // function to update current date every minute
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentDate(dayjs());

@@ -1,18 +1,22 @@
+/////////////////////////////////////DigitalClock Component////////////////////////////////////////
+
 import { View, Text } from "react-native";
 import React, { useState, useEffect } from "react";
 import dayjs from "dayjs";
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
 const DigitalClock = () => {
-  //set current time state
+  // set current time state with dayjs
   const [currentTime, setCurrentTime] = useState(dayjs());
 
-  //handle the interval change every 1 sec.
+  // function to handle the interval change every 1 sec.
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(dayjs());
     }, 1000);
 
-    //clear the interval
+    // clear the interval
     return () => clearInterval(interval);
   }, []);
 
@@ -23,8 +27,6 @@ const DigitalClock = () => {
         alignItems: "center",
         width: 220,
         height: 80,
-        // backgroundColor: "black",
-        // borderWidth: 6,
         borderRadius: 14,
         borderColor: "aqua",
       }}

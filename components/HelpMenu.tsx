@@ -70,6 +70,7 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
             paddingTop: 5,
           }}
         >
+          {/* close button */}
           <TouchableOpacity onPress={closeMenu}>
             <MaterialCommunityIcons
               name="close-circle"
@@ -88,7 +89,7 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
             paddingHorizontal: 5,
           }}
         >
-          {/*-- header text --*/}
+          {/* header text */}
           <Text
             style={{
               paddingBottom: 5,
@@ -99,7 +100,7 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
           >
             Help
           </Text>
-          {/*-- info text --*/}
+          {/* info text */}
           <Text
             style={{
               textAlign: "center",
@@ -113,7 +114,7 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
           </Text>
         </View>
 
-        {/*-- social buttons --*/}
+        {/* social buttons */}
         <View
           style={{
             flexDirection: "row",
@@ -133,7 +134,7 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
         </View>
 
         <View style={{ width: 240, paddingTop: 50, alignItems: "center" }}>
-          {/*-- thanks text --*/}
+          {/* thanks text */}
           <Text
             style={{
               textAlign: "center",

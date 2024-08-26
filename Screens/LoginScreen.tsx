@@ -1,5 +1,9 @@
 ///////////////////////////login screen with firebase registry/////////////////////////////////
 
+// This screen shows the login screen with firebase registry.
+// The authentication is handled by firebase auth.
+// The user can login with email and password or registry with email and password.
+
 import {
   View,
   TextInput,

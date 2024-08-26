@@ -26,6 +26,7 @@ import { number } from "yup";
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useStore } from "./TimeTrackingState";
 import { updateProjectData } from "../components/FirestoreService";
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 type RootStackParamList = {
   Details: { projectId: string };

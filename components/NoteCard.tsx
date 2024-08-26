@@ -7,6 +7,7 @@ import React from "react";
 import { AntDesign } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { doc, deleteDoc } from "firebase/firestore";
+
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -81,6 +82,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
         >
           added at: {note.createdAt.toLocaleString()}
         </Text>
+        {/*delete button*/}
         <TouchableOpacity onPress={handleDeletComment}>
           <AntDesign name="delete" size={30} color="darkgrey" />
         </TouchableOpacity>

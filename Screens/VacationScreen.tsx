@@ -1,3 +1,5 @@
+///////////////////////////////////////VacationScreen//////////////////////////////////////////////
+
 import { View, Text, FlatList } from "react-native";
 import React, { useEffect, useState } from "react";
 import { TouchableOpacity, TextInput } from "react-native-gesture-handler";
@@ -8,6 +10,8 @@ import CustomCalendar from "../components/CustomCalendar";
 import VacationForm from "../components/VacationForm";
 import VacationList from "../components/VacationList";
 import VacationBookingField from "../components/VacationBookingField";
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
 
 const VacationScreen = () => {
   return (

@@ -1,14 +1,22 @@
+//////////////////////////////DetailsProjectCard Component////////////////////////
+
 import { View, Text } from "react-native";
 import React from "react";
-import DigitalClock from "../components/DigitalClock";
 import { useRoute, RouteProp } from "@react-navigation/native";
+
+import DigitalClock from "../components/DigitalClock";
+
+//////////////////////////////////////////////////////////////////////////////////
 
 type RootStackParamList = {
   Details: { projectName: string };
 };
 
 type DetailsProjectRouteProps = RouteProp<RootStackParamList>;
+
+//////////////////////////////////////////////////////////////////////////////////
 const DetailsProjectCard: React.FC = () => {
+  // route params
   const route = useRoute<DetailsProjectRouteProps>();
   const { projectName } = route.params;
   return (
@@ -22,6 +30,7 @@ const DetailsProjectCard: React.FC = () => {
           backgroundColor: "transparent",
         }}
       >
+        {/* title */}
         <Text
           style={{
             fontFamily: "MPLUSLatin_Bold",
@@ -33,6 +42,7 @@ const DetailsProjectCard: React.FC = () => {
           - Project Details -
         </Text>
       </View>
+      {/* project name */}
       <View
         style={{
           marginBottom: 20,
@@ -56,7 +66,7 @@ const DetailsProjectCard: React.FC = () => {
         >
           {projectName}
         </Text>
-
+        {/* digital clock */}
         <Text
           style={{
             fontFamily: "MPLUSLatin_ExtraLight",

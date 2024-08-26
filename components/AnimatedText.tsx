@@ -1,3 +1,5 @@
+//////////////////////////AnimatedText Component////////////////////
+
 // In this component would be rendered the typed text animation wich is visible in the LoginScreen.
 // The animation shows 3 relevant properties from the application.
 

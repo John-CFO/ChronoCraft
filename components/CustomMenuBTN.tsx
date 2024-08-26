@@ -1,3 +1,5 @@
+/////////////////////////////CustomMenuBTN Component////////////////////////////////////
+
 import React from "react";
 import { useNavigation } from "@react-navigation/native";
 import { DrawerActions } from "@react-navigation/native";
@@ -18,8 +20,10 @@ type CustomMenuBTNProps = {
 ////////////////////////////////////////////////////////////////////////////////////////
 
 const CustomMenuBTN: React.FC<CustomMenuBTNProps> = () => {
+  // initialize navigation
   const navigation = useNavigation<DrawerNavigationProp<RootStackParamList>>();
 
+  // function to open drawer
   const openDrawer = () => {
     navigation.dispatch(DrawerActions.openDrawer);
   };

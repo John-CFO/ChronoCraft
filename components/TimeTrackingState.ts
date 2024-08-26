@@ -7,9 +7,9 @@
 
 import { create } from "zustand";
 import { Alert } from "react-native";
-
 import { updateProjectData } from "../components/FirestoreService";
 import { getDoc, doc, updateDoc, onSnapshot } from "firebase/firestore";
+
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 ///////////////////////////////////////////////////////////////////////////////////////////
 

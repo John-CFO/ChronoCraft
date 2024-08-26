@@ -1,3 +1,5 @@
+/////////////////////////////////////////VacationList Component////////////////////////////////////////
+
 import { View, Text, FlatList } from "react-native";
 import React, { useEffect, useState } from "react";
 //import { firebase } from "@react-native-firebase/firestore";
@@ -5,6 +7,8 @@ import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { TouchableOpacity, TextInput } from "react-native-gesture-handler";
 import { LinearGradient } from "expo-linear-gradient";
 import { collection, getDocs } from "firebase/firestore";
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const VacationList = () => {
   //set state for vacations
@@ -47,6 +51,7 @@ const VacationList = () => {
   };
 
   return (
+    //vacation list container
     <View style={{ backgroundColor: "black" }}>
       <View
         style={{
@@ -66,6 +71,7 @@ const VacationList = () => {
           alignItems: "center",
         }}
       >
+        {/* title */}
         <Text
           style={{
             fontSize: 22,
@@ -80,6 +86,7 @@ const VacationList = () => {
         style={{ width: 420, justifyContent: "center", alignItems: "center" }}
       >
         {vacations.length > 0 ? (
+          // if something is booked render the list
           <FlatList
             style={{
               width: 380,
@@ -103,6 +110,7 @@ const VacationList = () => {
             )}
           />
         ) : (
+          // if nothing is booked
           <View style={{ width: 330, height: 50, alignItems: "center" }}>
             <Text
               style={{

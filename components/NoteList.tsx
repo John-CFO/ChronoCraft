@@ -1,4 +1,4 @@
-////////////////////////////Note List Component////////////////////////////////
+////////////////////////////Note List Component///////////////////////////////////////////////
 
 import React, { useState, useEffect } from "react";
 import { ScrollView, View, Text, ActivityIndicator } from "react-native";
@@ -7,14 +7,14 @@ import { collection, query, getDocs, DocumentData } from "firebase/firestore";
 import NoteCard from "./NoteCard";
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 
-///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
 interface Note {
   id: string;
   comment: string;
   createdAt: Date;
 }
 
-///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////
 const NoteList: React.FC<{ projectId: string }> = ({ projectId }) => {
   // state to manage the  useEffect to show the notes
   const [notes, setNotes] = useState<Note[]>([]);
@@ -89,6 +89,7 @@ const NoteList: React.FC<{ projectId: string }> = ({ projectId }) => {
             flexGrow: 0,
           }}
         >
+          {/* Title */}
           <Text
             style={{
               fontFamily: "MPLUSLatin_Bold",
@@ -109,6 +110,7 @@ const NoteList: React.FC<{ projectId: string }> = ({ projectId }) => {
               />
             ))
           ) : (
+            // if there is no note
             <Text
               style={{
                 textAlign: "center",

@@ -1,6 +1,10 @@
+//////////////////////////////////////VacationBookingField Component////////////////////////////////
+
 import { View, Text, TouchableOpacity } from "react-native";
 import React from "react";
 import { LinearGradient } from "expo-linear-gradient";
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const VacationBookingField = () => {
   return (
@@ -16,6 +20,7 @@ const VacationBookingField = () => {
         backgroundColor: "black",
       }}
     >
+      {/* reserve button */}
       <TouchableOpacity
         style={{
           height: 45,
@@ -50,6 +55,7 @@ const VacationBookingField = () => {
         </LinearGradient>
       </TouchableOpacity>
 
+      {/* cancel button */}
       <TouchableOpacity
         style={{
           height: 45,

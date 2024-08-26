@@ -3,7 +3,6 @@
 import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import React, { useState, useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
-import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import {
   doc,
   getDoc,
@@ -11,6 +10,8 @@ import {
   serverTimestamp,
   collection,
 } from "firebase/firestore";
+
+import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
