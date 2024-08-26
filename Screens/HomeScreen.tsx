@@ -178,42 +178,62 @@ const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
 
   // function to delete projects
   const handleDeleteProject = async (projectId: string) => {
-    try {
-      // part to delete project
-      const db = FIREBASE_FIRESTORE;
-      const projectDocRef = doc(
-        db,
-        "Services",
-        "AczkjyWoOxdPAIRVxjy3",
-        "Projects",
-        projectId
-      );
-      await deleteDoc(projectDocRef);
-
-      setProjects((prevProjects) =>
-        prevProjects.filter((project) => project.id !== projectId)
-      );
-
-      // part to delete project notes
-      const noteCollection = collection(
-        db,
-        "Services",
-        "AczkjyWoOxdPAIRVxjy3",
-        "Projects",
-        projectId,
-        "Notes"
-      );
-      const notesSnapshot = await getDocs(noteCollection);
-      const deleteNotesPromises = notesSnapshot.docs.map(async (doc) => {
-        await deleteDoc(doc.ref);
-      });
-      await Promise.all(deleteNotesPromises);
-
-      // console.log("Project deleted ID:", projectId);
-      setRefresh(!refresh);
-    } catch (error) {
-      console.error("Delete project failed", error);
-    }
+    // alert to inform user what he has to do first before pressed the delete button
+    Alert.alert(
+      "Attention!",
+      "Do your really want to delete the project?",
+      [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Project deletion canceled"),
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          onPress: async () => {
+            try {
+              // part to delete project in firestore
+              const db = FIREBASE_FIRESTORE;
+              const projectDocRef = doc(
+                db,
+                "Services",
+                "AczkjyWoOxdPAIRVxjy3",
+                "Projects",
+                projectId
+              );
+              await deleteDoc(projectDocRef);
+              // part to filter out the deleted project
+              setProjects((prevProjects) =>
+                prevProjects.filter((project) => project.id !== projectId)
+              );
+              // part to delete project notes
+              const noteCollection = collection(
+                db,
+                "Services",
+                "AczkjyWoOxdPAIRVxjy3",
+                "Projects",
+                projectId,
+                "Notes"
+              );
+              // snapshot to delete notes
+              const notesSnapshot = await getDocs(noteCollection);
+              const deleteNotesPromises = notesSnapshot.docs.map(
+                async (doc) => {
+                  await deleteDoc(doc.ref);
+                }
+              );
+              await Promise.all(deleteNotesPromises);
+              // console.log("Project deleted ID:", projectId);
+              setRefresh(!refresh);
+            } catch (error) {
+              console.error("Delete project failed", error);
+            }
+          },
+          style: "destructive",
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
   // function to navigate to the details screen if user pressed an a listed project
