@@ -16,6 +16,7 @@ import {
 import React, { useEffect, useState, useRef } from "react";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import * as Animatable from "react-native-animatable";
 import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -43,12 +44,13 @@ const TimeTrackerCard = () => {
   // global state
   const {
     startTimer,
-    // pauseTimer,
     stopTimer,
     updateTimer,
     setTotalEarnings,
     getProjectState,
     resetAll,
+    saveStateToStorage,
+    restoreStateFromStorage,
   } = useStore();
 
   // local state
@@ -62,6 +64,42 @@ const TimeTrackerCard = () => {
     hourlyRate: 0,
     totalEarnings: 0,
   };
+
+  // local app state to manage the background task with AppState
+  const [appState, setAppState] = useState(AppState.currentState);
+
+  // function to save the state to storage if user mins the app
+  useEffect(() => {
+    const subscription = AppState.addEventListener(
+      "change",
+      async (nextAppState) => {
+        if (
+          appState.match(/inactive|background/) &&
+          nextAppState === "active"
+        ) {
+          const lastTime = await AsyncStorage.getItem("lastActiveTime");
+          if (lastTime) {
+            const elapsedTimeSinceInactive =
+              (new Date().getTime() - new Date(lastTime).getTime()) / 1000;
+            setLocalTimer((prev) => prev + elapsedTimeSinceInactive);
+            updateTimer(projectId, localTimer + elapsedTimeSinceInactive);
+          }
+          await restoreStateFromStorage();
+        } else if (nextAppState.match(/inactive|background/)) {
+          await AsyncStorage.setItem(
+            "lastActiveTime",
+            new Date().toISOString()
+          );
+          await saveStateToStorage();
+        }
+        setAppState(nextAppState);
+      }
+    );
+
+    return () => {
+      subscription.remove();
+    };
+  }, [appState]);
 
   // initialize local timer with project state
   const [localTimer, setLocalTimer] = useState(projectState.timer);
@@ -203,7 +241,9 @@ const TimeTrackerCard = () => {
             <FontAwesome6 name="pause" size={65} color="lightgrey" />
           </TouchableOpacity>
           <TouchableOpacity onPress={handleStart}>
-            <FontAwesome5 name="play" size={85} color="lightgrey" />
+            <Animatable.View animation="pulse" iterationCount="infinite">
+              <FontAwesome5 name="play" size={85} color="lightgrey" />
+            </Animatable.View>
           </TouchableOpacity>
           <TouchableOpacity onPress={handleStop}>
             <FontAwesome5 name="stop" size={52} color="lightgrey" />
