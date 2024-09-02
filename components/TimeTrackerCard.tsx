@@ -49,8 +49,6 @@ const TimeTrackerCard = () => {
     setTotalEarnings,
     getProjectState,
     resetAll,
-    saveStateToStorage,
-    restoreStateFromStorage,
   } = useStore();
 
   // local state
@@ -64,42 +62,6 @@ const TimeTrackerCard = () => {
     hourlyRate: 0,
     totalEarnings: 0,
   };
-
-  // local app state to manage the background task with AppState
-  const [appState, setAppState] = useState(AppState.currentState);
-
-  // function to save the state to storage if user mins the app
-  useEffect(() => {
-    const subscription = AppState.addEventListener(
-      "change",
-      async (nextAppState) => {
-        if (
-          appState.match(/inactive|background/) &&
-          nextAppState === "active"
-        ) {
-          const lastTime = await AsyncStorage.getItem("lastActiveTime");
-          if (lastTime) {
-            const elapsedTimeSinceInactive =
-              (new Date().getTime() - new Date(lastTime).getTime()) / 1000;
-            setLocalTimer((prev) => prev + elapsedTimeSinceInactive);
-            updateTimer(projectId, localTimer + elapsedTimeSinceInactive);
-          }
-          await restoreStateFromStorage();
-        } else if (nextAppState.match(/inactive|background/)) {
-          await AsyncStorage.setItem(
-            "lastActiveTime",
-            new Date().toISOString()
-          );
-          await saveStateToStorage();
-        }
-        setAppState(nextAppState);
-      }
-    );
-
-    return () => {
-      subscription.remove();
-    };
-  }, [appState]);
 
   // initialize local timer with project state
   const [localTimer, setLocalTimer] = useState(projectState.timer);
