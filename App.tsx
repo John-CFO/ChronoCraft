@@ -1,6 +1,6 @@
 /////////////////////app navigator and stack navigator///////////////////////
 
-import { Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View, Alert } from "react-native";
 import React, { useEffect, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "react-native";
@@ -37,6 +37,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 //import FAQBottomSheet from "./components/FAQBottomSheet";
 import CustomMenuBTN from "./components/CustomMenuBTN";
 import HelpMenu from "./components/HelpMenu";
+import { useStore } from "./components/TimeTrackingState";
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -265,9 +266,24 @@ const App = () => {
                     headerRight: () => (
                       <HeaderHelpComponent navigation={navigation} />
                     ),
+                    // Back button includes the if statement to check if the project is still running
                     headerLeft: () => (
                       <TouchableOpacity
-                        onPress={() => navigation.goBack()}
+                        onPress={async () => {
+                          const projectId = useStore.getState().getProjectId();
+                          const isTracking = await useStore
+                            .getState()
+                            .getProjectTrackingState(projectId);
+
+                          if (isTracking) {
+                            Alert.alert(
+                              "Project is still running.",
+                              " You can't leave the app. Please stop the project first."
+                            );
+                          } else {
+                            navigation.goBack();
+                          }
+                        }}
                         style={{ marginLeft: 20 }}
                       >
                         <AntDesign name="doubleleft" size={28} color="white" />
