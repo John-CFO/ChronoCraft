@@ -28,6 +28,8 @@ interface ProjectState {
 }
 
 interface TimeTrackingState {
+  getProjectTrackingState(projectId: string | null): unknown;
+  getProjectId: () => string | null;
   projects: { [key: string]: ProjectState };
   currentProjectId: string | null;
   setProjectId: (projectId: string) => void;
@@ -93,6 +95,10 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
     set(() => ({
       currentProjectId: projectId,
     }));
+  },
+
+  getProjectId: () => {
+    return get().currentProjectId;
   },
 
   // function to get the project state
@@ -274,6 +280,34 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
         },
       },
     }));
+  },
+
+  getProjectTrackingState: async (projectId: string) => {
+    if (!projectId) {
+      return false;
+    }
+
+    try {
+      const docRef = doc(
+        FIREBASE_FIRESTORE,
+        "Services",
+        "AczkjyWoOxdPAIRVxjy3",
+        "Projects",
+        projectId
+      );
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const projectData = docSnap.data();
+        return projectData.isTracking || false;
+      } else {
+        console.error("Error fetching project data:", docSnap);
+        return false;
+      }
+    } catch (error) {
+      console.error("Error fetching project data:", error);
+      return false;
+    }
   },
 
   // statefunction to reset all properties of a project
