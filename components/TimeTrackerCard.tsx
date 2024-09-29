@@ -49,6 +49,12 @@ const TimeTrackerCard = () => {
     setTotalEarnings,
     getProjectState,
     resetAll,
+
+    // localTimer,
+    // setLocalTimer,
+    appState,
+    setAppState,
+    setIsInitialized,
   } = useStore();
 
   // local state
@@ -66,6 +72,65 @@ const TimeTrackerCard = () => {
   // initialize local timer with project state
   const [localTimer, setLocalTimer] = useState(projectState.timer);
 
+  // function to handle app state changes if app is in background or foreground
+  useEffect(() => {
+    const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+      if (
+        appState.match(/(inactive|background)/) &&
+        nextAppState === "active" &&
+        projectState.isTracking
+      ) {
+        const lastTime = await AsyncStorage.getItem(
+          `lastActiveTime_${projectId}`
+        );
+        if (lastTime) {
+          const elapsedTime =
+            (new Date().getTime() - new Date(lastTime).getTime()) / 1000;
+
+          setLocalTimer((prevTimer: number) => {
+            const newTimer = prevTimer + elapsedTime;
+            updateTimer(projectId, newTimer); // Timer in der Datenbank aktualisieren
+            setTotalEarnings(
+              projectId,
+              (newTimer / 3600) * projectState.hourlyRate
+            );
+            return newTimer;
+          });
+        }
+        setIsInitialized(true);
+      }
+
+      if (
+        nextAppState.match(/inactive|background/) &&
+        projectState.isTracking
+      ) {
+        await AsyncStorage.setItem(
+          `lastActiveTime_${projectId}`,
+          new Date().toISOString()
+        );
+        setIsInitialized(false);
+      }
+
+      setAppState(nextAppState);
+    };
+
+    const subscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange
+    );
+    return () => subscription.remove();
+  }, [
+    appState,
+    projectId,
+    projectState.isTracking,
+    updateTimer,
+    setTotalEarnings,
+    //
+    setIsInitialized,
+    setLocalTimer,
+  ]);
+
+  /*
   // useEffect to update the timer and calculate the total earnings in the TimeTrackerCard
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -84,7 +149,46 @@ const TimeTrackerCard = () => {
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [projectState.isTracking, projectState.hourlyRate]);
+  }, [projectState.isTracking, projectState.hourlyRate]); */
+
+  // funtion to render the UI based on the project state
+  useEffect(() => {
+    console.log("useEffect triggered - isTracking:", projectState.isTracking);
+
+    if (!projectState.isTracking) {
+      console.log("Clearing interval because tracking is false...");
+      return; // break out of useEffect if tracking is false
+    }
+
+    console.log("Starting interval...");
+    const interval = setInterval(() => {
+      console.log("Interval running...");
+      setLocalTimer((prevTimer: number) => {
+        const newTimer = prevTimer + 1;
+        updateTimer(projectId, newTimer);
+
+        // calculate the final earnings
+        const earnings = ((newTimer / 3600) * projectState.hourlyRate).toFixed(
+          2
+        );
+        setTotalEarnings(projectId, parseFloat(earnings));
+
+        return newTimer;
+      });
+    }, 1000);
+
+    return () => {
+      console.log("Clearing interval...");
+      clearInterval(interval); // Cleanup des Intervalls
+    };
+  }, [
+    projectState.isTracking,
+    projectState.hourlyRate,
+    projectId,
+    setLocalTimer,
+    updateTimer,
+    setTotalEarnings,
+  ]);
 
   // functions to start, pause, stop and reset the timer
   const handleStart = async () => {
@@ -93,8 +197,10 @@ const TimeTrackerCard = () => {
       startTime: new Date(),
       isTracking: true,
     });
+    console.log("Starting timer:");
   };
 
+  // function to pause the timer
   const handlePause = async () => {
     stopTimer(projectId);
     await updateProjectData(projectId, {
@@ -104,6 +210,7 @@ const TimeTrackerCard = () => {
     console.log("Timer pausiert.");
   };
 
+  // function to stop the timer and calculate the earnings
   const handleStop = async () => {
     stopTimer(projectId);
     const earnings = parseFloat(
@@ -122,7 +229,7 @@ const TimeTrackerCard = () => {
   const handleReset = async () => {
     await resetAll(projectId);
 
-    setLocalTimer(0);
+    setLocalTimer(() => 0);
   };
 
   // function to format and round the time in the TimeTrackerCard
