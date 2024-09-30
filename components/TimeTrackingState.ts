@@ -11,6 +11,7 @@ import { updateProjectData } from "../components/FirestoreService";
 import { getDoc, doc, updateDoc, onSnapshot } from "firebase/firestore";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
+import useEffect from "react";
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 interface ProjectState {
@@ -28,35 +29,32 @@ interface ProjectState {
 }
 
 interface TimeTrackingState {
-  getProjectTrackingState(projectId: string | null): unknown;
-  getProjectId: () => string | null;
   projects: { [key: string]: ProjectState };
   currentProjectId: string | null;
+  rateInput: string;
+  appState: string;
+  isInitialized: boolean;
+
   setProjectId: (projectId: string) => void;
   startTimer: (projectId: string) => void;
   stopTimer: (projectId: string) => void;
   pauseTimer: (projectId: string) => void;
-  //resetTimer: (projectId: string) => void;
   updateTimer: (projectId: string, time: number) => void;
   setHourlyRate: (projectId: string, rate: number) => void;
   setTotalEarnings: (projectId: string, earnings: number) => void;
   resetAll: (projectId: string) => void;
   getProjectState: (projectId: string) => ProjectState | undefined;
-
-  //state test
-  //localTimer: number;
-  rateInput: string;
-  appState: string;
-  isInitialized: boolean;
-  //setLocalTimer: (update: (prevTimer: number) => number) => void;
   setRateInput: (rate: string) => void;
   setAppState: (state: string) => void;
   setIsInitialized: (value: boolean) => void;
+  getProjectTrackingState(projectId: string | null): unknown;
+  getProjectId: () => string | null;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 export const useStore = create<TimeTrackingState>((set, get) => ({
+  // projects state
   projects: {},
   currentProjectId: null,
 
@@ -97,6 +95,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
     }));
   },
 
+  // function to get the current project id
   getProjectId: () => {
     return get().currentProjectId;
   },
@@ -125,7 +124,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
     // add the lastStartTime to the project if it is not set the first time
     const updatedLastStartTime = project.timer > 0 ? new Date() : null;
 
-    // Update Firestore mit den neuen Werten
+    // update the project data in Firestore
     await updateProjectData(projectId, {
       startTime: new Date(),
       originalStartTime: updatedOriginalStartTime,
@@ -133,7 +132,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
       isTracking: true,
     });
 
-    // Aktualisiere den Zustand des Projekts im State
+    // update the UI state with the new values
     set((state) => ({
       projects: {
         ...state.projects,

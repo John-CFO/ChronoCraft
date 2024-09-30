@@ -17,7 +17,7 @@ import React, { useEffect, useState, useRef } from "react";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import * as Animatable from "react-native-animatable";
-import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
+import { doc, setDoc, updateDoc, getDoc, onSnapshot } from "firebase/firestore";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -41,24 +41,8 @@ const TimeTrackerCard = () => {
   const route = useRoute<TimeTrackerRouteProp>();
   const { projectId } = route.params;
 
-  // global state
-  const {
-    startTimer,
-    stopTimer,
-    updateTimer,
-    setTotalEarnings,
-    getProjectState,
-    resetAll,
-
-    // localTimer,
-    // setLocalTimer,
-    appState,
-    setAppState,
-    setIsInitialized,
-  } = useStore();
-
-  // local state
-  const projectState = getProjectState(projectId) || {
+  // project state(getProjectState is used to get the project UI state if app is started)
+  const projectState = useStore.getState().getProjectState(projectId) || {
     timer: 0,
     isTracking: false,
     lastStartTime: null,
@@ -68,6 +52,33 @@ const TimeTrackerCard = () => {
     hourlyRate: 0,
     totalEarnings: 0,
   };
+
+  // global state
+  const {
+    startTimer,
+    stopTimer,
+    updateTimer,
+    setTotalEarnings,
+    getProjectState,
+    resetAll,
+    appState,
+    setAppState,
+    setIsInitialized,
+
+    //isTracking,
+  } = useStore();
+
+  // local state
+  /* const projectState = getProjectState(projectId) || {
+    timer: 0,
+    isTracking: false,
+    lastStartTime: null,
+    originalStartTime: null,
+    pauseTime: null,
+    endTime: null,
+    hourlyRate: 0,
+    totalEarnings: 0,
+  }; */
 
   // initialize local timer with project state
   const [localTimer, setLocalTimer] = useState(projectState.timer);
@@ -395,7 +406,7 @@ const TimeTrackerCard = () => {
             }}
           >
             <Text style={{ color: "grey" }}>Last Session:</Text>
-            {" \n"}
+            {"\n"}
             {projectState.endTime
               ? new Date(projectState.endTime).toLocaleString()
               : "N/A"}
@@ -409,7 +420,8 @@ const TimeTrackerCard = () => {
               marginBottom: 5,
             }}
           >
-            <Text style={{ color: "grey" }}>Last Tracking Started:</Text> {"\n"}
+            <Text style={{ color: "grey" }}>Last Tracking Started:</Text>
+            {"\n"}
             {projectState.lastStartTime
               ? new Date(projectState.lastStartTime).toLocaleString()
               : "N/A"}
