@@ -4,19 +4,12 @@
 // the user can set the hourly rate and the component will calculate the earnings based on the time tracked by the time tracker card
 // it used ProjectContext.tsx to get the project id to save the background task and let the Tracker work in the background
 
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  AppState,
-  AppStateStatus,
-} from "react-native";
-import React, { useEffect, useState, useRef } from "react";
+import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import React, { useEffect, useState } from "react";
 import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import { Alert } from "react-native";
 import { number } from "yup";
 
@@ -29,17 +22,20 @@ type RootStackParamList = {
   Details: { projectId: string };
 };
 
-/*
-interface ProjectTrackingStatus {
-  isTracking: boolean;
-  trackingProjectName: string;
-} */
-
 type EarningsCalculatorRouteProp = RouteProp<RootStackParamList, "Details">;
+export type EarningsCalculatorCardProp = RouteProp<
+  RootStackParamList,
+  "Details"
+>;
+
+interface EarningsCalculatorCardProps {
+  route: EarningsCalculatorRouteProp;
+  projectId: string;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const EarningsCalculatorCard = () => {
+const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
   // navigation
   const route = useRoute<EarningsCalculatorRouteProp>();
   const navigation = useNavigation();
@@ -61,8 +57,11 @@ const EarningsCalculatorCard = () => {
 
   // initialize local hourly rate to save the state when user navigates away from the screen
   const [rateInput, setRateInput] = useState<string>("");
+  const [totalEarnings, setTotalEarnings] = useState<number>(
+    projectState.totalEarnings
+  );
 
-  // function to set hourly rate from firestore to the UI using snapshot
+  // function to show hourly rate with snapshot in the UI
   useEffect(() => {
     const fetchHourlyRate = async () => {
       if (projectId && rateInput === "") {
@@ -88,6 +87,54 @@ const EarningsCalculatorCard = () => {
       }
     };
     fetchHourlyRate();
+  }, [projectId]);
+
+  // function to fetch data from firestore if user navigate to details screen
+  const fetchEarningsData = async (projectId: string) => {
+    if (projectId && rateInput === "") {
+      try {
+        // Reference to the document in Firestore
+        const docRef = doc(
+          FIREBASE_FIRESTORE,
+          "Services",
+          "AczkjyWoOxdPAIRVxjy3",
+          "Projects",
+          projectId
+        );
+
+        // Get document snapshot
+        const docSnap = await getDoc(docRef);
+
+        // If document exists, retrieve the data
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+
+          // Extract hourly rate and total earnings
+          const fetchedRate = data?.hourlyRate || 0;
+          const fetchedEarnings = data?.totalEarnings || 0;
+
+          // Update Zustand global state
+          setHourlyRate(projectId, fetchedRate);
+          setTotalEarnings(fetchedEarnings); // Update local state
+
+          console.log("Earnings data fetched successfully:", {
+            hourlyRate: fetchedRate,
+            totalEarnings: fetchedEarnings,
+          });
+        } else {
+          console.log("No document found for the provided projectId.");
+        }
+      } catch (error) {
+        console.error("Error fetching earnings data from Firestore:", error);
+      }
+    }
+  };
+
+  // Fetch earnings data when the component is mounted
+  useEffect(() => {
+    if (projectId) {
+      fetchEarningsData(projectId);
+    }
   }, [projectId]);
 
   // function to set the hourlyRate value in the textInput to empty if user navigates away from the screen
@@ -175,7 +222,8 @@ const EarningsCalculatorCard = () => {
               textAlign: "center",
             }}
           >
-            ${Number(projectState.totalEarnings || 0).toFixed(2)}{" "}
+            {/*${Number(projectState.totalEarnings || 0).toFixed(2)}*/}$
+            {(totalEarnings || 0).toFixed(2)}
             {/* toFixed(2) rounds to 2 decimal places */}
           </Text>
         </View>
