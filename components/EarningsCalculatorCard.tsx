@@ -47,7 +47,13 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
   // console.log("EarningsCalculatorCard - projectId:", projectId);
 
   // global state
-  const { setHourlyRate, getProjectState } = useStore();
+  const {
+    setHourlyRate,
+    getProjectState,
+    calculateEarnings,
+    isTracking,
+    currentProjectId,
+  } = useStore();
 
   // local state
   const projectState = getProjectState(projectId) || {
@@ -60,6 +66,28 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
   const [totalEarnings, setTotalEarnings] = useState<number>(
     projectState.totalEarnings
   );
+
+  // function to calculate lively earnings
+  // Sync totalEarnings with global state
+  useEffect(() => {
+    if (isTracking) {
+      const intervalId = setInterval(() => {
+        calculateEarnings(currentProjectId as string);
+      }, 1000);
+
+      return () => clearInterval(intervalId); // Cleanup when effect ends
+    }
+  }, [isTracking, currentProjectId]);
+
+  // Add another useEffect to synchronize the local totalEarnings with the global one
+  useEffect(() => {
+    if (currentProjectId) {
+      const projectState = getProjectState(currentProjectId);
+      if (projectState) {
+        setTotalEarnings(projectState.totalEarnings);
+      }
+    }
+  }, [currentProjectId, getProjectState]);
 
   // function to show hourly rate with snapshot in the UI
   useEffect(() => {
@@ -222,9 +250,9 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
               textAlign: "center",
             }}
           >
-            {/*${Number(projectState.totalEarnings || 0).toFixed(2)}*/}$
-            {(totalEarnings || 0).toFixed(2)}
-            {/* toFixed(2) rounds to 2 decimal places */}
+            {/*the Number wrapper converts the totalEarnings into a Number to format it into a string with toFixed(2). 
+            this is important to display the totalEarnings in the correct format to lively tracking the earnings*/}
+            ${Number(projectState.totalEarnings || 0).toFixed(2)}
           </Text>
         </View>
         {/* Hourly Rate TextInput field*/}

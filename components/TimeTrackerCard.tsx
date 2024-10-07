@@ -225,42 +225,44 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
     setLocalTimer,
   ]);
 
-  // function to render the UI based on the project state and calculated timer and earnings
+  // function to render the UI based on the project state and calculated timer and earnings livelyly
   useEffect(() => {
-    if (!projectState.isTracking || !projectState.startTime) {
-      return;
+    let interval: NodeJS.Timeout;
+
+    // check if tracking is active
+    if (projectState.isTracking) {
+      // console.log("Project ID:", projectId);
+
+      // start interval to update the timer
+      interval = setInterval(() => {
+        setLocalTimer((prevTimer: number) => {
+          const newTimer = prevTimer + 1;
+          // console.log("New Timer:", newTimer);
+
+          // update global timer
+          updateTimer(projectId, newTimer);
+
+          // calculate earnings based on elapsed time and hourly rate
+          const earnings = (
+            (newTimer / 3600) *
+            projectState.hourlyRate
+          ).toFixed(2);
+          // console.log("Earnings:", earnings);
+
+          // update the earnings in the global state
+          setTotalEarnings(projectId, parseFloat(earnings));
+
+          return newTimer;
+        });
+      }, 1000); // run every second
     }
 
-    // start interval to update the timer
-    const interval = setInterval(() => {
-      setLocalTimer((prevTimer: number) => {
-        const newTimer = prevTimer + 1;
-
-        // calculate the newTimer with the elapsed time since the last startTime
-        updateTimer(projectId, newTimer);
-        const earnings = ((newTimer / 3600) * projectState.hourlyRate).toFixed(
-          2
-        );
-        setTotalEarnings(projectId, parseFloat(earnings));
-        /*
-        // Berechnung der Einnahmen
-        const earnings = (newTimer / 3600) * projectState.hourlyRate; // Berechnung in Stunden
-        const roundedEarnings = Math.round(earnings * 100) / 100; // Rundung auf 2 Dezimalstellen
-
-        // Aktualisiere den Timer und die Einnahmen im globalen Zustand
-        updateTimer(projectId, newTimer);
-        setTotalEarnings(projectId, roundedEarnings);
-*/
-        return newTimer;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval); // Cleanup
+    // cleanup interval on component unmount or if dependencies change
+    return () => clearInterval(interval);
   }, [
-    projectState.isTracking,
-    projectState.startTime,
-    projectState.hourlyRate,
-    projectId,
+    projectState.isTracking, // trigger effect when tracking starts or stops
+    projectState.hourlyRate, // trigger effect if the hourly rate changes
+    projectId, // track for the specific project
   ]);
 
   // functions to start, pause, stop and reset the timer
@@ -270,7 +272,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
       startTime: new Date(),
       isTracking: true,
     });
-    console.log("Starting timer:");
+    // console.log("Starting timer:");
   };
 
   // function to pause the timer
@@ -281,14 +283,15 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
       isTracking: false,
       pauseTime: new Date(),
     });
-    console.log("Timer pausiert.");
+    // console.log("Timer pausiert.");
   };
 
   const handleStop = async () => {
     // Stop the timer and ensure it's fully completed
     stopTimer(projectId);
-    //test
     const finalElapsedTime = localTimer;
+
+    // calculate earnings
     const earnings = parseFloat(
       ((finalElapsedTime / 3600) * projectState.hourlyRate).toFixed(2)
     );
@@ -320,13 +323,8 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
   // function to reset the timer
   const handleReset = async () => {
-    await resetAll(projectId);
+    resetAll(projectId);
     setLocalTimer(0);
-    // setEndTime(undefined);
-    // setLastStartTime(undefined);
-    // setOriginalStartTime(undefined);
-
-    //setLocalTimer(() => 0);
   };
 
   // function to format and round the time in the TimeTrackerCard
@@ -493,6 +491,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
           >
             <Text style={{ color: "grey" }}>Last Session:</Text>
             {"\n"}
+            {/*to prevent konflicts with Date types and timestamps it´s important to use not both*/}
             {endTime instanceof Date ? endTime.toLocaleString() : "N/A"}
           </Text>
           {/*last tracking info*/}
