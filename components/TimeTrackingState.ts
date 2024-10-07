@@ -38,7 +38,7 @@ interface TimeTrackingState {
   appState: string;
   isInitialized: boolean;
   isTracking: boolean;
-
+  calculateEarnings: (projectId: string | number) => void;
   setProjectId: (projectId: string) => void;
   startTimer: (projectId: string) => void;
   stopTimer: (projectId: string) => void;
@@ -55,8 +55,6 @@ interface TimeTrackingState {
   getProjectId: () => string | null;
   setProjectData: (projectId: string, projectData: ProjectState) => void;
   setProjectTime: (field: keyof ProjectState, value: any) => void;
-  //test
-
   setLastStartTime: (projectId: string, time: Date | null) => void; // Anpassung hier
   setOriginalStartTime: (projectId: string, time: Date | null) => void;
 }
@@ -148,7 +146,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
     })),
 
   // function to calculate the total earnings
-  calculateEarnings: (projectId: string | number) => {
+  /*  calculateEarnings: (projectId: string | number) => {
     const project = get().projects[projectId];
     if (project && project.startTime) {
       const elapsedTime =
@@ -164,6 +162,33 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
           },
         },
       }));
+    }
+  }, */
+
+  calculateEarnings: (projectId: string | number) => {
+    const project = get().projects[projectId];
+    if (project && project.startTime && project.hourlyRate > 0) {
+      const currentTime = new Date().getTime();
+      const startTime = project.startTime.getTime();
+      const elapsedTime = (currentTime - startTime) / 1000; // in seconds
+      const totalTime = project.timer + elapsedTime; // total time includes previous timer value
+
+      // Calculate earnings based on total time and hourly rate
+      const earnings = (totalTime / 3600) * project.hourlyRate;
+
+      set((state) => ({
+        projects: {
+          ...state.projects,
+          [projectId]: {
+            ...project,
+            totalEarnings: earnings,
+          },
+        },
+      }));
+    } else {
+      console.warn(
+        "Cannot calculate earnings: either project not found or hourly rate is 0"
+      );
     }
   },
 
