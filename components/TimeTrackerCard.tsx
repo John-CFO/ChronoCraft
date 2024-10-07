@@ -13,19 +13,20 @@ import {
   AppState,
   AppStateStatus,
 } from "react-native";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import * as Animatable from "react-native-animatable";
-import { doc, setDoc, updateDoc, getDoc, onSnapshot } from "firebase/firestore";
-import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
+import { doc, getDoc } from "firebase/firestore";
+import { useRoute, RouteProp } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 import { number } from "yup";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
-import { useStore } from "./TimeTrackingState";
+import { useStore, ProjectState } from "./TimeTrackingState";
+
 import { updateProjectData } from "../components/FirestoreService";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -35,11 +36,38 @@ type RootStackParamList = {
 
 type TimeTrackerRouteProp = RouteProp<RootStackParamList, "Details">;
 
+interface Project {
+  id: string;
+  timer: number;
+  isTracking: boolean;
+  endTime: Date | null;
+  totalEarnings: number;
+  name: string;
+  hourlyRate: number;
+  lastStartTime: Date | null;
+  originalStartTime: Date | null;
+}
+interface State {
+  projects: Record<string, Project>;
+}
+
+interface TimeTrackingCardsProps {
+  projectId: string;
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const TimeTrackerCard = () => {
+const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   const route = useRoute<TimeTrackerRouteProp>();
   const { projectId } = route.params;
+
+  // states to fetch data from firestore
+  const { lastStartTime, endTime, originalStartTime } = useStore((state) => ({
+    lastStartTime: state.projects[projectId]?.lastStartTime,
+    endTime: state.projects[projectId]?.endTime,
+    timer: state.projects[projectId]?.timer,
+    totalEarnings: state.projects[projectId]?.totalEarnings,
+    originalStartTime: state.projects[projectId]?.originalStartTime,
+  }));
 
   // project state(getProjectState is used to get the project UI state if app is started)
   const projectState = useStore.getState().getProjectState(projectId) || {
@@ -51,37 +79,91 @@ const TimeTrackerCard = () => {
     endTime: null,
     hourlyRate: 0,
     totalEarnings: 0,
+    startTime: null,
   };
 
   // global state
   const {
+    set,
+    appState,
+    currentProjectId,
     startTimer,
     stopTimer,
     updateTimer,
     setTotalEarnings,
-    getProjectState,
     resetAll,
-    appState,
     setAppState,
     setIsInitialized,
-
-    //isTracking,
+    setProjectData,
   } = useStore();
 
-  // local state
-  /* const projectState = getProjectState(projectId) || {
-    timer: 0,
-    isTracking: false,
-    lastStartTime: null,
-    originalStartTime: null,
-    pauseTime: null,
-    endTime: null,
-    hourlyRate: 0,
-    totalEarnings: 0,
-  }; */
-
   // initialize local timer with project state
-  const [localTimer, setLocalTimer] = useState(projectState.timer);
+  const [localTimer, setLocalTimer] = useState(projectState?.timer || 0);
+
+  // update localTimer when projectState.timer changes
+  useEffect(() => {
+    console.log("projectState.timer:", projectState?.timer);
+    if (
+      projectState?.timer !== undefined &&
+      projectState?.timer !== localTimer
+    ) {
+      setLocalTimer(projectState.timer);
+    }
+  }, [projectState?.timer]);
+
+  // function to fetch project data from firestore when navigate from home screen to details screen
+  useEffect(() => {
+    const fetchProjectData = async () => {
+      if (currentProjectId) {
+        try {
+          const docRef = doc(
+            FIREBASE_FIRESTORE,
+            "Services",
+            "AczkjyWoOxdPAIRVxjy3",
+            "Projects",
+            currentProjectId
+          );
+          const docSnap = await getDoc(docRef);
+
+          if (docSnap.exists()) {
+            const projectData = docSnap.data();
+            // change the type of originalStartTime, endTime, and lastStartTime to Date if it´s necessary
+            const formattedData = {
+              ...projectData,
+              originalStartTime: projectData.originalStartTime
+                ? projectData.originalStartTime.toDate()
+                : null,
+              endTime: projectData.endTime
+                ? projectData.endTime.toDate()
+                : null,
+              lastStartTime: projectData.lastStartTime
+                ? projectData.lastStartTime.toDate()
+                : null,
+            };
+
+            // Set local state with Firestore data
+            /*console.log("Fetched projectData:", projectData);
+            console.log("Original Start Time:", originalStartTime);
+            console.log(
+              "Type of Original Start Time:",
+              typeof originalStartTime
+            ); */
+            // update localTimer with projectData.timer
+            setLocalTimer(projectData.timer);
+
+            // Update Zustand store with project data
+            setProjectData(currentProjectId, formattedData as ProjectState);
+          } else {
+            console.error("No such document!");
+          }
+        } catch (error) {
+          console.error("Error fetching Firestore data:", error);
+        }
+      }
+    };
+
+    fetchProjectData();
+  }, [currentProjectId, setProjectData]);
 
   // function to handle app state changes if app is in background or foreground
   useEffect(() => {
@@ -94,13 +176,15 @@ const TimeTrackerCard = () => {
         const lastTime = await AsyncStorage.getItem(
           `lastActiveTime_${projectId}`
         );
+
+        // calculate the elapsed time since the last time the app was in the background
         if (lastTime) {
           const elapsedTime =
             (new Date().getTime() - new Date(lastTime).getTime()) / 1000;
 
           setLocalTimer((prevTimer: number) => {
             const newTimer = prevTimer + elapsedTime;
-            updateTimer(projectId, newTimer); // Timer in der Datenbank aktualisieren
+            updateTimer(projectId, newTimer); // update the timer in the TimeTrackerCard
             setTotalEarnings(
               projectId,
               (newTimer / 3600) * projectState.hourlyRate
@@ -111,6 +195,7 @@ const TimeTrackerCard = () => {
         setIsInitialized(true);
       }
 
+      // save the last time the app was in the background
       if (
         nextAppState.match(/inactive|background/) &&
         projectState.isTracking
@@ -136,69 +221,48 @@ const TimeTrackerCard = () => {
     projectState.isTracking,
     updateTimer,
     setTotalEarnings,
-    //
     setIsInitialized,
     setLocalTimer,
   ]);
 
-  /*
-  // useEffect to update the timer and calculate the total earnings in the TimeTrackerCard
+  // function to render the UI based on the project state and calculated timer and earnings livelyly
   useEffect(() => {
     let interval: NodeJS.Timeout;
+
+    // check if tracking is active
     if (projectState.isTracking) {
+      // console.log("Project ID:", projectId);
+
+      // start interval to update the timer
       interval = setInterval(() => {
-        setLocalTimer((prevTimer) => {
+        setLocalTimer((prevTimer: number) => {
           const newTimer = prevTimer + 1;
+          // console.log("New Timer:", newTimer);
+
+          // update global timer
           updateTimer(projectId, newTimer);
+
+          // calculate earnings based on elapsed time and hourly rate
           const earnings = (
             (newTimer / 3600) *
             projectState.hourlyRate
-          ).toFixed(2); // .toFixed(2) limited the number of decimal places in max. 2
+          ).toFixed(2);
+          // console.log("Earnings:", earnings);
+
+          // update the earnings in the global state
           setTotalEarnings(projectId, parseFloat(earnings));
+
           return newTimer;
         });
-      }, 1000);
+      }, 1000); // run every second
     }
+
+    // cleanup interval on component unmount or if dependencies change
     return () => clearInterval(interval);
-  }, [projectState.isTracking, projectState.hourlyRate]); */
-
-  // funtion to render the UI based on the project state
-  useEffect(() => {
-    console.log("useEffect triggered - isTracking:", projectState.isTracking);
-
-    if (!projectState.isTracking) {
-      console.log("Clearing interval because tracking is false...");
-      return; // break out of useEffect if tracking is false
-    }
-
-    console.log("Starting interval...");
-    const interval = setInterval(() => {
-      console.log("Interval running...");
-      setLocalTimer((prevTimer: number) => {
-        const newTimer = prevTimer + 1;
-        updateTimer(projectId, newTimer);
-
-        // calculate the final earnings
-        const earnings = ((newTimer / 3600) * projectState.hourlyRate).toFixed(
-          2
-        );
-        setTotalEarnings(projectId, parseFloat(earnings));
-
-        return newTimer;
-      });
-    }, 1000);
-
-    return () => {
-      console.log("Clearing interval...");
-      clearInterval(interval); // Cleanup des Intervalls
-    };
   }, [
-    projectState.isTracking,
-    projectState.hourlyRate,
-    projectId,
-    setLocalTimer,
-    updateTimer,
-    setTotalEarnings,
+    projectState.isTracking, // trigger effect when tracking starts or stops
+    projectState.hourlyRate, // trigger effect if the hourly rate changes
+    projectId, // track for the specific project
   ]);
 
   // functions to start, pause, stop and reset the timer
@@ -208,39 +272,59 @@ const TimeTrackerCard = () => {
       startTime: new Date(),
       isTracking: true,
     });
-    console.log("Starting timer:");
+    // console.log("Starting timer:");
   };
 
   // function to pause the timer
   const handlePause = async () => {
     stopTimer(projectId);
+
     await updateProjectData(projectId, {
       isTracking: false,
       pauseTime: new Date(),
     });
-    console.log("Timer pausiert.");
+    // console.log("Timer pausiert.");
   };
 
-  // function to stop the timer and calculate the earnings
   const handleStop = async () => {
+    // Stop the timer and ensure it's fully completed
     stopTimer(projectId);
-    const earnings = parseFloat(
-      ((localTimer / 3600) * projectState.hourlyRate).toFixed(2)
-    );
-    setTotalEarnings(projectId, earnings);
+    const finalElapsedTime = localTimer;
 
-    await updateProjectData(projectId, {
-      elapsedTime: localTimer,
-      endTime: new Date(),
-      totalEarnings: earnings,
-      isTracking: false,
-    });
+    // calculate earnings
+    const earnings = parseFloat(
+      ((finalElapsedTime / 3600) * projectState.hourlyRate).toFixed(2)
+    );
+
+    // update the project UI state
+    set((state: State) => ({
+      projects: {
+        ...state.projects,
+        [projectId]: {
+          ...state.projects[projectId],
+          endTime: new Date(),
+          isTracking: false,
+        },
+      },
+    }));
+
+    try {
+      // update firestore
+      await updateProjectData(projectId, {
+        timer: finalElapsedTime,
+        totalEarnings: earnings,
+        elapsedTime: finalElapsedTime,
+      });
+      // console.log("StopTimer: Firestore update successful");
+    } catch (error) {
+      console.error("Error updating project data:", error);
+    }
   };
 
+  // function to reset the timer
   const handleReset = async () => {
-    await resetAll(projectId);
-
-    setLocalTimer(() => 0);
+    resetAll(projectId);
+    setLocalTimer(0);
   };
 
   // function to format and round the time in the TimeTrackerCard
@@ -407,9 +491,8 @@ const TimeTrackerCard = () => {
           >
             <Text style={{ color: "grey" }}>Last Session:</Text>
             {"\n"}
-            {projectState.endTime
-              ? new Date(projectState.endTime).toLocaleString()
-              : "N/A"}
+            {/*to prevent konflicts with Date types and timestamps it´s important to use not both*/}
+            {endTime instanceof Date ? endTime.toLocaleString() : "N/A"}
           </Text>
           {/*last tracking info*/}
           <Text
@@ -422,8 +505,8 @@ const TimeTrackerCard = () => {
           >
             <Text style={{ color: "grey" }}>Last Tracking Started:</Text>
             {"\n"}
-            {projectState.lastStartTime
-              ? new Date(projectState.lastStartTime).toLocaleString()
+            {lastStartTime instanceof Date
+              ? lastStartTime.toLocaleString()
               : "N/A"}
           </Text>
           {/*original tracking info*/}
@@ -437,8 +520,10 @@ const TimeTrackerCard = () => {
           >
             <Text style={{ color: "grey" }}>Original Tracking Started:</Text>
             {"\n"}
-            {projectState.originalStartTime
-              ? new Date(projectState.originalStartTime).toLocaleString()
+            {originalStartTime
+              ? originalStartTime instanceof Date
+                ? originalStartTime.toLocaleString()
+                : "N/A"
               : "N/A"}
           </Text>
         </View>

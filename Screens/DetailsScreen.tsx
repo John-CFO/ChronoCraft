@@ -3,53 +3,36 @@
 // This component shows the project details in the DetailsScreen.
 // It includes the project details card, time tracker card, earnings calculator card success chart and the project notes.
 
-import {
-  View,
-  Text,
-  ScrollView,
-  Dimensions,
-  AppState,
-  AppStateStatus,
-  ActivityIndicator,
-  FlatList,
-} from "react-native";
-import React, { useEffect, useState, useRef } from "react";
-import {
-  getDoc,
-  updateDoc,
-  DocumentData,
-  query,
-  getDocs,
-  collection,
-} from "firebase/firestore";
+import { View, ScrollView, ActivityIndicator } from "react-native";
+import React, { useEffect, useState } from "react";
+import { query, getDocs, collection } from "firebase/firestore";
 import { User as User } from "firebase/auth";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { PieChart } from "react-native-chart-kit";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { Color } from "react-native-alert-notification/lib/typescript/service";
 import { LinearGradient } from "expo-linear-gradient";
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import DetailsProjectCard from "../components/DetailsProjectCard";
 import TimeTrackerCard from "../components/TimeTrackerCard";
 import EarningsCalculatorCard from "../components/EarningsCalculatorCard";
-import { fetchProjectData } from "../components/services/ChartDataService";
+
 import { getChartData } from "../components/PieChartProgressUtils";
 import NoteModal from "../components/NoteModal";
 import NoteList from "../components/NoteList";
-import { useStore } from "../components/TimeTrackingState";
-import DigitalClock from "../components/DigitalClock";
-//import { useAppState } from "../AppStateStore";
+import { useStore, ProjectState } from "../components/TimeTrackingState";
+
+import { EarningsCalculatorCardProp } from "../components/EarningsCalculatorCard";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/*interface DetailsScreenProps {
-  route: RouteProp<RootStackParamList, "Details">;
+type DetailsScreenProps = {
   navigation: StackNavigationProp<RootStackParamList, "Details">;
-  projectId: string;
-} */
+  route: RouteProp<RootStackParamList, "Details"> | EarningsCalculatorCardProp;
+};
 
 type DetailsScreenRouteProp = RouteProp<RootStackParamList, "Details">;
 
@@ -66,20 +49,22 @@ interface Note {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const DetailsScreen: React.FC = () => {
+const DetailsScreen: React.FC<DetailsScreenProps> = () => {
+  //const route = useRoute<DetailsScreenRouteProp>();
   const route = useRoute<DetailsScreenRouteProp>();
   const navigation = useNavigation();
   const { projectId = "No ID received" } = route.params || {};
   const { setProjectId } = useStore();
 
   // states to manage the NoteCard Value fetching
-  const [note, setNotes] = useState<Note[]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     setProjectId(projectId);
   }, [projectId, setProjectId]);
 
+  // function to fetch the notes from Firestore with snapshot
   useEffect(() => {
     const fetchNotes = async () => {
       try {
@@ -168,19 +153,22 @@ const DetailsScreen: React.FC = () => {
 
   console.log("Rendering component with chartData:", chartData);
 */
-
+  if (loading) {
+    return <ActivityIndicator size="large" color="#00ff00" />;
+  }
   return (
     <ScrollView style={{ backgroundColor: "black" }}>
       <View style={{ flex: 1, paddingHorizontal: 20, paddingBottom: 20 }}>
         {/* Project-Card */}
         <DetailsProjectCard />
         {/* Time-Tracker */}
-        <TimeTrackerCard />
+        <TimeTrackerCard projectId={projectId} />
         {/* Earn-Calculator-Card */}
-        <EarningsCalculatorCard />
-
+        <EarningsCalculatorCard
+          route={route as EarningsCalculatorCardProp} // route is importent to fetch the earnigs state from firestore when user navigate to details screen
+          projectId={projectId}
+        />
         {/* Success Chart */}
-
         {/* Notes Card */}
         <NoteList projectId={projectId} />
       </View>
