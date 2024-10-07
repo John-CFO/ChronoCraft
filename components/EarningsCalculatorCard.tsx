@@ -145,10 +145,10 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
           setHourlyRate(projectId, fetchedRate);
           setTotalEarnings(fetchedEarnings); // Update local state
 
-          console.log("Earnings data fetched successfully:", {
+          /*console.log("Earnings data fetched successfully:", {
             hourlyRate: fetchedRate,
             totalEarnings: fetchedEarnings,
-          });
+          });*/
         } else {
           console.log("No document found for the provided projectId.");
         }
