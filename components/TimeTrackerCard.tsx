@@ -21,12 +21,10 @@ import { doc, getDoc } from "firebase/firestore";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Alert } from "react-native";
 import { number } from "yup";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useStore, ProjectState } from "./TimeTrackingState";
-
 import { updateProjectData } from "../components/FirestoreService";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -35,21 +33,6 @@ type RootStackParamList = {
 };
 
 type TimeTrackerRouteProp = RouteProp<RootStackParamList, "Details">;
-
-interface Project {
-  id: string;
-  timer: number;
-  isTracking: boolean;
-  endTime: Date | null;
-  totalEarnings: number;
-  name: string;
-  hourlyRate: number;
-  lastStartTime: Date | null;
-  originalStartTime: Date | null;
-}
-interface State {
-  projects: Record<string, Project>;
-}
 
 interface TimeTrackingCardsProps {
   projectId: string;
@@ -84,7 +67,6 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
   // global state
   const {
-    set,
     appState,
     currentProjectId,
     startTimer,
@@ -102,7 +84,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
   // update localTimer when projectState.timer changes
   useEffect(() => {
-    console.log("projectState.timer:", projectState?.timer);
+    //  console.log("projectState.timer:", projectState?.timer);
     if (
       projectState?.timer !== undefined &&
       projectState?.timer !== localTimer
@@ -265,7 +247,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
     projectId, // track for the specific project
   ]);
 
-  // functions to start, pause, stop and reset the timer
+  // functions to start  the timer
   const handleStart = async () => {
     startTimer(projectId);
     await updateProjectData(projectId, {
@@ -286,39 +268,9 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
     // console.log("Timer pausiert.");
   };
 
+  // function to stop the timer
   const handleStop = async () => {
-    // Stop the timer and ensure it's fully completed
     stopTimer(projectId);
-    const finalElapsedTime = localTimer;
-
-    // calculate earnings
-    const earnings = parseFloat(
-      ((finalElapsedTime / 3600) * projectState.hourlyRate).toFixed(2)
-    );
-
-    // update the project UI state
-    set((state: State) => ({
-      projects: {
-        ...state.projects,
-        [projectId]: {
-          ...state.projects[projectId],
-          endTime: new Date(),
-          isTracking: false,
-        },
-      },
-    }));
-
-    try {
-      // update firestore
-      await updateProjectData(projectId, {
-        timer: finalElapsedTime,
-        totalEarnings: earnings,
-        elapsedTime: finalElapsedTime,
-      });
-      // console.log("StopTimer: Firestore update successful");
-    } catch (error) {
-      console.error("Error updating project data:", error);
-    }
   };
 
   // function to reset the timer
