@@ -1,7 +1,7 @@
 ///////////////////////////////////////VacationScreen//////////////////////////////////////////////
 
 import { View, Text, FlatList } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { TouchableOpacity, TextInput } from "react-native-gesture-handler";
 import { LinearGradient } from "expo-linear-gradient";
 import LottieView from "lottie-react-native";
@@ -10,12 +10,37 @@ import CustomCalendar from "../components/CustomCalendar";
 import VacationForm from "../components/VacationForm";
 import VacationList from "../components/VacationList";
 import VacationBookingField from "../components/VacationBookingField";
+import { useIsFocused, useFocusEffect } from "@react-navigation/native";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 const VacationScreen = () => {
+  // states to refresh the FlatList to show the updated data and current month
+  const [refreshKey, setRefreshKey] = useState(0);
+  const isFocused = useIsFocused();
+
+  // states to show the current month
+  const [currentMonth, setCurrentMonth] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+
+  // useFocusEffect to refresh the FlatList to show the updated data
+  useFocusEffect(
+    useCallback(() => {
+      setRefreshKey((prevKey) => prevKey + 1);
+    }, [])
+  );
+
+  useEffect(() => {
+    if (isFocused) {
+      // set the current month when render the screen
+      setCurrentMonth(new Date().toISOString().split("T")[0]);
+    }
+  }, [isFocused]);
+
   return (
     <FlatList
+      key={refreshKey} // key is important to refresh the FlatList
       ListHeaderComponent={
         <>
           <View
@@ -73,7 +98,7 @@ const VacationScreen = () => {
               backgroundColor: "black",
             }}
           >
-            <CustomCalendar />
+            <CustomCalendar currentMonth={currentMonth} />
           </View>
           <View style={{ marginBottom: 30, height: 50 }}>
             <VacationBookingField />

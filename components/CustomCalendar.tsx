@@ -18,9 +18,14 @@ interface MarkedDates {
   };
 }
 
+// interface to show the current month by rendering the VacationScreen
+interface CustomCalendarProps {
+  currentMonth: string;
+}
+
 /////////////////////////////////////////////////////////////////////////////////
 
-const CustomCalendar = () => {
+const CustomCalendar: React.FC<CustomCalendarProps> = ({ currentMonth }) => {
   const [selectedDates, setSelectedDates] = useState<{
     [date: string]: boolean;
   }>({});
@@ -32,12 +37,12 @@ const CustomCalendar = () => {
       const userId = user.uid;
       const bookingsRef = collection(FIREBASE_FIRESTORE, "bookings");
 
-      // Extrahiere die ausgewählten Daten aus dem State
+      // extract the selected dates from the selectedDates object
       const selectedDatesArray = Object.keys(selectedDates).filter(
         (date) => selectedDates[date]
       );
 
-      // Speichere die Daten in Firestore
+      // save the selected dates to the database
       await addDoc(bookingsRef, {
         userId,
         dates: selectedDatesArray,
@@ -56,11 +61,11 @@ const CustomCalendar = () => {
     } = {};
 
     if (start === end) {
-      // Der Benutzer hat nur einen Tag ausgewählt
+      // user has selected a single day
       const dateString = new Date(start).toISOString().split("T")[0];
       markedDates[dateString] = { selected: true };
     } else {
-      // Der Benutzer hat ein Zeitintervall ausgewählt
+      // user has selected multiple days
       let currentDate = new Date(start);
       while (currentDate <= new Date(end)) {
         const dateString = currentDate.toISOString().split("T")[0];
@@ -72,41 +77,18 @@ const CustomCalendar = () => {
     return markedDates;
   };
 
-  const handleDayPress = (day: { dateString: string | number | Date }) => {
-    const { dateString } = day;
-    const startDate = dateString;
-    const endDate = dateString;
-    // Rufe markSelectedDates auf und logge die Ergebnisse
-    const newSelectedDates = markSelectedDates(startDate, endDate);
-
-    console.log("New Selected Dates:", newSelectedDates);
-
-    setSelectedDates((prevDates: {}) => {
-      return {
-        ...prevDates,
-        ...newSelectedDates,
-      };
-    });
-
-    // Vergleiche als JSON-Strings, um eine korrekte Überprüfung durchzuführen
-    {
-      /*if (JSON.stringify(newSelectedDates) !== JSON.stringify(selectedDates)) {
-      console.log("Updating Selected Dates");
-      setSelectedDates(
-        newSelectedDates as unknown as { [date: string]: boolean }
-      );
-    }*/
-    }
-  };
-
   return (
     <View>
       <Calendar
-        current={"2024-02-05"}
-        minDate={"2023-01-01"}
-        maxDate={"2025-12-31"}
-        onDayPress={handleDayPress}
-        markedDates={selectedDates as unknown as MarkedDates}
+        key={currentMonth}
+        current={currentMonth}
+        minDate={"2024-01-01"}
+        maxDate={"2030-12-31"}
+        markedDates={
+          selectedDates as unknown as {
+            [date: string]: { selected: boolean };
+          }
+        }
         style={{
           height: 350,
           marginBottom: 50,

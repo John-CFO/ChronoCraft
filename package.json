@@ -22,7 +22,7 @@
     "@react-navigation/stack": "^6.3.20",
     "animated": "^0.2.2",
     "dayjs": "^1.11.10",
-    "expo": "^51.0.36",
+    "expo": "^51.0.37",
     "expo-background-fetch": "^12.0.1",
     "expo-blur": "^13.0.2",
     "expo-config": "^1.0.0",
