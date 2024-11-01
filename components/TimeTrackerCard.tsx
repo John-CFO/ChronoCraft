@@ -21,7 +21,6 @@ import { doc, getDoc } from "firebase/firestore";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { number } from "yup";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useStore, ProjectState } from "./TimeTrackingState";

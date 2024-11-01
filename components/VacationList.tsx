@@ -52,12 +52,24 @@ const VacationList = () => {
 
   return (
     //vacation list container
-    <View style={{ backgroundColor: "black" }}>
+    <View
+      style={{
+        marginTop: 45,
+        height: "95%",
+        width: "95%",
+        backgroundColor: "#191919",
+        borderWidth: 1,
+        borderColor: "aqua",
+        borderRadius: 8,
+        paddingBottom: 10,
+        alignItems: "center",
+      }}
+    >
       <View
         style={{
           width: 420,
-          height: 80,
-          backgroundColor: "black",
+          height: 50,
+          //backgroundColor: "black",
           justifyContent: "center",
           alignItems: "center",
         }}
@@ -111,7 +123,13 @@ const VacationList = () => {
           />
         ) : (
           // if nothing is booked
-          <View style={{ width: 330, height: 50, alignItems: "center" }}>
+          <View
+            style={{
+              width: 330,
+              height: 50,
+              alignItems: "center",
+            }}
+          >
             <Text
               style={{
                 textAlign: "center",
