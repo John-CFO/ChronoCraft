@@ -9,12 +9,13 @@ import LottieView from "lottie-react-native";
 import CustomCalendar from "../components/CustomCalendar";
 import VacationForm from "../components/VacationForm";
 import VacationList from "../components/VacationList";
-import VacationBookingField from "../components/VacationBookingField";
 import { useIsFocused, useFocusEffect } from "@react-navigation/native";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 const VacationScreen = () => {
+  // state to handle the marked dates when select them
+  const [markedDates, setMarkedDates] = useState<{ [key: string]: any }>({});
   // states to refresh the FlatList to show the updated data and current month
   const [refreshKey, setRefreshKey] = useState(0);
   const isFocused = useIsFocused();
@@ -88,9 +89,7 @@ const VacationScreen = () => {
               </Text>
             </View>
           </View>
-          <View>
-            <VacationForm />
-          </View>
+
           <View
             style={{
               width: 420,
@@ -98,10 +97,14 @@ const VacationScreen = () => {
               backgroundColor: "black",
             }}
           >
-            <CustomCalendar currentMonth={currentMonth} />
+            <CustomCalendar
+              currentMonth={currentMonth}
+              markedDates={markedDates}
+            />
           </View>
-          <View style={{ marginBottom: 30, height: 50 }}>
-            <VacationBookingField />
+
+          <View>
+            <VacationForm />
           </View>
         </>
       }
@@ -110,8 +113,9 @@ const VacationScreen = () => {
           <View
             style={{
               flex: 1,
-              height: "100%",
-              width: 420,
+              height: "10%",
+              width: "100%",
+              backgroundColor: "black",
               justifyContent: "center",
               alignItems: "center",
             }}

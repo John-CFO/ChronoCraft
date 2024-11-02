@@ -38,7 +38,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { AntDesign } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
-import { number, string } from "yup";
+
 import dayjs from "dayjs";
 
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
