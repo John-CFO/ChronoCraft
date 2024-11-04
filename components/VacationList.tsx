@@ -6,70 +6,78 @@ import React, { useEffect, useState } from "react";
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { TouchableOpacity, TextInput } from "react-native-gesture-handler";
 import { LinearGradient } from "expo-linear-gradient";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, onSnapshot } from "firebase/firestore";
+import { error } from "firebase-functions/logger";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const VacationList = () => {
   //set state for vacations
   const [vacations, setVacations] = useState<
-    { id: string; name: string; status: string }[]
+    { id: string; markedDates: string[] }[]
   >([]);
 
-  //effect hook to get the data from firestore with fetch
+  // effect hook to get the data from firestore with snapshot
   useEffect(() => {
-    const fetchData = async () => {
-      //const db = firebase.firestore();
-      const db = FIREBASE_FIRESTORE;
-      const vacationsCollection = collection(db, "vacations");
-      const vacationsSnapshot = await getDocs(vacationsCollection);
+    const vacationsCollection = collection(
+      FIREBASE_FIRESTORE,
+      "Services",
+      "AczkjyWoOxdPAIRVxjy3",
+      "Vacations"
+    );
 
-      const vacationsData = vacationsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        name: doc.data().name,
-        status: doc.data().status,
-      }));
+    const unsubscribe = onSnapshot(vacationsCollection, (snapshot) => {
+      const vacationsData = snapshot.docs.map((doc) => {
+        const data = doc.data();
+
+        // extract the key from the markedDates object to get the array of dates
+        const markedDatesArray = data.markedDates
+          ? Object.keys(data.markedDates)
+          : [];
+
+        // console.log("Converted markedDates:", markedDatesArray);
+
+        return {
+          id: doc.id,
+          markedDates: markedDatesArray,
+        };
+      });
+
+      // sort the vacations by the first marked date
+      vacationsData.sort((a, b) => {
+        if (a.markedDates.length === 0 || b.markedDates.length === 0) return 0;
+        return (
+          new Date(a.markedDates[0]).getTime() -
+          new Date(b.markedDates[0]).getTime()
+        );
+      });
+
+      // console.log("Vacations Data:", vacationsData);
       setVacations(vacationsData);
-    };
-    fetchData();
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  //switch instruction to show the current state of bookings
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "received":
-        return "Request received";
-      case "failed":
-        return "Request failed";
-      case "approved":
-        return "Request approved";
-      case "pending":
-        return "Request pending";
-      default:
-        return "Unknown Status";
-    }
-  };
-
   return (
-    //vacation list container
+    // vacation list container
     <View
       style={{
-        marginTop: 45,
-        height: "95%",
         width: "95%",
-        backgroundColor: "#191919",
+        minHeight: 200,
+        marginTop: 20,
+        marginBottom: 20,
+        padding: 5,
+        borderRadius: 10,
         borderWidth: 1,
         borderColor: "aqua",
-        borderRadius: 8,
-        paddingBottom: 10,
-        alignItems: "center",
+        backgroundColor: "#191919",
       }}
     >
       <View
         style={{
-          width: 420,
-          height: 50,
-          //backgroundColor: "black",
+          width: "auto",
+          height: 10,
           justifyContent: "center",
           alignItems: "center",
         }}
@@ -77,7 +85,7 @@ const VacationList = () => {
 
       <View
         style={{
-          width: 420,
+          width: "auto",
           height: 80,
           justifyContent: "center",
           alignItems: "center",
@@ -86,8 +94,8 @@ const VacationList = () => {
         {/* title */}
         <Text
           style={{
-            fontSize: 22,
-            fontFamily: "MPLUSLatin_Regular",
+            fontSize: 25,
+            fontFamily: "MPLUSLatin_Bold",
             color: "white",
           }}
         >
@@ -95,31 +103,85 @@ const VacationList = () => {
         </Text>
       </View>
       <View
-        style={{ width: 420, justifyContent: "center", alignItems: "center" }}
+        style={{
+          width: "auto",
+          marginTop: 20,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
       >
         {vacations.length > 0 ? (
           // if something is booked render the list
           <FlatList
-            style={{
-              width: 380,
-              borderRadius: 8,
-              borderColor: "aqua",
-              borderWidth: 2,
-            }}
+            contentContainerStyle={{ paddingBottom: 20 }}
             data={vacations}
             keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <Text
-                key={item.id}
-                style={{
-                  fontFamily: "MPLUSLatin_Regular",
-                  color: "white",
-                  fontSize: 16,
-                }}
-              >
-                {item.name} - Status: {getStatusText(item.status)}
-              </Text>
-            )}
+            renderItem={({ item }) => {
+              const sortedDates = item.markedDates
+                .map((date) => {
+                  const [year, month, day] = date.split("-");
+
+                  // parseInt is used to convert the string to a number to sort the dates list
+                  return {
+                    formatted: `${parseInt(day, 10)}.${parseInt(month, 10)}.${year}`,
+                    timestamp: new Date(
+                      parseInt(year, 10),
+                      parseInt(month, 10) - 1, // -1 because months are zero-based
+                      parseInt(day, 10)
+                    ),
+                  };
+                })
+                .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime()); // sort by timestamp
+
+              // extract the first and last date to show a range in the UI
+              const displayRange =
+                sortedDates.length > 1
+                  ? `${sortedDates[0].formatted} - ${sortedDates[sortedDates.length - 1].formatted}`
+                  : sortedDates[0]?.formatted;
+
+              return (
+                <View
+                  style={{
+                    height: 60,
+                    width: 360,
+                    justifyContent: "center",
+                    paddingLeft: 10,
+                    borderRadius: 10,
+                    backgroundColor: "#191919",
+                    padding: 8,
+                    margin: 10,
+
+                    //shadow options for android
+                    shadowColor: "#ffffff",
+                    elevation: 2,
+                    //shadow options for ios
+                    shadowOffset: { width: 2, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 3,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: "MPLUSLatin_Bold",
+                      fontSize: 16,
+                      color: "white",
+                      marginBottom: 5,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: "grey",
+                        fontFamily: "MPLUSLatin_Bold",
+                        fontSize: 16,
+                      }}
+                    >
+                      Date:
+                    </Text>{" "}
+                    {displayRange || "No marked dates"}
+                  </Text>
+                </View>
+              );
+            }}
           />
         ) : (
           // if nothing is booked
