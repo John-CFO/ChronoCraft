@@ -13,7 +13,7 @@ import { useIsFocused, useFocusEffect } from "@react-navigation/native";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-const VacationScreen = () => {
+function VacationScreen() {
   // state to handle the marked dates when select them
   const [markedDates, setMarkedDates] = useState<{ [key: string]: any }>({});
   // states to refresh the FlatList to show the updated data and current month
@@ -128,6 +128,6 @@ const VacationScreen = () => {
       renderItem={() => null}
     />
   );
-};
+}
 
 export default VacationScreen;
