@@ -25,6 +25,7 @@ interface CustomCalendarProps {
 
 export interface CustomCalendarRef {
   scrollToMonth: (month: string) => void;
+  scrollToToday: () => void;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -33,32 +34,37 @@ const CustomCalendar = forwardRef<CustomCalendarRef, CustomCalendarProps>(
     // initialize the useCalendarStore and setCurrentMonth
     const { markedDates } = useCalendarStore();
 
-    // initialize the earliestMarkedDate to change the currentMonth when user adds a new marked date
-    const earliestMarkedDate = Object.keys(markedDates).sort()[0];
-    // initialize the currentMonth and propagate it to the ref
-    const [currentMonth, setCurrentMonth] = useState<string>(
-      earliestMarkedDate || new Date().toISOString().split("T")[0]
-    );
+    // initialize currentMonth state
+    const [currentMonth, setCurrentMonth] = useState<string>("");
 
-    // method to scroll to a specific month by using the ref
-    useImperativeHandle(ref, () => ({
-      scrollToMonth: (month: string) => {
-        setCurrentMonth(month);
-      },
-    }));
+    // initialize earliestMarkedDate by sorting the markedDates and selecting the first date
+    // this will be used to determine the currentMonth and serve as a reference point
+    // when the user adds a new marked date, ensuring the calendar starts at the earliest marked date
+    const earliestMarkedDate = Object.keys(markedDates).sort()[0];
 
     // set the currentMonth when the earliestMarkedDate changes
     useEffect(() => {
-      if (earliestMarkedDate) {
-        setCurrentMonth(earliestMarkedDate);
-      }
+      setCurrentMonth(
+        earliestMarkedDate || new Date().toISOString().split("T")[0]
+      );
     }, [earliestMarkedDate]);
 
+    // method to scroll by using the ref
+    useImperativeHandle(ref, () => ({
+      // method to scroll to the first day in the markedDates object
+      scrollToMonth: (month: string) => {
+        setCurrentMonth(month); // set the month where the user wants to scroll
+      },
+      // method to scroll to the current month when user pushes the save or cancel button
+      scrollToToday: () => {
+        const today = new Date().toISOString().split("T")[0];
+        setCurrentMonth(today); // set the calendar to the current month
+      },
+    }));
     return (
       <View>
         {/* Calendar - style and handle options*/}
         <Calendar
-          //key={Object.keys(markedDates).join(",")}
           key={currentMonth}
           current={currentMonth}
           markedDates={useCalendarStore((state) => state.markedDates)}
