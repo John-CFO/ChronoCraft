@@ -2,12 +2,12 @@
 
 import { View, Text, FlatList } from "react-native";
 import React, { useEffect, useState } from "react";
-//import { firebase } from "@react-native-firebase/firestore";
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
-import { TouchableOpacity, TextInput } from "react-native-gesture-handler";
-import { LinearGradient } from "expo-linear-gradient";
-import { collection, getDocs, onSnapshot } from "firebase/firestore";
-import { error } from "firebase-functions/logger";
+import { TouchableOpacity } from "react-native-gesture-handler";
+import { collection, onSnapshot, doc, deleteDoc } from "firebase/firestore";
+import { AntDesign } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
+import { Alert } from "react-native";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -58,6 +58,39 @@ const VacationList = () => {
 
     return () => unsubscribe();
   }, []);
+
+  // function to delete vacation dates
+  const handleDeleteDate = async (id: string) => {
+    // alert to confirm deletion
+    Alert.alert("Attention!", "Do you really want to delete the vacation?", [
+      {
+        text: "Cancel",
+        onPress: () => console.log("Vacation deletion canceled"),
+        style: "cancel",
+      },
+      {
+        text: "Delete",
+        onPress: async () => {
+          try {
+            const vacationDoc = doc(
+              FIREBASE_FIRESTORE,
+              "Services",
+              "AczkjyWoOxdPAIRVxjy3",
+              "Vacations",
+              id
+            );
+
+            await deleteDoc(vacationDoc);
+
+            // console.log(`Vacation with ID ${id} deleted successfully.`);
+          } catch (error) {
+            console.error("Error deleting vacation:", error);
+          }
+        },
+        style: "destructive", // to visually indicate a destructive action
+      },
+    ]);
+  };
 
   return (
     // vacation list container
@@ -144,13 +177,14 @@ const VacationList = () => {
                   style={{
                     height: 60,
                     width: 360,
-                    justifyContent: "center",
+                    flexDirection: "row",
+                    justifyContent: "space-around",
+                    paddingTop: 15,
                     paddingLeft: 10,
                     borderRadius: 10,
                     backgroundColor: "#191919",
                     padding: 8,
                     margin: 10,
-
                     //shadow options for android
                     shadowColor: "#ffffff",
                     elevation: 2,
@@ -179,6 +213,17 @@ const VacationList = () => {
                     </Text>{" "}
                     {displayRange || "No marked dates"}
                   </Text>
+                  <TouchableOpacity>
+                    <MaterialIcons
+                      name="edit-note"
+                      size={30}
+                      color="darkgrey"
+                    />
+                    {/*vacation delete button */}
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => handleDeleteDate(item.id)}>
+                    <AntDesign name="delete" size={30} color="darkgrey" />
+                  </TouchableOpacity>
                 </View>
               );
             }}
