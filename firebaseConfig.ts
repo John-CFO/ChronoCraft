@@ -9,7 +9,7 @@ import { getFirestore, Firestore } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getAnalytics, isSupported } from "firebase/analytics";
 
-console.log("Firebase API Key:", process.env.REACT_APP_FIREBASE_API_KEY);
+//console.log("Firebase API Key:", process.env.REACT_APP_FIREBASE_API_KEY);
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
