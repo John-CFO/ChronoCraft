@@ -1,57 +1,37 @@
 ///////////////////////////////////////VacationForm Component////////////////////////////////////////
 
-//NOTE - Todo: change TextInpot to TextInput.Mask
-
-import {
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-} from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Text, View, ScrollView, TouchableOpacity, Alert } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FontAwesome } from "@expo/vector-icons";
-import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
-import {
-  doc,
-  setDoc,
-  serverTimestamp,
-  collection,
-  addDoc,
-} from "firebase/firestore";
+import { serverTimestamp, collection, addDoc } from "firebase/firestore";
 
+import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useCalendarStore } from "../components/CalendarState";
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const VacationForm = () => {
+  // initial start and end dates states
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
+  // states to open the date pickers and show the selected dates
+  const [tempStartDate, setTempStartDate] = useState<string | null>(null);
+  const [tempEndDate, setTempEndDate] = useState<string | null>(null);
 
+  // globale CalendarState
   const { markedDates, resetMarkedDates, handleSelect, handleCancel } =
     useCalendarStore();
-
-  // function to handle date selection
-  const handleDateSelection = () => {
-    if (startDate && endDate) {
-      handleSelect(startDate, endDate);
-      setStartDate(""); //clear start date
-      setEndDate(""); //clear end date
-      console.log(
-        "Marked dates in store:",
-        useCalendarStore.getState().markedDates
-      );
-    }
-  };
+  //console.log("Marked dates in store:", markedDates);
 
   // function to save vacation data to Firestore
   const handleSaveVacation = async () => {
     try {
       const user = FIREBASE_AUTH.currentUser;
       if (!user) {
-        console.error("Kein Benutzer angemeldet");
+        console.error("No user logged in");
         return;
       }
 
@@ -81,19 +61,37 @@ const VacationForm = () => {
 
       resetMarkedDates(); // reset marked dates after saving
     } catch (error) {
-      console.error("Fehler beim Speichern des Urlaubs:", error);
+      console.error("Error saving vacation:", error);
     }
   };
 
-  // save function with error handling
+  // save function with error handling for the button
   const handleSave = async () => {
     if (Object.keys(markedDates).length === 0) {
-      console.error("Keine Daten zum Speichern vorhanden");
+      console.error("No data to save in markedDates");
       return;
     }
 
     await handleSaveVacation();
   };
+
+  // hook to render the selected dates and clear the form after selection
+  useEffect(() => {
+    if (startDate && endDate) {
+      handleSelect(startDate, endDate);
+      setStartDate("");
+      setEndDate("");
+    }
+  }, [startDate, endDate]);
+
+  // hook to clear the form after leaving the VacationScreen
+  useEffect(() => {
+    return () => {
+      //console.log("Cleaning up VacationForm state...");
+      setTempStartDate(null);
+      setTempEndDate(null);
+    };
+  }, []);
 
   return (
     <ScrollView>
@@ -108,119 +106,176 @@ const VacationForm = () => {
           height: 80,
         }}
       >
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <View style={{ paddingHorizontal: 10 }}>
-            <MaterialCommunityIcons
-              name="calendar-text"
-              size={40}
-              color="white"
-            />
-          </View>
-
-          {/* Input Field "Start Date" */}
-          <View
-            style={{
-              margin: 5,
-              backgroundColor: "lightgrey",
-              width: 130,
-              height: 50,
-              borderWidth: 2,
-              borderColor: "white",
-              borderRadius: 8,
-            }}
-          >
-            <TextInput
-              placeholder="Start Date"
-              placeholderTextColor="grey"
-              editable={true}
-              keyboardType="numeric"
-              value={startDate}
-              onChangeText={(text) => setStartDate(text)}
-              style={{
-                width: 250,
-                height: 40,
-                paddingLeft: 10,
-                fontSize: 22,
-              }}
-            />
-          </View>
-
-          <View style={{ paddingHorizontal: 10 }}>
-            <FontAwesome name="arrow-circle-right" size={40} color="white" />
-          </View>
-
-          {/* Input Field "End Date" */}
-          <View
-            style={{
-              margin: 5,
-              backgroundColor: "lightgrey",
-              width: 130,
-              height: 50,
-              borderWidth: 3,
-              borderColor: "white",
-              borderRadius: 8,
-            }}
-          >
-            <TextInput
-              placeholder="End Date"
-              placeholderTextColor="grey"
-              editable={true}
-              keyboardType="numeric"
-              value={endDate}
-              onChangeText={(text) => setEndDate(text)}
-              style={{
-                width: 250,
-                height: 40,
-                paddingLeft: 10,
-                fontSize: 22,
-              }}
-            />
-          </View>
-        </View>
-      </View>
-
-      <View
-        style={{
-          alignItems: "center",
-          backgroundColor: "black",
-          padding: 20,
-        }}
-      >
-        {/* Select Button */}
-        <TouchableOpacity
-          onPress={handleDateSelection}
+        <View
           style={{
-            height: 45,
-            width: 260,
-            borderRadius: 8,
-            borderWidth: 3,
-            borderColor: "white",
-            overflow: "hidden",
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 25,
           }}
         >
-          <LinearGradient
-            colors={["#00FFFF", "#FFFFFF"]}
+          {/*  Start Date and End Date Buttons  */}
+          <TouchableOpacity
+            // validate start date
+            onPress={() => {
+              if (!tempStartDate) {
+                setTempStartDate(new Date().toISOString().split("T")[0]);
+              }
+            }}
             style={{
-              alignItems: "center",
+              margin: 5,
+              backgroundColor: "#191919",
+              width: 180,
+              height: 50,
+              borderWidth: 1,
+              borderColor: "aqua",
+              borderRadius: 8,
               justifyContent: "center",
-              height: 45,
-              width: 260,
+              alignItems: "center",
             }}
           >
-            <Text
+            <View
               style={{
-                color: "grey",
-                fontSize: 18,
-                fontFamily: "MPLUSLatin_Bold",
-                marginBottom: 11,
-                marginRight: 9,
+                flexDirection: "row",
+                position: "relative",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                paddingRight: 20,
+                width: "100%",
               }}
             >
-              Select
-            </Text>
-          </LinearGradient>
-        </TouchableOpacity>
+              <MaterialCommunityIcons
+                name="calendar-text"
+                size={40}
+                color="grey"
+                style={{
+                  position: "absolute",
+                  left: 5,
+                }}
+              />
+
+              <Text
+                style={{
+                  textAlign: "center",
+                  fontSize: 18,
+                  fontWeight: "bold",
+                  color: "white",
+                }}
+              >
+                {startDate || "Start Date"}
+              </Text>
+            </View>
+          </TouchableOpacity>
+
+          {/* End Date Button */}
+          <TouchableOpacity
+            onPress={() => {
+              // condition to prevent selecting an end date before a start date with an alert
+              if (!startDate) {
+                Alert.alert("Sorry", "Please select a start date first.", [
+                  {
+                    text: "OK",
+                  },
+                ]);
+                return;
+              }
+
+              setTempEndDate(new Date().toISOString().split("T")[0]);
+            }}
+            style={{
+              margin: 5,
+              backgroundColor: "#191919",
+              width: 180,
+              height: 50,
+              borderWidth: 1,
+              borderColor: "aqua",
+              borderRadius: 8,
+              justifyContent: "center",
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                position: "relative",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                paddingRight: 20,
+                width: "100%",
+              }}
+            >
+              <FontAwesome
+                name="arrow-circle-right"
+                size={40}
+                color="grey"
+                style={{
+                  position: "absolute",
+                  left: 5,
+                }}
+              />
+
+              <Text
+                style={{
+                  textAlign: "center",
+                  fontSize: 18,
+                  fontWeight: "bold",
+                  color: "white",
+                }}
+              >
+                {endDate || "End Date"}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </View>
       </View>
+      {/* Date Picker Modals */}
+      {tempStartDate !== null && (
+        <DateTimePicker
+          value={tempStartDate ? new Date(tempStartDate) : new Date()}
+          minimumDate={new Date()}
+          mode="date"
+          display="spinner"
+          themeVariant="dark" // IOS only
+          accentColor="aqua" //IOS only
+          textColor="white" //IOS only
+          onChange={(event, selectedDate) => {
+            //console.log("DatePicker event type:", event.type);
+            // condition to delete value if user pressed cancel
+            if (event.type === "dismissed") {
+              setTempStartDate(null);
+              return;
+            }
+            //condition to add the selected date
+            if (selectedDate) {
+              setTempStartDate(null); // delete the temporary display
+              setStartDate(selectedDate.toISOString().split("T")[0]);
+            }
+          }}
+        />
+      )}
+
+      {tempEndDate !== null && (
+        <DateTimePicker
+          value={tempEndDate ? new Date(tempEndDate) : new Date()}
+          minimumDate={new Date()}
+          mode="date"
+          display="spinner"
+          themeVariant="dark" // IOS only
+          accentColor="aqua" //IOS only
+          textColor="white" //IOS only
+          onChange={(event, selectedDate) => {
+            // condition to delete value if user pressed cancel
+            //console.log("DatePicker event type:", event.type);
+            if (event.type === "dismissed") {
+              setTempEndDate(null);
+              return;
+            }
+            //condition to add the selected date
+            if (selectedDate) {
+              setTempEndDate(null); // delete the temporary display
+              setEndDate(selectedDate.toISOString().split("T")[0]);
+            }
+          }}
+        />
+      )}
 
       <View
         style={{

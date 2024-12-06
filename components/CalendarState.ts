@@ -1,124 +1,86 @@
-/////////////////////////////////Calendar State Component//////////////////////////////////
+////////////////////////////////////CalendarState Component////////////////////////////////
 
 import { create } from "zustand";
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
+// interface to handle calendar state and actions
 interface CalendarState {
   markedDates: {
     [key: string]: any;
   };
   setMarkedDates: (newDates: { [key: string]: any }) => void;
   resetMarkedDates: () => void;
-  handleSelect: (startDate: string, endDate: string) => void;
+  handleSelect: (startDate: string, endDate?: string) => void;
   handleCancel: () => void;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////
-// helper function to convert a date string to ISO format
-const convertToISODate = (dateString: string) => {
-  const [day, month, year] = dateString.split(".");
-  return `${year}-${month}-${day}`;
+// types for markedDates styles
+type MarkedDate = {
+  customStyles: {
+    container: {
+      borderWidth: number;
+      borderColor: string;
+      backgroundColor: string;
+    };
+    text: {
+      color: string;
+      fontWeight: string;
+    };
+  };
 };
-// initialize the useCalendarStore
+
+// type for markedDates
+type MarkedDates = {
+  [key: string]: MarkedDate;
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
+// create CalendarStore
 export const useCalendarStore = create<CalendarState>((set) => ({
+  // initial state
   markedDates: {},
 
-  // setter function to set the marked dates
-  setMarkedDates: (newDates) =>
-    set((state) => ({
-      markedDates: { ...state.markedDates, ...newDates },
-    })),
+  // function to update markedDates
+  setMarkedDates: (newDates) => set({ markedDates: newDates }),
+
+  // function to reset markedDates
   resetMarkedDates: () => set(() => ({ markedDates: {} })),
 
-  // function to select the dates and send it to save function and the Custom Calendar component
-  handleSelect: (startDate: string, endDate?: string) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // add time to midnight
-
-    // convert startDate to Date object
-    const formattedStartDate = convertToISODate(startDate);
-    const selectedDate = new Date(formattedStartDate);
-    selectedDate.setHours(0, 0, 0, 0);
-
-    if (selectedDate < today) {
-      alert("Please select a future date.");
+  // function to handle date selection to the CustomCalendar
+  handleSelect: (startDate, endDate) => {
+    if (!startDate || !endDate) {
+      //console.error("start or end date is missing.");
       return;
     }
 
-    if (!startDate) {
-      // console.error("Start date is undefined.");
-      return;
-    }
+    const dates: MarkedDates = {};
+    let currentDate = new Date(startDate);
 
-    if (endDate) {
-      const formattedEndDate = convertToISODate(endDate);
-      const selectedEndDate = new Date(formattedEndDate);
-      selectedEndDate.setHours(0, 0, 0, 0);
+    const end = new Date(endDate);
 
-      // check if the end date is also in the future
-      if (selectedEndDate < today) {
-        alert("Please select a future end date.");
-        return;
-      }
-    }
-
-    // console.log("Start Date:", startDate);
-    // console.log("End Date:", endDate);
-
-    // mark the dates between startDate and endDate
-    const currentDate = new Date(formattedStartDate);
-    let newMarkedDates: { [key: string]: any } = {};
-
-    if (endDate) {
-      const formattedEndDate = convertToISODate(endDate);
-      const lastDate = new Date(formattedEndDate);
-
-      // loop through the dates between startDate and endDate
-      while (currentDate <= lastDate) {
-        const dateString = currentDate.toISOString().split("T")[0];
-
-        if (currentDate >= today) {
-          newMarkedDates[dateString] = {
-            customStyles: {
-              container: {
-                borderWidth: 1,
-                borderColor: "aqua",
-                borderRadius: 50,
-              },
-              text: {
-                color: "white",
-              },
-            },
-          };
-        }
-
-        currentDate.setDate(currentDate.getDate() + 1);
-      }
-    } else {
-      // mark only the start date if no end date is provided
-      const dateString = currentDate.toISOString().split("T")[0];
-      if (currentDate >= today) {
-        newMarkedDates[dateString] = {
-          customStyles: {
-            container: {
-              borderWidth: 1,
-              borderColor: "aqua",
-              borderRadius: 50,
-            },
-            text: {
-              color: "white",
-            },
+    while (currentDate <= end) {
+      const formattedDate = currentDate.toISOString().split("T")[0];
+      dates[formattedDate] = {
+        customStyles: {
+          container: {
+            borderWidth: 1,
+            borderColor: "aqua",
+            backgroundColor: "transparent",
           },
-        };
-      }
+          text: { color: "white", fontWeight: "bold" },
+        },
+      };
+
+      // go to the next day
+      currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    set((state) => ({
-      markedDates: { ...state.markedDates, ...newMarkedDates },
-    }));
+    useCalendarStore.getState().setMarkedDates(dates); // update store
+    //console.log("Neue markierte Daten:", dates);
   },
 
-  // function to cancel the selection
+  // function to cancel date selection
   handleCancel: () => set(() => ({ markedDates: {} })),
 }));

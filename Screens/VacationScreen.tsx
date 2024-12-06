@@ -2,14 +2,12 @@
 
 import { View, Text, FlatList } from "react-native";
 import React, { useEffect, useState, useCallback } from "react";
-import { TouchableOpacity, TextInput } from "react-native-gesture-handler";
-import { LinearGradient } from "expo-linear-gradient";
 import LottieView from "lottie-react-native";
+import { useIsFocused, useFocusEffect } from "@react-navigation/native";
 
 import CustomCalendar from "../components/CustomCalendar";
 import VacationForm from "../components/VacationForm";
 import VacationList from "../components/VacationList";
-import { useIsFocused, useFocusEffect } from "@react-navigation/native";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
