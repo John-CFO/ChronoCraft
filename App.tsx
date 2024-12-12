@@ -33,6 +33,8 @@ import CustomDrawer from "./components/CustomDrawer";
 //import { useNavigation } from "@react-navigation/native";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import "react-native-gesture-handler";
+import "react-native-reanimated";
 
 //import FAQBottomSheet from "./components/FAQBottomSheet";
 import CustomMenuBTN from "./components/CustomMenuBTN";
@@ -257,7 +259,10 @@ const App = () => {
                 {/* Details Screen direkt im Stack Navigator */}
                 <Stack.Screen
                   name="Details"
-                  component={DetailsScreen}
+                  component={DetailsScreen as any}
+                  initialParams={{
+                    projectId: "",
+                  }}
                   // custom header config. for Details Screen
                   options={({ navigation }) => ({
                     headerShown: true,
