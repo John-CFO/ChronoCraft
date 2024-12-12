@@ -9,6 +9,8 @@ import { AntDesign } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Alert } from "react-native";
 
+import VacationRemindModal from "../components/VacationRemindModal";
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const VacationList = () => {
@@ -16,6 +18,9 @@ const VacationList = () => {
   const [vacations, setVacations] = useState<
     { id: string; markedDates: string[] }[]
   >([]);
+
+  // handle reminder modal state
+  const [reminderModalVisible, setReminderModalVisible] = useState(false);
 
   // effect hook to get the data from firestore with snapshot
   useEffect(() => {
@@ -92,6 +97,11 @@ const VacationList = () => {
     ]);
   };
 
+  // function to show the reminder-modal
+  const openReminderModal = () => {
+    setReminderModalVisible(true);
+  };
+
   return (
     // vacation list container
     <View
@@ -135,6 +145,7 @@ const VacationList = () => {
           Booked Vacations
         </Text>
       </View>
+
       <View
         style={{
           width: "auto",
@@ -143,6 +154,10 @@ const VacationList = () => {
           alignItems: "center",
         }}
       >
+        <VacationRemindModal
+          isVisible={reminderModalVisible}
+          onClose={() => setReminderModalVisible(false)}
+        />
         {vacations.length > 0 ? (
           // if something is booked render the list
           <FlatList
@@ -213,7 +228,7 @@ const VacationList = () => {
                     </Text>{" "}
                     {displayRange || "No marked dates"}
                   </Text>
-                  <TouchableOpacity>
+                  <TouchableOpacity onPress={() => openReminderModal()}>
                     <MaterialIcons
                       name="edit-note"
                       size={30}
