@@ -35,6 +35,7 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-gesture-handler";
 import "react-native-reanimated";
+import "text-encoding-polyfill"; //bugfix: for delete project with notes
 
 //import FAQBottomSheet from "./components/FAQBottomSheet";
 import CustomMenuBTN from "./components/CustomMenuBTN";
