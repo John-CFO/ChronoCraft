@@ -38,7 +38,7 @@
     "expo-notifications": "^0.27.8",
     "expo-status-bar": "~1.11.1",
     "expo-task-manager": "~11.7.3",
-    "firebase": "^11.0.2",
+    "firebase": "^11.1.0",
     "firebase-admin": "^12.1.1",
     "firebase-functions": "^5.0.1",
     "install": "^0.13.0",
@@ -59,6 +59,7 @@
     "react-native-svg": "^14.1.0",
     "react-native-type-animation": "^0.3.0",
     "start": "^5.1.0",
+    "text-encoding-polyfill": "^0.6.7",
     "zustand": "^4.5.4"
   },
   "devDependencies": {
