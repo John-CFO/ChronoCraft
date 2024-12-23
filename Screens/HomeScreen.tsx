@@ -107,13 +107,12 @@ const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
         );
 
         const projectsSnapshot = await getDocs(projectsCollection);
-        const projectsData = projectsSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          //name: doc.data().name,
-          //createdAt: doc.data().createdAt,
-          //notes: [], // Hinzufügen einer leeren Notizliste
-        }));
+        const projectsData = projectsSnapshot.docs
+          .filter((doc) => doc.exists())
+          .map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
         setProjects(
           projectsData as {
             createdAt: any;
@@ -181,7 +180,7 @@ const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
     // alert to inform user what he has to do first before pressed the delete button
     Alert.alert(
       "Attention!",
-      "Do your really want to delete the project?",
+      "Do your really want to delete the project? If you delete the project, all notes will be deleted as well.",
       [
         {
           text: "Cancel",
@@ -192,21 +191,8 @@ const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
           text: "Delete",
           onPress: async () => {
             try {
-              // part to delete project in firestore
+              // part to delete project notes in firestore
               const db = FIREBASE_FIRESTORE;
-              const projectDocRef = doc(
-                db,
-                "Services",
-                "AczkjyWoOxdPAIRVxjy3",
-                "Projects",
-                projectId
-              );
-              await deleteDoc(projectDocRef);
-              // part to filter out the deleted project
-              setProjects((prevProjects) =>
-                prevProjects.filter((project) => project.id !== projectId)
-              );
-              // part to delete project notes
               const noteCollection = collection(
                 db,
                 "Services",
@@ -223,6 +209,20 @@ const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
                 }
               );
               await Promise.all(deleteNotesPromises);
+              // part to filter out the deleted project
+              setProjects((prevProjects) =>
+                prevProjects.filter((project) => project.id !== projectId)
+              );
+              // part to delete projects
+              const projectDocRef = doc(
+                db,
+                "Services",
+                "AczkjyWoOxdPAIRVxjy3",
+                "Projects",
+                projectId
+              );
+              await deleteDoc(projectDocRef);
+
               // console.log("Project deleted ID:", projectId);
               setRefresh(!refresh);
             } catch (error) {
