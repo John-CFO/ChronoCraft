@@ -52,9 +52,13 @@ const VacationForm = () => {
         "Vacations"
       );
 
+      // Startdatum aus `markedDates` ableiten
+      const startDate = Object.keys(filteredMarkedDates).sort()[0];
+
       // create new document in `Vacations` collection
       await addDoc(vacationsCollection, {
         uid: user.uid,
+        startDate: startDate,
         markedDates: filteredMarkedDates,
         createdAt: serverTimestamp(),
       });

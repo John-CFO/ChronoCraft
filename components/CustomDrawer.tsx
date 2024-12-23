@@ -92,7 +92,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
 
   // function to close edit profile modal and update user profile
   const closeProfileModal = () => {
-    // console.log("Edit modal closed");
+    //console.log("Edit modal closed");
     setProfileModalVisible(false);
     fetchUserProfile();
   };

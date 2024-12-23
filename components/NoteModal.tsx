@@ -1,5 +1,7 @@
 //////////////////////////////////// Note Modal Component //////////////////////////////
 
+//NOTE: change the modal width to the same like the other modals
+
 import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import React, { useState, useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";

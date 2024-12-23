@@ -24,11 +24,13 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-
       "package": "com.ChronoCraft_Android",
-      "permissions": ["RECEIVE_BOOT_COMPLETED", "WAKE_LOCK"]
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "WAKE_LOCK",
+        "POST_NOTIFICATIONS"
+      ]
     },
-
     "web": {
       "favicon": "./assets/favicon.png"
     },
@@ -45,6 +47,12 @@
           ]
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "481d68c9-3b59-4eac-8ee4-d89d19ea9ea8"
+      }
+    },
+    "owner": "john-cfo"
   }
 }

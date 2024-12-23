@@ -29,19 +29,21 @@ import {
   Toast,
   AlertNotificationRoot,
 } from "react-native-alert-notification";
+import { NotificationManager } from "../components/services/PushNotifications";
 import { LinearGradient } from "expo-linear-gradient";
 import { FontAwesome5 } from "@expo/vector-icons";
 
 import { FIREBASE_APP, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import AppLogo from "../components/AppLogo";
 import AnimatedText from "../components/AnimatedText";
-import { showNotification } from "../components/services/PushNotifications";
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 const LoginScreen: React.FC = () => {
   // declaire the navigation to user get in after logein
   const navigation = useNavigation();
+
+  //const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
 
   // states for registry and login
   const [email, setEmail] = useState("");
@@ -58,6 +60,7 @@ const LoginScreen: React.FC = () => {
     try {
       const response = await signInWithEmailAndPassword(auth, email, password);
       console.log(response);
+
       navigation.navigate("Home" as never);
       console.log("Login successfully");
     } catch (error) {
@@ -84,23 +87,33 @@ const LoginScreen: React.FC = () => {
         password
       );
       console.log("Registration successfully:", response);
+
       await createUserDocument(response.user.uid, { email: email });
 
-      // Welcome notification from expo-push-notifications
-      await showNotification(
-        "Welcome! 🎉 ",
-        "Congratulations. Registration successful!"
+      // Push-Token abrufen
+      const token = await NotificationManager.registerForPushNotifications();
+      if (!token) {
+        console.log("Push token not available.");
+        return;
+      }
+
+      console.log("Expo Push Token:", token);
+
+      // Speichere den Push-Token in der Firebase-Datenbank
+      await NotificationManager.savePushTokenToDatabase(
+        response.user.uid,
+        token
       );
 
-      console.log("Success message should be visible now");
+      // Willkommensbenachrichtigung senden
+      await NotificationManager.sendWelcomeNotification(token);
     } catch (error) {
       console.log("Registration failed:", error);
 
-      // react-native-alert-notification toast
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: "Registration failed",
-        textBody: "choose email and password and then click Register!",
+        textBody: "Choose email and password and then click Register!",
       });
     } finally {
       setLoading(false);
