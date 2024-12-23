@@ -6,8 +6,12 @@ import {
   Auth,
 } from "firebase/auth";
 import { getFirestore, Firestore } from "firebase/firestore";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getAnalytics, isSupported } from "firebase/analytics";
+
+import "firebase/messaging";
+//import { getToken, getMessaging } from "expo-firebase-messaging";
 
 //console.log("Firebase API Key:", process.env.REACT_APP_FIREBASE_API_KEY);
 

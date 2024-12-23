@@ -7,7 +7,7 @@ import { LinearGradient } from "expo-linear-gradient";
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 type CheckmarkReminderProps = {
   selectedOption: number | null;
-  onSelect: (index: number) => void;
+  onSelect: (index: number) => void; // callback function
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -21,18 +21,22 @@ const CheckmarkReminder: React.FC<CheckmarkReminderProps> = ({
     translateYAnim: useRef(new Animated.Value(0)).current, // move up or down animation of the point
     scaleAnim: useRef(new Animated.Value(0)).current, // size of the point when point is moving
   })); // Animationswerte für jeden Punkt
+  // console.log("Reminder save process started. selectedOption:", selectedOption);
 
+  // function to handle the press of the checkmark points
   const handlePress = (index: number) => {
     onSelect(index); // active the selected point
 
+    // animation loop to control the checkmark points
     animations.forEach((anim, i) => {
       if (i === index) {
         // start animation for selected point
         Animated.sequence([
+          // first movement up with enlargement of the point
           Animated.parallel([
             Animated.timing(anim.translateYAnim, {
               toValue: -100, // hight of the point movement
-              duration: 300,
+              duration: 300, // time of the movement
               useNativeDriver: true,
             }),
             Animated.timing(anim.scaleAnim, {
@@ -41,6 +45,7 @@ const CheckmarkReminder: React.FC<CheckmarkReminderProps> = ({
               useNativeDriver: true,
             }),
           ]),
+          // second movement down to start with shrink of the point
           Animated.parallel([
             Animated.timing(anim.translateYAnim, {
               toValue: 0, // back to center
@@ -57,7 +62,7 @@ const CheckmarkReminder: React.FC<CheckmarkReminderProps> = ({
       } else {
         // set default animation for other points
         Animated.timing(anim.scaleAnim, {
-          toValue: 0,
+          toValue: 0, // point is invisible
           duration: 300,
           useNativeDriver: true,
         }).start();

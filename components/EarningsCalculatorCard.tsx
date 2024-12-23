@@ -6,12 +6,10 @@
 
 import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import React, { useEffect, useState } from "react";
-import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-
 import { Alert } from "react-native";
-import { number } from "yup";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { updateProjectData } from "../components/FirestoreService";
@@ -158,7 +156,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
     }
   };
 
-  // Fetch earnings data when the component is mounted
+  // fetch earnings data when the component is mounted
   useEffect(() => {
     if (projectId) {
       fetchEarningsData(projectId);
@@ -168,7 +166,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
   // function to set the hourlyRate value in the textInput to empty if user navigates away from the screen
   useEffect(() => {
     const resetRateInput = () => {
-      setRateInput(""); // Clear input field when screen is re-entered
+      setRateInput(""); // clear input field when screen is re-entered
     };
     const unsubscribe = navigation.addListener("focus", resetRateInput);
     return () => {
@@ -197,7 +195,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
 
         setRateInput(""); // clean input field
       } catch (error) {
-        console.error("Fehler beim Speichern des Stundenlohns: ", error);
+        console.error("Error saving hourly rate: ", error);
       }
       // alert to inform user what he has to do first before pressed the save button
     } else {

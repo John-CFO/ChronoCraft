@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Alert } from "react-native";
 import Modal from "react-native-modal";
 import { LinearGradient } from "expo-linear-gradient";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, getDoc } from "firebase/firestore";
+import { NotificationManager } from "./services/PushNotifications";
 
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import CheckmarkAnimation from "./Checkmark";
@@ -12,9 +13,10 @@ import CheckmarkAnimation from "./Checkmark";
 /////////////////////////////////////////////////////////////////////////////////
 
 type VacationRemindModalProps = {
+  vacationId: string | null;
   isVisible: boolean;
   onClose: () => void;
-  onSelect: (value: string) => void;
+  onSelect: (index: number) => void;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -22,47 +24,142 @@ type VacationRemindModalProps = {
 const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
   isVisible,
   onClose,
+  vacationId,
 }) => {
+  // state for selected reminder option
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
 
-  // save function with error handling for the button
-  const handleSaveReminder = async () => {
+  // define reminder durations in days
+  const reminderDurations = [1, 3, 7]; // 1 Day, 3 Days, 7 Days
+
+  // function to select a reminder option
+  const handleSelectOption = (optionIndex: number) => {
+    const selectedDuration = reminderDurations[optionIndex]; // map index to duration
+    setSelectedOption(optionIndex); // update selected option
+    //console.log("Selected option updated:", selectedDuration);
+  };
+
+  // Save function with error handling for the button
+  const handleSaveReminder = async (
+    id: string, // vacation ID
+    uid: string, // user ID
+    onClose: () => void // callback to close the modal
+  ) => {
+    // console.log("Reminder save process started.");
+
     try {
-      // condition to check if selectedOption is´nt selected (give alert back)
-      if (selectedOption === null) {
-        Alert.alert("Error", "Please select a reminder option before saving.");
+      // if no vacation is selected send alert
+      if (!id) {
+        // console.error("No vacation selected.");
+        Alert.alert("Error", "No vacation selected.");
         return;
       }
 
-      //  Array of reminder durations (in days)
-      const reminderDurations = [1, 3, 7];
-      const selectedDuration = reminderDurations[selectedOption];
-
-      // condition to check if user is logged in ( is not give alert back and return)
+      // check if user is logged in
       const user = FIREBASE_AUTH.currentUser;
+      //  console.log("Current user:", user);
+
+      // if no user is logged in send alert
       if (!user) {
         Alert.alert("Error", "You must be logged in to save a reminder.");
         return;
       }
 
-      // firebase route
-      const reminderRef = doc(
+      const reminderDuration = reminderDurations[selectedOption!]; // map index to duration
+      //  console.log("Converted reminder duration:", reminderDuration);
+      // call user document from firestore
+      const userDocRef = doc(FIREBASE_FIRESTORE, "users", user.uid);
+      // console.log("Fetching push token for user:", user.uid);
+
+      // make a snapshot of the user document
+      const userSnapshot = await getDoc(userDocRef);
+      // if the user document does not exist send alert
+      if (!userSnapshot.exists()) {
+        // console.error("User document not found in Firestore.");
+        Alert.alert("Error", "User document not found in Firestore.");
+        return;
+      }
+      // exract the push token from the user document
+      const userData = userSnapshot.data();
+      const pushToken = userData?.pushToken; // call the push token
+      //  console.log("Fetched Push Token:", pushToken);
+      // if no push token is found send alert
+      if (!pushToken) {
+        //  console.error("Push Token not found.");
+        Alert.alert("Error", "Push Token not found.");
+        return;
+      }
+
+      // get a reference to the vacation document
+      const vacationRef = doc(
         FIREBASE_FIRESTORE,
         "Services",
         "AczkjyWoOxdPAIRVxjy3",
-        "Reminders",
-        user.uid
+        "Vacations",
+        id
       );
-      // add data to firebase with reminderDuration and createdAt
-      await setDoc(reminderRef, {
-        reminderDuration: selectedDuration,
-        createdAt: serverTimestamp(),
-      });
-      // alert to inform user that reminder has been saved
+      //  console.log("Fetching vacation data for ID:", id);
+      // make a snapshot of the vacation document
+      const vacationSnapshot = await getDoc(vacationRef);
+      // if the vacation document does not exist send alert
+      if (!vacationSnapshot.exists()) {
+        //  console.error("Vacation not found in Firestore.");
+        Alert.alert("Error", "Vacation not found.");
+        return;
+      }
+      // make a snapshot of the vacation data
+      const vacationData = vacationSnapshot.data();
+      //  console.log("Vacation data:", vacationData);
+      // set the start date from the vacation data
+      const startDate = new Date(vacationData?.startDate);
+      // console.log("Parsed startDate:", startDate);
+      // if the start date is invalid send alert
+      if (isNaN(startDate.getTime())) {
+        // console.error("Invalid vacation start date.");
+        Alert.alert("Error", "Invalid vacation start date.");
+        return;
+      }
+      // console.log("Selected Option for reminderDuration:", selectedOption);
+      // if selected option is undefined or invalid send alert
+      if (selectedOption == null || selectedOption < 0) {
+        // console.error("Selected Option is undefined or invalid.");
+        Alert.alert("Error", "Please select a reminder duration.");
+        return;
+      }
+
+      // update the reminderDuration in the vacation document
+      await setDoc(
+        vacationRef,
+        {
+          reminderDuration, // duraction of the reminder
+          createdAt: new Date(),
+          ...vacationData, // keep the rest of the data
+        },
+        { merge: true } // update only the specified fields
+      );
+      // console.log("Reminder saved successfully.");
+
+      // calculate the reminder date with the selected duration
+      const reminderDate = new Date(startDate);
+      reminderDate.setDate(reminderDate.getDate() - reminderDuration);
+      // console.log("Calculated reminder date:", reminderDate);
+      // console.log("Scheduling notification...");
+
+      // plane the notification with the calculated date
+      await NotificationManager.scheduleVacationReminder(
+        "Vacation Reminder",
+        `Your vacation starts in ${reminderDuration} days.`,
+        reminderDate,
+        pushToken
+      );
+      // console.log("Notification successfully scheduled.");
+
+      // success alert
       Alert.alert("Success", "Reminder saved successfully.");
-      onClose();
+      // console.log("Reminder save process completed.");
+      onClose(); // close the modal after saving
     } catch (error) {
-      console.error("Failed to save reminder:", error);
+      //  console.error("Failed to save reminder:", error);
       Alert.alert("Error", "Failed to save reminder. Please try again.");
     }
   };
@@ -116,7 +213,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
           {/* checkmark animation*/}
           <CheckmarkAnimation
             selectedOption={selectedOption}
-            onSelect={setSelectedOption}
+            onSelect={handleSelectOption}
           />
           {/* Save Button */}
           <TouchableOpacity
@@ -129,7 +226,18 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
               borderColor: "white",
               overflow: "hidden",
             }}
-            onPress={handleSaveReminder as any}
+            onPress={() => {
+              {
+                /* condition to save the reminder */
+              }
+              if (vacationId) {
+                handleSaveReminder(
+                  vacationId,
+                  FIREBASE_AUTH.currentUser?.uid || "",
+                  onClose
+                );
+              }
+            }}
           >
             <LinearGradient
               colors={["#00FFFF", "#FFFFFF"]}
