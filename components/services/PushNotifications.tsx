@@ -1,104 +1,118 @@
-// Todoo kommentieren was in dieser file passiert
+///////////////////////////////////PushNotifications Component////////////////////////////
 
-import { useEffect, useRef, useState } from "react";
-import { Platform, Alert } from "react-native";
+// NOTE: before testing notifications do a build and run the app to become the request permissions
+
 import * as Notifications from "expo-notifications";
-import * as Device from "expo-device";
-import Constants from "expo-constants";
+import { Platform } from "react-native";
+import { doc, setDoc } from "firebase/firestore";
+import { FIREBASE_FIRESTORE } from "../../firebaseConfig";
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
-export const showNotification = async (title: string, body: string) => {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title,
-      body,
-    },
-    trigger: { seconds: 1 },
-  });
-};
+//////////////////////////////////////////////////////////////////////////////////////////
 
-const PushNotifications = () => {
-  const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
-  const notificationListener = useRef<Notifications.Subscription>();
-  const responseListener = useRef<Notifications.Subscription>();
+export class NotificationManager {
+  private static isConfigured = false; // prevents double configuration
 
-  useEffect(() => {
-    registerForPushNotificationsAsync().then((token) =>
-      setExpoPushToken(token ?? null)
-    );
+  // configuation for push notifications
+  static configureNotificationHandler() {
+    if (this.isConfigured) return; // jump out if already configured
 
-    notificationListener.current =
-      Notifications.addNotificationReceivedListener((notification) => {
-        console.log("Notification Received:", notification);
-      });
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+      }),
+    });
 
-    responseListener.current =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log("Notification Response:", response);
-      });
+    this.isConfigured = true; // mark as configured
+  }
 
-    return () => {
-      if (notificationListener.current) {
-        Notifications.removeNotificationSubscription(
-          notificationListener.current
-        );
+  // register the device for push notifications, get the token and get the permission
+  static async registerForPushNotifications(): Promise<string | null> {
+    try {
+      const { status } = await Notifications.getPermissionsAsync(); // prove current permission
+      if (status !== "granted") {
+        const { status: newStatus } =
+          await Notifications.requestPermissionsAsync(); // request permission
+        if (newStatus !== "granted") {
+          console.log("Push-Notification permission not granted.");
+          return null; // if permission is not granted return null
+        }
       }
-      if (responseListener.current) {
-        Notifications.removeNotificationSubscription(responseListener.current);
+      // generate the Expo pushtoken
+      const token = (await Notifications.getExpoPushTokenAsync()).data;
+
+      if (Platform.OS === "android") {
+        // config the notification channel for android devices
+        await Notifications.setNotificationChannelAsync("default", {
+          name: "Default",
+          importance: Notifications.AndroidImportance.MAX, // max importance because we want to be notified
+          sound: "default", // standard sound for android devices is default
+          vibrationPattern: [0, 250, 250, 250], // default vibration pattern
+        });
       }
+
+      return token; // return generated token
+    } catch (error) {
+      console.error("Error while registering for push notifications:", error);
+      return null; // returns null if there is an error
+    }
+  }
+
+  // save the push token to the firestore and also merge the push token with the user-ID
+  static async savePushTokenToDatabase(userId: string, pushToken: string) {
+    try {
+      const userRef = doc(FIREBASE_FIRESTORE, "users", userId); // ref for the user document
+      await setDoc(userRef, { pushToken }, { merge: true }); // save the push token (merge:true prevents overwriting)
+      console.log("Push token successfully saved.");
+    } catch (error) {
+      console.error("Error saving push token:", error);
+    }
+  }
+
+  // plane a notification
+  static async scheduleNotification(
+    title: string,
+    body: string,
+    trigger: Notifications.NotificationTriggerInput
+  ) {
+    try {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title,
+          body,
+        },
+        trigger, // trigger for the notification when it should be sent
+      });
+    } catch (error) {
+      console.error("Error scheduling notification:", error);
+    }
+  }
+
+  // send a welcome notification after registration
+  static async sendWelcomeNotification(token: string) {
+    const trigger: Notifications.NotificationTriggerInput = {
+      seconds: 1, // send notification immediately
     };
-  }, []);
 
-  const registerForPushNotificationsAsync = async (): Promise<
-    string | null
-  > => {
-    let token: string | null = null;
+    await this.scheduleNotification(
+      "Welcome!",
+      "Thank you for registering on ChronoCraft!. We are glad to see you!",
+      trigger
+    );
+  }
 
-    if (Device.isDevice) {
-      const { status: existingStatus } =
-        await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-      if (existingStatus !== "granted") {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-      if (finalStatus !== "granted") {
-        Alert.alert("Failed to get push token for push notification!");
-        return null;
-      }
-      try {
-        const projectId =
-          Constants.expoConfig?.extra?.eas?.projectId ||
-          Constants.easConfig?.projectId;
-        if (!projectId) throw new Error("Project ID not found");
-        token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
-        console.log("Expo Push Token:", token);
-      } catch (error) {
-        console.error("Error getting Expo Push Token:", error);
-        return null;
-      }
-    }
+  // plan a notification for a vacation
+  static async scheduleVacationReminder(
+    title: string,
+    body: string,
+    vacationDate: Date,
+    token: string
+  ) {
+    const trigger: Notifications.NotificationTriggerInput = {
+      date: vacationDate, // send notification on the vacation date (1 day, 3 days or 7 days before)
+    };
 
-    if (Platform.OS === "android") {
-      await Notifications.setNotificationChannelAsync("default", {
-        name: "default",
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: "#FF231F7C",
-        sound: "default",
-      });
-    }
-
-    return token;
-  };
-
-  return null;
-};
-
-export default PushNotifications;
+    await this.scheduleNotification(title, body, trigger);
+  }
+}

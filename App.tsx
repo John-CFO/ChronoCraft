@@ -1,6 +1,6 @@
 /////////////////////app navigator and stack navigator///////////////////////
 
-import { Text, TouchableOpacity, View, Alert } from "react-native";
+import { Text, TouchableOpacity, View, Alert, Button } from "react-native";
 import React, { useEffect, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "react-native";
@@ -21,13 +21,6 @@ import {
 } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 import { User, onAuthStateChanged } from "firebase/auth";
-import LoginScreen from "./Screens/LoginScreen";
-import HomeScreen from "./Screens/HomeScreen";
-import DetailsScreen from "./Screens/DetailsScreen";
-import FlexAccountScreen from "./Screens/FlexAccountScreen";
-import VacationScreen from "./Screens/VacationScreen";
-import { FIREBASE_AUTH } from "./firebaseConfig";
-import CustomDrawer from "./components/CustomDrawer";
 //import { AlertNotificationRoot } from "react-native-alert-notification";
 //import { Color } from "react-native-alert-notification/lib/typescript/service";
 //import { useNavigation } from "@react-navigation/native";
@@ -36,7 +29,13 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-gesture-handler";
 import "react-native-reanimated";
 
-//import FAQBottomSheet from "./components/FAQBottomSheet";
+import LoginScreen from "./Screens/LoginScreen";
+import HomeScreen from "./Screens/HomeScreen";
+import DetailsScreen from "./Screens/DetailsScreen";
+import FlexAccountScreen from "./Screens/FlexAccountScreen";
+import VacationScreen from "./Screens/VacationScreen";
+import { FIREBASE_AUTH } from "./firebaseConfig";
+import CustomDrawer from "./components/CustomDrawer";
 import CustomMenuBTN from "./components/CustomMenuBTN";
 import HelpMenu from "./components/HelpMenu";
 import { useStore } from "./components/TimeTrackingState";
@@ -186,7 +185,6 @@ const CustomDrawerLabel: React.FC<CustomDrawerLabelProps> = ({
 // drawer navigation for the app
 const App = () => {
   // statusbar content color
-
   setTimeout(() => {
     StatusBar.setBarStyle("light-content");
   }, 1000);

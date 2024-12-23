@@ -4,7 +4,14 @@ import { View, Text, FlatList } from "react-native";
 import React, { useEffect, useState } from "react";
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { TouchableOpacity } from "react-native-gesture-handler";
-import { collection, onSnapshot, doc, deleteDoc } from "firebase/firestore";
+import {
+  collection,
+  onSnapshot,
+  doc,
+  getDoc,
+  writeBatch,
+  deleteField,
+} from "firebase/firestore";
 import { AntDesign } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Alert } from "react-native";
@@ -21,7 +28,9 @@ const VacationList = () => {
 
   // handle reminder modal state
   const [reminderModalVisible, setReminderModalVisible] = useState(false);
-
+  const [selectedVacationId, setSelectedVacationId] = useState<string | null>(
+    null
+  );
   // effect hook to get the data from firestore with snapshot
   useEffect(() => {
     const vacationsCollection = collection(
@@ -31,6 +40,7 @@ const VacationList = () => {
       "Vacations"
     );
 
+    // unsubscribe from the snapshot to avoid memory leaks
     const unsubscribe = onSnapshot(vacationsCollection, (snapshot) => {
       const vacationsData = snapshot.docs.map((doc) => {
         const data = doc.data();
@@ -65,7 +75,7 @@ const VacationList = () => {
   }, []);
 
   // function to delete vacation dates
-  const handleDeleteDate = async (id: string) => {
+  const handleDeleteDate = async (vacationId: string) => {
     // alert to confirm deletion
     Alert.alert("Attention!", "Do you really want to delete the vacation?", [
       {
@@ -82,12 +92,30 @@ const VacationList = () => {
               "Services",
               "AczkjyWoOxdPAIRVxjy3",
               "Vacations",
-              id
+              vacationId
             );
 
-            await deleteDoc(vacationDoc);
+            // firestore batch for atomic updates
+            const batch = writeBatch(FIREBASE_FIRESTORE);
 
-            // console.log(`Vacation with ID ${id} deleted successfully.`);
+            // conditionally delete the reminderDuration field
+            const vacationData = await getDoc(vacationDoc);
+            if (vacationData.exists()) {
+              const data = vacationData.data();
+              if (data && data.reminderDuration) {
+                batch.update(vacationDoc, {
+                  reminderDuration: deleteField(), // delete the reminderDuration field
+                });
+              }
+            }
+
+            // delete the vacation
+            batch.delete(vacationDoc);
+
+            // commit the batch to the database
+            await batch.commit();
+
+            // console.log(`Vacation ${vacationId} was deleted.`);
           } catch (error) {
             console.error("Error deleting vacation:", error);
           }
@@ -98,7 +126,8 @@ const VacationList = () => {
   };
 
   // function to show the reminder-modal
-  const openReminderModal = () => {
+  const openReminderModal = (id: string) => {
+    setSelectedVacationId(id);
     setReminderModalVisible(true);
   };
 
@@ -156,7 +185,9 @@ const VacationList = () => {
       >
         <VacationRemindModal
           isVisible={reminderModalVisible}
+          vacationId={selectedVacationId}
           onClose={() => setReminderModalVisible(false)}
+          onSelect={() => setReminderModalVisible(false)}
         />
         {vacations.length > 0 ? (
           // if something is booked render the list
@@ -228,7 +259,7 @@ const VacationList = () => {
                     </Text>{" "}
                     {displayRange || "No marked dates"}
                   </Text>
-                  <TouchableOpacity onPress={() => openReminderModal()}>
+                  <TouchableOpacity onPress={() => openReminderModal(item.id)}>
                     <MaterialIcons
                       name="edit-note"
                       size={30}
