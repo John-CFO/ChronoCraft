@@ -110,6 +110,15 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
       // make a snapshot of the vacation data
       const vacationData = vacationSnapshot.data();
       //  console.log("Vacation data:", vacationData);
+
+      // if the vacation already has a reminder send alert
+      if (vacationData?.reminderDuration) {
+        Alert.alert(
+          "Error",
+          "Vacation already has a reminder. If   you want to change it, delete vacation and create a new one."
+        );
+        return; // stop the function if user tries to add a reminder to a vacation that already has one
+      }
       // set the start date from the vacation data
       const startDate = new Date(vacationData?.startDate);
       // console.log("Parsed startDate:", startDate);
