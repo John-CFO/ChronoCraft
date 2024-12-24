@@ -13,7 +13,7 @@ import {
   deleteField,
 } from "firebase/firestore";
 import { AntDesign } from "@expo/vector-icons";
-import { MaterialIcons } from "@expo/vector-icons";
+import Entypo from "@expo/vector-icons/Entypo";
 import { Alert } from "react-native";
 
 import VacationRemindModal from "../components/VacationRemindModal";
@@ -240,31 +240,36 @@ const VacationList = () => {
                     shadowRadius: 3,
                   }}
                 >
-                  <Text
-                    style={{
-                      fontFamily: "MPLUSLatin_Bold",
-                      fontSize: 16,
-                      color: "white",
-                      marginBottom: 5,
-                    }}
-                  >
+                  <View style={{ flex: 1 }}>
                     <Text
                       style={{
-                        color: "grey",
                         fontFamily: "MPLUSLatin_Bold",
                         fontSize: 16,
+                        color: "white",
+                        marginBottom: 5,
                       }}
                     >
-                      Date:
-                    </Text>{" "}
-                    {displayRange || "No marked dates"}
-                  </Text>
-                  <TouchableOpacity onPress={() => openReminderModal(item.id)}>
-                    <MaterialIcons
-                      name="edit-note"
-                      size={30}
-                      color="darkgrey"
-                    />
+                      <Text
+                        style={{
+                          color: "grey",
+                          fontFamily: "MPLUSLatin_Bold",
+                          fontSize: 16,
+                        }}
+                      >
+                        Date:
+                      </Text>{" "}
+                      {displayRange || "No marked dates"}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={{
+                      paddingHorizontal: 10,
+                      paddingRight: 20,
+                      marginTop: 5,
+                    }}
+                    onPress={() => openReminderModal(item.id)}
+                  >
+                    <Entypo name="bell" size={24} color="gray" />
                     {/*vacation delete button */}
                   </TouchableOpacity>
                   <TouchableOpacity onPress={() => handleDeleteDate(item.id)}>
