@@ -424,7 +424,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
             justifyContent: "flex-start",
             //shadow options for android
             shadowColor: "#ffffff",
-            elevation: 5,
+            elevation: 2,
             //shadow options for ios
             shadowOffset: { width: 2, height: 2 },
             shadowOpacity: 0.3,

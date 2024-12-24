@@ -2,7 +2,7 @@
 
 // NOTE: the NodeCard is nested in the NoteList Component
 
-import { View, Text, Touchable } from "react-native";
+import { View, Text } from "react-native";
 import React from "react";
 import { AntDesign } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native-gesture-handler";
@@ -64,7 +64,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
         minHeight: 100,
         //shadow options for android
         shadowColor: "#ffffff",
-        elevation: 5,
+        elevation: 2,
         //shadow options for ios
         shadowOffset: { width: 2, height: 2 },
         shadowOpacity: 0.3,
