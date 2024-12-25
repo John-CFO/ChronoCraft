@@ -39,7 +39,13 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
     //console.log("Selected option updated:", selectedDuration);
   };
 
-  // Save function with error handling for the button
+  // reset the selected option when the model will be closed
+  const handleCloseModal = () => {
+    setSelectedOption(null); // set selected option to null
+    onClose();
+  };
+
+  // save function with error handling for the button
   const handleSaveReminder = async (
     id: string, // vacation ID
     uid: string, // user ID
@@ -177,8 +183,8 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
     <Modal
       // modal options
       isVisible={isVisible}
-      onSwipeComplete={onClose}
-      onBackdropPress={onClose}
+      onSwipeComplete={handleCloseModal}
+      onBackdropPress={handleCloseModal}
       swipeDirection={["up", "down"]}
     >
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
