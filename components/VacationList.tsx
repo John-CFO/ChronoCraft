@@ -12,6 +12,8 @@ import {
   writeBatch,
   deleteField,
 } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
+import { FIREBASE_AUTH } from "../firebaseConfig";
 import { AntDesign } from "@expo/vector-icons";
 import Entypo from "@expo/vector-icons/Entypo";
 import { Alert } from "react-native";
@@ -26,15 +28,35 @@ const VacationList = () => {
     { id: string; markedDates: string[] }[]
   >([]);
 
+  const [user, setUser] = useState<any>(null);
+
   // handle reminder modal state
   const [reminderModalVisible, setReminderModalVisible] = useState(false);
   const [selectedVacationId, setSelectedVacationId] = useState<string | null>(
     null
   );
+
+  // hook to get the user from firebase to show the vacations
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(FIREBASE_AUTH, (authUser) => {
+      if (authUser) {
+        setUser(authUser); // user is logged in
+      } else {
+        setUser(null); // user isn´t logged in
+      }
+    });
+
+    return () => unsubscribeAuth();
+  }, []); // once when the component mounts
+
   // effect hook to get the data from firestore with snapshot
   useEffect(() => {
+    if (!user) return;
+
     const vacationsCollection = collection(
       FIREBASE_FIRESTORE,
+      "users",
+      user.uid,
       "Services",
       "AczkjyWoOxdPAIRVxjy3",
       "Vacations"
@@ -42,9 +64,10 @@ const VacationList = () => {
 
     // unsubscribe from the snapshot to avoid memory leaks
     const unsubscribe = onSnapshot(vacationsCollection, (snapshot) => {
+      // console.log("Snapshot data:", snapshot.docs);
       const vacationsData = snapshot.docs.map((doc) => {
         const data = doc.data();
-
+        // console.log("Vacation data:", data);
         // extract the key from the markedDates object to get the array of dates
         const markedDatesArray = data.markedDates
           ? Object.keys(data.markedDates)
@@ -72,7 +95,7 @@ const VacationList = () => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [user]);
 
   // function to delete vacation dates
   const handleDeleteDate = async (vacationId: string) => {
@@ -89,6 +112,8 @@ const VacationList = () => {
           try {
             const vacationDoc = doc(
               FIREBASE_FIRESTORE,
+              "users",
+              user.uid,
               "Services",
               "AczkjyWoOxdPAIRVxjy3",
               "Vacations",

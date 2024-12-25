@@ -99,6 +99,8 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
       // get a reference to the vacation document
       const vacationRef = doc(
         FIREBASE_FIRESTORE,
+        "users",
+        user.uid,
         "Services",
         "AczkjyWoOxdPAIRVxjy3",
         "Vacations",

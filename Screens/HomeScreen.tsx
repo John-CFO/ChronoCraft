@@ -10,25 +10,19 @@
 import {
   View,
   Text,
-  Button,
-  FlatList,
   Keyboard,
   TextInput,
   TouchableOpacity,
   Animated,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
   LayoutChangeEvent,
 } from "react-native";
-import React, { useState, useEffect, ReactNode, useRef } from "react";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import Modal from "react-native-modal";
 import { Alert } from "react-native";
 import {
   collection,
-  DocumentData,
-  CollectionReference,
   getDocs,
   doc,
   deleteDoc,
@@ -96,11 +90,13 @@ const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
 
   // function to load data from firestore
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchData = async ({ user }: { user: any }) => {
       try {
         const db = FIREBASE_FIRESTORE;
         const projectsCollection = collection(
           db,
+          "users",
+          user.uid,
           "Services",
           "AczkjyWoOxdPAIRVxjy3",
           "Projects"
@@ -125,7 +121,7 @@ const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
         console.error("Error fetching projects", error);
       }
     };
-    fetchData();
+    fetchData({ user: FIREBASE_AUTH.currentUser });
   }, [refresh]);
 
   // function to add projects
@@ -141,6 +137,8 @@ const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
         const db = FIREBASE_FIRESTORE;
         const projectsCollection = collection(
           db,
+          "users",
+          user.uid,
           "Services",
           "AczkjyWoOxdPAIRVxjy3",
           "Projects"
@@ -177,10 +175,10 @@ const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
 
   // function to delete projects
   const handleDeleteProject = async (projectId: string) => {
-    // alert to inform user what he has to do first before pressed the delete button
+    // alert to inform user what he has to do first before pressing the delete button
     Alert.alert(
       "Attention!",
-      "Do your really want to delete the project? If you delete the project, all notes will be deleted as well.",
+      "Do you really want to delete the project? If you delete the project, all notes will be deleted as well.",
       [
         {
           text: "Cancel",
@@ -191,31 +189,42 @@ const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
           text: "Delete",
           onPress: async () => {
             try {
-              // part to delete project notes in firestore
+              const user = FIREBASE_AUTH.currentUser;
+              if (!user) {
+                Alert.alert("Error", "User not authenticated.");
+                return;
+              }
+
               const db = FIREBASE_FIRESTORE;
               const noteCollection = collection(
                 db,
+                "users",
+                user.uid,
                 "Services",
                 "AczkjyWoOxdPAIRVxjy3",
                 "Projects",
                 projectId,
                 "Notes"
               );
-              // snapshot to delete notes
+
+              // Snapshot to delete notes
               const notesSnapshot = await getDocs(noteCollection);
+
+              // Delete each note
               const deleteNotesPromises = notesSnapshot.docs.map(
                 async (doc) => {
                   await deleteDoc(doc.ref);
                 }
               );
+
+              // wait for all note deletions to finish before deleting the project
               await Promise.all(deleteNotesPromises);
-              // part to filter out the deleted project
-              setProjects((prevProjects) =>
-                prevProjects.filter((project) => project.id !== projectId)
-              );
-              // part to delete projects
+
+              // now delete the project
               const projectDocRef = doc(
                 db,
+                "users",
+                user.uid,
                 "Services",
                 "AczkjyWoOxdPAIRVxjy3",
                 "Projects",
@@ -223,10 +232,16 @@ const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
               );
               await deleteDoc(projectDocRef);
 
-              // console.log("Project deleted ID:", projectId);
+              // remove project from state
+              setProjects((prevProjects) =>
+                prevProjects.filter((project) => project.id !== projectId)
+              );
+
+              // optional: refresh the list
               setRefresh(!refresh);
+              console.log("Project and related notes deleted successfully.");
             } catch (error) {
-              console.error("Delete project failed", error);
+              console.error("Delete project or notes failed", error);
             }
           },
           style: "destructive",

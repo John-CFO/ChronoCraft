@@ -4,11 +4,17 @@
 
 import { doc, updateDoc } from "firebase/firestore";
 
-import { FIREBASE_FIRESTORE } from "../firebaseConfig";
+import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 export const updateProjectData = async (projectId: string, data: any) => {
+  const user = FIREBASE_AUTH.currentUser;
+  if (!user) {
+    console.error("User is not authenticated.");
+    return false;
+  }
+
   if (!projectId) {
     // console.error("updateProjectData - projectId ist nicht definiert.");
     return;
@@ -20,6 +26,8 @@ export const updateProjectData = async (projectId: string, data: any) => {
     ); */
     const projectDocRef = doc(
       FIREBASE_FIRESTORE,
+      "users",
+      user.uid,
       "Services",
       "AczkjyWoOxdPAIRVxjy3",
       "Projects",

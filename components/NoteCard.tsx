@@ -8,7 +8,7 @@ import { AntDesign } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { doc, deleteDoc } from "firebase/firestore";
 
-import { FIREBASE_FIRESTORE } from "../firebaseConfig";
+import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 
 ///////////////////////////////////////////////////////////////////////////////////
 interface Note {
@@ -32,9 +32,16 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
 
   // function to handle note deletion in firestore
   const handleDeletComment = async () => {
+    const user = FIREBASE_AUTH.currentUser;
+    if (!user) {
+      console.error("User is not authenticated.");
+      return false;
+    }
     try {
       const noteDocRef = doc(
         FIREBASE_FIRESTORE,
+        "users",
+        user.uid,
         "Services",
         "AczkjyWoOxdPAIRVxjy3",
         "Projects",

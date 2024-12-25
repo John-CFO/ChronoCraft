@@ -47,6 +47,8 @@ const VacationForm = () => {
 
       const vacationsCollection = collection(
         FIREBASE_FIRESTORE,
+        "users",
+        user.uid,
         "Services",
         "AczkjyWoOxdPAIRVxjy3",
         "Vacations"

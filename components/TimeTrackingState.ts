@@ -9,7 +9,7 @@ import { create } from "zustand";
 import { AppState } from "react-native";
 import { updateProjectData } from "../components/FirestoreService";
 import { getDoc, doc } from "firebase/firestore";
-
+import { getAuth } from "firebase/auth";
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -351,6 +351,11 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
 
   // function to get the project tracking state in the TimeTrackerCard using snapshot from firebase
   getProjectTrackingState: async (projectId: string) => {
+    const user = getAuth().currentUser; // Holt den aktuellen Benutzer aus dem Store
+    if (!user) {
+      console.error("User is not authenticated.");
+      return false;
+    }
     if (!projectId) {
       return false;
     }
@@ -358,6 +363,8 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
     try {
       const docRef = doc(
         FIREBASE_FIRESTORE,
+        "users",
+        user.uid,
         "Services",
         "AczkjyWoOxdPAIRVxjy3",
         "Projects",
