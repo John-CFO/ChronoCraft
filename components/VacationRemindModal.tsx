@@ -74,7 +74,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
       const reminderDuration = reminderDurations[selectedOption!]; // map index to duration
       //  console.log("Converted reminder duration:", reminderDuration);
       // call user document from firestore
-      const userDocRef = doc(FIREBASE_FIRESTORE, "users", user.uid);
+      const userDocRef = doc(FIREBASE_FIRESTORE, "Users", user.uid);
       // console.log("Fetching push token for user:", user.uid);
 
       // make a snapshot of the user document
@@ -99,6 +99,8 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
       // get a reference to the vacation document
       const vacationRef = doc(
         FIREBASE_FIRESTORE,
+        "Users",
+        user.uid,
         "Services",
         "AczkjyWoOxdPAIRVxjy3",
         "Vacations",
