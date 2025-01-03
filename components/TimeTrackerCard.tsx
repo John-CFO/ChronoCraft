@@ -18,6 +18,7 @@ import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import * as Animatable from "react-native-animatable";
 import { doc, getDoc } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -95,10 +96,17 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   // function to fetch project data from firestore when navigate from home screen to details screen
   useEffect(() => {
     const fetchProjectData = async () => {
+      const user = getAuth().currentUser;
+      if (!user) {
+        console.error("User is not authenticated.");
+        return false;
+      }
       if (currentProjectId) {
         try {
           const docRef = doc(
             FIREBASE_FIRESTORE,
+            "Users",
+            user.uid,
             "Services",
             "AczkjyWoOxdPAIRVxjy3",
             "Projects",
