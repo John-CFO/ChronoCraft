@@ -128,7 +128,7 @@ const LoginScreen: React.FC = () => {
   // function to create user document in firestore
   const createUserDocument = async (userId: string, userData: any) => {
     try {
-      const userRef = doc(FIREBASE_FIRESTORE, "users", userId);
+      const userRef = doc(FIREBASE_FIRESTORE, "Users", userId);
       await setDoc(userRef, userData, { merge: true });
       console.log("User document created successfully");
     } catch (error) {

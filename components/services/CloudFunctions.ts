@@ -4,26 +4,24 @@ import * as admin from "firebase-admin";
 admin.initializeApp();
 const db = admin.firestore();
 
-admin.initializeApp();
-
 export const onDeleteProject = functions.firestore
-  .document("Services/AczkjyWoOxdPAIRVxjy3/Projects/{projectId}")
+  .document("Users/{userId}/Services/AczkjyWoOxdPAIRVxjy3/Projects/{projectId}")
   .onDelete(async (snapshot, context) => {
-    const projectId = context.params.projectId;
+    const { userId, projectId } = context.params;
 
     try {
-      const notesCollectionRef = admin
-        .firestore()
-        .collection(`Projects/${projectId}/Notes`);
+      const notesCollectionRef = db.collection(
+        `Users/${userId}/Services/AczkjyWoOxdPAIRVxjy3/Projects/${projectId}/Notes`
+      );
       const notesQuerySnapshot = await notesCollectionRef.get();
 
-      const batch = admin.firestore().batch();
+      const batch = db.batch();
       notesQuerySnapshot.forEach((doc) => {
         batch.delete(doc.ref);
       });
 
       await batch.commit();
-      console.log(`Deleted notes for project ${projectId}`);
+      console.log(`Deleted notes for project ${projectId} in user ${userId}`);
     } catch (error) {
       console.error("Error deleting notes:", error);
     }

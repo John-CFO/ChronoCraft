@@ -127,7 +127,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     }
 
     try {
-      const userRef = doc(FIREBASE_FIRESTORE, "users", currentUser.uid);
+      const userRef = doc(FIREBASE_FIRESTORE, "Users", currentUser.uid);
       await updateDoc(userRef, {
         displayName: newName || currentUser.displayName || "",
         personalID: newPersonalID || "",

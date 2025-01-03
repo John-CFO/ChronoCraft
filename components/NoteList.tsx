@@ -5,7 +5,7 @@ import { ScrollView, View, Text, ActivityIndicator } from "react-native";
 import { collection, query, getDocs, DocumentData } from "firebase/firestore";
 
 import NoteCard from "./NoteCard";
-import { FIREBASE_FIRESTORE } from "../firebaseConfig";
+import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 interface Note {
@@ -25,10 +25,17 @@ const NoteList: React.FC<{ projectId: string }> = ({ projectId }) => {
   // useEffect to fetch the notes from Firestore with snapshot
   useEffect(() => {
     const fetchNotes = async () => {
+      const user = FIREBASE_AUTH.currentUser;
+      if (!user) {
+        console.error("User is not authenticated.");
+        return false;
+      }
       try {
         const notesQuery = query(
           collection(
             FIREBASE_FIRESTORE,
+            "Users",
+            user.uid,
             `Services/AczkjyWoOxdPAIRVxjy3/Projects/${projectId}/Notes`
           )
         );

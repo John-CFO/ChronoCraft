@@ -62,7 +62,7 @@ export class NotificationManager {
   // save the push token to the firestore and also merge the push token with the user-ID
   static async savePushTokenToDatabase(userId: string, pushToken: string) {
     try {
-      const userRef = doc(FIREBASE_FIRESTORE, "users", userId); // ref for the user document
+      const userRef = doc(FIREBASE_FIRESTORE, "Users", userId); // ref for the user document
       await setDoc(userRef, { pushToken }, { merge: true }); // save the push token (merge:true prevents overwriting)
       console.log("Push token successfully saved.");
     } catch (error) {

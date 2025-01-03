@@ -66,7 +66,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
     try {
       const currentUser = FIREBASE_AUTH.currentUser;
       if (currentUser && currentUser.uid) {
-        const userRef = doc(FIREBASE_FIRESTORE, "users", currentUser.uid);
+        const userRef = doc(FIREBASE_FIRESTORE, "Users", currentUser.uid);
         const userDoc = await getDoc(userRef);
         if (userDoc.exists()) {
           setUser({ uid: currentUser.uid, ...userDoc.data() } as CustomUser);

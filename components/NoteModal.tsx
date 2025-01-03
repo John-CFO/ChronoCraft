@@ -59,7 +59,12 @@ const NoteModal: React.FC<NoteModalProps> = ({
   }, []);
 
   // function to handle comment submission
-  const handleSubmitComment = async (projectId: string, comment: string) => {
+  const handleSubmitComment = async (
+    projectId: string,
+    comment: string,
+    userId: string,
+    serviceId: string
+  ) => {
     // alert to inform user what he has to do first before pressed the send button
     if (!comment.trim()) {
       Alert.alert(
@@ -71,7 +76,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
 
     // console.log("Submitting comment with projectId:", projectId);
     try {
-      if (!projectId) {
+      if (!projectId || !userId || !serviceId) {
         // console.error("Invalid projectId:", projectId);
         return;
       }
@@ -80,10 +85,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
       if (user) {
         const projectRef = doc(
           FIREBASE_FIRESTORE,
-          "Services",
-          "AczkjyWoOxdPAIRVxjy3",
-          "Projects",
-          projectId
+          `Users/${userId}/Services/${serviceId}/Projects/${projectId}`
         );
 
         const projectSnapshot = await getDoc(projectRef);
@@ -91,7 +93,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
         if (projectSnapshot.exists()) {
           const projectNotesRef = collection(
             FIREBASE_FIRESTORE,
-            `Services/AczkjyWoOxdPAIRVxjy3/Projects/${projectId}/Notes`
+            `Users/${userId}/Services/${serviceId}/Projects/${projectId}/Notes`
           );
           await addDoc(projectNotesRef, {
             uid: user.uid,
@@ -183,7 +185,14 @@ const NoteModal: React.FC<NoteModalProps> = ({
 
           {/*submit button*/}
           <TouchableOpacity
-            onPress={() => handleSubmitComment(projectId, comment)}
+            onPress={() =>
+              handleSubmitComment(
+                projectId,
+                comment,
+                FIREBASE_AUTH.currentUser?.uid as string,
+                "AczkjyWoOxdPAIRVxjy3"
+              )
+            }
             style={{
               marginTop: 30,
               height: 45,

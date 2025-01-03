@@ -11,7 +11,7 @@ import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Alert } from "react-native";
 
-import { FIREBASE_FIRESTORE } from "../firebaseConfig";
+import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { updateProjectData } from "../components/FirestoreService";
 import { useStore } from "./TimeTrackingState";
 
@@ -90,10 +90,17 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
   // function to show hourly rate with snapshot in the UI
   useEffect(() => {
     const fetchHourlyRate = async () => {
+      const user = FIREBASE_AUTH.currentUser;
+      if (!user) {
+        console.error("User is not authenticated.");
+        return false;
+      }
       if (projectId && rateInput === "") {
         try {
           const docRef = doc(
             FIREBASE_FIRESTORE,
+            "Users",
+            user.uid,
             "Services",
             "AczkjyWoOxdPAIRVxjy3",
             "Projects",
@@ -117,11 +124,18 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
 
   // function to fetch data from firestore if user navigate to details screen
   const fetchEarningsData = async (projectId: string) => {
+    const user = FIREBASE_AUTH.currentUser;
+    if (!user) {
+      console.error("User is not authenticated.");
+      return false;
+    }
     if (projectId && rateInput === "") {
       try {
         // Reference to the document in Firestore
         const docRef = doc(
           FIREBASE_FIRESTORE,
+          "Users",
+          user.uid,
           "Services",
           "AczkjyWoOxdPAIRVxjy3",
           "Projects",
@@ -135,11 +149,11 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
         if (docSnap.exists()) {
           const data = docSnap.data();
 
-          // Extract hourly rate and total earnings
+          // extract hourly rate and total earnings
           const fetchedRate = data?.hourlyRate || 0;
           const fetchedEarnings = data?.totalEarnings || 0;
 
-          // Update Zustand global state
+          // update Zustand global state
           setHourlyRate(projectId, fetchedRate);
           setTotalEarnings(fetchedEarnings); // Update local state
 

@@ -28,7 +28,12 @@ type DetailsScreenRouteProp = RouteProp<RootStackParamList, "Details">;
 
 type RootStackParamList = {
   Home: undefined;
-  Details: { projectId: string; projectName: string };
+  Details: {
+    projectId: string;
+    projectName: string;
+    userId?: string;
+    serviceId?: string;
+  };
 };
 
 interface Note {
@@ -40,10 +45,13 @@ interface Note {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const DetailsScreen: React.FC<DetailsScreenProps> = () => {
-  //const route = useRoute<DetailsScreenRouteProp>();
   const route = useRoute<DetailsScreenRouteProp>();
   const navigation = useNavigation();
-  const { projectId = "No ID received" } = route.params || {};
+  const {
+    projectId = "No ID received",
+    userId = "No User ID",
+    serviceId = "No Service ID",
+  } = route.params || {};
   const { setProjectId } = useStore();
 
   // states to manage the NoteCard Value fetching
@@ -61,7 +69,7 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
         const notesQuery = query(
           collection(
             FIREBASE_FIRESTORE,
-            `Services/AczkjyWoOxdPAIRVxjy3/Projects/${projectId}/Notes`
+            `Users/${userId}/Services/${serviceId}/Projects/${projectId}/Notes`
           )
         );
         const notesSnapshot = await getDocs(notesQuery);
@@ -87,7 +95,7 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
     };
 
     fetchNotes();
-  }, [projectId]);
+  }, [projectId, userId, serviceId]);
 
   /*
   // loading indicator when data is loading from firebase
@@ -120,7 +128,7 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
         <TimeTrackerCard projectId={projectId} />
         {/* Earn-Calculator-Card */}
         <EarningsCalculatorCard
-          route={route as EarningsCalculatorCardProp} // route is importent to fetch the earnigs state from firestore when user navigate to details screen
+          route={route as EarningsCalculatorCardProp} // route is importent to fetch the earnings state from firestore when user navigate to details screen
           projectId={projectId}
         />
         {/* Success Chart */}

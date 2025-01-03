@@ -1,6 +1,6 @@
 ////////////////////////// CustomCalendar Component //////////////////////////////
 
-import { View, Text } from "react-native";
+import { View } from "react-native";
 import React, {
   useImperativeHandle,
   forwardRef,
@@ -8,10 +8,7 @@ import React, {
   useEffect,
 } from "react";
 import { Calendar } from "react-native-calendars";
-import { collection, addDoc } from "firebase/firestore";
-import MarkedDates from "react-native-calendars";
 
-import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useCalendarStore } from "../components/CalendarState";
 
 /////////////////////////////////////////////////////////////////////////////////

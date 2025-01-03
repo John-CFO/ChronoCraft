@@ -29,6 +29,7 @@ const VacationForm = () => {
   // function to save vacation data to Firestore
   const handleSaveVacation = async () => {
     try {
+      // check if user is logged in
       const user = FIREBASE_AUTH.currentUser;
       if (!user) {
         console.error("No user logged in");
@@ -47,6 +48,8 @@ const VacationForm = () => {
 
       const vacationsCollection = collection(
         FIREBASE_FIRESTORE,
+        "Users",
+        user.uid,
         "Services",
         "AczkjyWoOxdPAIRVxjy3",
         "Vacations"
