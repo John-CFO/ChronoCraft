@@ -15,7 +15,6 @@ import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const FAQBottomSheet = () => {
-  const navigation = useNavigation();
   const [expandedSections, setExpandedSections] = useState<{
     [key: string]: boolean;
   }>({
@@ -24,99 +23,11 @@ const FAQBottomSheet = () => {
     faq2: false,
   });
 
-  const bottomSheetModalRef = useRef<typeof BottomSheetModal>(null);
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const user = FIREBASE_AUTH.currentUser;
-  const userUid = user ? user.uid : null;
-
   const toggleSection = (section: string) => {
     setExpandedSections((prevState) => ({
       ...prevState,
       [section]: !prevState[section],
     }));
-  };
-
-  const closeFAQSheet = () => {
-    //bottomSheetModalRef.current?.dismiss();
-    if (bottomSheetModalRef.current) {
-      // Falls erforderlich, explizites Casting des Typs
-      (bottomSheetModalRef.current as any).close(); // Versuche es mit `close()` oder `dismiss()`
-    }
-  };
-  const reauthenticateUser = async (password: string) => {
-    if (!user) {
-      throw new Error("No user is signed in.");
-    }
-
-    const credential = EmailAuthProvider.credential(user.email!, password);
-
-    try {
-      await reauthenticateWithCredential(user, credential);
-      console.log("Reauthentication successful");
-    } catch (error) {
-      console.error("Error during reauthentication:", error);
-      throw error;
-    }
-  };
-
-  const deleteImageFromStorage = async (imagePath: string) => {
-    try {
-      const storage = getStorage();
-      const imageRef = ref(storage, imagePath);
-      await deleteObject(imageRef);
-      console.log("Image deleted successfully");
-    } catch (error) {
-      console.error("Error deleting image:", error);
-    }
-  };
-
-  const markUserDataAsInactive = async (userUid: string) => {
-    try {
-      const userRef = doc(FIREBASE_FIRESTORE, "Users", userUid);
-      await updateDoc(userRef, { isActive: false }); // Marking the data as inactive
-      console.log("User data marked as inactive");
-    } catch (error) {
-      console.error("Error marking user data as inactive:", error);
-      throw error;
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    if (!password) {
-      Alert.alert("Error", "Please enter your password.");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      if (!userUid) {
-        throw new Error("No user is signed in.");
-      }
-
-      await reauthenticateUser(password);
-      await deleteImageFromStorage(`profilePictures/${userUid}`);
-      await markUserDataAsInactive(userUid); // Mark data as inactive before deletion
-      await FIREBASE_AUTH.currentUser?.delete();
-      Alert.alert("Success", "Your account has been deleted.");
-
-      closeFAQSheet();
-
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "Login" as never }],
-      });
-    } catch (error: any) {
-      console.error("Fehler beim Löschen des Kontos:", error);
-      Alert.alert(
-        "Error",
-        "There was an issue deleting your account: " + error.message
-      );
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (
@@ -185,12 +96,8 @@ const FAQBottomSheet = () => {
             marginVertical: 20,
             borderColor: "#ccc",
           }}
-          value={password}
-          onChangeText={setPassword}
         />
         <TouchableOpacity
-          onPress={handleDeleteAccount}
-          disabled={loading}
           style={[
             {
               backgroundColor: "red",
@@ -199,13 +106,12 @@ const FAQBottomSheet = () => {
               borderRadius: 5,
               marginTop: 10,
             },
-            loading && { backgroundColor: "#ccc" },
           ]}
         >
           <Text
             style={{ color: "white", textAlign: "center", fontWeight: "bold" }}
           >
-            {loading ? "Lösche Konto..." : "Konto löschen"}
+            {"Delete Account"}
           </Text>
         </TouchableOpacity>
       </Collapsible>

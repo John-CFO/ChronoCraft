@@ -30,7 +30,7 @@ import { getDoc, doc } from "firebase/firestore";
 
 import EditProfileModal from "./EditProfileModal";
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
-import FAQBottomSheet from "./FAQBottomSheet";
+import FAQBottomSheet from "../components/FAQBottomSheet";
 import { CustomUser } from "./types/CustomUser"; // CustomUser type definition import to handle conflict with FirebaseUser
 
 ////////////////////////////////////////////////////////////////////////////////////////
