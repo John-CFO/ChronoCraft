@@ -6,6 +6,7 @@ import {
   Auth,
 } from "firebase/auth";
 import { getFirestore, Firestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getAnalytics, isSupported } from "firebase/analytics";
@@ -50,6 +51,9 @@ try {
 // initialize Firestore
 const firestore: Firestore = getFirestore(app);
 
+// initialize Storage
+const storage = getStorage(app);
+
 // initialize Analytics when supported
 isSupported().then((supported) => {
   if (supported) {
@@ -72,4 +76,5 @@ export {
   app as FIREBASE_APP,
   authInstance as FIREBASE_AUTH,
   firestore as FIREBASE_FIRESTORE,
+  storage as FIREBASE_STORAGE,
 };
