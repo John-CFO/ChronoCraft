@@ -194,38 +194,42 @@ const LoginScreen: React.FC = () => {
                 {/* email input */}
                 <TextInput
                   style={{
-                    borderColor: "black",
-                    borderWidth: 2,
-                    borderRadius: 10,
+                    borderColor: "aqua",
+                    borderWidth: 1.5,
+                    borderRadius: 12,
                     paddingLeft: 15,
-                    padding: 5,
                     fontSize: 22,
-                    height: 40,
-                    width: 270,
-                    backgroundColor: "white",
+                    paddingBottom: 5,
+                    height: 50,
+                    width: 280,
+                    color: "white",
+                    backgroundColor: "#191919",
                     fontFamily: "MPLUSLatin_Regular",
                   }}
                   placeholder="Email"
+                  placeholderTextColor={"darkgrey"}
                   autoCapitalize="none"
                   onChangeText={(text) => setEmail(text)}
                   value={email}
                 />
-                <View style={{ position: "relative", width: 270, height: 40 }}>
+                <View style={{ position: "relative", width: 280, height: 40 }}>
                   {/* password input */}
                   <TextInput
                     style={{
-                      borderColor: "black",
-                      borderWidth: 2,
-                      borderRadius: 10,
+                      borderColor: "aqua",
+                      borderWidth: 1.5,
+                      borderRadius: 12,
                       paddingLeft: 15,
                       paddingRight: 40,
-                      padding: 5,
+                      paddingBottom: 5,
                       fontSize: 22,
-                      height: "100%",
-                      backgroundColor: "white",
-                      fontFamily: "MPLUSLatin_Regular",
+                      height: 50,
+                      color: "white",
+                      backgroundColor: "#191919",
+                      //fontFamily: "MPLUSLatin_Regular",
                     }}
                     placeholder="Password"
+                    placeholderTextColor={"darkgrey"}
                     autoCapitalize="none"
                     secureTextEntry={secureTextEntry}
                     onChangeText={(text) => setPassword(text)}
@@ -234,7 +238,7 @@ const LoginScreen: React.FC = () => {
                   {/* visibility eye button */}
                   <TouchableOpacity
                     onPress={toggleSecureTextEntry}
-                    style={{ position: "absolute", right: 15, top: 10 }}
+                    style={{ position: "absolute", right: 15, top: 15 }}
                   >
                     <FontAwesome5
                       name={secureTextEntry ? "eye" : "eye-slash"}
@@ -252,18 +256,22 @@ const LoginScreen: React.FC = () => {
                 ></ActivityIndicator>
               ) : (
                 <>
-                  <View style={{ flexDirection: "row", margin: 20 }}>
+                  <View
+                    style={{
+                      flexDirection: "column",
+                      margin: 30,
+                    }}
+                  >
                     {/* login button */}
                     <TouchableOpacity
                       onPress={handleLogin}
                       style={{
-                        marginHorizontal: 10,
-                        width: 120,
-                        height: 55,
-                        borderRadius: 10,
+                        width: 280,
+                        borderRadius: 12,
+                        overflow: "hidden",
                         borderWidth: 3,
                         borderColor: "white",
-                        overflow: "hidden",
+                        marginBottom: 8,
                       }}
                     >
                       <LinearGradient
@@ -271,18 +279,16 @@ const LoginScreen: React.FC = () => {
                         style={{
                           alignItems: "center",
                           justifyContent: "center",
-                          borderRadius: 6,
-                          height: 55,
-                          width: 120,
+                          height: 45,
+                          width: 280,
                         }}
                       >
                         <Text
                           style={{
-                            marginBottom: 20,
-                            marginRight: 10,
-                            color: "grey",
-                            fontSize: 25,
                             fontFamily: "MPLUSLatin_Bold",
+                            fontSize: 22,
+                            color: "grey",
+                            marginBottom: 5,
                           }}
                         >
                           Login
@@ -294,13 +300,11 @@ const LoginScreen: React.FC = () => {
                     <TouchableOpacity
                       onPress={handleRegister}
                       style={{
-                        marginHorizontal: 10,
-                        width: 120,
-                        height: 55,
-                        borderRadius: 10,
+                        width: 280,
+                        borderRadius: 12,
+                        overflow: "hidden",
                         borderWidth: 3,
                         borderColor: "white",
-                        overflow: "hidden",
                       }}
                     >
                       <LinearGradient
@@ -308,18 +312,16 @@ const LoginScreen: React.FC = () => {
                         style={{
                           alignItems: "center",
                           justifyContent: "center",
-                          borderRadius: 6,
-                          height: 55,
-                          width: 120,
+                          height: 45,
+                          width: 280,
                         }}
                       >
                         <Text
                           style={{
-                            marginBottom: 20,
-                            marginRight: 10,
-                            color: "grey",
-                            fontSize: 25,
                             fontFamily: "MPLUSLatin_Bold",
+                            fontSize: 22,
+                            color: "grey",
+                            marginBottom: 5,
                           }}
                         >
                           Register
