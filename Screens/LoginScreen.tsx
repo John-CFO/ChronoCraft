@@ -36,12 +36,21 @@ import { FontAwesome5 } from "@expo/vector-icons";
 import { FIREBASE_APP, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import AppLogo from "../components/AppLogo";
 import AnimatedText from "../components/AnimatedText";
+import LostPasswordModal from "../components/LostPasswordModal";
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 const LoginScreen: React.FC = () => {
   // declaire the navigation to user get in after logein
   const navigation = useNavigation();
+
+  // states for LostPasswordModal
+  const [isModalVisible, setModalVisible] = useState(false);
+
+  // function to toggle the LostPasswordModal to open or close
+  const toggleModal = () => {
+    setModalVisible(!isModalVisible);
+  };
 
   //const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
 
@@ -204,7 +213,6 @@ const LoginScreen: React.FC = () => {
                     width: 280,
                     color: "white",
                     backgroundColor: "#191919",
-                    fontFamily: "MPLUSLatin_Regular",
                   }}
                   placeholder="Email"
                   placeholderTextColor={"darkgrey"}
@@ -226,7 +234,6 @@ const LoginScreen: React.FC = () => {
                       height: 50,
                       color: "white",
                       backgroundColor: "#191919",
-                      //fontFamily: "MPLUSLatin_Regular",
                     }}
                     placeholder="Password"
                     placeholderTextColor={"darkgrey"}
@@ -331,6 +338,22 @@ const LoginScreen: React.FC = () => {
                   </View>
                 </>
               )}
+              {/* LostPasswordModal */}
+              <TouchableOpacity onPress={toggleModal} style={{ marginTop: 10 }}>
+                <Text
+                  style={{
+                    color: "aqua",
+                    textDecorationLine: "underline",
+                    fontSize: 16,
+                  }}
+                >
+                  Forgot Password?
+                </Text>
+              </TouchableOpacity>
+              <LostPasswordModal
+                visible={isModalVisible}
+                onClose={toggleModal}
+              />
             </View>
 
             {/* status bar */}
