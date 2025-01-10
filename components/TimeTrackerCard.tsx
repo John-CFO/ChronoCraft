@@ -387,12 +387,12 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
           <TouchableOpacity
             onPress={handleReset}
             style={{
-              width: 120,
+              width: 280,
               borderRadius: 12,
               overflow: "hidden",
               borderWidth: 3,
               borderColor: "white",
-              marginBottom: 30,
+              marginBottom: 25,
             }}
           >
             <LinearGradient
@@ -401,7 +401,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
                 alignItems: "center",
                 justifyContent: "center",
                 height: 45,
-                width: 120,
+                width: 280,
               }}
             >
               <Text

@@ -276,31 +276,29 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
             alignItems: "center",
           }}
         >
-          <View
+          <TextInput
+            placeholder="Enter your hourly rate"
+            placeholderTextColor="grey"
+            keyboardType="numeric"
+            value={rateInput}
+            onChangeText={handleRateChange}
             style={{
-              backgroundColor: "lightgrey",
+              marginBottom: 15,
               width: 280,
-              height: 50,
-              borderWidth: 2,
-              borderColor: "white",
+              borderColor: "aqua",
+              borderWidth: 1.5,
               borderRadius: 12,
-              marginBottom: 20,
+              paddingLeft: 15,
+              paddingRight: 40,
+              paddingBottom: 5,
+              fontSize: 22,
+              height: 50,
+              color: "white",
+              fontWeight: "bold",
+              backgroundColor: "black",
             }}
-          >
-            <TextInput
-              placeholder="Enter your hourly rate"
-              placeholderTextColor="grey"
-              keyboardType="numeric"
-              value={rateInput}
-              onChangeText={handleRateChange}
-              style={{
-                marginBottom: 10,
-                height: 40,
-                paddingHorizontal: 10,
-                fontSize: 22,
-              }}
-            />
-          </View>
+          />
+
           {/* Save button */}
           <TouchableOpacity
             onPress={handleSave}

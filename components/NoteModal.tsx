@@ -170,11 +170,12 @@ const NoteModal: React.FC<NoteModalProps> = ({
               borderColor: "aqua",
               borderRadius: 5,
               padding: 10,
-              marginBottom: 10,
+              marginBottom: 20,
               minHeight: 100,
               minWidth: 330,
               color: "white",
               fontSize: 18,
+              backgroundColor: "#191919",
             }}
             placeholder={`Write a comment${dots}`}
             placeholderTextColor="grey"
@@ -194,13 +195,12 @@ const NoteModal: React.FC<NoteModalProps> = ({
               )
             }
             style={{
-              marginTop: 30,
-              height: 45,
-              width: 120,
-              borderRadius: 8,
+              width: 280,
+              borderRadius: 12,
+              overflow: "hidden",
               borderWidth: 3,
               borderColor: "white",
-              overflow: "hidden",
+              marginBottom: 20,
             }}
           >
             <LinearGradient
@@ -210,16 +210,15 @@ const NoteModal: React.FC<NoteModalProps> = ({
                 justifyContent: "center",
 
                 height: 45,
-                width: 120,
+                width: 280,
               }}
             >
               <Text
                 style={{
-                  color: "grey",
-                  fontSize: 18,
                   fontFamily: "MPLUSLatin_Bold",
-                  marginBottom: 11,
-                  marginRight: 9,
+                  fontSize: 22,
+                  color: "grey",
+                  marginBottom: 5,
                 }}
               >
                 Save

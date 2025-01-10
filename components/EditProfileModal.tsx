@@ -179,7 +179,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
               fontSize: 32,
               fontFamily: "MPLUSLatin_Bold",
               marginBottom: 11,
-              marginRight: 9,
             }}
           >
             Profile Settings
@@ -189,7 +188,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
         <View
           style={{
             width: 330,
-            height: 220,
+            height: 280,
             backgroundColor: "transparent",
             justifyContent: "center",
             alignItems: "center",
@@ -242,29 +241,20 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
         </View>
 
         {/* change user name */}
-
         <View
-          style={{
-            flexDirection: "row",
-            borderTopWidth: 0.5,
-            borderTopColor: "lightgrey",
-            width: 330,
-            height: 80,
-            padding: 5,
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "transparent",
-          }}
+          style={{ width: 330, height: 300, backgroundColor: "transparent" }}
         >
           <View
             style={{
-              margin: 5,
-              backgroundColor: "lightgrey",
-              width: 280,
-              height: 50,
-              borderWidth: 2,
-              borderColor: "white",
-              borderRadius: 12,
+              flexDirection: "row",
+              borderTopWidth: 0.5,
+              borderTopColor: "lightgrey",
+              width: 330,
+              height: 80,
+              padding: 5,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "transparent",
             }}
           >
             <TextInput
@@ -273,37 +263,33 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
               value={newName}
               onChangeText={setNewName}
               style={{
-                width: 250,
-                height: 40,
-                paddingLeft: 10,
+                width: 280,
+                borderColor: "aqua",
+                borderWidth: 1.5,
+                borderRadius: 12,
+                paddingLeft: 15,
+                paddingRight: 40,
+                paddingBottom: 5,
                 fontSize: 22,
+                height: 50,
+                color: "white",
+                backgroundColor: "#191919",
               }}
             />
           </View>
-        </View>
-        <View
-          style={{
-            flexDirection: "row",
-            width: 330,
-            height: 50,
-            padding: 5,
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "transparent",
-          }}
-        >
-          {/* change user personal-ID */}
-
           <View
             style={{
-              backgroundColor: "lightgrey",
-              width: 280,
+              flexDirection: "row",
+              width: 330,
               height: 50,
-              borderWidth: 2,
-              borderColor: "white",
-              borderRadius: 12,
+              padding: 5,
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "transparent",
             }}
           >
+            {/* change user personal-ID */}
+
             <TextInput
               placeholder="Personal-ID"
               placeholderTextColor="grey"
@@ -311,63 +297,68 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
               onChangeText={setNewPersonalID}
               keyboardType="numeric"
               style={{
-                width: 250,
-                height: 40,
-                paddingLeft: 10,
+                width: 280,
+                borderColor: "aqua",
+                borderWidth: 1.5,
+                borderRadius: 12,
+                paddingLeft: 15,
+                paddingRight: 40,
+                paddingBottom: 5,
                 fontSize: 22,
+                height: 50,
+                color: "white",
+                backgroundColor: "#191919",
               }}
             />
           </View>
-        </View>
-        <View
-          style={{
-            marginTop: 15,
-            width: 330,
-            height: 80,
-            borderTopWidth: 0.5,
-            paddingTop: 35,
-            borderTopColor: "lightgrey",
-            backgroundColor: "transparent",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          {/* update button */}
-          <TouchableOpacity
-            onPress={handleSave}
+          <View
             style={{
-              height: 45,
-              width: 120,
-              borderRadius: 12,
-              borderWidth: 3,
-              borderColor: "white",
-              overflow: "hidden",
+              marginTop: 15,
+              width: 330,
+              height: 100,
+              borderTopWidth: 0.5,
+              borderTopColor: "lightgrey",
+              backgroundColor: "blue",
+              justifyContent: "center",
+              alignItems: "center",
             }}
           >
-            <LinearGradient
-              colors={["#00FFFF", "#FFFFFF"]}
+            {/* update button */}
+            <TouchableOpacity
+              onPress={handleSave}
               style={{
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 8,
-                height: 45,
-                width: 120,
+                marginTop: 30,
+                width: 280,
+                borderRadius: 12,
+                overflow: "hidden",
+                borderWidth: 3,
+                borderColor: "white",
+                marginBottom: 20,
               }}
             >
-              <Text
+              <LinearGradient
+                colors={["#00FFFF", "#FFFFFF"]}
                 style={{
-                  color: "grey",
-                  fontSize: 22,
-                  fontFamily: "MPLUSLatin_Bold",
-                  marginBottom: 11,
-                  marginRight: 9,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: 45,
+                  width: 280,
                 }}
               >
-                Update
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
-
+                <Text
+                  style={{
+                    color: "grey",
+                    fontSize: 22,
+                    fontFamily: "MPLUSLatin_Bold",
+                    marginBottom: 11,
+                    marginRight: 9,
+                  }}
+                >
+                  Update
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
           <View
             style={{
               height: 45,
@@ -380,6 +371,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
             {/* navigation tip */}
             <Text
               style={{
+                marginTop: 20,
                 fontSize: 18,
                 color: "lightgrey",
                 fontFamily: "MPLUSLatin_ExtraLight",

@@ -235,13 +235,13 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
           {/* Save Button */}
           <TouchableOpacity
             style={{
-              height: 45,
-              width: 120,
-              marginBottom: 60,
-              borderRadius: 8,
+              marginTop: 10,
+              width: 280,
+              borderRadius: 12,
+              overflow: "hidden",
               borderWidth: 3,
               borderColor: "white",
-              overflow: "hidden",
+              marginBottom: 55,
             }}
             onPress={() => {
               {
@@ -262,13 +262,13 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
                 alignItems: "center",
                 justifyContent: "center",
                 height: 45,
-                width: 120,
+                width: 280,
               }}
             >
               <Text
                 style={{
                   color: "grey",
-                  fontSize: 18,
+                  fontSize: 22,
                   fontFamily: "MPLUSLatin_Bold",
                   marginBottom: 11,
                   marginRight: 9,
