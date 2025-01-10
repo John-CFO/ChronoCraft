@@ -486,32 +486,28 @@ const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
           gap: 20,
         }}
       >
-        <View
+        <TextInput
           style={{
-            backgroundColor: "lightgrey",
             width: 320,
+            borderColor: "aqua",
+            borderWidth: 1.5,
+            borderRadius: 12,
+            paddingLeft: 15,
+            paddingRight: 40,
+            paddingBottom: 5,
+            fontSize: 22,
             height: 50,
-            borderWidth: 2,
-            borderColor: "white",
-            borderRadius: 8,
+            color: "white",
+            fontWeight: "bold",
+            backgroundColor: "#191919",
           }}
-        >
-          <TextInput
-            style={{
-              paddingLeft: 10,
-              width: 250,
-              height: 40,
-              fontSize: 22,
-              fontWeight: "bold",
-            }}
-            placeholder={`Add new Project${dots}`}
-            placeholderTextColor="grey"
-            editable={true}
-            onChangeText={setNewProjectName}
-            maxLength={48}
-            value={newProjectName}
-          />
-        </View>
+          placeholder={`Add new Project${dots}`}
+          placeholderTextColor="grey"
+          editable={true}
+          onChangeText={setNewProjectName}
+          maxLength={48}
+          value={newProjectName}
+        />
 
         <TouchableOpacity onPress={handleAddProject}>
           <LinearGradient
