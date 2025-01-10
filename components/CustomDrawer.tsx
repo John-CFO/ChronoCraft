@@ -217,7 +217,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
           onChange={handleSheetChanges}
           backgroundStyle={{ backgroundColor: "white" }}
         >
-          <FAQBottomSheet />
+          <FAQBottomSheet navigation={undefined} />
         </BottomSheetModal>
         {/* FAQ button */}
         <TouchableOpacity onPress={handlePresentModalPress}>

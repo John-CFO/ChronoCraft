@@ -33,7 +33,7 @@ import "text-encoding-polyfill"; //bugfix: for delete project with notes
 import LoginScreen from "./Screens/LoginScreen";
 import HomeScreen from "./Screens/HomeScreen";
 import DetailsScreen from "./Screens/DetailsScreen";
-import FlexAccountScreen from "./Screens/FlexAccountScreen";
+import WorkHoursScreen from "./Screens/WorkHoursScreen";
 import VacationScreen from "./Screens/VacationScreen";
 import { FIREBASE_AUTH } from "./firebaseConfig";
 import CustomDrawer from "./components/CustomDrawer";
@@ -126,14 +126,14 @@ const AppDrawerNavigator = () => {
 
       <Drawer.Screen
         name="Flex"
-        component={FlexAccountScreen}
+        component={WorkHoursScreen}
         options={{
           // function to change the icon color when focused
           drawerActiveTintColor: "white",
           drawerInactiveTintColor: "darkgrey",
 
           drawerLabel: ({ focused }) => (
-            <CustomDrawerLabel focused={focused} title="Flex" />
+            <CustomDrawerLabel focused={focused} title="Work-Hours" />
           ),
           drawerIcon: ({ focused, color }) => (
             <MaterialCommunityIcons
