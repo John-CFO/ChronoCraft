@@ -13,7 +13,8 @@ import {
   AppState,
   AppStateStatus,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import * as Animatable from "react-native-animatable";
@@ -296,7 +297,10 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
     const hours = Math.floor(roundedTime / 3600);
     const minutes = Math.floor((roundedTime % 3600) / 60);
     const seconds = roundedTime % 60;
-    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+      2,
+      "0"
+    )}:${String(seconds).padStart(2, "0")}`;
   }
 
   return (
