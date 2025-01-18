@@ -1,26 +1,37 @@
 ///////////////////////////////////////WorkHoursScreen.tsx////////////////////////////////////////////
 
-import { View, Text, ScrollView, TextInput, Button } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  TextInput,
+  Button,
+  Alert,
+  TouchableOpacity,
+} from "react-native";
 import React, { useState, useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
-import { BarChart } from "react-native-chart-kit";
+import { StackedBarChart } from "react-native-chart-kit";
 import {
   collection,
-  query,
-  where,
-  onSnapshot,
-  addDoc,
+  setDoc,
+  getDocs,
+  doc,
+  DocumentData,
 } from "firebase/firestore";
+import dayjs from "../dayjsConfig";
 import { getAuth } from "firebase/auth";
+
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
-import { TouchableOpacity } from "react-native-gesture-handler";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const WorkHoursScreen = () => {
+  // state to handle the user time zone
+  const [userTimeZone, setUserTimeZone] = useState<string>(dayjs.tz.guess());
   // state to handle the work data
   const [workData, setWorkData] = useState<
-    { date: string; duration: number }[]
+    { date: string; duration: number; overHours: number }[]
   >([]);
   // state to handle the expected hours
   const [expectedHours, setExpectedHours] = useState("");
@@ -30,7 +41,9 @@ const WorkHoursScreen = () => {
   const [isWorking, setIsWorking] = useState(false);
   // state to handle the elapsed time to calculate the total hours
   const [elapsedTime, setElapsedTime] = useState(0);
-
+  // state to manage the document ID when user saves expectedHours and tracking data in Firestore
+  const [currentDocId, setCurrentDocId] = useState<string | null>(null);
+  const [workHours, setWorkHours] = useState<DocumentData[]>([]);
   // function to calculate the elapsed time in hours
   const calculateElapsedTime = (startTime: Date): number => {
     const elapsedMilliseconds = Date.now() - startTime.getTime();
@@ -47,10 +60,11 @@ const WorkHoursScreen = () => {
   // function to calculate the total hours worked
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
-
+    const accelerationFactor = 60; // simulate 1 second as 1 minute (for testing purposes)
     if (isWorking && startWorkTime) {
       const updateElapsedTime = () => {
-        const elapsedTimeInHours = calculateElapsedTime(startWorkTime);
+        const elapsedTimeInHours =
+          calculateElapsedTime(startWorkTime) * accelerationFactor; // accelerate the elapsed time(for testing purposes)
         setElapsedTime(elapsedTimeInHours); // set elapsed time in hours
       };
 
@@ -58,7 +72,7 @@ const WorkHoursScreen = () => {
 
       timer = setInterval(() => {
         updateElapsedTime(); // update every minute
-      }, 60_000); // calculate interval in 60sec
+      }, 1_000); //(for testing purposes)   standart: 60_000); // calculate interval in 60sec
     }
 
     return () => {
@@ -68,39 +82,62 @@ const WorkHoursScreen = () => {
     };
   }, [isWorking, startWorkTime]);
 
-  // hook with snapshot to get the work data from firestore
-  useEffect(() => {
-    const unsubscribe = onSnapshot(
-      query(
-        collection(FIREBASE_FIRESTORE, "workData"),
-        where("userId", "==", getAuth().currentUser?.uid)
-      ),
-      (snapshot) => {
-        const fetchedData = snapshot.docs.map((doc) => {
-          const data = doc.data();
-          return {
-            date: new Date(data.start).toLocaleDateString(),
-            duration: data.duration,
-          };
-        });
-        setWorkData(fetchedData);
-      }
-    );
-    return () => unsubscribe();
-  }, []);
-
   // function to save the expected hours
   const handleSaveMinHours = async () => {
     const hours = parseFloat(expectedHours);
-    if (!isNaN(hours) && hours > 0) {
-      try {
-        await addDoc(collection(FIREBASE_FIRESTORE, "workHours"), {
-          expectedHours: hours,
-        });
-        console.log("Expected hours saved:", hours);
-      } catch (error) {
-        console.error("Error saving min hours:", error);
+
+    // validate expectedHours input
+    if (!expectedHours || isNaN(hours) || hours <= 0) {
+      Alert.alert(
+        "Invalid Input",
+        "Please enter a valid number greater than 0.",
+        [{ text: "OK", style: "default" }]
+      );
+      return;
+    }
+
+    try {
+      const userId = getAuth().currentUser?.uid;
+      if (!userId) {
+        console.error("User ID not available.");
+        return;
       }
+      const docRef = currentDocId
+        ? doc(
+            FIREBASE_FIRESTORE,
+            "Users",
+            userId,
+            "Services",
+            "AczkjyWoOxdPAIRVxjy3",
+            "WorkHours",
+            currentDocId
+          )
+        : doc(
+            collection(
+              FIREBASE_FIRESTORE,
+              "Users",
+              userId,
+              "Services",
+              "AczkjyWoOxdPAIRVxjy3",
+              "WorkHours"
+            )
+          );
+      if (!currentDocId) {
+        setCurrentDocId(docRef.id); // save the document ID for future use
+      }
+      await setDoc(docRef, {
+        userId,
+        expectedHours: hours,
+      });
+      setCurrentDocId(docRef.id); // save document ID
+      console.log("Expected hours saved:", hours);
+    } catch (error) {
+      console.error("Error saving min hours:", error);
+      Alert.alert(
+        "Error",
+        "During the saving process an error occurred. Please try again.",
+        [{ text: "OK", style: "default" }]
+      );
     }
   };
 
@@ -112,35 +149,67 @@ const WorkHoursScreen = () => {
 
   // function to stop the work and update the work data in firestore
   const handleStopWork = async () => {
-    if (startWorkTime) {
+    if (startWorkTime && currentDocId) {
+      const accelerationFactor = 60; // simulate 1 second as 1 minute (for testing purposes)
       const endTime = new Date();
-      const duration = calculateElapsedTime(startWorkTime); // uses the calculateElapsedTime function
-
-      const workDay = startWorkTime.toISOString().split("T")[0];
-
+      const duration = calculateElapsedTime(startWorkTime); // calculate duration
+      const acceleratedDuration = duration * accelerationFactor; // accelerate the duration(for testing purposes)
+      const roundedDuration = parseFloat(acceleratedDuration.toFixed(2)); // rou
+      const workDay = dayjs(startWorkTime)
+        .tz(userTimeZone)
+        .format("YYYY-MM-DD");
+      const overHours = roundedDuration - parseFloat(expectedHours);
+      const roundedOverHours = parseFloat(overHours.toFixed(2));
       try {
-        await addDoc(collection(FIREBASE_FIRESTORE, "workHours"), {
+        const userId = getAuth().currentUser?.uid;
+        if (!userId) {
+          console.error("User ID not available.");
+          return;
+        }
+        const docRef = doc(
+          FIREBASE_FIRESTORE,
+          "Users",
+          userId,
+          "Services",
+          "AczkjyWoOxdPAIRVxjy3",
+          "WorkHours",
+          currentDocId
+        );
+        // save data to firestore
+        await setDoc(docRef, {
+          userId,
+          expectedHours: parseFloat(expectedHours),
+          workDay,
           start: startWorkTime.toISOString(),
           end: endTime.toISOString(),
-          duration,
-          workDay,
+          duration: roundedDuration,
+          overHours: Math.max(roundedOverHours, 0),
         });
-
         setWorkData((prev) => {
           const existingEntry = prev.find((entry) => entry.date === workDay);
-
+          // condtion to update the duration and overHours
           if (existingEntry) {
             return prev.map((entry) =>
               entry.date === workDay
-                ? { ...entry, duration: entry.duration + duration }
+                ? {
+                    ...entry,
+                    duration: entry.duration + roundedDuration,
+                    overHours: Math.max(entry.overHours + roundedOverHours, 0), // use the rounded overHours
+                  }
                 : entry
             );
           } else {
-            return [...prev, { date: workDay, duration }];
+            return [
+              ...prev,
+              {
+                date: workDay,
+                duration: roundedDuration,
+                overHours: Math.max(roundedOverHours, 0), // use the rounded overHours
+              },
+            ];
           }
         });
-
-        console.log("Saved work data:", duration);
+        console.log("Saved work data:", roundedDuration, roundedOverHours);
       } catch (error) {
         console.error("Error saving work data:", error);
       } finally {
@@ -150,11 +219,66 @@ const WorkHoursScreen = () => {
     }
   };
 
+  // hook with snapshot to get the work data from firestore
+  useEffect(() => {
+    const fetchWorkHours = async () => {
+      try {
+        const userId = getAuth().currentUser?.uid;
+        if (!userId) {
+          console.log("User is not authenticated");
+          return;
+        }
+        // define the path to your collection (userId is already part of the path)
+        const workHoursRef = collection(
+          FIREBASE_FIRESTORE,
+          "Users",
+          userId,
+          "Services",
+          "AczkjyWoOxdPAIRVxjy3", // specific service ID
+          "WorkHours"
+        );
+
+        // fetch the documents from the collection
+        const querySnapshot = await getDocs(workHoursRef);
+
+        const fetchedWorkHours:
+          | ((prevState: never[]) => never[])
+          | DocumentData[] = [];
+        querySnapshot.forEach((doc) => {
+          fetchedWorkHours.push(doc.data());
+        });
+
+        setWorkHours(fetchedWorkHours);
+      } catch (error) {
+        console.error("Error fetching work hours:", error);
+      }
+    };
+
+    fetchWorkHours();
+  }, []);
+
+  // hook to get the current time
+  useEffect(() => {
+    setUserTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  }, []);
+
+  // function to  define the stacked chart data
+  const stackedChartData = {
+    legend: ["Work Hours", "Over Hours"],
+    data: workData.map((entry) => {
+      console.log("Entry for chart:", entry);
+      return [entry.duration, entry.overHours];
+    }),
+    barColors: ["rgba(0, 255, 255, 1)", "rgba(255, 0, 0, 1)"],
+    labels: workData.map((entry) => entry.date),
+  };
+
   return (
-    <ScrollView>
+    <ScrollView style={{ flex: 1, backgroundColor: "black" }}>
       <View
         style={{
           flex: 1,
+          minHeight: "100%",
           justifyContent: "center",
           alignItems: "center",
           backgroundColor: "black",
@@ -184,10 +308,22 @@ const WorkHoursScreen = () => {
             shadowRadius: 10,
             shadowOffset: { width: 0, height: 4 },
             elevation: 4,
-            borderWidth: 2,
+            borderWidth: 1,
             borderColor: "aqua",
           }}
         >
+          {/* title */}
+          <Text
+            style={{
+              fontFamily: "MPLUSLatin_Bold",
+              fontSize: 25,
+              color: "white",
+              marginBottom: 60,
+              textAlign: "center",
+            }}
+          >
+            Daily Workhours
+          </Text>
           <Text
             style={{
               fontSize: 18,
@@ -277,43 +413,52 @@ const WorkHoursScreen = () => {
             </Text>
           )}
         </View>
-
-        <View>
-          {workData.length === 0 ? (
-            <Text style={{ textAlign: "center", marginTop: 20 }}>
-              No Working Hours yet
-            </Text>
-          ) : (
-            <BarChart
-              data={{
-                labels: workData.map((item) => item.date),
-                datasets: [{ data: workData.map((item) => item.duration) }],
-              }}
-              width={350}
-              height={300}
-              yAxisLabel=""
-              yAxisSuffix=" h"
-              chartConfig={{
-                backgroundColor: "#191919",
-                backgroundGradientFrom: "#191919",
-                backgroundGradientTo: "#191919",
-                decimalPlaces: 1,
-
-                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-              }}
-              style={{
-                marginTop: 20,
-                borderRadius: 12,
-                height: 300,
-                width: 350,
-
-                borderWidth: 2,
-                borderColor: "aqua",
-                overflow: "hidden",
-              }}
-            />
-          )}
+        <View
+          style={{
+            alignItems: "center",
+            padding: 15,
+            borderWidth: 1,
+            borderColor: "aqua",
+            borderRadius: 12,
+            backgroundColor: "#191919",
+          }}
+        >
+          {/* title */}
+          <Text
+            style={{
+              fontFamily: "MPLUSLatin_Bold",
+              fontSize: 25,
+              color: "white",
+              marginBottom: 60,
+              textAlign: "center",
+            }}
+          >
+            Workhours Chart
+          </Text>
+          <StackedBarChart
+            data={stackedChartData}
+            // width={Dimensions.get("window").width - 40} // Breite des Charts
+            width={350}
+            height={300}
+            yAxisLabel=""
+            yAxisSuffix="h"
+            fromZero={true}
+            yAxisInterval={1} // Schritte auf der Y-Achse
+            hideLegend={false} // Setze auf "true", um die Legende auszublenden
+            chartConfig={{
+              color: (opacity = 1) => `rgba(0, 255, 255, ${opacity})`,
+              labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+            }}
+            style={{
+              borderWidth: 0.5,
+              //borderColor: "aqua",
+              borderRadius: 8, //shadow options for android
+              shadowColor: "#ffffff",
+              elevation: 3,
+              //shadow options for ios
+              shadowOffset: { width: 3, height: 3 },
+            }}
+          />
         </View>
       </View>
     </ScrollView>
@@ -321,3 +466,10 @@ const WorkHoursScreen = () => {
 };
 
 export default WorkHoursScreen;
+
+/*
+{workData.length === 0 ? (
+  <Text style={{ textAlign: "center", marginTop: 20 }}>
+    No Working Hours yet
+  </Text>
+):()*/
