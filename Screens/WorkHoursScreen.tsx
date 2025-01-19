@@ -257,6 +257,19 @@ const WorkHoursScreen = () => {
     fetchWorkHours();
   }, []);
 
+  // hookt to process the work data from firestore
+  useEffect(() => {
+    const processWorkHours = () => {
+      const processedData = workHours.map((doc) => ({
+        date: doc.workDay,
+        duration: doc.duration,
+        overHours: doc.overHours,
+      }));
+      setWorkData(processedData); // set the processed data
+    };
+    processWorkHours();
+  }, [workHours]); // if workHours changes
+
   // hook to get the current time
   useEffect(() => {
     setUserTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
@@ -269,7 +282,7 @@ const WorkHoursScreen = () => {
       console.log("Entry for chart:", entry);
       return [entry.duration, entry.overHours];
     }),
-    barColors: ["rgba(0, 255, 255, 1)", "rgba(255, 0, 0, 1)"],
+    barColors: ["rgb(51, 51, 51)", "rgb(0, 247, 255)"],
     labels: workData.map((entry) => entry.date),
   };
 
@@ -437,22 +450,26 @@ const WorkHoursScreen = () => {
           </Text>
           <StackedBarChart
             data={stackedChartData}
-            // width={Dimensions.get("window").width - 40} // Breite des Charts
             width={350}
             height={300}
             yAxisLabel=""
             yAxisSuffix="h"
             fromZero={true}
-            yAxisInterval={1} // Schritte auf der Y-Achse
-            hideLegend={false} // Setze auf "true", um die Legende auszublenden
+            yAxisInterval={1} // steps for y-axis
+            hideLegend={false} // set true to hide legend
             chartConfig={{
               color: (opacity = 1) => `rgba(0, 255, 255, ${opacity})`,
               labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+              propsForLabels: {
+                fontSize: 12,
+                fontWeight: "bold",
+                fill: "gray",
+              },
             }}
             style={{
               borderWidth: 0.5,
               //borderColor: "aqua",
-              borderRadius: 8, //shadow options for android
+              borderRadius: 12, //shadow options for android
               shadowColor: "#ffffff",
               elevation: 3,
               //shadow options for ios
