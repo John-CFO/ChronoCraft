@@ -1,17 +1,10 @@
 ////////////////////////////////LostPasswordModal Component////////////////////////////
 
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Alert,
-  Modal,
-  StyleSheet,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { LinearGradient } from "expo-linear-gradient";
+import Modal from "react-native-modal";
 
 import { FIREBASE_AUTH } from "../firebaseConfig";
 
@@ -50,20 +43,24 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide">
+    <Modal
+      isVisible={visible}
+      backdropColor="black"
+      onBackdropPress={onClose}
+      swipeDirection={["up", "down"]}
+      onSwipeComplete={onClose}
+    >
       <View
         style={{
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: "rgba(0, 0, 0, 0.7)",
         }}
       >
         <View
           style={{
             width: "90%",
             height: "auto",
-
             backgroundColor: "black",
             alignItems: "center",
             padding: 20,
@@ -102,7 +99,7 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
               width: 280,
               height: 50,
               borderWidth: 2,
-              marginBottom: 60,
+              marginBottom: 20,
               borderRadius: 12,
             }}
           >
@@ -131,13 +128,12 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
           <TouchableOpacity
             onPress={handlePasswordReset}
             style={{
-              height: 45,
-              width: 120,
-
+              width: 280,
               borderRadius: 12,
+              overflow: "hidden",
               borderWidth: 3,
               borderColor: "white",
-              overflow: "hidden",
+              marginBottom: 20,
             }}
           >
             <LinearGradient
@@ -145,9 +141,8 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
               style={{
                 alignItems: "center",
                 justifyContent: "center",
-                borderRadius: 8,
                 height: 45,
-                width: 120,
+                width: 280,
               }}
             >
               <Text
@@ -164,19 +159,17 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
             </LinearGradient>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={onClose}
+          {/* navigation tip */}
+          <Text
             style={{
-              padding: 10,
               marginTop: 20,
-              width: "100%",
-              alignItems: "center",
+              fontSize: 18,
+              color: "lightgrey",
+              fontFamily: "MPLUSLatin_ExtraLight",
             }}
           >
-            <Text style={{ color: "lightgrey", fontWeight: "bold" }}>
-              Cancel
-            </Text>
-          </TouchableOpacity>
+            swipe up or down to close
+          </Text>
         </View>
       </View>
     </Modal>

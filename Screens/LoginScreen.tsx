@@ -49,10 +49,8 @@ const LoginScreen: React.FC = () => {
 
   // function to toggle the LostPasswordModal to open or close
   const toggleModal = () => {
-    setModalVisible(!isModalVisible);
+    setModalVisible((prev) => !prev);
   };
-
-  //const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
 
   // states for registry and login
   const [email, setEmail] = useState("");
@@ -99,7 +97,7 @@ const LoginScreen: React.FC = () => {
 
       await createUserDocument(response.user.uid, { email: email });
 
-      // Push-Token abrufen
+      // call the push token
       const token = await NotificationManager.registerForPushNotifications();
       if (!token) {
         console.log("Push token not available.");
@@ -108,17 +106,17 @@ const LoginScreen: React.FC = () => {
 
       console.log("Expo Push Token:", token);
 
-      // Speichere den Push-Token in der Firebase-Datenbank
+      // save the push token to the firestore
       await NotificationManager.savePushTokenToDatabase(
         response.user.uid,
         token
       );
 
-      // Willkommensbenachrichtigung senden
+      // welcome notification
       await NotificationManager.sendWelcomeNotification(token);
     } catch (error) {
       console.log("Registration failed:", error);
-
+      // alert notification toast
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: "Registration failed",
