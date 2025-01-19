@@ -318,7 +318,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
               height: 100,
               borderTopWidth: 0.5,
               borderTopColor: "lightgrey",
-              backgroundColor: "blue",
+              backgroundColor: "transparent",
               justifyContent: "center",
               alignItems: "center",
             }}
