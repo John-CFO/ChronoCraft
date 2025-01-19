@@ -1,6 +1,9 @@
 ////////////////////////////////LostPasswordModal Component////////////////////////////
 
-import React, { useState } from "react";
+// this component is used to reset the password of the user
+// it will send an email to the user with instructions on how to reset the password
+
+import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { LinearGradient } from "expo-linear-gradient";
@@ -21,8 +24,10 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
   visible,
   onClose,
 }) => {
+  // state to hold the email
   const [email, setEmail] = useState("");
 
+  // function to handle the password reset
   const handlePasswordReset = async () => {
     if (!email) {
       Alert.alert("Error", "Please enter your email.");
@@ -35,12 +40,39 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
         "E-Mails sent",
         "An E-Mail has been sent to you with instructions on how to reset your password."
       );
-      onClose(); // Modal schließen
+      onClose(); // close the modal
     } catch (error) {
       console.error(error);
       Alert.alert("Error", "There was an error resetting your password.");
     }
   };
+
+  // dot animation for TextInput
+  const [dots, setDots] = useState(".");
+
+  useEffect(() => {
+    // initial count
+    let count = 0;
+
+    // setInterval condition
+    const interval = setInterval(() => {
+      if (count === 0) {
+        setDots(".");
+      } else if (count === 1) {
+        setDots("..");
+      } else if (count === 2) {
+        setDots("...");
+      } else {
+        setDots("");
+        count = -1; // restart the animation
+      }
+
+      count += 1;
+    }, 700); // handle animation time
+
+    // clear the interval
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <Modal
@@ -57,6 +89,7 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
           alignItems: "center",
         }}
       >
+        {/* modal header */}
         <View
           style={{
             width: "90%",
@@ -80,6 +113,7 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
             Reset Password
           </Text>
 
+          {/* email input */}
           <View
             style={{
               flexDirection: "row",
@@ -104,7 +138,7 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
             }}
           >
             <TextInput
-              placeholder="E-Mail-Adress"
+              placeholder={`E-Mail Adress${dots}`}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -125,6 +159,7 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
             />
           </View>
 
+          {/* reset password button */}
           <TouchableOpacity
             onPress={handlePasswordReset}
             style={{
