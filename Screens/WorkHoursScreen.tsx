@@ -260,15 +260,22 @@ const WorkHoursScreen = () => {
   // hookt to process the work data from firestore
   useEffect(() => {
     const processWorkHours = () => {
-      const processedData = workHours.map((doc) => ({
-        date: doc.workDay,
-        duration: doc.duration,
-        overHours: doc.overHours,
-      }));
-      setWorkData(processedData); // set the processed data
+      // process the work data and sort by date
+      const processedData = workHours
+        .map((doc) => ({
+          date: doc.workDay, // sort by date(workDay)
+          duration: doc.duration,
+          overHours: doc.overHours,
+        }))
+        .sort(
+          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+        ); // sort by date
+
+      setWorkData(processedData);
     };
+
     processWorkHours();
-  }, [workHours]); // if workHours changes
+  }, [workHours]);
 
   // hook to get the current time
   useEffect(() => {
