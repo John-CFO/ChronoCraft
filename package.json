@@ -21,7 +21,7 @@
     "@react-navigation/drawer": "^6.6.7",
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/stack": "^6.3.20",
-    "animated": "^0.2.2",
+    "@shopify/react-native-skia": "^0.1.221",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.10",
     "deprecated-react-native-prop-types": "^5.0.0",
@@ -63,6 +63,7 @@
     "react-native-type-animation": "^0.3.0",
     "start": "^5.1.0",
     "text-encoding-polyfill": "^0.6.7",
+    "victory-native": "^41.16.0",
     "zustand": "^4.5.4"
   },
   "devDependencies": {
