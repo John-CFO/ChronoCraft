@@ -1,52 +1,27 @@
-import React, { useState, useEffect } from "react";
+/////////////////////////////WorkHoursInput Component////////////////////////////
+
+import React, { useState } from "react";
 import { Text, View, TouchableOpacity, TextInput, Alert } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { getAuth } from "firebase/auth";
-import { setDoc, doc, onSnapshot } from "firebase/firestore";
+import { setDoc, doc } from "firebase/firestore";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import dayjs from "../dayjsConfig";
 
 const WorkHoursInput = () => {
+  // state to store the expected hours
   const [expectedHours, setExpectedHours] = useState("");
+  // state to store the current document ID
   const [currentDocId, setCurrentDocId] = useState<string | null>(null);
+  // state to store the user's time zone
   const [userTimeZone, setUserTimeZone] = useState<string>(dayjs.tz.guess());
-  const [tempExpectedHours, setTempExpectedHours] = useState<string>("");
+  // state to store the temporary expected hours
+  const [tempExpectedHours, setTempExpectedHours] = useState("");
 
-  // Effect, um die Daten nach dem Speichern aus Firestore zu holen
-  useEffect(() => {
-    const fetchWorkHours = async () => {
-      const userId = getAuth().currentUser?.uid;
-      if (!userId || !currentDocId) return;
-
-      const docRef = doc(
-        FIREBASE_FIRESTORE,
-        "Users",
-        userId,
-        "Services",
-        "AczkjyWoOxdPAIRVxjy3",
-        "WorkHours",
-        currentDocId
-      );
-
-      const unsubscribe = onSnapshot(docRef, (docSnapshot) => {
-        if (docSnapshot.exists()) {
-          const data = docSnapshot.data();
-          if (data && data.expectedHours) {
-            setExpectedHours(data.expectedHours.toString());
-            setTempExpectedHours(data.expectedHours.toString()); // Sync temp value with firestore
-          }
-        }
-      });
-
-      return unsubscribe; // Unsubscribe when component unmounts
-    };
-
-    fetchWorkHours();
-  }, [currentDocId]); // Runs only when currentDocId changes
-
+  // function to save the expected hours
   const handleSaveMinHours = async () => {
-    const hours = parseFloat(tempExpectedHours);
+    const hours = parseFloat(tempExpectedHours); // parse the expected hours
 
     if (!tempExpectedHours || isNaN(hours) || hours <= 0) {
       Alert.alert(
@@ -56,14 +31,14 @@ const WorkHoursInput = () => {
       );
       return;
     }
-
+    // condition to check if the user is logged in
     try {
       const userId = getAuth().currentUser?.uid;
       if (!userId) {
         console.error("User ID not available.");
         return;
       }
-
+      // use the user's time zone
       const workDay = dayjs().tz(userTimeZone).format("YYYY-MM-DD");
 
       // Referenz für das Dokument basierend auf dem workDay
@@ -77,11 +52,12 @@ const WorkHoursInput = () => {
         workDay // Das Datum als Dokument-ID
       );
 
+      // condition to check if the currentDocId is null and set it
       if (!currentDocId) {
         setCurrentDocId(docRef.id);
       }
 
-      // Speichern der Arbeitszeit in Firestore
+      // save the data to Firestore
       await setDoc(docRef, {
         userId,
         expectedHours: hours,
@@ -97,6 +73,7 @@ const WorkHoursInput = () => {
       if (error instanceof Error) {
         console.error("Error message:", error.message);
       }
+      // alert to inform the user about the error
       Alert.alert(
         "Error",
         "During the saving process an error occurred. Please try again.",
@@ -123,6 +100,7 @@ const WorkHoursInput = () => {
         borderColor: "aqua",
       }}
     >
+      {/* title and subtitle */}
       <Text
         style={{
           fontFamily: "MPLUSLatin_Bold",
@@ -154,6 +132,7 @@ const WorkHoursInput = () => {
           alignItems: "center",
         }}
       >
+        {/* Text Input to enter the expected hours */}
         <TextInput
           placeholder="(e.g. 8)"
           placeholderTextColor="grey"
@@ -177,6 +156,7 @@ const WorkHoursInput = () => {
           }}
         />
       </View>
+      {/* Save Button */}
       <TouchableOpacity
         onPress={handleSaveMinHours}
         style={{
