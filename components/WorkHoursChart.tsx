@@ -1,17 +1,20 @@
+//////////////////////////////////////////////////WorkHoursChart Component////////////////////////////
+
+// this file mounts the WorkHoursChart in the WorkHoursScreen
+// it includes the bar chart and the tooltip with the position options and the data maping function
+
 import { View, Text } from "react-native";
 import React, { useState } from "react";
 import { BarChart } from "react-native-gifted-charts";
+
 import WorkHoursState from "../components/WorkHoursState";
 
-interface DataPoint {
-  day: string;
-  expectedHours: number;
-  overHours: number;
-  workDay: string;
-}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const WorkHoursChart = () => {
+  // get the data from the WorkHoursState
   const { data } = WorkHoursState();
+  // state to postion the tooltip
   const [tooltipData, setTooltipData] = useState<{
     date: string;
     expectedHours: number;
@@ -20,52 +23,71 @@ const WorkHoursChart = () => {
     y: number;
   } | null>(null);
 
+  // function to handle bar press
   const handleBarPress = (item: any, index: number) => {
-    if (
-      item &&
-      item.expectedHours !== undefined &&
-      item.overHours !== undefined
-    ) {
-      const barWidth = 22; // Breite eines Balkens
-      const spacing = 24; // Abstand zwischen den Balken
-      const x = index * (barWidth + spacing) + barWidth / 2; // X-Position des Tooltips
-      const y = 400 - (item.expectedHours + item.overHours) * 30; // Y-Position des Tooltips
+    if (item?.stacks) {
+      const expectedHours = item.stacks[0]?.value || 0;
+      const overHours = item.stacks[1]?.value || 0;
 
+      const barWidth = 22;
+      const spacing = 24;
+      const chartHeight = 400;
+      const scaleFactor = 10; // pixel to hour
+
+      const x = index * (barWidth + spacing) + barWidth / 2;
+      const highestPoint = (expectedHours + overHours) * scaleFactor;
+      let y = chartHeight - highestPoint - 40;
+
+      // options to position the tooltip in Y if it is too high
+      if (y < 50) y = 50;
+
+      // options to position the tooltip in Y if it is too low
+      if (y > chartHeight - 100) y = chartHeight - 280;
+
+      // atjust x position
+      let adjustedX = x;
+      if (x < 40) adjustedX += 50;
+      if (x > 300) adjustedX -= 50;
+
+      // set tooltip to expected position with data
       setTooltipData({
-        date: item.day,
-        expectedHours: item.expectedHours,
-        overHours: item.overHours,
-        x,
-        y,
+        date: item.label,
+        expectedHours,
+        overHours,
+        x: adjustedX,
+        y: y,
+      });
+      console.log("Tooltip Position:", {
+        x: adjustedX,
+        y: y,
+        highestPoint,
+        expectedHours,
+        overHours,
       });
     }
   };
-
-  const safeData = data
+  // function to  filter an maping the values and define the data for the bar chart
+  const stackData = data
+    .filter((item) => item.elapsedTime > 0) // filter out items where elapsedTime is 0
     .map((item, index) => {
       if (!item.workDay || isNaN(new Date(item.workDay).getTime())) {
-        console.warn("Invalid or missing day in safeData:", item);
+        console.warn("Invalid or missing day:", item);
         return null;
       }
-      if (!item.day || typeof item.day !== "string") {
-        console.error(`Invalid day at index ${index}:`, item);
-      }
-      const parsedDate = new Date(item.workDay);
+
       return {
-        day: parsedDate.toISOString().split("T")[0],
-        expectedHours: Number(item.expectedHours) || 0,
-        overHours: Number(item.overHours) || 0,
+        label: new Date(item.workDay).toISOString().split("T")[0],
+        stacks: [
+          { value: Number(item.expectedHours) || 0, color: "gray" }, // use elapsedTime instead of expectedHours
+          {
+            value: Number(item.overHours) || 0,
+            color: "aqua",
+            marginBottom: 2,
+          },
+        ],
       };
     })
     .filter((item) => item !== null);
-
-  const stackedBarData = safeData.map((item) => ({
-    stacks: [
-      { value: item.expectedHours, color: "gray" },
-      { value: item.overHours, color: "aqua" },
-    ],
-    label: item.day,
-  }));
 
   return (
     <View
@@ -80,6 +102,7 @@ const WorkHoursChart = () => {
         backgroundColor: "#191919",
       }}
     >
+      {/*Title */}
       <Text
         style={{
           fontFamily: "MPLUSLatin_Bold",
@@ -92,24 +115,26 @@ const WorkHoursChart = () => {
       >
         Workhours Chart
       </Text>
-
+      {/*Stacked Bar Chart */}
       <BarChart
-        data={stackedBarData}
-        barWidth={22}
-        spacing={24}
-        roundedTop
-        roundedBottom
-        hideRules
+        width={280}
+        rotateLabel
+        maxValue={12}
+        noOfSections={6}
+        stackData={stackData}
+        barWidth={30}
+        initialSpacing={20}
+        spacing={10}
+        barBorderRadius={2.5}
+        isAnimated
+        yAxisColor={"darkgray"}
+        xAxisColor={"darkgray"}
         xAxisLabelTextStyle={{ color: "white" }}
         yAxisTextStyle={{ color: "white" }}
-        noOfSections={4}
-        yAxisOffset={0}
-        initialSpacing={10}
-        onPress={(item: DataPoint, index: number) =>
-          handleBarPress(item, index)
-        }
+        onPress={(item: any, index: number) => handleBarPress(item, index)}
       />
 
+      {/*Legend Container */}
       <View
         style={{
           flexDirection: "row",
@@ -158,20 +183,34 @@ const WorkHoursChart = () => {
           </Text>
         </View>
       </View>
+      {/*Tooltip Box */}
       {tooltipData && (
         <View
           style={{
             position: "absolute",
+            width: 115,
+            height: 80,
+            justifyContent: "space-around",
             top: tooltipData.y,
             left: tooltipData.x,
-            backgroundColor: "white",
-            padding: 10,
-            borderRadius: 5,
+            backgroundColor: "#333",
+            padding: 8,
+            borderRadius: 8,
             elevation: 5,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.5,
+            shadowRadius: 4,
           }}
         >
-          <Text style={{ fontSize: 16, color: "black" }}>
-            {`Date: ${tooltipData.date}\nExpected Hours: ${tooltipData.expectedHours}\nOver Hours: ${tooltipData.overHours}`}
+          <Text style={{ fontSize: 14, color: "white", fontWeight: "bold" }}>
+            {`📅 ${tooltipData.date}`}
+          </Text>
+          <Text style={{ fontSize: 12, color: "white" }}>
+            {`⏳ Expected: ${tooltipData.expectedHours}h`}
+          </Text>
+          <Text style={{ fontSize: 12, color: "aqua" }}>
+            {`🚀 Over: ${tooltipData.overHours}h`}
           </Text>
         </View>
       )}
