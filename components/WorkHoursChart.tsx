@@ -74,9 +74,13 @@ const WorkHoursChart = () => {
         console.warn("Invalid or missing day:", item);
         return null;
       }
+      // format the date to e.g. "01.Jan"
+      const formattedDate = new Date(item.workDay)
+        .toLocaleDateString("de-DE", { day: "2-digit", month: "short" })
+        .replace(/\./g, "");
 
       return {
-        label: new Date(item.workDay).toISOString().split("T")[0],
+        label: formattedDate,
         stacks: [
           { value: Number(item.expectedHours) || 0, color: "gray" }, // use elapsedTime instead of expectedHours
           {
@@ -92,7 +96,6 @@ const WorkHoursChart = () => {
   return (
     <View
       style={{
-        paddingHorizontal: 20,
         marginTop: 50,
         width: "100%",
         height: 400,
@@ -117,14 +120,14 @@ const WorkHoursChart = () => {
       </Text>
       {/*Stacked Bar Chart */}
       <BarChart
-        width={280}
-        rotateLabel
+        width={290}
+        //rotateLabel
         maxValue={12}
         noOfSections={6}
         stackData={stackData}
         barWidth={30}
-        initialSpacing={20}
-        spacing={10}
+        initialSpacing={5}
+        spacing={28}
         barBorderRadius={2.5}
         isAnimated
         yAxisColor={"darkgray"}
