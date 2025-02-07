@@ -8,6 +8,7 @@ import React, { useState } from "react";
 import { BarChart } from "react-native-gifted-charts";
 
 import WorkHoursState from "../components/WorkHoursState";
+import ChartRadioButtons from "./ChartRadioButtons";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -98,7 +99,7 @@ const WorkHoursChart = () => {
       style={{
         marginTop: 50,
         width: "100%",
-        height: 400,
+        height: 480,
         borderWidth: 1,
         borderColor: "aqua",
         borderRadius: 12,
@@ -111,13 +112,14 @@ const WorkHoursChart = () => {
           fontFamily: "MPLUSLatin_Bold",
           fontSize: 25,
           color: "white",
-          marginBottom: 30,
+          marginBottom: 80,
           marginTop: 25,
           textAlign: "center",
         }}
       >
         Workhours Chart
       </Text>
+      <ChartRadioButtons />
       {/*Stacked Bar Chart */}
       <BarChart
         width={290}
@@ -143,7 +145,7 @@ const WorkHoursChart = () => {
           flexDirection: "row",
           justifyContent: "center",
           alignItems: "center",
-          marginTop: 5,
+          marginTop: 25,
           marginBottom: 15,
         }}
       >
