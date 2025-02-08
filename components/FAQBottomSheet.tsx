@@ -150,13 +150,13 @@ const FAQBottomSheet = ({ navigation }: { navigation: any }) => {
 
   return (
     <View style={{ padding: 20, backgroundColor: "white", borderRadius: 10 }}>
-      {/* FAQ 1: Beispielinhalt */}
+      {/* FAQ 1: How to close workhourschart tooltip */}
       <TouchableOpacity
         onPress={() => toggleSection("faq1")}
         style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}
       >
         <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-          How to change my password?
+          How to close the tooltip on the Workhours Chart?
         </Text>
         <Text style={{ marginLeft: 10, fontSize: 18 }}>
           {expandedSections.faq1 ? "↑" : "↓"}
@@ -164,7 +164,12 @@ const FAQBottomSheet = ({ navigation }: { navigation: any }) => {
       </TouchableOpacity>
       <Collapsible collapsed={!expandedSections.faq1}>
         <Text style={{ marginTop: 10, fontSize: 14, color: "#555" }}>
-          ........................................
+          To close the tooltip, simply tap anywhere outside the chart area but
+          inside the card. The entire card is set up to listen for taps outside
+          of the chart, so if you tap on any empty space within the card (but
+          not on the chart itself), the tooltip will automatically disappear. If
+          you have any further questions about using the chart or interacting
+          with the tooltip, please let us know!
         </Text>
       </Collapsible>
 
@@ -174,21 +179,39 @@ const FAQBottomSheet = ({ navigation }: { navigation: any }) => {
         style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}
       >
         <Text style={{ fontSize: 16, fontWeight: "bold" }}>
+          How to change my password?
+        </Text>
+        <Text style={{ marginLeft: 10, fontSize: 18 }}>
+          {expandedSections.faq1 ? "↑" : "↓"}
+        </Text>
+      </TouchableOpacity>
+      <Collapsible collapsed={!expandedSections.faq2}>
+        <Text style={{ marginTop: 10, fontSize: 14, color: "#555" }}>
+          ........................................
+        </Text>
+      </Collapsible>
+
+      {/* FAQ 3: Beispielinhalt */}
+      <TouchableOpacity
+        onPress={() => toggleSection("faq3")}
+        style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}
+      >
+        <Text style={{ fontSize: 16, fontWeight: "bold" }}>
           How to add a project?
         </Text>
         <Text style={{ marginLeft: 10, fontSize: 18 }}>
           {expandedSections.faq2 ? "↑" : "↓"}
         </Text>
       </TouchableOpacity>
-      <Collapsible collapsed={!expandedSections.faq2}>
+      <Collapsible collapsed={!expandedSections.faq3}>
         <Text style={{ marginTop: 10, fontSize: 14, color: "#555" }}>
           .........................................
         </Text>
       </Collapsible>
 
-      {/* FAQ 3: Konto löschen */}
+      {/* FAQ 4: Konto löschen */}
       <TouchableOpacity
-        onPress={() => toggleSection("faq3")}
+        onPress={() => toggleSection("faq4")}
         style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}
       >
         <Text style={{ fontSize: 16, fontWeight: "bold" }}>
@@ -198,7 +221,7 @@ const FAQBottomSheet = ({ navigation }: { navigation: any }) => {
           {expandedSections.faq3 ? "↑" : "↓"}
         </Text>
       </TouchableOpacity>
-      <Collapsible collapsed={!expandedSections.faq3}>
+      <Collapsible collapsed={!expandedSections.faq4}>
         <Text style={{ marginTop: 10, fontSize: 14, color: "#555" }}>
           To delete your account, you must confirm your password. If you delete
           your account, your data will no longer exist the next time you
