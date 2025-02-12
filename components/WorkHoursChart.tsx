@@ -212,7 +212,10 @@ const WorkHoursChart = () => {
         </Text>
         <ChartRadioButtons
           chartType={chartType as "week" | "month" | "year"}
-          setChartType={setChartType}
+          setChartType={(type) => {
+            setChartType(type);
+            setTooltipData(null); // let the tooltip close if the chart type changes
+          }}
         />
         {/* Stacked Bar Chart */}
         <BarChart
