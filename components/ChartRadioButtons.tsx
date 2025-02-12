@@ -1,14 +1,23 @@
-/////////////////////////////////ChartRadioButtons Component////////////////////////////
+//////////////////////////////////ChartRadioButtons Component////////////////////////////////
+
+// This component is used to show the chart radio buttons in the WorkHours Chart card
 
 import { View, Text, TouchableOpacity } from "react-native";
-import React, { useState } from "react";
+import React from "react";
 
-////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
 
-const ChartRadioButtons = () => {
-  // state to set the chart type with the radio button
-  const [chartType, setChartType] = useState<"week" | "month" | "year">("week");
+interface ChartRadioButtonsProps {
+  chartType: "week" | "month" | "year";
+  setChartType: (chartType: "week" | "month" | "year") => void;
+}
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+const ChartRadioButtons: React.FC<ChartRadioButtonsProps> = ({
+  chartType,
+  setChartType,
+}) => {
   return (
     <View
       style={{
@@ -18,8 +27,8 @@ const ChartRadioButtons = () => {
       }}
     >
       <TouchableOpacity
-        style={{ flexDirection: "row", alignItems: "center" }}
         onPress={() => setChartType("week")}
+        style={{ flexDirection: "row", alignItems: "center" }}
       >
         <View
           style={{
@@ -48,8 +57,8 @@ const ChartRadioButtons = () => {
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={{ flexDirection: "row", alignItems: "center" }}
         onPress={() => setChartType("month")}
+        style={{ flexDirection: "row", alignItems: "center" }}
       >
         <View
           style={{
@@ -78,8 +87,8 @@ const ChartRadioButtons = () => {
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={{ flexDirection: "row", alignItems: "center" }}
         onPress={() => setChartType("year")}
+        style={{ flexDirection: "row", alignItems: "center" }}
       >
         <View
           style={{
