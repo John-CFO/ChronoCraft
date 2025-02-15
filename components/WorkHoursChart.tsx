@@ -19,12 +19,14 @@ import WorkHoursState from "../components/WorkHoursState";
 import ChartRadioButtons from "./ChartRadioButtons";
 import { formatTooltipDate } from "../components/FormatToolTip";
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
 const WorkHoursChart = () => {
-  // Hole die Daten aus dem WorkHoursState
+  // get the data from the WorkHoursState
   const { data } = WorkHoursState();
-  // State für den initialen Chart-Typ
+  // initialstate for the chart type
   const [chartType, setChartType] = useState("week");
-  // State für das Tooltip
+  // state and types for the tooltip
   const [tooltipData, setTooltipData] = useState<{
     date: string;
     expectedHours: number;
@@ -32,23 +34,23 @@ const WorkHoursChart = () => {
     x: number;
     y: number;
   } | null>(null);
-  // Ref für den ScrollView, um die Scrollposition zu steuern
+  // ref for the scrollview
   const scrollViewRef = useRef<ScrollView>(null);
-  // State, um die Breite der Card zu messen
+  // state for the card width
   const [cardWidth, setCardWidth] = useState<number>(0);
 
-  // Padding, der als "Frame" dient
+  // card padding in px to calculate the inner width for the frame
   const cardPadding = 16;
 
-  // Berechne die innere Breite (Frame-Breite) der Card
+  // calculate the inner width for the frame
   const innerWidth = cardWidth > 0 ? cardWidth - 2 * cardPadding : 0;
 
-  // Zurücksetzen der Scrollposition, wenn der Charttyp wechselt
+  // set scroolview back if the chart type changes
   useEffect(() => {
     scrollViewRef.current?.scrollTo({ x: 0, animated: true });
   }, [chartType]);
 
-  // Funktion zur Behandlung eines Balken-Taps
+  // fnuction to handel the press of the bars
   const handleBarPress = (item: any, index: number) => {
     if (item?.stacks) {
       const expectedHours = item.stacks[0]?.value || 0;
@@ -57,14 +59,14 @@ const WorkHoursChart = () => {
       const barWidth = 22;
       const spacing = 24;
       const chartHeight = 400;
-      const scaleFactor = chartType === "year" ? 2 : 15; // Skalierungsfaktor anpassen
+      const scaleFactor = chartType === "year" ? 2 : 15; // skale factor if chart type is year 2 else 15
       const tooltipHeight = 80;
 
       const x = index * (barWidth + spacing) + barWidth / 2;
       let y =
         chartHeight - (expectedHours + overHours) * scaleFactor - tooltipHeight;
 
-      // Passe die x-Position an, damit das Tooltip nicht abgeschnitten wird
+      // fix the x-position to safe the bar width
       let adjustedX = x;
       if (x < 40) adjustedX += 50;
       if (x > 300) adjustedX -= 50;
@@ -79,27 +81,39 @@ const WorkHoursChart = () => {
     }
   };
 
-  // Funktion zum Filtern der Daten je nach Chart-Typ
+  // function to filter data by chart type
   const filterDataByChartType = (data: any, type: string) => {
+    // get the current date
     const today = new Date();
+    // filter the data
     return data.filter((item: { workDay: string }) => {
+      // convert the workDay string to a Date object
       const itemDate = new Date(item.workDay);
+      // condition to check the chart type
       if (type === "week") {
-        const dayOfWeek = today.getDay(); // 0 = Sonntag, 1 = Montag, ...
+        // determine the beginning and end of the week (Monday-Sunday)
+        const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ...
         const startOfWeek = new Date(today);
         startOfWeek.setDate(
-          today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1)
+          today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1) // define the start of the week
         );
+        // set the hours, minutes, seconds, and milliseconds to 0
         startOfWeek.setHours(0, 0, 0, 0);
+        // determine the end of the week
         const endOfWeek = new Date(startOfWeek);
+        // define the end of the week
         endOfWeek.setDate(startOfWeek.getDate() + 6);
+        // set the hours, minutes, seconds, and milliseconds to 23:59:59
         endOfWeek.setHours(23, 59, 59, 999);
+        // if the itemDate is between the start and end of the week
         return itemDate >= startOfWeek && itemDate <= endOfWeek;
+        // condition to check the chart type
       } else if (type === "month") {
         return (
           itemDate.getMonth() === today.getMonth() &&
           itemDate.getFullYear() === today.getFullYear()
         );
+        // condition to check the chart type
       } else if (type === "year") {
         return itemDate.getFullYear() === today.getFullYear();
       }
@@ -109,7 +123,7 @@ const WorkHoursChart = () => {
 
   const filteredData = filterDataByChartType(data, chartType);
 
-  // Hilfsfunktion zum Formatieren des x-Achsen-Labels
+  // help function to formate the x-axis label in the different chart modes
   const formatDate = (dateString: string, viewMode: string) => {
     const date = new Date(dateString);
     if (viewMode === "year") {
@@ -119,15 +133,18 @@ const WorkHoursChart = () => {
     } else if (viewMode === "month") {
       return date.toLocaleDateString("de-DE", { day: "2-digit" });
     }
+    // Week-Chart is the default
     return date.toLocaleDateString("de-DE", { day: "2-digit" });
   };
 
-  // Mapping der Daten für den BarChart
+  // section that maps the data to the bar chart and calculates the year chart bar for every month
   let stackData: any[] = [];
 
   if (chartType === "year") {
+    // define the monthly sums for each year as an object
     const monthlySums: { [key: string]: { expected: number; over: number } } =
       {};
+    // filter the data with the definitions above and calculate the monthly sums
     filteredData.forEach((item: any) => {
       const month = new Date(item.workDay).getMonth();
       const year = new Date(item.workDay).getFullYear();
@@ -139,6 +156,7 @@ const WorkHoursChart = () => {
       monthlySums[key].expected += Number(item.expectedHours) || 0;
       monthlySums[key].over += Number(item.overHours) || 0;
     });
+    // map the monthly sums to the bar chart and format the x-axis labels
     stackData = Object.keys(monthlySums).map((key) => {
       const [year, month] = key.split("-");
       const monthName = new Date(Number(year), Number(month), 1)
@@ -153,6 +171,7 @@ const WorkHoursChart = () => {
       };
     });
   } else {
+    // filter and map the data
     stackData = filteredData
       .filter((item: any) => item.elapsedTime > 0)
       .map((item: any) => {
@@ -190,7 +209,7 @@ const WorkHoursChart = () => {
       : initialSpacing + stackData.length * (barWidth + spacing) + spacing;
 
   return (
-    // Mit TouchableWithoutFeedback schließen wir das Tooltip beim Tippen außerhalb
+    // TouchableWithoutFeedback to close the tooltip
     <TouchableWithoutFeedback onPress={() => setTooltipData(null)}>
       <View
         onLayout={(event: LayoutChangeEvent) =>
@@ -223,12 +242,12 @@ const WorkHoursChart = () => {
           chartType={chartType as "week" | "month" | "year"}
           setChartType={(type) => {
             setChartType(type);
-            setTooltipData(null); // Tooltip schließen beim Wechsel des Chart-Typs
+            setTooltipData(null); // close tooltip if chart type changes
           }}
         />
-        {/* Frame-Container mit horizontalem Padding */}
+        {/* Frame-Container with horizontal scrollbar */}
         <View style={{ paddingHorizontal: cardPadding }}>
-          {/* Horizontal scrollbarer Container für den BarChart */}
+          {/* Horizontal scrollbarer container for the BarChart */}
           <ScrollView
             horizontal
             ref={scrollViewRef}
