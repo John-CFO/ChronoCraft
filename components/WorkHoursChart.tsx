@@ -45,12 +45,12 @@ const WorkHoursChart = () => {
   // calculate the inner width for the frame
   const innerWidth = cardWidth > 0 ? cardWidth - 2 * cardPadding : 0;
 
-  // set scroolview back if the chart type changes
+  // set scrollview back if the chart type changes
   useEffect(() => {
     scrollViewRef.current?.scrollTo({ x: 0, animated: true });
   }, [chartType]);
 
-  // fnuction to handel the press of the bars
+  // function to handel the press of the bars
   const handleBarPress = (item: any, index: number) => {
     if (item?.stacks) {
       const expectedHours = item.stacks[0]?.value || 0;
@@ -72,7 +72,7 @@ const WorkHoursChart = () => {
       if (x > 300) adjustedX -= 50;
 
       setTooltipData({
-        date: item.label,
+        date: item.originalDate,
         expectedHours,
         overHours,
         x: adjustedX,
@@ -182,6 +182,7 @@ const WorkHoursChart = () => {
         const formattedDate = formatDate(item.workDay, chartType);
         return {
           label: formattedDate,
+          originalDate: item.workDay,
           stacks: [
             { value: Number(item.expectedHours) || 0, color: "gray" },
             {
@@ -195,11 +196,14 @@ const WorkHoursChart = () => {
       .filter((item: any) => item !== null);
   }
 
-  // Definiere feste Werte für Balken & Spacing
+  // define fix values for bars and spacing
   const barWidth = 30;
   const spacing = 8;
   const initialSpacing = 5;
-  // Verwende die gemessene cardWidth als Mindestbreite (falls bereits vorhanden)
+
+  // define the number of label sections
+  const noOfSections = 6;
+  // use the width of the screen to calculate the width of the chart
   const computedChartWidth =
     innerWidth > 0
       ? Math.max(
@@ -207,6 +211,22 @@ const WorkHoursChart = () => {
           initialSpacing + stackData.length * (barWidth + spacing) + spacing
         )
       : initialSpacing + stackData.length * (barWidth + spacing) + spacing;
+
+  const actualMax = Math.max(
+    ...stackData.map(
+      (item: { stacks: { value: number }[] }) =>
+        item.stacks[0].value + item.stacks[1].value
+    )
+  );
+
+  const computedMaxValue = actualMax < 10 ? 10 : actualMax;
+
+  // calculate the maximum value and round it
+  const step = Math.ceil(computedMaxValue / (noOfSections - 1));
+  // generate an array that starts at 0 and increments in equal steps
+  const yAxisLabelTexts = Array.from({ length: noOfSections }, (_, i) =>
+    (i * step).toString()
+  );
 
   return (
     // TouchableWithoutFeedback to close the tooltip
@@ -255,13 +275,9 @@ const WorkHoursChart = () => {
           >
             <BarChart
               width={computedChartWidth}
-              maxValue={Math.max(
-                ...stackData.map(
-                  (item: { stacks: { value: number }[] }) =>
-                    item.stacks[0].value + item.stacks[1].value
-                )
-              )}
-              noOfSections={6}
+              maxValue={computedMaxValue}
+              noOfSections={noOfSections}
+              yAxisLabelTexts={yAxisLabelTexts}
               stackData={stackData}
               barWidth={barWidth}
               initialSpacing={initialSpacing}
