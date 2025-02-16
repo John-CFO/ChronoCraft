@@ -41,6 +41,8 @@ const WorkHoursChart = () => {
 
   // card padding in px to calculate the inner width for the frame
   const cardPadding = 16;
+  // state for the scrollX to save the tooltip position in the chart
+  const [scrollX, setScrollX] = useState(0);
 
   // calculate the inner width for the frame
   const innerWidth = cardWidth > 0 ? cardWidth - 2 * cardPadding : 0;
@@ -61,15 +63,30 @@ const WorkHoursChart = () => {
       const chartHeight = 400;
       const scaleFactor = chartType === "year" ? 2 : 15; // skale factor if chart type is year 2 else 15
       const tooltipHeight = 80;
+      const tooltipWidth = 115;
 
-      const x = index * (barWidth + spacing) + barWidth / 2;
-      let y =
+      // calculate the absolute X-Position of the bar relative to the chart content container
+      const absoluteX = index * (barWidth + spacing) + barWidth / 2;
+
+      // use the scrollX offset and the card padding to calculate the relative X position in the scrollview container
+      const relativeX = absoluteX + cardPadding - scrollX;
+
+      // define the inner frame
+      const frameLeft = cardPadding;
+      const frameRight = cardWidth - cardPadding;
+
+      // caluclate the adjusted X position to ensure the tooltip is fully within the inner frame
+      let adjustedX = relativeX;
+      if (adjustedX < frameLeft) {
+        adjustedX = frameLeft;
+      }
+      if (adjustedX + tooltipWidth > frameRight) {
+        adjustedX = frameRight - tooltipWidth;
+      }
+
+      // calculate the Y position of the tooltip whit the skale factor
+      const y =
         chartHeight - (expectedHours + overHours) * scaleFactor - tooltipHeight;
-
-      // fix the x-position to safe the bar width
-      let adjustedX = x;
-      if (x < 40) adjustedX += 50;
-      if (x > 300) adjustedX -= 50;
 
       setTooltipData({
         date: item.originalDate,
@@ -211,14 +228,14 @@ const WorkHoursChart = () => {
           initialSpacing + stackData.length * (barWidth + spacing) + spacing
         )
       : initialSpacing + stackData.length * (barWidth + spacing) + spacing;
-
+  // calculate the maximum value
   const actualMax = Math.max(
     ...stackData.map(
       (item: { stacks: { value: number }[] }) =>
         item.stacks[0].value + item.stacks[1].value
     )
   );
-
+  // define the maximum value if it is less than 10
   const computedMaxValue = actualMax < 10 ? 10 : actualMax;
 
   // calculate the maximum value and round it
@@ -271,6 +288,8 @@ const WorkHoursChart = () => {
           <ScrollView
             horizontal
             ref={scrollViewRef}
+            onScroll={(e) => setScrollX(e.nativeEvent.contentOffset.x)}
+            scrollEventThrottle={16}
             contentContainerStyle={{ paddingRight: spacing + barWidth / 2 }}
           >
             <BarChart
