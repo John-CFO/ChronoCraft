@@ -394,7 +394,7 @@ const WorkHoursChart = () => {
               {`⏳ Expected: ${tooltipData.expectedHours}h`}
             </Text>
             <Text style={{ fontSize: 12, color: "aqua" }}>
-              {`🚀 Over: ${tooltipData.overHours}h`}
+              {`🚀 Over: ${(tooltipData.overHours || 0).toFixed(2)}h`}
             </Text>
           </View>
         )}
