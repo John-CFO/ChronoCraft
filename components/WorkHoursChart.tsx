@@ -145,13 +145,13 @@ const WorkHoursChart = () => {
     const date = new Date(dateString);
     if (viewMode === "year") {
       return date
-        .toLocaleDateString("de-DE", { month: "short" })
+        .toLocaleDateString("en-GB", { month: "short" })
         .replace(".", "");
     } else if (viewMode === "month") {
-      return date.toLocaleDateString("de-DE", { day: "2-digit" });
+      return date.toLocaleDateString("en-GB", { day: "2-digit" });
     }
     // Week-Chart is the default
-    return date.toLocaleDateString("de-DE", { day: "2-digit" });
+    return date.toLocaleDateString("en-GB", { day: "2-digit" });
   };
 
   // section that maps the data to the bar chart and calculates the year chart bar for every month
@@ -175,12 +175,17 @@ const WorkHoursChart = () => {
     });
     // map the monthly sums to the bar chart and format the x-axis labels
     stackData = Object.keys(monthlySums).map((key) => {
+      // split the key into year and month
       const [year, month] = key.split("-");
-      const monthName = new Date(Number(year), Number(month), 1)
-        .toLocaleDateString("de-DE", { month: "short" })
+      // create a date object for the month
+      const dateForMonth = new Date(Number(year), Number(month), 1);
+      // format the date
+      const monthName = dateForMonth
+        .toLocaleDateString("en-GB", { month: "short" })
         .replace(".", "");
       return {
         label: monthName,
+        originalDate: dateForMonth.toISOString(),
         stacks: [
           { value: monthlySums[key].expected, color: "gray" },
           { value: monthlySums[key].over, color: "aqua", marginBottom: 2 },
@@ -383,7 +388,7 @@ const WorkHoursChart = () => {
             }}
           >
             <Text style={{ fontSize: 14, color: "white", fontWeight: "bold" }}>
-              {`📅 ${formatTooltipDate(tooltipData.date)}`}
+              {`📅 ${formatTooltipDate(tooltipData.date, chartType)}`}
             </Text>
             <Text style={{ fontSize: 12, color: "white" }}>
               {`⏳ Expected: ${tooltipData.expectedHours}h`}
