@@ -1,10 +1,10 @@
 /////////////////////////////WorkHoursInput Component////////////////////////////
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Text, View, TouchableOpacity, TextInput, Alert } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { getAuth } from "firebase/auth";
-import { setDoc, doc } from "firebase/firestore";
+import { setDoc, doc, getDoc } from "firebase/firestore";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import dayjs from "../dayjsConfig";
@@ -18,6 +18,39 @@ const WorkHoursInput = () => {
   const [userTimeZone, setUserTimeZone] = useState<string>(dayjs.tz.guess());
   // state to store the temporary expected hours
   const [tempExpectedHours, setTempExpectedHours] = useState("");
+
+  // hook to fetch the expected hours from Firestore by mount
+  useEffect(() => {
+    const fetchExpectedHours = async () => {
+      try {
+        const userId = getAuth().currentUser?.uid;
+        if (!userId) return;
+
+        const tz = dayjs.tz.guess();
+        const workDay = dayjs().tz(tz).format("YYYY-MM-DD");
+
+        const docRef = doc(
+          FIREBASE_FIRESTORE,
+          "Users",
+          userId,
+          "Services",
+          "AczkjyWoOxdPAIRVxjy3",
+          "WorkHours",
+          workDay
+        );
+
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setExpectedHours(data.expectedHours.toString());
+        }
+      } catch (error) {
+        console.error("Error fetching hours:", error);
+      }
+    };
+
+    fetchExpectedHours();
+  }, []); // empty array enshures that this runs only once by mount
 
   // function to save the expected hours
   const handleSaveMinHours = async () => {
@@ -41,7 +74,7 @@ const WorkHoursInput = () => {
       // use the user's time zone
       const workDay = dayjs().tz(userTimeZone).format("YYYY-MM-DD");
 
-      // Referenz für das Dokument basierend auf dem workDay
+      // reference for the document based on the workDay
       const docRef = doc(
         FIREBASE_FIRESTORE,
         "Users",
@@ -49,7 +82,7 @@ const WorkHoursInput = () => {
         "Services",
         "AczkjyWoOxdPAIRVxjy3",
         "WorkHours",
-        workDay // Das Datum als Dokument-ID
+        workDay // date as document ID
       );
 
       // condition to check if the currentDocId is null and set it
