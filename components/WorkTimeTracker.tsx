@@ -15,6 +15,7 @@ import dayjs from "../dayjsConfig";
 import { produce } from "immer";
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import WorkHoursState from "../components/WorkHoursState";
+import { formatTime } from "../components/WorkTimeCalc";
 
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -66,27 +67,27 @@ const WorkTimeTracker = () => {
     return elapsedMilliseconds / (1000 * 60 * 60);
   };
 
-  // function to format and round the time
-  const formatTime = (timeInHours: number): string => {
-    const hours = Math.floor(timeInHours);
-    const minutes = Math.floor((timeInHours - hours) * 60);
-    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
-  };
-
   // hook to update elapsed time
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
-    const accelerationFactor = 60;
+
     if (isWorking && startWorkTime) {
       const updateElapsedTime = () => {
-        const elapsedTimeInHours =
-          calculateElapsedTime(startWorkTime) * accelerationFactor;
+        const elapsedTimeInHours = calculateElapsedTime(startWorkTime);
         setElapsedTime(elapsedTimeInHours);
       };
 
       updateElapsedTime();
 
-      timer = setInterval(() => {
+      timer = setInterval(updateElapsedTime, 1000);
+    } else {
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+      }
+    }
+
+    /* timer = setInterval(() => {
         updateElapsedTime();
       }, 1_000); // update every second
     } else {
@@ -94,7 +95,7 @@ const WorkTimeTracker = () => {
         clearInterval(timer);
         timer = null;
       }
-    }
+    }*/
 
     return () => {
       if (timer) {
@@ -115,7 +116,7 @@ const WorkTimeTracker = () => {
     // get the current work day
     const workDay = dayjs().tz(userTimeZone).format("YYYY-MM-DD");
     setCurrentDocId(workDay);
-
+    setIsWorking(true);
     try {
       const workRef = doc(
         FIREBASE_FIRESTORE,
@@ -164,7 +165,6 @@ const WorkTimeTracker = () => {
         console.log("Expected Workhours saved:", expectedHoursFromFirestore);
 
         setStartWorkTime(new Date(startTime));
-        setIsWorking(true);
       } else {
         console.log("No Document found.");
         alert("First add your expected hours.");
@@ -177,20 +177,26 @@ const WorkTimeTracker = () => {
   // function to stop work
   const handleStopWork = async () => {
     console.log("Stopping work...");
-    console.log("Start time:", startWorkTime);
-    console.log("Current doc ID:", currentDocId);
+    setIsWorking(false); // Interval sofort stoppen
 
     if (!startWorkTime || !currentDocId) {
-      console.warn("Missing Starttime or Dokument-ID!");
+      console.warn("Fehlende Startzeit oder Dokument-ID!");
       return;
     }
 
     const userId = getAuth().currentUser?.uid;
     if (!userId) {
-      console.error("Found no user ID.");
+      console.error("Keine Benutzer-ID gefunden.");
       return;
     }
-    // get the reference to the document
+
+    const endTime = new Date();
+    const realDurationMs = endTime.getTime() - startWorkTime.getTime();
+    const realDurationHours = realDurationMs / (1000 * 60 * 60);
+    const roundedDuration = parseFloat(realDurationHours.toFixed(2));
+    const overHours = roundedDuration - parseFloat(expectedHours);
+    const roundedOverHours = parseFloat(overHours.toFixed(2));
+
     const workRef = doc(
       FIREBASE_FIRESTORE,
       "Users",
@@ -198,53 +204,31 @@ const WorkTimeTracker = () => {
       "Services",
       "AczkjyWoOxdPAIRVxjy3",
       "WorkHours",
-      currentDocId
+      currentDocId // Hier sicherstellen, dass die ID existiert
     );
-    // initialize workSnap with the document
+
+    // Existenz des Dokuments prüfen
     const workSnap = await getDoc(workRef);
-
     if (!workSnap.exists()) {
-      console.error("Found no Document!");
-      return;
-    }
-    // initialize work data
-    const workData = workSnap.data();
-    if (workData.userId !== userId) {
-      console.error("Error! This user is not allowed to stop the work!");
+      console.error("Fehler: Das Dokument existiert nicht!");
       return;
     }
 
-    const accelerationFactor = 60;
-    const endTime = new Date();
-    const duration = calculateElapsedTime(startWorkTime);
-    const acceleratedDuration = duration * accelerationFactor;
-    const roundedDuration = parseFloat(acceleratedDuration.toFixed(2));
-
-    // initialize work day with user time zone
-    const workDay = startWorkTime
-      ? dayjs(startWorkTime).tz(userTimeZone).format("YYYY-MM-DD")
-      : null;
-    const overHours = roundedDuration - parseFloat(expectedHours);
-    const roundedOverHours = parseFloat(overHours.toFixed(2));
-    if (!workDay) {
-      console.error("Error: workDay is NULL!", startWorkTime);
-    }
-    // update the document
     try {
       await updateDoc(workRef, {
         endTime: endTime.toISOString(),
         duration: roundedDuration,
         overHours: Math.max(roundedOverHours, 0),
       });
-
-      console.log("Work successfully stopped.");
-      setStartWorkTime(null);
-      setCurrentDocId(null);
+      console.log("Daten erfolgreich aktualisiert.");
     } catch (error) {
-      console.error("Error stopping work:", error);
+      console.error("Fehler beim Stoppen:", error);
     }
-  };
 
+    // State zurücksetzen
+    setStartWorkTime(null);
+    setCurrentDocId(null);
+  };
   // fnction to get the data from firestore
   useEffect(() => {
     const fetchData = async () => {
