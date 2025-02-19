@@ -18,6 +18,7 @@ import { BarChart } from "react-native-gifted-charts";
 import WorkHoursState from "../components/WorkHoursState";
 import ChartRadioButtons from "./ChartRadioButtons";
 import { formatTooltipDate } from "../components/FormatToolTip";
+import { formatTime } from "../components/WorkTimeCalc";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -372,7 +373,7 @@ const WorkHoursChart = () => {
           <View
             style={{
               position: "absolute",
-              width: 115,
+              width: 120,
               height: 90,
               justifyContent: "space-around",
               top: tooltipData.y,
@@ -390,11 +391,11 @@ const WorkHoursChart = () => {
             <Text style={{ fontSize: 14, color: "white", fontWeight: "bold" }}>
               {`📅 ${formatTooltipDate(tooltipData.date, chartType)}`}
             </Text>
-            <Text style={{ fontSize: 12, color: "white" }}>
-              {`⏳ Expected: ${tooltipData.expectedHours}h`}
+            <Text style={{ fontSize: 11, color: "white" }}>
+              {`⏳ Expected: ${formatTime(tooltipData.expectedHours)}h`}
             </Text>
-            <Text style={{ fontSize: 12, color: "aqua" }}>
-              {`🚀 Over: ${(tooltipData.overHours || 0).toFixed(2)}h`}
+            <Text style={{ fontSize: 11, color: "aqua" }}>
+              {`🚀 Over: ${formatTime(tooltipData.overHours || 0)}h`}
             </Text>
           </View>
         )}
