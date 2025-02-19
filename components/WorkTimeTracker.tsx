@@ -86,17 +86,6 @@ const WorkTimeTracker = () => {
         timer = null;
       }
     }
-
-    /* timer = setInterval(() => {
-        updateElapsedTime();
-      }, 1_000); // update every second
-    } else {
-      if (timer) {
-        clearInterval(timer);
-        timer = null;
-      }
-    }*/
-
     return () => {
       if (timer) {
         clearInterval(timer);
@@ -177,7 +166,7 @@ const WorkTimeTracker = () => {
   // function to stop work
   const handleStopWork = async () => {
     console.log("Stopping work...");
-    setIsWorking(false); // Interval sofort stoppen
+    setIsWorking(false);
 
     if (!startWorkTime || !currentDocId) {
       console.warn("Fehlende Startzeit oder Dokument-ID!");
@@ -204,10 +193,10 @@ const WorkTimeTracker = () => {
       "Services",
       "AczkjyWoOxdPAIRVxjy3",
       "WorkHours",
-      currentDocId // Hier sicherstellen, dass die ID existiert
+      currentDocId
     );
 
-    // Existenz des Dokuments prüfen
+    // check if the document exists
     const workSnap = await getDoc(workRef);
     if (!workSnap.exists()) {
       console.error("Fehler: Das Dokument existiert nicht!");
@@ -225,11 +214,11 @@ const WorkTimeTracker = () => {
       console.error("Fehler beim Stoppen:", error);
     }
 
-    // State zurücksetzen
+    // set all states to null
     setStartWorkTime(null);
     setCurrentDocId(null);
   };
-  // fnction to get the data from firestore
+  // function to get the data from firestore
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
