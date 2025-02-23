@@ -30,8 +30,10 @@ const WorkHoursChart = () => {
   // state and types for the tooltip
   const [tooltipData, setTooltipData] = useState<{
     date: string;
-    expectedHours: number;
+    expectedHours?: number;
+    baseValue: number;
     overHours: number;
+    plannedHours: number;
     x: number;
     y: number;
   } | null>(null);
@@ -56,8 +58,10 @@ const WorkHoursChart = () => {
   // function to handel the press of the bars
   const handleBarPress = (item: any, index: number) => {
     if (item?.stacks) {
-      const expectedHours = item.stacks[0]?.value || 0;
+      // Die Werte aus dem Stack, wie oben berechnet
+      const baseValue = item.stacks[0]?.value || 0;
       const overHours = item.stacks[1]?.value || 0;
+      const plannedHours = item.plannedHours || 0; // neuer Wert
 
       const barWidth = 22;
       const spacing = 24;
@@ -87,12 +91,13 @@ const WorkHoursChart = () => {
 
       // calculate the Y position of the tooltip whit the skale factor
       const y =
-        chartHeight - (expectedHours + overHours) * scaleFactor - tooltipHeight;
+        chartHeight - (baseValue + overHours) * scaleFactor - tooltipHeight;
 
       setTooltipData({
         date: item.originalDate,
-        expectedHours,
+        baseValue,
         overHours,
+        plannedHours, // geplanter Wert aus Firestore
         x: adjustedX,
         y,
       });
@@ -203,16 +208,28 @@ const WorkHoursChart = () => {
           return null;
         }
         const formattedDate = formatDate(item.workDay, chartType);
+        const workedDuration = Number(item.elapsedTime) || 0;
+        const plannedHours = Number(item.expectedHours) || 0;
+        // Basis: bis maximal die geplanten Stunden (expectedHours) oder die tatsächlich gearbeitete Zeit, wenn diese geringer ist
+        const baseValue =
+          workedDuration < plannedHours ? workedDuration : plannedHours;
+        // Überschuss: nur wenn die gearbeitete Zeit über den geplanten Stunden liegt
+        const extraValue =
+          workedDuration > plannedHours ? workedDuration - plannedHours : 0;
         return {
           label: formattedDate,
           originalDate: item.workDay,
-          stacks: [
+          plannedHours, // für den Tooltip benötigt
+          /*stacks: [
             { value: Number(item.expectedHours) || 0, color: "gray" },
             {
               value: Number(item.overHours) || 0,
               color: "aqua",
               marginBottom: 2,
-            },
+            },  ],*/
+          stacks: [
+            { value: baseValue, color: "gray" },
+            { value: extraValue, color: "aqua", marginBottom: 2 },
           ],
         };
       })
@@ -392,7 +409,9 @@ const WorkHoursChart = () => {
               {`📅 ${formatTooltipDate(tooltipData.date, chartType)}`}
             </Text>
             <Text style={{ fontSize: 11, color: "white" }}>
-              {`⏳ Expected: ${formatTime(tooltipData.expectedHours)}h`}
+              {tooltipData.baseValue < tooltipData.plannedHours
+                ? `⏳ Duration: ${formatTime(tooltipData.baseValue)}h`
+                : `⏳ Expected: ${formatTime(tooltipData.baseValue)}h`}
             </Text>
             <Text style={{ fontSize: 11, color: "aqua" }}>
               {`🚀 Over: ${formatTime(tooltipData.overHours || 0)}h`}
