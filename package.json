@@ -43,7 +43,6 @@
     "firebase": "^11.1.0",
     "firebase-admin": "^12.1.1",
     "firebase-functions": "^5.0.1",
-    "immer": "^10.1.1",
     "install": "^0.13.0",
     "link": "^2.1.0",
     "lottie-react-native": "^6.5.1",
