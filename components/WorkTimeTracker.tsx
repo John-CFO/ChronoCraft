@@ -1,6 +1,6 @@
 /////////////////////////////WorkTimeTracker Component////////////////////////////
 
-import { View, Text, Button } from "react-native";
+import { View, Text, Button, AppState } from "react-native";
 import React, { useState, useEffect } from "react";
 import {
   collection,
@@ -11,9 +11,10 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
-import dayjs from "../dayjsConfig";
-import { produce } from "immer";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
+import dayjs from "../dayjsConfig";
 import WorkHoursState from "../components/WorkHoursState";
 import { formatTime } from "../components/WorkTimeCalc";
 
@@ -35,6 +36,8 @@ const WorkTimeTracker = () => {
   // new trigger to reload the chart after stop
   // it is needed because the chart is not updated after stop the timer without reload
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  // state to handle the app state
+  const [appState, setAppState] = useState(AppState.currentState);
 
   // global WorkHoursState
   const {
@@ -95,6 +98,67 @@ const WorkTimeTracker = () => {
       }
     };
   }, [isWorking, startWorkTime, accumulatedDuration]);
+
+  // hook to update the app state if the app is in the foreground or background
+  useEffect(() => {
+    const handleAppStateChange = async (nextAppState: string) => {
+      // variable to store the app state
+      let appStateValue:
+        | "active"
+        | "background"
+        | "inactive"
+        | "unknown"
+        | "extension"
+        | null = null;
+      // check if the app state is valid
+      if (
+        nextAppState === "active" ||
+        nextAppState === "background" ||
+        nextAppState === "inactive" ||
+        nextAppState === "unknown" ||
+        nextAppState === "extension"
+      ) {
+        appStateValue = nextAppState;
+      } else {
+        console.error(`Invalid app state: ${nextAppState}`);
+      }
+      // if the app returns from the background and is working:
+      if (
+        appState.match(/inactive|background/) && // check what the app state was before
+        nextAppState === "active" && // check if the app is in the foreground
+        isWorking // check if the app is working
+      ) {
+        const lastTime = await AsyncStorage.getItem("lastActiveTime");
+        if (lastTime) {
+          // calculate the elapsed time
+          const elapsedHours =
+            (Date.now() - new Date(lastTime).getTime()) / (1000 * 60 * 60);
+          // update the accumulated duration
+          setAccumulatedDuration((prev) => prev + elapsedHours);
+          // set a new start time, so that the difference is measured from now
+          setStartWorkTime(new Date());
+        }
+      }
+      // Wenn die App in den Hintergrund geht und gearbeitet wird:
+      // if the app goes to the background and is working
+      if (nextAppState.match(/inactive|background/) && isWorking) {
+        await AsyncStorage.setItem("lastActiveTime", new Date().toISOString());
+      }
+      // set the app state if it is valid
+      if (appStateValue !== null) {
+        setAppState(appStateValue);
+      }
+    };
+    // event listener to listen for changes in the app state
+    const subscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange
+    );
+    // delete the event listener
+    return () => {
+      subscription.remove();
+    };
+  }, [appState, isWorking]);
 
   // function to start work
   const handleStartWork = async () => {
