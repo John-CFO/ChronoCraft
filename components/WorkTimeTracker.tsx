@@ -30,6 +30,12 @@ interface DataPoint {
 const WorkTimeTracker = () => {
   // state to store the user's time zone
   const [userTimeZone, setUserTimeZone] = useState<string>(dayjs.tz.guess());
+  // local state for accumulated duration (in hours)
+  const [accumulatedDuration, setAccumulatedDuration] = useState(0);
+  // new trigger to reload the chart after stop
+  // it is needed because the chart is not updated after stop the timer without reload
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
   // global WorkHoursState
   const {
     isWorking,
@@ -73,25 +79,22 @@ const WorkTimeTracker = () => {
 
     if (isWorking && startWorkTime) {
       const updateElapsedTime = () => {
-        const elapsedTimeInHours = calculateElapsedTime(startWorkTime);
-        setElapsedTime(elapsedTimeInHours);
+        const currentSession = calculateElapsedTime(startWorkTime);
+        setElapsedTime(accumulatedDuration + currentSession);
       };
 
       updateElapsedTime();
-
       timer = setInterval(updateElapsedTime, 1000);
-    } else {
-      if (timer) {
-        clearInterval(timer);
-        timer = null;
-      }
+    } else if (timer) {
+      clearInterval(timer);
+      timer = null;
     }
     return () => {
       if (timer) {
         clearInterval(timer);
       }
     };
-  }, [isWorking, startWorkTime]);
+  }, [isWorking, startWorkTime, accumulatedDuration]);
 
   // function to start work
   const handleStartWork = async () => {
@@ -99,13 +102,14 @@ const WorkTimeTracker = () => {
 
     const userId = getAuth().currentUser?.uid;
     if (!userId) {
-      console.error("User ID nicht verfügbar.");
+      console.error("User ID not available.");
       return;
     }
     // get the current work day
     const workDay = dayjs().tz(userTimeZone).format("YYYY-MM-DD");
     setCurrentDocId(workDay);
     setIsWorking(true);
+
     try {
       const workRef = doc(
         FIREBASE_FIRESTORE,
@@ -118,6 +122,7 @@ const WorkTimeTracker = () => {
       );
 
       const docSnap = await getDoc(workRef);
+      let newStartTime;
       if (docSnap.exists()) {
         const workData = docSnap.data();
         const expectedHoursFromFirestore = workData?.expectedHours;
@@ -131,58 +136,62 @@ const WorkTimeTracker = () => {
           return;
         }
 
-        console.log(
-          "Expected Hours from Firestore:",
-          expectedHoursFromFirestore
-        );
-        // initialize start time
-        const startTime = new Date().toISOString();
+        // current accumulated duration (if exists)
+        const prevDuration = Number(workData?.duration) || 0;
+        setAccumulatedDuration(prevDuration);
 
-        // update the document
+        // set new start time, so that already tracked time is considered
+        newStartTime = new Date();
+
         await setDoc(
           workRef,
           {
-            startTime,
+            startTime: newStartTime.toISOString(),
             expectedHours: expectedHoursFromFirestore,
             workDay,
             userId,
           },
           { merge: true }
         );
-
-        console.log("Start Worktime:", startTime);
-        console.log("Expected Workhours saved:", expectedHoursFromFirestore);
-
-        setStartWorkTime(new Date(startTime));
+        console.log(
+          "Resuming work. Previous duration:",
+          prevDuration,
+          "hours. New start time:",
+          newStartTime
+        );
+        setStartWorkTime(newStartTime);
       } else {
         console.log("No Document found.");
         alert("First add your expected hours.");
+        return;
       }
     } catch (error) {
       console.error("Error starting work:", error);
     }
   };
-
   // function to stop work
   const handleStopWork = async () => {
     console.log("Stopping work...");
     setIsWorking(false);
 
     if (!startWorkTime || !currentDocId) {
-      console.warn("Fehlende Startzeit oder Dokument-ID!");
+      console.warn("Missing startWorkTime or currentDocId.");
       return;
     }
 
     const userId = getAuth().currentUser?.uid;
     if (!userId) {
-      console.error("Keine Benutzer-ID gefunden.");
+      console.error("No user ID found.");
       return;
     }
 
     const endTime = new Date();
-    const realDurationMs = endTime.getTime() - startWorkTime.getTime();
-    const realDurationHours = realDurationMs / (1000 * 60 * 60);
-    const roundedDuration = parseFloat(realDurationHours.toFixed(2));
+
+    // calculate the duration of the current session (in hours)
+    const sessionDurationHours = calculateElapsedTime(startWorkTime);
+    // full duration = accumulated duration + current session
+    const totalDuration = accumulatedDuration + sessionDurationHours;
+    const roundedDuration = parseFloat(totalDuration.toFixed(2));
     const overHours = roundedDuration - parseFloat(expectedHours);
     const roundedOverHours = parseFloat(overHours.toFixed(2));
 
@@ -195,34 +204,38 @@ const WorkTimeTracker = () => {
       "WorkHours",
       currentDocId
     );
-
     // check if the document exists
     const workSnap = await getDoc(workRef);
     if (!workSnap.exists()) {
-      console.error("Fehler: Das Dokument existiert nicht!");
+      console.error("Error: Document does not exist!");
       return;
     }
-
     try {
       await updateDoc(workRef, {
         endTime: endTime.toISOString(),
         duration: roundedDuration,
         overHours: Math.max(roundedOverHours, 0),
       });
-      console.log("Daten erfolgreich aktualisiert.");
+      console.log(
+        "Data successfully updated with total duration:",
+        roundedDuration
+      );
+      // load global state new to update the chart
+      await loadState();
+      setRefreshTrigger((prev) => prev + 1);
     } catch (error) {
-      console.error("Fehler beim Stoppen:", error);
+      console.error("Error updating data:", error);
     }
-
-    // set all states to null
+    // update the local accumulated duration and reset the start time
+    setAccumulatedDuration(roundedDuration);
     setStartWorkTime(null);
-    setCurrentDocId(null);
   };
+
   // function to get the data from firestore
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
-
+      // snapshot of firestore data
       const snapshot = await getDocs(
         collection(
           FIREBASE_FIRESTORE,
@@ -233,14 +246,15 @@ const WorkTimeTracker = () => {
           "WorkHours"
         )
       );
-
+      // condition to check if the snapshot is empty
       if (snapshot.empty) {
         console.warn("No data found in Firestore.");
         return;
       }
-      // map the data and formate it
+      // initialize the data with the fetched data from firestore
       const fetchedData = snapshot.docs.map((doc) => doc.data());
       const formattedData = fetchedData
+        // map the data to the expected format
         .map((item) => {
           if (!item.workDay || isNaN(new Date(item.workDay).getTime())) {
             console.error("Missing workDay in item:", item);
@@ -263,7 +277,7 @@ const WorkTimeTracker = () => {
     };
 
     fetchData();
-  }, [user, currentDocId]);
+  }, [user, currentDocId, refreshTrigger]);
 
   return (
     <View
