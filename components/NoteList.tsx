@@ -8,6 +8,7 @@ import NoteCard from "./NoteCard";
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
+
 interface Note {
   id: string;
   comment: string;
@@ -22,14 +23,16 @@ const NoteList: React.FC<{ projectId: string }> = ({ projectId }) => {
   // state to manage the loading Indicator
   const [loading, setLoading] = useState<boolean>(true);
 
-  // useEffect to fetch the notes from Firestore with snapshot
+  // hook to fetch the notes from Firestore with snapshot
   useEffect(() => {
     const fetchNotes = async () => {
+      // condition to check if user is authenticated
       const user = FIREBASE_AUTH.currentUser;
       if (!user) {
         console.error("User is not authenticated.");
         return false;
       }
+      // try to get the notes from Firestore
       try {
         const notesQuery = query(
           collection(
@@ -40,7 +43,7 @@ const NoteList: React.FC<{ projectId: string }> = ({ projectId }) => {
           )
         );
         const notesSnapshot = await getDocs(notesQuery);
-
+        // condition to check if notesSnapshot is empty
         if (!notesSnapshot.empty) {
           const fetchedNotes: Note[] = notesSnapshot.docs.map((doc) => {
             const data = doc.data() as DocumentData;
@@ -68,7 +71,7 @@ const NoteList: React.FC<{ projectId: string }> = ({ projectId }) => {
   const handleDeleteNote = (noteId: string) => {
     setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
   };
-
+  // condition: if the loading is true show the loading indicator
   if (loading) {
     return (
       <View>

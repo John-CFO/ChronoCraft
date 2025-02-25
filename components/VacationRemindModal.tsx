@@ -1,5 +1,10 @@
 //////////////////////////VacationRemindModal Component//////////////////////////
 
+// This component is used to show a modal to set a reminder for a vacation
+// The user can select a reminder duration and save the reminder to Firestore
+
+////////////////////////////////////////////////////////////////////////////////
+
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Alert } from "react-native";
 import Modal from "react-native-modal";

@@ -1,5 +1,11 @@
 /////////////////////////////////////////VacationList Component////////////////////////////////////////
 
+// This component is used to show the vacations in a list
+// The user can navigate to the reminder modal to set a reminder for a vacation
+// and also delete the vacation from the list
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
 import { View, Text, FlatList } from "react-native";
 import React, { useEffect, useState } from "react";
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";

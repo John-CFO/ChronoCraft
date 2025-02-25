@@ -81,20 +81,22 @@ const NoteModal: React.FC<NoteModalProps> = ({
         return;
       }
 
+      // condition to check if user is authenticated
       const user = FIREBASE_AUTH.currentUser;
       if (user) {
         const projectRef = doc(
           FIREBASE_FIRESTORE,
           `Users/${userId}/Services/${serviceId}/Projects/${projectId}`
         );
-
+        // initialize the project snapshot
         const projectSnapshot = await getDoc(projectRef);
-
+        // condition to check if the project exists
         if (projectSnapshot.exists()) {
           const projectNotesRef = collection(
             FIREBASE_FIRESTORE,
             `Users/${userId}/Services/${serviceId}/Projects/${projectId}/Notes`
           );
+          // add the comment to the project
           await addDoc(projectNotesRef, {
             uid: user.uid,
             comment: comment,
@@ -114,6 +116,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
     }
   };
 
+  // function to handle comment change
   const handleCommentChange = (text: string) => {
     setComment(text);
   };

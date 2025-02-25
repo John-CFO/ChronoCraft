@@ -42,7 +42,7 @@ export const useCalendarStore = create<CalendarState>((set) => ({
   // initial state
   markedDates: {},
 
-  // function to update markedDates
+  // setter to update markedDates
   setMarkedDates: (newDates) => set({ markedDates: newDates }),
 
   // function to reset markedDates
