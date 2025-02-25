@@ -9,16 +9,18 @@ import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 export const updateProjectData = async (projectId: string, data: any) => {
+  // condition to check if user is authenticated
   const user = FIREBASE_AUTH.currentUser;
   if (!user) {
     console.error("User is not authenticated.");
     return false;
   }
-
+  // if no projectId is provided return
   if (!projectId) {
     // console.error("updateProjectData - projectId ist nicht definiert.");
     return;
   }
+  // try to update the project data
   try {
     /* console.log(
       "updateProjectData - Updating project with projectId:",

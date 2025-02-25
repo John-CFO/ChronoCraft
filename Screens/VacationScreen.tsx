@@ -23,16 +23,15 @@ function VacationScreen() {
     new Date().toISOString().split("T")[0]
   );
 
-  // useFocusEffect to refresh the FlatList to show the updated data
+  // hook to refresh the FlatList to show the updated data
   useFocusEffect(
     useCallback(() => {
       setRefreshKey((prevKey) => prevKey + 1);
     }, [])
   );
-
+  // hook to set the current month when render the screen
   useEffect(() => {
     if (isFocused) {
-      // set the current month when render the screen
       setCurrentMonth(new Date().toISOString().split("T")[0]);
     }
   }, [isFocused]);
@@ -87,7 +86,7 @@ function VacationScreen() {
               </Text>
             </View>
           </View>
-
+          {/* Calendar */}
           <View
             style={{
               width: 420,
@@ -100,7 +99,7 @@ function VacationScreen() {
               markedDates={markedDates}
             />
           </View>
-
+          {/* VacationForm */}
           <View>
             <VacationForm />
           </View>
@@ -108,6 +107,7 @@ function VacationScreen() {
       }
       ListFooterComponent={
         <>
+          {/* VacationList */}
           <View
             style={{
               flex: 1,

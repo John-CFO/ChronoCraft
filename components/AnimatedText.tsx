@@ -6,6 +6,8 @@
 // You find a detailed documentation on https://github.com/benjamineruvieru/react-native-type-animation.
 // In this documentaiton would you find properties to change style, loop and handle the type-animation library.
 
+////////////////////////////////////////////////////////////////////
+
 import React from "react";
 import { TypeAnimation } from "react-native-type-animation";
 

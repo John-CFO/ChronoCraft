@@ -6,6 +6,8 @@
 // the user can also set his hourly rate to calculate the total earnings. the total earnings and the hourly rate are shown in the details screen
 // it used ProjectContext.tsx to get the project id to save the background task and let the Tracker work in the background
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 import {
   View,
   Text,
@@ -14,7 +16,6 @@ import {
   AppStateStatus,
 } from "react-native";
 import React, { useState, useEffect } from "react";
-
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import * as Animatable from "react-native-animatable";
@@ -28,7 +29,7 @@ import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useStore, ProjectState } from "./TimeTrackingState";
 import { updateProjectData } from "../components/FirestoreService";
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
 type RootStackParamList = {
   Details: { projectId: string };
 };
@@ -38,13 +39,14 @@ type TimeTrackerRouteProp = RouteProp<RootStackParamList, "Details">;
 interface TimeTrackingCardsProps {
   projectId: string;
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
+  // initialize the routing
   const route = useRoute<TimeTrackerRouteProp>();
   const { projectId } = route.params;
 
-  // states to fetch data from firestore
+  // use the global state to fetch data from firestore
   const { lastStartTime, endTime, originalStartTime } = useStore((state) => ({
     lastStartTime: state.projects[projectId]?.lastStartTime,
     endTime: state.projects[projectId]?.endTime,
@@ -83,7 +85,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   // initialize local timer with project state
   const [localTimer, setLocalTimer] = useState(projectState?.timer || 0);
 
-  // update localTimer when projectState.timer changes
+  // hook to update localTimer when projectState.timer changes
   useEffect(() => {
     //  console.log("projectState.timer:", projectState?.timer);
     if (
@@ -94,7 +96,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
     }
   }, [projectState?.timer]);
 
-  // function to fetch project data from firestore when navigate from home screen to details screen
+  // hook to fetch project data from firestore when navigate from home screen to details screen
   useEffect(() => {
     const fetchProjectData = async () => {
       const user = getAuth().currentUser;
@@ -141,7 +143,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
             // update localTimer with projectData.timer
             setLocalTimer(projectData.timer);
 
-            // Update Zustand store with project data
+            // update Zustand store with project data
             setProjectData(currentProjectId, formattedData as ProjectState);
           } else {
             console.error("No such document!");
@@ -215,7 +217,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
     setLocalTimer,
   ]);
 
-  // function to render the UI based on the project state and calculated timer and earnings livelyly
+  // hook to render the UI based on the project state and calculated timer and earnings livelyly
   useEffect(() => {
     let interval: NodeJS.Timeout;
 

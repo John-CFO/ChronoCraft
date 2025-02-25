@@ -29,11 +29,12 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
 
   // function to handle the password reset
   const handlePasswordReset = async () => {
+    // condition: if no email is entered show an alert
     if (!email) {
       Alert.alert("Error", "Please enter your email.");
       return;
     }
-
+    // try to send the password reset email, if it was successful show an alert with instructions
     try {
       await sendPasswordResetEmail(FIREBASE_AUTH, email);
       Alert.alert(

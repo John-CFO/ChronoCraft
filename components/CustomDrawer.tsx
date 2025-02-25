@@ -3,6 +3,8 @@
 // this coponent is used to create the custom  user-specific drawer
 // it includes the Edit Profile modal, the FAQ bottom sheet, the drawer item list as component and the logout function
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
 import {
   View,
   Text,
@@ -85,7 +87,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
     }
   };
 
-  // useeffect to fetch user profile data when component mounts
+  // hook to fetch user profile data when component mounts
   useEffect(() => {
     fetchUserProfile();
   }, []);

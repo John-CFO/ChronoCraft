@@ -1,3 +1,5 @@
+/////////////////////////////////Workhours Screen////////////////////////////////////
+
 import React from "react";
 import { View, Text, SafeAreaView, ScrollView } from "react-native";
 
@@ -5,6 +7,8 @@ import WorkHoursState from "../components/WorkHoursState";
 import WorkHoursInput from "../components/WorkHoursInput";
 import WorkTimeTracker from "../components/WorkTimeTracker";
 import WorkHoursChart from "../components/WorkHoursChart";
+
+/////////////////////////////////////////////////////////////////////////////////////
 
 const WorkHoursScreen = () => {
   const {} = WorkHoursState();
@@ -42,11 +46,13 @@ const WorkHoursScreen = () => {
           >
             - Workhours Management -
           </Text>
-
+          {/* WorkHours Input */}
           <WorkHoursInput />
           <View style={{ marginTop: 50, width: "100%" }}>
+            {/* Worktime Tracker */}
             <WorkTimeTracker />
           </View>
+          {/* Workhours Chart */}
           <WorkHoursChart />
         </View>
       </SafeAreaView>

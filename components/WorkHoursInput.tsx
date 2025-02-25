@@ -1,5 +1,9 @@
 /////////////////////////////WorkHoursInput Component////////////////////////////
 
+// This component is used to show the expected hours input field and save the expected hours to Firestore
+
+/////////////////////////////////////////////////////////////////////////////////
+
 import React, { useState, useEffect } from "react";
 import { Text, View, TouchableOpacity, TextInput, Alert } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -8,6 +12,8 @@ import { setDoc, doc, getDoc } from "firebase/firestore";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import dayjs from "../dayjsConfig";
+
+//////////////////////////////////////////////////////////////////////////////////
 
 const WorkHoursInput = () => {
   // state to store the expected hours

@@ -4,6 +4,8 @@
 // the user can set the hourly rate and the component will calculate the earnings based on the time tracked by the time tracker card
 // it used ProjectContext.tsx to get the project id to save the background task and let the Tracker work in the background
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 import { View, Text, TextInput, TouchableOpacity } from "react-native";
 import React, { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
@@ -15,7 +17,8 @@ import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { updateProjectData } from "../components/FirestoreService";
 import { useStore } from "./TimeTrackingState";
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 type RootStackParamList = {
   Details: { projectId: string };
 };
@@ -65,7 +68,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
     projectState.totalEarnings
   );
 
-  // function to calculate lively earnings
+  // hook to calculate lively earnings
   // Sync totalEarnings with global state
   useEffect(() => {
     if (isTracking) {
@@ -77,7 +80,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
     }
   }, [isTracking, currentProjectId]);
 
-  // Add another useEffect to synchronize the local totalEarnings with the global one
+  // hook to synchronize the local totalEarnings with the global one
   useEffect(() => {
     if (currentProjectId) {
       const projectState = getProjectState(currentProjectId);
@@ -87,7 +90,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
     }
   }, [currentProjectId, getProjectState]);
 
-  // function to show hourly rate with snapshot in the UI
+  // hook to show hourly rate with snapshot in the UI
   useEffect(() => {
     const fetchHourlyRate = async () => {
       const user = FIREBASE_AUTH.currentUser;

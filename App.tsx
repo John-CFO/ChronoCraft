@@ -1,18 +1,12 @@
 /////////////////////app navigator and stack navigator///////////////////////
 
-import { Text, TouchableOpacity, View, Alert, Button } from "react-native";
+import { Text, TouchableOpacity, View, Alert } from "react-native";
 import React, { useEffect, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
-import {
-  createDrawerNavigator,
-  // DrawerNavigationProp,
-} from "@react-navigation/drawer";
-import {
-  createStackNavigator,
-  // TransitionPresets,
-} from "@react-navigation/stack";
+import { createDrawerNavigator } from "@react-navigation/drawer";
+import { createStackNavigator } from "@react-navigation/stack";
 import {
   Fontisto,
   MaterialIcons,
@@ -21,9 +15,6 @@ import {
 } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 import { User, onAuthStateChanged } from "firebase/auth";
-//import { AlertNotificationRoot } from "react-native-alert-notification";
-//import { Color } from "react-native-alert-notification/lib/typescript/service";
-//import { useNavigation } from "@react-navigation/native";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-gesture-handler";
@@ -58,11 +49,12 @@ const Drawer = createDrawerNavigator();
 const HeaderHelpComponent = ({ navigation }: { navigation: any }) => {
   const [isHelpMenuVisible, setHelpMenuVisible] = useState(false);
 
+  // function to open help menu
   const openDropdown = () => {
     // console.log("open dropdown help menu");
     setHelpMenuVisible(true);
   };
-
+  // function to close help menu
   const closeDropdown = () => {
     // console.log("close dropdown help menu");
     setHelpMenuVisible(false);
@@ -200,7 +192,7 @@ const App = () => {
   // state to navigate user between drawers
   const [user, setUser] = useState<User | null>(null);
 
-  // useeffect to navigate use after login to an other screen
+  // hook to navigate use after login to an other screen
   useEffect(() => {
     onAuthStateChanged(FIREBASE_AUTH, (user) => {
       // console.log("user", user);
@@ -225,6 +217,7 @@ const App = () => {
                     open: { animation: "timing", config: { duration: 300 } },
                     close: { animation: "timing", config: { duration: 300 } },
                   },
+                  // function to slide the stack from the right into the screen
                   cardStyleInterpolator: ({ current, layouts }) => {
                     return {
                       cardStyle: {

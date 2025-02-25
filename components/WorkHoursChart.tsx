@@ -58,10 +58,10 @@ const WorkHoursChart = () => {
   // function to handel the press of the bars
   const handleBarPress = (item: any, index: number) => {
     if (item?.stacks) {
-      // Die Werte aus dem Stack, wie oben berechnet
+      // the values from the stack as above calculated
       const baseValue = item.stacks[0]?.value || 0;
       const overHours = item.stacks[1]?.value || 0;
-      const plannedHours = item.plannedHours || 0; // neuer Wert
+      const plannedHours = item.plannedHours || 0; // new value
 
       const barWidth = 22;
       const spacing = 24;
@@ -97,7 +97,7 @@ const WorkHoursChart = () => {
         date: item.originalDate,
         baseValue,
         overHours,
-        plannedHours, // geplanter Wert aus Firestore
+        plannedHours, // planed value from Firestore
         x: adjustedX,
         y,
       });
@@ -143,7 +143,6 @@ const WorkHoursChart = () => {
       return false;
     });
   };
-
   const filteredData = filterDataByChartType(data, chartType);
 
   // help function to formate the x-axis label in the different chart modes
@@ -210,23 +209,16 @@ const WorkHoursChart = () => {
         const formattedDate = formatDate(item.workDay, chartType);
         const workedDuration = Number(item.elapsedTime) || 0;
         const plannedHours = Number(item.expectedHours) || 0;
-        // Basis: bis maximal die geplanten Stunden (expectedHours) oder die tatsächlich gearbeitete Zeit, wenn diese geringer ist
+        // Basis: up to a maximum of the planned hours (expectedHours) or the actual time worked, if this is less
         const baseValue =
           workedDuration < plannedHours ? workedDuration : plannedHours;
-        // Überschuss: nur wenn die gearbeitete Zeit über den geplanten Stunden liegt
+        // Excess: only if the time worked exceeds the planned hours
         const extraValue =
           workedDuration > plannedHours ? workedDuration - plannedHours : 0;
         return {
           label: formattedDate,
           originalDate: item.workDay,
-          plannedHours, // für den Tooltip benötigt
-          /*stacks: [
-            { value: Number(item.expectedHours) || 0, color: "gray" },
-            {
-              value: Number(item.overHours) || 0,
-              color: "aqua",
-              marginBottom: 2,
-            },  ],*/
+          plannedHours, // for the tooltip needed
           stacks: [
             { value: baseValue, color: "gray" },
             { value: extraValue, color: "aqua", marginBottom: 2 },

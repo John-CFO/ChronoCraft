@@ -3,6 +3,8 @@
 // This component shows the project details in the DetailsScreen.
 // It includes the project details card, time tracker card, earnings calculator card success chart and the project notes.
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 import { View, ScrollView, ActivityIndicator } from "react-native";
 import React, { useEffect, useState } from "react";
 import { query, getDocs, collection } from "firebase/firestore";
@@ -45,8 +47,11 @@ interface Note {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const DetailsScreen: React.FC<DetailsScreenProps> = () => {
+  // navigation
   const route = useRoute<DetailsScreenRouteProp>();
   const navigation = useNavigation();
+
+  // initialize the states from TimeTrackingState
   const {
     projectId = "No ID received",
     userId = "No User ID",
@@ -58,11 +63,12 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+  // hook to set the projectId
   useEffect(() => {
     setProjectId(projectId);
   }, [projectId, setProjectId]);
 
-  // function to fetch the notes from Firestore with snapshot
+  // hook to fetch the notes from Firestore with snapshot
   useEffect(() => {
     const fetchNotes = async () => {
       try {
@@ -73,7 +79,7 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
           )
         );
         const notesSnapshot = await getDocs(notesQuery);
-
+        // condition to check if notesSnapshot is empty, then setNotes([])
         if (!notesSnapshot.empty) {
           const fetchedNotes: Note[] = notesSnapshot.docs.map((doc) => {
             const data = doc.data();
@@ -116,6 +122,7 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
 
   console.log("Rendering component with chartData:", chartData);
 */
+  // loading indicator when data is loading from firebase
   if (loading) {
     return <ActivityIndicator size="large" color="#00ff00" />;
   }

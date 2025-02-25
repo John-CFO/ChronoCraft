@@ -32,7 +32,6 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { AntDesign } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
-
 import dayjs from "dayjs";
 
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
@@ -48,13 +47,9 @@ type RootStackParamList = {
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, "Home">;
 
-/*interface HomeScreenNavigationProps {
-  navigate(arg0: string, arg1: { projectsId: string }): unknown;
-  navigation: StackNavigationProp<RootStackParamList, "Home">;
-} */
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
+const HomeScreen: React.FC = () => {
   // navigation declaration to navigate from any project to DetailsScreen
   const navigation = useNavigation<HomeScreenNavigationProp>();
 
@@ -330,6 +325,7 @@ const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
     };
 
     return (
+      // Animation View parameters
       <Animated.View
         style={{
           height: averageItemHeight,
@@ -347,6 +343,7 @@ const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
         }}
         onLayout={mesureItemHeight}
       >
+        {/* Button to navigate to the details screen */}
         <TouchableOpacity
           onPress={() => handleProjectPress(item.id as string, item.name)}
           style={{ alignItems: "center", justifyContent: "center", flex: 1 }}
@@ -357,6 +354,7 @@ const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
               width: "100%",
             }}
           >
+            {/* Section with date in the project container */}
             {item.createdAt && typeof item.createdAt.toDate === "function" && (
               <Text
                 style={{
@@ -368,7 +366,7 @@ const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
                 {dayjs(item.createdAt.toDate()).format("DD.MM.YYYY")}
               </Text>
             )}
-
+            {/* Project name in the project container */}
             <Text
               style={{
                 marginTop: 5,
@@ -391,9 +389,11 @@ const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
             height: "100%",
           }}
         >
+          {/* Button to delete a project */}
           <TouchableOpacity onPress={() => handleDeleteProject(item.id)}>
             <AntDesign name="delete" size={30} color="darkgrey" />
           </TouchableOpacity>
+          {/* Button to add a note to a project */}
           <TouchableOpacity onPress={() => openNoteModal(item.id)}>
             <MaterialIcons name="edit-note" size={30} color="darkgrey" />
           </TouchableOpacity>
@@ -424,7 +424,7 @@ const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
           - Your Projects -
         </Text>
       </View>
-
+      {/* Section to scroll the projects list with the scroll animation */}
       {projects.length > 0 ? (
         <Animated.FlatList
           style={{
@@ -471,6 +471,7 @@ const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
           </Text>
         </View>
       )}
+      {/* Project input */}
       <View
         style={{
           position: "absolute",
@@ -508,7 +509,7 @@ const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
           maxLength={48}
           value={newProjectName}
         />
-
+        {/* + Button to add a new project */}
         <TouchableOpacity onPress={handleAddProject}>
           <LinearGradient
             colors={["#00FFFF", "#FFFFFF"]}
@@ -546,7 +547,7 @@ const HomeScreen: React.FC /*<HomeScreenNavigationProps>*/ = () => {
           </LinearGradient>
         </TouchableOpacity>
       </View>
-
+      {/* Note Modal */}
       <Modal
         isVisible={noteModalVisible}
         backdropColor="black"

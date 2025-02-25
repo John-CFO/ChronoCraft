@@ -5,14 +5,17 @@
 // NOTE: "timer" is in the gobalState management the same like "elapsedTime" in the other files (it is only used to handle the calculation and timer logic management)
 // the combination of timer and elapsedTime is necessary to correctly track time across multiple sessions. without timer, you would not be able to accumulate total running time properly if the timer is stopped and started multiple times.
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 import { create } from "zustand";
 import { AppState } from "react-native";
-import { updateProjectData } from "../components/FirestoreService";
 import { getDoc, doc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+
+import { updateProjectData } from "../components/FirestoreService";
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 
-///////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export interface ProjectState {
   id: string;
@@ -59,7 +62,7 @@ interface TimeTrackingState {
   setOriginalStartTime: (projectId: string, time: Date | null) => void;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export const useStore = create<TimeTrackingState>((set, get) => ({
   // projects state
@@ -270,7 +273,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
         timer: finalElapsedTime, // round the timer
         endTime: new Date(),
         elapsedTime: finalElapsedTime, // round elapsed time with finalElapsedTime
-        totalEarnings: earnings, // aktualisierte Einnahmen
+        totalEarnings: earnings, // updated earnings
         pauseTime: null,
         originalStartTime: project.originalStartTime || project.startTime,
       });
@@ -351,7 +354,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
 
   // function to get the project tracking state in the TimeTrackerCard using snapshot from firebase
   getProjectTrackingState: async (projectId: string) => {
-    const user = getAuth().currentUser; // Holt den aktuellen Benutzer aus dem Store
+    const user = getAuth().currentUser; // gets the current user from firebase
     if (!user) {
       console.error("User is not authenticated.");
       return false;

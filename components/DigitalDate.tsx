@@ -9,7 +9,7 @@ const DigitalDate = () => {
   // current date state with dayjs
   const [currentDate, setCurrentDate] = useState(dayjs());
 
-  // function to update current date every minute
+  // hook to update current date every minute
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentDate(dayjs());

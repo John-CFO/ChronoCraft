@@ -39,7 +39,7 @@ const CustomCalendar = forwardRef<CustomCalendarRef, CustomCalendarProps>(
     // when the user adds a new marked date, ensuring the calendar starts at the earliest marked date
     const earliestMarkedDate = Object.keys(markedDates).sort()[0];
 
-    // set the currentMonth when the earliestMarkedDate changes
+    // hook to set the currentMonth when the earliestMarkedDate changes
     useEffect(() => {
       setCurrentMonth(
         earliestMarkedDate || new Date().toISOString().split("T")[0]
