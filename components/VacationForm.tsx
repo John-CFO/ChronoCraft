@@ -1,5 +1,10 @@
 ///////////////////////////////////////VacationForm Component////////////////////////////////////////
 
+// This component is used to show the vacation form
+// The user can select a start and end date and save the vacation to Firestore
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
 import React, { useState, useEffect } from "react";
 import { Text, View, ScrollView, TouchableOpacity, Alert } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -55,7 +60,7 @@ const VacationForm = () => {
         "Vacations"
       );
 
-      // Startdatum aus `markedDates` ableiten
+      // conducted by sorting the keys of `markedDates`
       const startDate = Object.keys(filteredMarkedDates).sort()[0];
 
       // create new document in `Vacations` collection

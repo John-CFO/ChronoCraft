@@ -4,6 +4,8 @@
 // The authentication is handled by firebase auth.
 // The user can login with email and password or registry with email and password.
 
+///////////////////////////////////////////////////////////////////////////////////////////////
+
 import {
   View,
   TextInput,
@@ -150,7 +152,7 @@ const LoginScreen: React.FC = () => {
         style={{ flex: 1 }}
       >
         <View style={{ flex: 1 }}>
-          {/* background image */}
+          {/* Background image */}
           <ImageBackground
             source={require("../assets/Holo_GIF.gif")}
             style={{
@@ -167,7 +169,7 @@ const LoginScreen: React.FC = () => {
                 width: "100%",
               }}
             >
-              {/* app logo */}
+              {/* App logo */}
               <AppLogo />
               <View
                 style={{
@@ -179,7 +181,7 @@ const LoginScreen: React.FC = () => {
                   height: 30,
                 }}
               >
-                {/* text animation */}
+                {/* Text animation */}
                 <AnimatedText />
               </View>
             </View>
@@ -198,7 +200,7 @@ const LoginScreen: React.FC = () => {
                   alignItems: "center",
                 }}
               >
-                {/* email input */}
+                {/* Email input */}
                 <TextInput
                   style={{
                     borderColor: "aqua",
@@ -219,7 +221,7 @@ const LoginScreen: React.FC = () => {
                   value={email}
                 />
                 <View style={{ position: "relative", width: 280, height: 40 }}>
-                  {/* password input */}
+                  {/* Password input */}
                   <TextInput
                     style={{
                       borderColor: "aqua",
@@ -240,7 +242,7 @@ const LoginScreen: React.FC = () => {
                     onChangeText={(text) => setPassword(text)}
                     value={password}
                   />
-                  {/* visibility eye button */}
+                  {/* Visibility eye button */}
                   <TouchableOpacity
                     onPress={toggleSecureTextEntry}
                     style={{ position: "absolute", right: 15, top: 15 }}
@@ -253,7 +255,7 @@ const LoginScreen: React.FC = () => {
                   </TouchableOpacity>
                 </View>
               </View>
-              {/* loading spinner */}
+              {/* Loading spinner */}
               {loading ? (
                 <ActivityIndicator
                   size="large"
@@ -267,7 +269,7 @@ const LoginScreen: React.FC = () => {
                       margin: 30,
                     }}
                   >
-                    {/* login button */}
+                    {/* Login button */}
                     <TouchableOpacity
                       onPress={handleLogin}
                       style={{
@@ -301,7 +303,7 @@ const LoginScreen: React.FC = () => {
                       </LinearGradient>
                     </TouchableOpacity>
 
-                    {/* register button */}
+                    {/* Register button */}
                     <TouchableOpacity
                       onPress={handleRegister}
                       style={{
@@ -354,7 +356,7 @@ const LoginScreen: React.FC = () => {
               />
             </View>
 
-            {/* status bar */}
+            {/* Status bar */}
             <StatusBar
               barStyle="light-content"
               translucent

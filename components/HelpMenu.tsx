@@ -23,12 +23,12 @@ interface HelpMenuProps {
 /////////////////////////////////////////////////////////////////////////////
 
 const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
-  //function to close the menu
+  // function to close the menu
   const closeMenu = () => {
     onClose();
   };
 
-  //functions to open as extern the social buttons
+  // functions to open as extern the social buttons
   const openFacebook = () => {
     Linking.openURL("https://www.facebook.com/");
   };

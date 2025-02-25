@@ -1,5 +1,12 @@
 /////////////////////////////WorkTimeTracker Component////////////////////////////
 
+// This component is used to track the user's work time and update the WorkHoursState
+// The user has to add the expected hours for each day to Firestore
+// With this data, the WorkTimeTracker can calculate the over hours and update the WorkHoursState
+// Finally, the WorkTimeTracker can update the WorkHoursState and the WorkHoursChart in every chart view
+
+//////////////////////////////////////////////////////////////////////////////////
+
 import { View, Text, Button, AppState } from "react-native";
 import React, { useState, useEffect } from "react";
 import {
@@ -26,6 +33,7 @@ interface DataPoint {
   overHours: number;
   workDay: string;
 }
+
 ///////////////////////////////////////////////////////////////////////////////////
 
 const WorkTimeTracker = () => {
@@ -139,7 +147,7 @@ const WorkTimeTracker = () => {
           setStartWorkTime(new Date());
         }
       }
-      // Wenn die App in den Hintergrund geht und gearbeitet wird:
+
       // if the app goes to the background and is working
       if (nextAppState.match(/inactive|background/) && isWorking) {
         await AsyncStorage.setItem("lastActiveTime", new Date().toISOString());

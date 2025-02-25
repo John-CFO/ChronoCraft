@@ -3,15 +3,11 @@
 // this component uses the zustand state management library
 // to manage the state of the workhours component
 
+///////////////////////////////////////////////////////////////////////////
+
 import { create } from "zustand";
 import { getAuth } from "firebase/auth";
-import {
-  doc,
-  setDoc,
-  getDoc,
-  collection,
-  documentId,
-} from "firebase/firestore";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 
 ////////////////////////////////////////////////////////////////////////////
@@ -90,9 +86,9 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
     if (!user) return;
 
     const state = get();
-    const stateToSave = { ...state }; // Kopiere den Zustand
+    const stateToSave = { ...state }; // kopie the state
 
-    // Entferne alle Funktionen aus dem Zustand
+    // delete all states from the function
     Object.keys(stateToSave).forEach((key) => {
       if (typeof stateToSave[key] === "function") {
         delete stateToSave[key];
@@ -108,7 +104,7 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
       "WorkHours",
       state.currentDocId || "defaultDocId"
     );
-    await setDoc(docRef, stateToSave); // Speichere nur die zustandsrelevanten Daten
+    await setDoc(docRef, stateToSave); // save only state nessesary data
   },
 
   // actions to update the workhoursstate

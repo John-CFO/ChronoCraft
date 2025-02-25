@@ -106,13 +106,14 @@ const FAQBottomSheet = ({ navigation }: { navigation: any }) => {
 
   // function to handle account deletion
   const handleDeleteAccount = async () => {
+    // condition to check if no password is entered
     if (!password) {
       Alert.alert("Error", "Please enter your password.");
       return;
     }
 
     setLoading(true);
-
+    // try to delete the account
     try {
       if (!userUid) {
         throw new Error("No user is signed in.");

@@ -10,7 +10,7 @@ const DigitalClock = () => {
   // set current time state with dayjs
   const [currentTime, setCurrentTime] = useState(dayjs());
 
-  // function to handle the interval change every 1 sec.
+  // hook to handle the interval change every 1 sec.
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(dayjs());

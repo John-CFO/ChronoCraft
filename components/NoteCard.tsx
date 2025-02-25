@@ -11,6 +11,7 @@ import { doc, deleteDoc } from "firebase/firestore";
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 
 ///////////////////////////////////////////////////////////////////////////////////
+
 interface Note {
   id: string;
   comment: string;
@@ -32,11 +33,13 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
 
   // function to handle note deletion in firestore
   const handleDeletComment = async () => {
+    // condition to check if user is authenticated
     const user = FIREBASE_AUTH.currentUser;
     if (!user) {
       console.error("User is not authenticated.");
       return false;
     }
+    // try to delete the note from firestore whith the note id and useRef
     try {
       const noteDocRef = doc(
         FIREBASE_FIRESTORE,

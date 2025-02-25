@@ -2,6 +2,8 @@
 
 // This component is used to show the chart radio buttons in the WorkHours Chart card
 
+/////////////////////////////////////////////////////////////////////////////////////////////
+
 import { View, Text, TouchableOpacity } from "react-native";
 import React from "react";
 

@@ -4,6 +4,8 @@
 // users can change their name, personal ID and profile picture
 // name and personal ID are stored in Firestore while the profile picture is stored in Firebase Storage
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
 import {
   View,
   Text,
@@ -52,7 +54,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     return null;
   }
 
-  // request media library permissions on component mount
+  // hook to request media library permissions on component mount
   useEffect(() => {
     const requestMediaLibraryPermissions = async () => {
       const { status } =
