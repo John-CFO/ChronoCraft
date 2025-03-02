@@ -298,8 +298,9 @@ const WorkHoursChart = () => {
               spacing={spacing}
               barBorderRadius={2.5}
               isAnimated
-              yAxisColor={"darkgray"}
-              xAxisColor={"darkgray"}
+              yAxisColor={"white"}
+              xAxisColor={"white"}
+              rulesColor={"dimgray"} // color for the horizontal break lines
               xAxisLabelTextStyle={{ color: "white" }}
               yAxisTextStyle={{ color: "white" }}
               onPress={(item: any, index: number) =>
