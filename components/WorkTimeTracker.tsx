@@ -7,8 +7,9 @@
 
 //////////////////////////////////////////////////////////////////////////////////
 
-import { View, Text, Button, AppState } from "react-native";
+import { View, Text, Button, AppState, TouchableOpacity } from "react-native";
 import React, { useState, useEffect } from "react";
+import { LinearGradient } from "expo-linear-gradient";
 import {
   collection,
   setDoc,
@@ -381,15 +382,86 @@ const WorkTimeTracker = () => {
         WorkTime Tracker
       </Text>
       {!isWorking ? (
-        <Button title="Start" onPress={handleStartWork} />
+        <TouchableOpacity
+          onPress={handleStartWork}
+          style={{
+            width: 280,
+            borderRadius: 12,
+            overflow: "hidden",
+            borderWidth: 3,
+            borderColor: "white",
+            marginBottom: 25,
+          }}
+        >
+          <LinearGradient
+            colors={["#00FFFF", "#FFFFFF"]}
+            style={{
+              alignItems: "center",
+              justifyContent: "center",
+              height: 45,
+              width: 280,
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: "MPLUSLatin_Bold",
+                fontSize: 22,
+                color: "grey",
+                marginBottom: 5,
+                paddingRight: 10,
+              }}
+            >
+              Start
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
       ) : (
-        <Button title="Stop" onPress={handleStopWork} />
+        <TouchableOpacity
+          onPress={handleStopWork}
+          style={{
+            width: 280,
+            borderRadius: 12,
+            overflow: "hidden",
+            borderWidth: 3,
+            borderColor: "white",
+            marginBottom: 25,
+          }}
+        >
+          <LinearGradient
+            colors={["#00FFFF", "#FFFFFF"]}
+            style={{
+              alignItems: "center",
+              justifyContent: "center",
+              height: 45,
+              width: 280,
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: "MPLUSLatin_Bold",
+                fontSize: 22,
+                color: "grey",
+                marginBottom: 5,
+                paddingRight: 10,
+              }}
+            >
+              Stop
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
       )}
-      {isWorking && startWorkTime && (
-        <Text style={{ color: "aqua", marginTop: 8 }}>
-          Working hours are running: {formatTime(elapsedTime)} hours
-        </Text>
-      )}
+
+      <Text
+        style={{
+          fontWeight: "bold",
+          fontSize: 55,
+          color: isWorking ? "white" : "gray",
+          marginBottom: 5,
+          textAlign: "center",
+        }}
+      >
+        {formatTime(elapsedTime)}
+      </Text>
     </View>
   );
 };
