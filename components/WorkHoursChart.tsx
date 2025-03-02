@@ -233,8 +233,6 @@ const WorkHoursChart = () => {
   const spacing = 8;
   const initialSpacing = 5;
 
-  // define the number of label sections
-  const noOfSections = 6;
   // use the width of the screen to calculate the width of the chart
   const computedChartWidth =
     innerWidth > 0
@@ -243,22 +241,6 @@ const WorkHoursChart = () => {
           initialSpacing + stackData.length * (barWidth + spacing) + spacing
         )
       : initialSpacing + stackData.length * (barWidth + spacing) + spacing;
-  // calculate the maximum value
-  const actualMax = Math.max(
-    ...stackData.map(
-      (item: { stacks: { value: number }[] }) =>
-        item.stacks[0].value + item.stacks[1].value
-    )
-  );
-  // define the maximum value if it is less than 10
-  const computedMaxValue = actualMax < 10 ? 10 : actualMax;
-
-  // calculate the maximum value and round it
-  const step = Math.ceil(computedMaxValue / (noOfSections - 1));
-  // generate an array that starts at 0 and increments in equal steps
-  const yAxisLabelTexts = Array.from({ length: noOfSections }, (_, i) =>
-    (i * step).toString()
-  );
 
   return (
     // TouchableWithoutFeedback to close the tooltip
@@ -309,9 +291,7 @@ const WorkHoursChart = () => {
           >
             <BarChart
               width={computedChartWidth}
-              maxValue={computedMaxValue}
-              noOfSections={noOfSections}
-              yAxisLabelTexts={yAxisLabelTexts}
+              yAxisLabelSuffix="h"
               stackData={stackData}
               barWidth={barWidth}
               initialSpacing={initialSpacing}
