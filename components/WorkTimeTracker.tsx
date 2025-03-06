@@ -25,6 +25,7 @@ import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import dayjs from "../dayjsConfig";
 import WorkHoursState from "../components/WorkHoursState";
 import { formatTime } from "../components/WorkTimeCalc";
+import WorkTimeAnimation from "../components/WorkTimeAnimation";
 
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -450,7 +451,9 @@ const WorkTimeTracker = () => {
           </LinearGradient>
         </TouchableOpacity>
       )}
-
+      <View style={{ position: "relative", height: 20 }}>
+        {isWorking && <WorkTimeAnimation />}
+      </View>
       <Text
         style={{
           fontWeight: "bold",
