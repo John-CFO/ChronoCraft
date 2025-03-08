@@ -7,7 +7,7 @@
 
 //////////////////////////////////////////////////////////////////////////////////
 
-import { View, Text, Button, AppState, TouchableOpacity } from "react-native";
+import { View, Text, AppState, TouchableOpacity } from "react-native";
 import React, { useState, useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -451,9 +451,11 @@ const WorkTimeTracker = () => {
           </LinearGradient>
         </TouchableOpacity>
       )}
+      {/* Tracking Animation */}
       <View style={{ position: "relative", height: 20 }}>
         {isWorking && <WorkTimeAnimation />}
       </View>
+      {/* Tracking Time */}
       <Text
         style={{
           fontWeight: "bold",
