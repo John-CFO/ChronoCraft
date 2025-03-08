@@ -242,6 +242,30 @@ const WorkHoursChart = () => {
         )
       : initialSpacing + stackData.length * (barWidth + spacing) + spacing;
 
+  // function to calculate the dynamic maxValue for Week- and Month-views
+  // to reduce the size of the chart (Y-Axis scaling)
+  const getDynamicMaxValue = () => {
+    // only for Week- and Month-views dynamically scale
+    if (chartType === "week" || chartType === "month") {
+      let maxSum = 0;
+      stackData.forEach((item) => {
+        const sum = item.stacks.reduce(
+          (acc: number, curr: { value: number }) => acc + curr.value,
+          0
+        );
+        if (sum > maxSum) maxSum = sum;
+      });
+
+      // add a buffer (e.g. 10% more)
+      return maxSum * 1.1;
+    }
+
+    // use the standard value for Year-View
+    return undefined;
+  };
+
+  const dynamicMaxValue = getDynamicMaxValue();
+
   return (
     // TouchableWithoutFeedback to close the tooltip
     <TouchableWithoutFeedback onPress={() => setTooltipData(null)}>
@@ -293,6 +317,7 @@ const WorkHoursChart = () => {
               width={computedChartWidth}
               yAxisLabelSuffix="h"
               stackData={stackData}
+              maxValue={dynamicMaxValue} // regulate the size of the Y-Axis
               barWidth={barWidth}
               initialSpacing={initialSpacing}
               spacing={spacing}
