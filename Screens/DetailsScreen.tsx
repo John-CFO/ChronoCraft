@@ -18,6 +18,7 @@ import EarningsCalculatorCard from "../components/EarningsCalculatorCard";
 import NoteList from "../components/NoteList";
 import { useStore } from "../components/TimeTrackingState";
 import { EarningsCalculatorCardProp } from "../components/EarningsCalculatorCard";
+import RoutingLoader from "../components/RoutingLoader";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -62,6 +63,8 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
   // states to manage the NoteCard Value fetching
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  // state to manage the loading Indicator time
+  const [minTimePassed, setMinTimePassed] = useState(false);
 
   // hook to set the projectId
   useEffect(() => {
@@ -103,9 +106,24 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
     fetchNotes();
   }, [projectId, userId, serviceId]);
 
-  /*
+  // hook to manage the loading indicator time
+  useEffect(() => {
+    // set minTimePassed to true after 3 seconds
+    const timer = setTimeout(() => {
+      setMinTimePassed(true);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!loading && minTimePassed) {
+      setLoading(false);
+    }
+  }, [loading, minTimePassed]);
+
   // loading indicator when data is loading from firebase
-  if (loading) {
+  if (loading || !minTimePassed) {
     return (
       <View
         style={{
@@ -115,17 +133,11 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
           backgroundColor: "black",
         }}
       >
-        <ActivityIndicator size="large" color="#00ff00" />
+        <RoutingLoader />
       </View>
     );
   }
 
-  console.log("Rendering component with chartData:", chartData);
-*/
-  // loading indicator when data is loading from firebase
-  if (loading) {
-    return <ActivityIndicator size="large" color="#00ff00" />;
-  }
   return (
     <ScrollView style={{ backgroundColor: "black" }}>
       <View style={{ flex: 1, paddingHorizontal: 20, paddingBottom: 20 }}>
