@@ -32,7 +32,7 @@ import { getDoc, doc } from "firebase/firestore";
 
 import EditProfileModal from "./EditProfileModal";
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
-import FAQBottomSheet from "../components/FAQBottomSheet";
+import FAQBottomSheet from "./FAQBottomSheet";
 import { CustomUser } from "./types/CustomUser"; // CustomUser type definition import to handle conflict with FirebaseUser
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -217,7 +217,8 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
           index={1}
           snapPoints={snapPoints}
           onChange={handleSheetChanges}
-          backgroundStyle={{ backgroundColor: "white" }}
+          backgroundStyle={{ backgroundColor: "#191919" }}
+          handleIndicatorStyle={{ backgroundColor: "#191919" }}
         >
           <FAQBottomSheet navigation={undefined} />
         </BottomSheetModal>
