@@ -11,7 +11,6 @@ import { View, Text, TouchableOpacity, Alert, TextInput } from "react-native";
 import Collapsible from "react-native-collapsible";
 import { LinearGradient } from "expo-linear-gradient";
 import { doc, updateDoc } from "firebase/firestore";
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { deleteObject, ref, getStorage } from "firebase/storage";
 import { EmailAuthProvider } from "firebase/auth";
 import { reauthenticateWithCredential } from "firebase/auth";
@@ -21,10 +20,14 @@ import { ScrollView } from "react-native-gesture-handler";
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const FAQBottomSheet = ({ navigation }: { navigation: any }) => {
-  // reference to the bottom sheet modal
-  const bottomSheetModalRef = useRef<typeof BottomSheetModal>(null);
+interface FAQBottomSheetProps {
+  navigation: any;
+  closeModal: () => void | undefined;
+}
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
   // FAQ section states
   const [expandedSections, setExpandedSections] = useState<{
     [key: string]: boolean;
@@ -52,10 +55,12 @@ const FAQBottomSheet = ({ navigation }: { navigation: any }) => {
 
   // function to close the FAQ bottom sheet modal
   const closeFAQSheet = () => {
-    // condition to check if the bottomSheetModalRef is defined
-    if (bottomSheetModalRef.current) {
-      // if defined, close the modal
-      (bottomSheetModalRef.current as any).close();
+    try {
+      // console.log("FAQ bottom sheet closed.");
+      closeModal();
+    } catch (error) {
+      console.error("Error closing FAQ bottom sheet:", error);
+      throw error;
     }
   };
 
