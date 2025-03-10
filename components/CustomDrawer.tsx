@@ -217,10 +217,15 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
           index={1}
           snapPoints={snapPoints}
           onChange={handleSheetChanges}
+          enablePanDownToClose={true}
+          android_keyboardInputMode="adjustResize"
           backgroundStyle={{ backgroundColor: "#191919" }}
           handleIndicatorStyle={{ backgroundColor: "#191919" }}
         >
-          <FAQBottomSheet navigation={undefined} />
+          <FAQBottomSheet
+            navigation={undefined}
+            closeModal={() => bottomSheetModalRef.current?.close()}
+          />
         </BottomSheetModal>
         {/* FAQ button */}
         <TouchableOpacity onPress={handlePresentModalPress}>
