@@ -1,8 +1,15 @@
 ///////////////////////////////////FAQBottomSheet Component////////////////////////////////////////
 
+// This file is used to create the FAQ bottom sheet modal
+// It includes the FAQ sections and the delete account section
+// It also includes the functions to open and close the FAQ bottom sheet modal
+// And also the aswer to change the user´s password
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 import React, { useState, useRef } from "react";
 import { View, Text, TouchableOpacity, Alert, TextInput } from "react-native";
 import Collapsible from "react-native-collapsible";
+import { LinearGradient } from "expo-linear-gradient";
 import { doc, updateDoc } from "firebase/firestore";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { deleteObject, ref, getStorage } from "firebase/storage";
@@ -10,8 +17,9 @@ import { EmailAuthProvider } from "firebase/auth";
 import { reauthenticateWithCredential } from "firebase/auth";
 
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
+import { ScrollView } from "react-native-gesture-handler";
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const FAQBottomSheet = ({ navigation }: { navigation: any }) => {
   // reference to the bottom sheet modal
@@ -150,118 +158,267 @@ const FAQBottomSheet = ({ navigation }: { navigation: any }) => {
   };
 
   return (
-    <View style={{ padding: 20, backgroundColor: "white", borderRadius: 10 }}>
-      {/* FAQ 1: How to close workhourschart tooltip */}
-      <TouchableOpacity
-        onPress={() => toggleSection("faq1")}
-        style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}
+    <View
+      style={{
+        flex: 1,
+        width: "100%",
+      }}
+    >
+      {/* FAQ Header */}
+      <View
+        style={{
+          position: "relative",
+          height: 50,
+          justifyContent: "center",
+          borderBottomWidth: 1,
+          borderBottomColor: "rgba(255, 255, 255, 0.1)",
+        }}
       >
-        <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-          How to close the tooltip on the Workhours Chart?
-        </Text>
-        <Text style={{ marginLeft: 10, fontSize: 18 }}>
-          {expandedSections.faq1 ? "↑" : "↓"}
-        </Text>
-      </TouchableOpacity>
-      <Collapsible collapsed={!expandedSections.faq1}>
-        <Text style={{ marginTop: 10, fontSize: 14, color: "#555" }}>
-          To close the tooltip, simply tap anywhere outside the chart area but
-          inside the card. The entire card is set up to listen for taps outside
-          of the chart, so if you tap on any empty space within the card (but
-          not on the chart itself), the tooltip will automatically disappear. If
-          you have any further questions about using the chart or interacting
-          with the tooltip, please let us know!
-        </Text>
-      </Collapsible>
-
-      {/* FAQ 2: Beispielinhalt */}
-      <TouchableOpacity
-        onPress={() => toggleSection("faq2")}
-        style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}
-      >
-        <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-          How to change my password?
-        </Text>
-        <Text style={{ marginLeft: 10, fontSize: 18 }}>
-          {expandedSections.faq1 ? "↑" : "↓"}
-        </Text>
-      </TouchableOpacity>
-      <Collapsible collapsed={!expandedSections.faq2}>
-        <Text style={{ marginTop: 10, fontSize: 14, color: "#555" }}>
-          ........................................
-        </Text>
-      </Collapsible>
-
-      {/* FAQ 3: Beispielinhalt */}
-      <TouchableOpacity
-        onPress={() => toggleSection("faq3")}
-        style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}
-      >
-        <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-          How to add a project?
-        </Text>
-        <Text style={{ marginLeft: 10, fontSize: 18 }}>
-          {expandedSections.faq2 ? "↑" : "↓"}
-        </Text>
-      </TouchableOpacity>
-      <Collapsible collapsed={!expandedSections.faq3}>
-        <Text style={{ marginTop: 10, fontSize: 14, color: "#555" }}>
-          .........................................
-        </Text>
-      </Collapsible>
-
-      {/* FAQ 4: Konto löschen */}
-      <TouchableOpacity
-        onPress={() => toggleSection("faq4")}
-        style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}
-      >
-        <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-          How to delete my account?
-        </Text>
-        <Text style={{ marginLeft: 10, fontSize: 18 }}>
-          {expandedSections.faq3 ? "↑" : "↓"}
-        </Text>
-      </TouchableOpacity>
-      <Collapsible collapsed={!expandedSections.faq4}>
-        <Text style={{ marginTop: 10, fontSize: 14, color: "#555" }}>
-          To delete your account, you must confirm your password. If you delete
-          your account, your data will no longer exist the next time you
-          register.
-        </Text>
-        {/* Password Input Field */}
-        <TextInput
-          placeholder="add your password"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
+        <Text
           style={{
-            borderWidth: 1,
-            borderRadius: 5,
-            padding: 10,
-            marginVertical: 20,
-            borderColor: "#ccc",
+            color: "gray",
+            fontSize: 20,
+            fontFamily: "MPLUSLatin_Bold",
+            textAlign: "center",
           }}
-        />
-        {/*Button to delete account */}
-        <TouchableOpacity
-          onPress={handleDeleteAccount}
-          style={[
-            {
-              backgroundColor: "red",
-              paddingVertical: 12,
-              paddingHorizontal: 20,
-              borderRadius: 5,
-              marginTop: 10,
-            },
-          ]}
         >
-          <Text
-            style={{ color: "white", textAlign: "center", fontWeight: "bold" }}
+          Frequently Asked Questions
+        </Text>
+        {/* Close Button */}
+        <TouchableOpacity
+          onPress={closeFAQSheet}
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 12,
+            width: 32,
+            height: 32,
+            borderRadius: 16,
+            borderColor: "white",
+            borderWidth: 1,
+            backgroundColor: "rgba(0, 0, 0, 0.3)",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 999,
+          }}
+        >
+          <LinearGradient
+            colors={["#00FFFF", "#FFFFFF"]}
+            style={{
+              alignItems: "center",
+              justifyContent: "center",
+              height: 30,
+              width: 30,
+              borderRadius: 16,
+            }}
           >
-            {loading ? "deleting..." : "Delete Account"}
-          </Text>
+            <Text
+              style={{
+                color: "gray",
+                fontSize: 30,
+                lineHeight: 32,
+                fontWeight: "bold",
+              }}
+            >
+              ×
+            </Text>
+          </LinearGradient>
         </TouchableOpacity>
-      </Collapsible>
+      </View>
+
+      <ScrollView style={{ flex: 1 }}>
+        <View
+          style={{
+            padding: 20,
+            backgroundColor: "#191919",
+            borderRadius: 10,
+            position: "relative",
+            minHeight: 400,
+          }}
+        >
+          {/* FAQ Content */}
+          <View style={{ marginTop: 24 }}>
+            {/* FAQ 1: How to close workhourschart tooltip */}
+            <TouchableOpacity
+              onPress={() => toggleSection("faq1")}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                paddingVertical: 12,
+                borderBottomWidth: 1,
+                borderBottomColor: "rgba(255, 255, 255, 0.1)",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: "600",
+                  color: "white",
+                  flex: 1,
+                  marginRight: 16,
+                }}
+              >
+                How to close the tooltip on the Workhours Chart?
+              </Text>
+              <Text style={{ color: "aqua", fontSize: 20 }}>
+                {expandedSections.faq1 ? "−" : "+"}
+              </Text>
+            </TouchableOpacity>
+            <Collapsible collapsed={!expandedSections.faq1}>
+              <Text
+                style={{
+                  paddingTop: 12,
+                  fontSize: 14,
+                  color: "#CCCCCC",
+                  lineHeight: 20,
+                }}
+              >
+                To close the tooltip, simply tap anywhere outside the chart area
+                but inside the card. The entire card is set up to listen for
+                taps outside of the chart.
+              </Text>
+            </Collapsible>
+            {/* FAQ 1: How to change your password */}
+            <TouchableOpacity
+              onPress={() => toggleSection("faq2")}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                paddingVertical: 12,
+                borderBottomWidth: 1,
+                borderBottomColor: "rgba(255, 255, 255, 0.1)",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: "600",
+                  color: "white",
+                  flex: 1,
+                  marginRight: 16,
+                }}
+              >
+                How to change my password?
+              </Text>
+              <Text style={{ color: "aqua", fontSize: 20 }}>
+                {expandedSections.faq2 ? "−" : "+"}
+              </Text>
+            </TouchableOpacity>
+            <Collapsible collapsed={!expandedSections.faq2}>
+              <Text
+                style={{
+                  paddingTop: 12,
+                  fontSize: 14,
+                  color: "#CCCCCC",
+                  lineHeight: 20,
+                }}
+              >
+                ....................................
+              </Text>
+            </Collapsible>
+
+            {/* FAQ 3: How to delete your account */}
+            <TouchableOpacity
+              onPress={() => toggleSection("faq3")}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                paddingVertical: 12,
+                borderBottomWidth: 1,
+                borderBottomColor: "rgba(255, 255, 255, 0.1)",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: "600",
+                  color: "white",
+                  flex: 1,
+                  marginRight: 16,
+                }}
+              >
+                How to delete my account?
+              </Text>
+              <Text style={{ color: "aqua", fontSize: 20 }}>
+                {expandedSections.faq3 ? "−" : "+"}
+              </Text>
+            </TouchableOpacity>
+            <Collapsible collapsed={!expandedSections.faq3}>
+              <Text
+                style={{
+                  paddingTop: 12,
+                  fontSize: 14,
+                  color: "#CCCCCC",
+                  lineHeight: 20,
+                }}
+              >
+                To delete your account, you must confirm your password. All data
+                will be permanently removed from our servers.
+              </Text>
+              <View style={{ alignItems: "center" }}>
+                <TextInput
+                  placeholder="Enter your password"
+                  placeholderTextColor="#888"
+                  secureTextEntry
+                  value={password}
+                  onChangeText={setPassword}
+                  style={{
+                    width: 280,
+                    marginVertical: 10,
+                    borderColor: "aqua",
+                    borderWidth: 1.5,
+                    borderRadius: 12,
+                    paddingLeft: 15,
+                    paddingRight: 40,
+                    paddingBottom: 5,
+                    fontSize: 22,
+                    height: 50,
+                    color: "white",
+                    backgroundColor: "#191919",
+                  }}
+                />
+
+                <TouchableOpacity
+                  onPress={handleDeleteAccount}
+                  style={{
+                    width: 280,
+                    borderRadius: 12,
+                    overflow: "hidden",
+                    borderWidth: 3,
+                    borderColor: "white",
+                    marginBottom: 25,
+                  }}
+                >
+                  <LinearGradient
+                    colors={["#00FFFF", "#FFFFFF"]}
+                    style={{
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: 45,
+                      width: 280,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: "MPLUSLatin_Bold",
+                        fontSize: 22,
+                        color: "grey",
+                        marginBottom: 5,
+                        paddingRight: 10,
+                      }}
+                    >
+                      {loading ? "Deleting..." : "Delete Account"}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </Collapsible>
+          </View>
+        </View>
+      </ScrollView>
     </View>
   );
 };
