@@ -255,89 +255,81 @@ const LoginScreen: React.FC = () => {
                   </TouchableOpacity>
                 </View>
               </View>
-              {/* Loading spinner */}
-              {loading ? (
-                <ActivityIndicator
-                  size="large"
-                  color="blue"
-                ></ActivityIndicator>
-              ) : (
-                <>
-                  <View
+
+              <View
+                style={{
+                  flexDirection: "column",
+                  margin: 30,
+                }}
+              >
+                {/* Login button */}
+                <TouchableOpacity
+                  onPress={handleLogin}
+                  style={{
+                    width: 280,
+                    borderRadius: 12,
+                    overflow: "hidden",
+                    borderWidth: 3,
+                    borderColor: "white",
+                    marginBottom: 8,
+                  }}
+                >
+                  <LinearGradient
+                    colors={["#00FFFF", "#FFFFFF"]}
                     style={{
-                      flexDirection: "column",
-                      margin: 30,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: 45,
+                      width: 280,
                     }}
                   >
-                    {/* Login button */}
-                    <TouchableOpacity
-                      onPress={handleLogin}
+                    <Text
                       style={{
-                        width: 280,
-                        borderRadius: 12,
-                        overflow: "hidden",
-                        borderWidth: 3,
-                        borderColor: "white",
-                        marginBottom: 8,
+                        fontFamily: "MPLUSLatin_Bold",
+                        fontSize: 22,
+                        color: "grey",
+                        marginBottom: 5,
                       }}
                     >
-                      <LinearGradient
-                        colors={["#00FFFF", "#FFFFFF"]}
-                        style={{
-                          alignItems: "center",
-                          justifyContent: "center",
-                          height: 45,
-                          width: 280,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            fontFamily: "MPLUSLatin_Bold",
-                            fontSize: 22,
-                            color: "grey",
-                            marginBottom: 5,
-                          }}
-                        >
-                          Login
-                        </Text>
-                      </LinearGradient>
-                    </TouchableOpacity>
+                      Login
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
 
-                    {/* Register button */}
-                    <TouchableOpacity
-                      onPress={handleRegister}
+                {/* Register button */}
+                <TouchableOpacity
+                  onPress={handleRegister}
+                  style={{
+                    width: 280,
+                    borderRadius: 12,
+                    overflow: "hidden",
+                    borderWidth: 3,
+                    borderColor: "white",
+                  }}
+                >
+                  <LinearGradient
+                    colors={["#00FFFF", "#FFFFFF"]}
+                    style={{
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: 45,
+                      width: 280,
+                    }}
+                  >
+                    <Text
                       style={{
-                        width: 280,
-                        borderRadius: 12,
-                        overflow: "hidden",
-                        borderWidth: 3,
-                        borderColor: "white",
+                        fontFamily: "MPLUSLatin_Bold",
+                        fontSize: 22,
+                        color: "grey",
+                        marginBottom: 5,
                       }}
                     >
-                      <LinearGradient
-                        colors={["#00FFFF", "#FFFFFF"]}
-                        style={{
-                          alignItems: "center",
-                          justifyContent: "center",
-                          height: 45,
-                          width: 280,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            fontFamily: "MPLUSLatin_Bold",
-                            fontSize: 22,
-                            color: "grey",
-                            marginBottom: 5,
-                          }}
-                        >
-                          Register
-                        </Text>
-                      </LinearGradient>
-                    </TouchableOpacity>
-                  </View>
-                </>
-              )}
+                      Register
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+
               {/* LostPasswordModal */}
               <TouchableOpacity onPress={toggleModal} style={{ marginTop: 10 }}>
                 <Text
