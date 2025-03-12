@@ -210,6 +210,7 @@ const App = () => {
               <Stack.Navigator
                 screenOptions={{
                   headerShown: false,
+                  animationEnabled: false, // importent to disable the default animation wich produces a header jump bug
                   // This part is used to slide the stack from the right into the screen
                   gestureEnabled: true,
                   gestureDirection: "horizontal",
