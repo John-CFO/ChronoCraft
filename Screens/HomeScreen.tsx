@@ -328,7 +328,7 @@ const HomeScreen: React.FC = () => {
       // Animation View parameters
       <Animated.View
         style={{
-          height: averageItemHeight,
+          height: ITEM_HEIGHT,
           transform: [{ scale }],
           opacity,
           margin: 5,
