@@ -7,6 +7,8 @@
 
 // note: item.id is the local ID of the project. The project.id is the remote ID from firebase to itentify a project.
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
 import {
   View,
   Text,
@@ -37,6 +39,7 @@ import dayjs from "dayjs";
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { useStore } from "../components/TimeTrackingState";
 import NoteModal from "../components/NoteModal";
+import RoutingLoader from "../components/RoutingLoader";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -52,6 +55,8 @@ type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, "Home">;
 const HomeScreen: React.FC = () => {
   // navigation declaration to navigate from any project to DetailsScreen
   const navigation = useNavigation<HomeScreenNavigationProp>();
+  // state to handle the loading animation
+  const [isLoading, setIsLoading] = useState(true);
 
   // initialize the project id globally to reset all components in the details screen
   const { setProjectId } = useStore();
@@ -85,38 +90,46 @@ const HomeScreen: React.FC = () => {
 
   // function to load data from firestore
   useEffect(() => {
-    const fetchData = async ({ user }: { user: any }) => {
-      try {
-        const db = FIREBASE_FIRESTORE;
-        const projectsCollection = collection(
-          db,
-          "Users",
-          user.uid,
-          "Services",
-          "AczkjyWoOxdPAIRVxjy3",
-          "Projects"
-        );
+    // constant to handle the loading animation
+    const timer = setTimeout(() => {
+      // fetch the data from firestore with snapshots
+      const fetchData = async ({ user }: { user: any }) => {
+        try {
+          const db = FIREBASE_FIRESTORE;
+          const projectsCollection = collection(
+            db,
+            "Users",
+            user.uid,
+            "Services",
+            "AczkjyWoOxdPAIRVxjy3",
+            "Projects"
+          );
 
-        const projectsSnapshot = await getDocs(projectsCollection);
-        const projectsData = projectsSnapshot.docs
-          .filter((doc) => doc.exists())
-          .map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-        setProjects(
-          projectsData as {
-            createdAt: any;
-            id: string;
-            name: string;
-            notes: { content: string; timestamp: any }[];
-          }[]
-        );
-      } catch (error) {
-        console.error("Error fetching projects", error);
-      }
-    };
-    fetchData({ user: FIREBASE_AUTH.currentUser });
+          const projectsSnapshot = await getDocs(projectsCollection);
+          const projectsData = projectsSnapshot.docs
+            .filter((doc) => doc.exists())
+            .map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            }));
+          setProjects(
+            projectsData as {
+              createdAt: any;
+              id: string;
+              name: string;
+              notes: { content: string; timestamp: any }[];
+            }[]
+          );
+          setIsLoading(false);
+        } catch (error) {
+          console.error("Error fetching projects", error);
+          setIsLoading(false);
+        }
+      };
+      fetchData({ user: FIREBASE_AUTH.currentUser });
+    }, 3000);
+
+    return () => clearTimeout(timer);
   }, [refresh]);
 
   // function to add projects
@@ -404,165 +417,177 @@ const HomeScreen: React.FC = () => {
 
   return (
     <View style={{ flex: 1, width: "100%", backgroundColor: "black" }}>
-      <View
-        style={{
-          width: "100%",
-          height: 50,
-          marginBottom: 20,
-          backgroundColor: "transparent",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <Text
-          style={{
-            fontFamily: "MPLUSLatin_Bold",
-            fontSize: 25,
-            color: "white",
-          }}
-        >
-          - Your Projects -
-        </Text>
-      </View>
-      {/* Section to scroll the projects list with the scroll animation */}
-      {projects.length > 0 ? (
-        <Animated.FlatList
-          style={{
-            flex: 1,
-            marginHorizontal: "3%",
-            marginBottom: "20%",
-            height: "50%",
-            borderRadius: 12,
-            borderWidth: 0.5,
-          }}
-          contentContainerStyle={{
-            width: "100%",
-            alignItems: "center",
-          }}
-          scrollEnabled={true}
-          data={projects}
-          keyExtractor={(item) => item.id}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: true }
-          )}
-          scrollEventThrottle={16}
-          renderItem={renderItem}
-        />
-      ) : (
+      {/* RoutingLoader section */}
+      {isLoading ? (
         <View
-          style={{
-            width: "100%",
-            height: "80%",
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "transparent",
-          }}
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
         >
-          <Text
-            style={{
-              textAlign: "center",
-              color: "white",
-              fontSize: 18,
-              fontFamily: "MPLUSLatin_ExtraLight",
-            }}
-          >
-            You haven't any projects yet.
-          </Text>
+          <RoutingLoader />
         </View>
-      )}
-      {/* Project input */}
-      <View
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          width: "100%",
-          height: 80,
-          backgroundColor: "transparent",
-          flexDirection: "row",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: 20,
-        }}
-      >
-        <TextInput
-          style={{
-            width: 320,
-            borderColor: "aqua",
-            borderWidth: 1.5,
-            borderRadius: 12,
-            paddingLeft: 15,
-            paddingRight: 40,
-            paddingBottom: 5,
-            fontSize: 22,
-            height: 50,
-            color: "white",
-            fontWeight: "bold",
-            backgroundColor: "#191919",
-          }}
-          placeholder={`Add new Project${dots}`}
-          placeholderTextColor="grey"
-          editable={true}
-          onChangeText={setNewProjectName}
-          maxLength={48}
-          value={newProjectName}
-        />
-        {/* + Button to add a new project */}
-        <TouchableOpacity onPress={handleAddProject}>
-          <LinearGradient
-            colors={["#00FFFF", "#FFFFFF"]}
+      ) : (
+        <>
+          {/* Header section */}
+          <View
             style={{
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: 25,
+              width: "100%",
               height: 50,
-              width: 50,
+              marginBottom: 20,
+              backgroundColor: "transparent",
+              justifyContent: "center",
+              alignItems: "center",
             }}
           >
+            <Text
+              style={{
+                fontFamily: "MPLUSLatin_Bold",
+                fontSize: 25,
+                color: "white",
+              }}
+            >
+              - Your Projects -
+            </Text>
+          </View>
+          {/* Section to scroll the projects list with the scroll animation */}
+          {projects.length > 0 ? (
+            <Animated.FlatList
+              style={{
+                flex: 1,
+                marginHorizontal: "3%",
+                marginBottom: "20%",
+                height: "50%",
+                borderRadius: 12,
+                borderWidth: 0.5,
+              }}
+              contentContainerStyle={{
+                width: "100%",
+                alignItems: "center",
+              }}
+              scrollEnabled={true}
+              data={projects}
+              keyExtractor={(item) => item.id}
+              onScroll={Animated.event(
+                [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                { useNativeDriver: true }
+              )}
+              scrollEventThrottle={16}
+              renderItem={renderItem}
+            />
+          ) : (
             <View
               style={{
-                width: 50,
-                height: 50,
-                borderRadius: 25,
-                backgroundColor: "transparent",
-                borderWidth: 3,
-                borderColor: "white",
-                justifyContent: "center",
+                width: "100%",
+                height: "80%",
                 alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "transparent",
               }}
             >
               <Text
                 style={{
-                  fontSize: 60,
-                  fontWeight: "bold",
-                  lineHeight: 57,
-                  color: "grey",
+                  textAlign: "center",
+                  color: "white",
+                  fontSize: 18,
+                  fontFamily: "MPLUSLatin_ExtraLight",
                 }}
               >
-                +
+                You haven't any projects yet.
               </Text>
             </View>
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
-      {/* Note Modal */}
-      <Modal
-        isVisible={noteModalVisible}
-        backdropColor="black"
-        onBackdropPress={closeNoteModal}
-        swipeDirection={["up", "down"]}
-        onSwipeComplete={closeNoteModal}
-        style={{ justifyContent: "center", alignItems: "center" }}
-      >
-        <NoteModal
-          projectId={selectedProjectId}
-          onClose={() => {
-            setNoteModalVisible(false);
-          }}
-        />
-      </Modal>
+          )}
+          {/* Project input */}
+          <View
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              width: "100%",
+              height: 80,
+              backgroundColor: "transparent",
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 20,
+            }}
+          >
+            <TextInput
+              style={{
+                width: 320,
+                borderColor: "aqua",
+                borderWidth: 1.5,
+                borderRadius: 12,
+                paddingLeft: 15,
+                paddingRight: 40,
+                paddingBottom: 5,
+                fontSize: 22,
+                height: 50,
+                color: "white",
+                fontWeight: "bold",
+                backgroundColor: "#191919",
+              }}
+              placeholder={`Add new Project${dots}`}
+              placeholderTextColor="grey"
+              editable={true}
+              onChangeText={setNewProjectName}
+              maxLength={48}
+              value={newProjectName}
+            />
+            {/* + Button to add a new project */}
+            <TouchableOpacity onPress={handleAddProject}>
+              <LinearGradient
+                colors={["#00FFFF", "#FFFFFF"]}
+                style={{
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 25,
+                  height: 50,
+                  width: 50,
+                }}
+              >
+                <View
+                  style={{
+                    width: 50,
+                    height: 50,
+                    borderRadius: 25,
+                    backgroundColor: "transparent",
+                    borderWidth: 3,
+                    borderColor: "white",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 60,
+                      fontWeight: "bold",
+                      lineHeight: 57,
+                      color: "grey",
+                    }}
+                  >
+                    +
+                  </Text>
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+          {/* Note Modal */}
+          <Modal
+            isVisible={noteModalVisible}
+            backdropColor="black"
+            onBackdropPress={closeNoteModal}
+            swipeDirection={["up", "down"]}
+            onSwipeComplete={closeNoteModal}
+            style={{ justifyContent: "center", alignItems: "center" }}
+          >
+            <NoteModal
+              projectId={selectedProjectId}
+              onClose={() => {
+                setNoteModalVisible(false);
+              }}
+            />
+          </Modal>
+        </>
+      )}
     </View>
   );
 };
