@@ -387,7 +387,16 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                 />
 
                 <TouchableOpacity
-                  onPress={handleDeleteAccount}
+                  onPress={() =>
+                    Alert.alert(
+                      "Delete Account",
+                      "Are you sure you want to delete your account?",
+                      [
+                        { text: "Cancel", style: "cancel" },
+                        { text: "Delete", onPress: handleDeleteAccount },
+                      ]
+                    )
+                  }
                   style={{
                     width: 280,
                     borderRadius: 12,
