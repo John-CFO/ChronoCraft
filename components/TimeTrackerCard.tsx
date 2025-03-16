@@ -157,6 +157,10 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
     fetchProjectData();
   }, [currentProjectId, setProjectData]);
 
+  // state function to update the timer in the TimeTrackerCard if app is in foreground
+  const [delayedElapsedTime, setDelayedElapsedTime] = useState<number | null>(
+    null
+  );
   // function to handle app state changes if app is in background or foreground
   useEffect(() => {
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
@@ -168,96 +172,74 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
         const lastTime = await AsyncStorage.getItem(
           `lastActiveTime_${projectId}`
         );
-
-        // calculate the elapsed time since the last time the app was in the background
         if (lastTime) {
-          const elapsedTime =
-            (new Date().getTime() - new Date(lastTime).getTime()) / 1000;
+          const lastTimeMs = new Date(lastTime).getTime();
+          const now = new Date().getTime();
+          if (!isNaN(lastTimeMs) && lastTimeMs < now) {
+            const elapsedTime = (now - lastTimeMs) / 1000;
 
-          setLocalTimer((prevTimer: number) => {
-            const newTimer = prevTimer + elapsedTime;
-            updateTimer(projectId, newTimer); // update the timer in the TimeTrackerCard
-            setTotalEarnings(
-              projectId,
-              (newTimer / 3600) * projectState.hourlyRate
-            );
-            return newTimer;
-          });
+            // safe the elapsed time to the state
+            setDelayedElapsedTime(elapsedTime);
+          }
+          // reset after a certain amount of time
+          await AsyncStorage.removeItem(`lastActiveTime_${projectId}`);
         }
         setIsInitialized(true);
       }
-
-      // save the last time the app was in the background
       if (
         nextAppState.match(/inactive|background/) &&
         projectState.isTracking
       ) {
-        await AsyncStorage.setItem(
-          `lastActiveTime_${projectId}`,
-          new Date().toISOString()
-        );
+        const timestamp = new Date().toISOString();
+        await AsyncStorage.setItem(`lastActiveTime_${projectId}`, timestamp);
         setIsInitialized(false);
       }
-
       setAppState(nextAppState);
     };
-
     const subscription = AppState.addEventListener(
       "change",
       handleAppStateChange
     );
+
     return () => subscription.remove();
   }, [
     appState,
     projectId,
     projectState.isTracking,
-    updateTimer,
-    setTotalEarnings,
     setIsInitialized,
-    setLocalTimer,
+    setAppState,
   ]);
 
-  // hook to render the UI based on the project state and calculated timer and earnings livelyly
+  // hook to delay the update of the timer until the elapsed time is calculated
+  useEffect(() => {
+    if (delayedElapsedTime !== null) {
+      const newTimer = localTimer + delayedElapsedTime;
+      setLocalTimer(newTimer);
+      updateTimer(projectId, newTimer);
+      setTotalEarnings(projectId, (newTimer / 3600) * projectState.hourlyRate);
+      setDelayedElapsedTime(null);
+    }
+  }, [delayedElapsedTime]);
+
+  // hook to calculate and update the timer
   useEffect(() => {
     let interval: NodeJS.Timeout;
-
-    // check if tracking is active
     if (projectState.isTracking) {
-      // console.log("Project ID:", projectId);
-
-      // start interval to update the timer
       interval = setInterval(() => {
-        setLocalTimer((prevTimer: number) => {
-          const newTimer = prevTimer + 1;
-          // console.log("New Timer:", newTimer);
-
-          // update global timer
-          updateTimer(projectId, newTimer);
-
-          // calculate earnings based on elapsed time and hourly rate
-          const earnings = (
-            (newTimer / 3600) *
-            projectState.hourlyRate
-          ).toFixed(2);
-          // console.log("Earnings:", earnings);
-
-          // update the earnings in the global state
-          setTotalEarnings(projectId, parseFloat(earnings));
-
-          return newTimer;
-        });
-      }, 1000); // run every second
+        setLocalTimer((prevTimer) => prevTimer + 1);
+      }, 1000);
     }
-
-    // cleanup interval on component unmount or if dependencies change
     return () => clearInterval(interval);
-  }, [
-    projectState.isTracking, // trigger effect when tracking starts or stops
-    projectState.hourlyRate, // trigger effect if the hourly rate changes
-    projectId, // track for the specific project
-  ]);
+  }, [projectState.isTracking]);
 
-  // functions to start  the timer
+  // hook to update the timer,calculate the earnings and set them in the global state
+  useEffect(() => {
+    updateTimer(projectId, localTimer);
+    const earnings = (localTimer / 3600) * projectState.hourlyRate;
+    setTotalEarnings(projectId, earnings);
+  }, [localTimer, projectId, projectState.hourlyRate]);
+
+  // function to start  the timer
   const handleStart = async () => {
     startTimer(projectId);
     await updateProjectData(projectId, {
