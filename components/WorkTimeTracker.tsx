@@ -392,7 +392,7 @@ const WorkTimeTracker = () => {
 
   useEffect(() => {
     setAccumulatedDuration(elapsedTime);
-  }, []); // nur einmal beim Mounten
+  }, []); // once when the component mounts
 
   return (
     <View
