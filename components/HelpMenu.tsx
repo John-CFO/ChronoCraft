@@ -10,7 +10,7 @@ import {
   ImageBackground,
 } from "react-native";
 import React from "react";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { Foundation } from "@expo/vector-icons";
 
 /////////////////////////////////////////////////////////////////////////////
@@ -70,13 +70,45 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
             paddingTop: 5,
           }}
         >
-          {/* close button */}
-          <TouchableOpacity onPress={closeMenu}>
-            <MaterialCommunityIcons
-              name="close-circle"
-              size={38}
-              color="white"
-            />
+          {/* Close Button */}
+          <TouchableOpacity
+            onPress={closeMenu}
+            style={{
+              position: "absolute",
+              top: 10,
+              right: 12,
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              borderColor: "white",
+              borderWidth: 1,
+              backgroundColor: "rgba(0, 0, 0, 0.3)",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 999,
+            }}
+          >
+            <LinearGradient
+              colors={["#00FFFF", "#FFFFFF"]}
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+                height: 30,
+                width: 30,
+                borderRadius: 16,
+              }}
+            >
+              <Text
+                style={{
+                  color: "gray",
+                  fontSize: 30,
+                  lineHeight: 32,
+                  fontWeight: "bold",
+                }}
+              >
+                ×
+              </Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
         <View
