@@ -133,7 +133,6 @@ const WorkTimeTracker = () => {
     loadElapsedTime();
   }, []); // add the saved time once when the component mounts
 
-  //
   // hook to update the app state if the app is in the foreground or background using reference to the previous app state
   useEffect(() => {
     // flag to prevent multiple state changes when app goes from inactive to active
