@@ -54,7 +54,9 @@ const WorkTimeTracker = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   // state to handle the app state
   const [appState, setAppState] = useState(AppState.currentState);
-  const isHandlingStateChange = useRef(false);
+  // reference to the previous app state
+  const prevAppStateRef = useRef<AppStateStatus>(AppState.currentState);
+
   // global WorkHoursState
   const {
     isWorking,
@@ -133,11 +135,9 @@ const WorkTimeTracker = () => {
 
   //
   // hook to update the app state if the app is in the foreground or background using reference to the previous app state
-  const prevAppStateRef = useRef<AppStateStatus>(AppState.currentState);
   useEffect(() => {
     // flag to prevent multiple state changes when app goes from inactive to active
     let handledActive = false;
-
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
       // set the new app state
       setAppState(nextAppState);
@@ -152,7 +152,6 @@ const WorkTimeTracker = () => {
         ]);
         console.log(` Save elapsedTime: ${elapsedTime}, Time: ${nowISO}`);
       }
-
       // if the app returns to "active" from a state that was not "active"
       // and the timer is running (isWorking === true), calculate the elapsed time
       if (
@@ -190,13 +189,11 @@ const WorkTimeTracker = () => {
           // set the workflow starttime new
           setStartWorkTime(new Date());
         }
-
         // set the app state to active after 1 second
         setTimeout(() => {
           handledActive = false;
         }, 1000);
       }
-
       // save the previous app state for the next iteration
       prevAppStateRef.current = nextAppState;
     };
