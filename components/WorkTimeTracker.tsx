@@ -7,8 +7,14 @@
 
 //////////////////////////////////////////////////////////////////////////////////
 
-import { View, Text, AppState, TouchableOpacity } from "react-native";
-import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  AppState,
+  AppStateStatus,
+  TouchableOpacity,
+} from "react-native";
+import React, { useState, useEffect, useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   collection,
@@ -48,6 +54,8 @@ const WorkTimeTracker = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   // state to handle the app state
   const [appState, setAppState] = useState(AppState.currentState);
+  // reference to the previous app state
+  const prevAppStateRef = useRef<AppStateStatus>(AppState.currentState);
 
   // global WorkHoursState
   const {
@@ -111,64 +119,93 @@ const WorkTimeTracker = () => {
 
   // hook to update the app state if the app is in the foreground or background
   useEffect(() => {
-    const handleAppStateChange = async (nextAppState: string) => {
-      // variable to store the app state
-      let appStateValue:
-        | "active"
-        | "background"
-        | "inactive"
-        | "unknown"
-        | "extension"
-        | null = null;
-      // check if the app state is valid
-      if (
-        nextAppState === "active" ||
-        nextAppState === "background" ||
-        nextAppState === "inactive" ||
-        nextAppState === "unknown" ||
-        nextAppState === "extension"
-      ) {
-        appStateValue = nextAppState;
-      } else {
-        console.error(`Invalid app state: ${nextAppState}`);
-      }
-      // if the app returns from the background and is working:
-      if (
-        appState.match(/inactive|background/) && // check what the app state was before
-        nextAppState === "active" && // check if the app is in the foreground
-        isWorking // check if the app is working
-      ) {
-        const lastTime = await AsyncStorage.getItem("lastActiveTime");
-        if (lastTime) {
-          // calculate the elapsed time
-          const elapsedHours =
-            (Date.now() - new Date(lastTime).getTime()) / (1000 * 60 * 60);
-          // update the accumulated duration
-          setAccumulatedDuration((prev) => prev + elapsedHours);
-          // set a new start time, so that the difference is measured from now
-          setStartWorkTime(new Date());
-        }
-      }
+    // function to load the elapsedTime from AsyncStorage
+    const loadElapsedTime = async () => {
+      const storedElapsedTime = await AsyncStorage.getItem("elapsedTime");
+      if (storedElapsedTime) {
+        const parsed = JSON.parse(storedElapsedTime);
+        const newValue = parsed > elapsedTime ? parsed : elapsedTime;
 
-      // if the app goes to the background and is working
-      if (nextAppState.match(/inactive|background/) && isWorking) {
-        await AsyncStorage.setItem("lastActiveTime", new Date().toISOString());
-      }
-      // set the app state if it is valid
-      if (appStateValue !== null) {
-        setAppState(appStateValue);
+        // if the loaded value is higher than the current, update it
+        setElapsedTime(newValue);
       }
     };
-    // event listener to listen for changes in the app state
+    loadElapsedTime();
+  }, []); // add the saved time once when the component mounts
+
+  // hook to update the app state if the app is in the foreground or background using reference to the previous app state
+  useEffect(() => {
+    // flag to prevent multiple state changes when app goes from inactive to active
+    let handledActive = false;
+    const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+      // set the new app state
+      setAppState(nextAppState);
+
+      // condition to handle the state change if the app is in the foreground or background
+      if (nextAppState === "background" || nextAppState === "inactive") {
+        const nowISO = new Date().toISOString();
+        // save the elapsed time and the last active time to AsyncStorage
+        await AsyncStorage.multiSet([
+          ["elapsedTime", JSON.stringify(elapsedTime)],
+          ["lastActiveTime", nowISO],
+        ]);
+        console.log(` Save elapsedTime: ${elapsedTime}, Time: ${nowISO}`);
+      }
+      // if the app returns to "active" from a state that was not "active"
+      // and the timer is running (isWorking === true), calculate the elapsed time
+      if (
+        prevAppStateRef.current !== "active" &&
+        nextAppState === "active" &&
+        isWorking
+      ) {
+        // prevent multiple state changes when app goes from inactive to active
+        if (handledActive) {
+          console.log(" Second active state change ignored.");
+          return;
+        }
+        handledActive = true;
+        // load the elapsed time and last active time from AsyncStorage
+        const lastTime = await AsyncStorage.getItem("lastActiveTime");
+        const storedElapsedTime = await AsyncStorage.getItem("elapsedTime");
+
+        if (lastTime && storedElapsedTime) {
+          const savedElapsedTime = JSON.parse(storedElapsedTime);
+          // calculate the elapsed time since the last active time (in hours)
+          const elapsedMs = Date.now() - new Date(lastTime).getTime();
+          const elapsedHours = elapsedMs / (1000 * 60 * 60);
+          console.log(`App was inactive for ${elapsedHours.toFixed(2)} Hours.`);
+          // update the elapsed time
+          const newElapsed = savedElapsedTime + elapsedHours;
+          console.log(
+            ` Calculate new time: ${savedElapsedTime} + ${elapsedHours.toFixed(2)} = ${newElapsed.toFixed(2)}`
+          );
+          // update only with newValue if the new elapsed time is greater than the current
+          const newValue = newElapsed > elapsedTime ? newElapsed : elapsedTime;
+          setElapsedTime(newValue);
+          setAccumulatedDuration((prev) =>
+            newElapsed > prev ? newElapsed : prev
+          );
+          // set the workflow starttime new
+          setStartWorkTime(new Date());
+        }
+        // set the app state to active after 1 second
+        setTimeout(() => {
+          handledActive = false;
+        }, 1000);
+      }
+      // save the previous app state for the next iteration
+      prevAppStateRef.current = nextAppState;
+    };
+    // subscribe to app state changes
     const subscription = AppState.addEventListener(
       "change",
       handleAppStateChange
     );
-    // delete the event listener
+    // clear the event listener when the component unmounts
     return () => {
       subscription.remove();
     };
-  }, [appState, isWorking]);
+  }, [elapsedTime, isWorking]);
 
   // function to start work
   const handleStartWork = async () => {
@@ -340,7 +377,7 @@ const WorkTimeTracker = () => {
             workDay: new Date(item.workDay).toISOString().split("T")[0],
             expectedHours: Number(item.expectedHours) || 0,
             overHours: Number(item.overHours) || 0,
-            elapsedTime: Number(item.duration) || 0, // Add elapsedTime from Firestore
+            elapsedTime: Number(item.duration) || 0, // add elapsedTime from Firestore
           };
         })
         // filter out null values
@@ -352,6 +389,10 @@ const WorkTimeTracker = () => {
 
     fetchData();
   }, [user, currentDocId, refreshTrigger]);
+
+  useEffect(() => {
+    setAccumulatedDuration(elapsedTime);
+  }, []); // once when the component mounts
 
   return (
     <View
