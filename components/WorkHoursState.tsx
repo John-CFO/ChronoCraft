@@ -8,6 +8,7 @@
 import { create } from "zustand";
 import { getAuth } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
+
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 
 ////////////////////////////////////////////////////////////////////////////
@@ -74,26 +75,29 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         const state = docSnap.data();
-        set(state);
+        set({
+          elapsedTime: state.elapsedTime || 0,
+          isWorking: state.isWorking || false,
+          startWorkTime: state.startWorkTime || null,
+        });
       }
     } catch (error) {
       console.log("Error loading state from Firestore:", error);
     }
   },
 
+  // save state to firestore
   saveState: async () => {
     const user = getAuth().currentUser;
     if (!user) return;
 
     const state = get();
-    const stateToSave = { ...state }; // kopie the state
-
-    // delete all states from the function
-    Object.keys(stateToSave).forEach((key) => {
-      if (typeof stateToSave[key] === "function") {
-        delete stateToSave[key];
-      }
-    });
+    const stateToSave = {
+      elapsedTime: state.elapsedTime,
+      isWorking: state.isWorking,
+      startWorkTime: state.startWorkTime,
+      currentDocId: state.currentDocId,
+    };
 
     const docRef = doc(
       FIREBASE_FIRESTORE,
@@ -104,7 +108,8 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
       "WorkHours",
       state.currentDocId || "defaultDocId"
     );
-    await setDoc(docRef, stateToSave); // save only state nessesary data
+
+    await setDoc(docRef, stateToSave); // save only the necessary fields
   },
 
   // actions to update the workhoursstate
