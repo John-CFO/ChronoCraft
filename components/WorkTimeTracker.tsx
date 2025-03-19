@@ -13,6 +13,7 @@ import {
   AppState,
   AppStateStatus,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
@@ -56,6 +57,8 @@ const WorkTimeTracker = () => {
   const [appState, setAppState] = useState(AppState.currentState);
   // reference to the previous app state
   const prevAppStateRef = useRef<AppStateStatus>(AppState.currentState);
+  // state to get the work day from firestore to update the state wich is needed to enable the timer start button
+  const [workDay, setWorkDay] = useState("");
 
   // global WorkHoursState
   const {
@@ -65,10 +68,12 @@ const WorkTimeTracker = () => {
     expectedHours,
     currentDocId,
     setIsWorking,
+    setExpectedHours,
     setStartWorkTime,
     setElapsedTime,
     setData,
     setCurrentDocId,
+    docExists,
     loadState,
   } = WorkHoursState();
 
@@ -81,12 +86,43 @@ const WorkTimeTracker = () => {
     loadState();
   }, []);
 
-  // hook to load state if currentDocId changes
+  // useEffect to get the expected hours for today
   useEffect(() => {
-    if (currentDocId) {
-      loadState();
-    }
-  }, [currentDocId]);
+    const getExpectedHoursForToday = async () => {
+      const userId = getAuth().currentUser?.uid;
+      if (!userId) return;
+      const today = dayjs().format("YYYY-MM-DD"); // current day
+      setWorkDay(today);
+      try {
+        const docRef = doc(
+          FIREBASE_FIRESTORE,
+          "Users",
+          userId,
+          "Services",
+          "AczkjyWoOxdPAIRVxjy3",
+          "WorkHours",
+          today
+        );
+        const docSnapshot = await getDoc(docRef);
+        if (docSnapshot.exists()) {
+          // document for today exists: set expected hours
+          setExpectedHours(docSnapshot.data().expectedHours?.toString() || "0");
+        } else {
+          // no document for today: set expected hours to 0
+          setExpectedHours("0");
+        }
+        // set current doc id to the current day
+        setCurrentDocId(today);
+      } catch (error) {
+        console.error("Error fetching expected hours:", error);
+        Alert.alert(
+          "Error",
+          "An error occurred while fetching the data. Please try again."
+        );
+      }
+    };
+    getExpectedHoursForToday();
+  }, []); // run only once when the component mounts
 
   // function to calculate elapsed time
   const calculateElapsedTime = (startTime: Date): number => {
@@ -97,13 +133,11 @@ const WorkTimeTracker = () => {
   // hook to update elapsed time
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
-
     if (isWorking && startWorkTime) {
       const updateElapsedTime = () => {
         const currentSession = calculateElapsedTime(startWorkTime);
         setElapsedTime(accumulatedDuration + currentSession);
       };
-
       updateElapsedTime();
       timer = setInterval(updateElapsedTime, 1000);
     } else if (timer) {
@@ -125,7 +159,6 @@ const WorkTimeTracker = () => {
       if (storedElapsedTime) {
         const parsed = JSON.parse(storedElapsedTime);
         const newValue = parsed > elapsedTime ? parsed : elapsedTime;
-
         // if the loaded value is higher than the current, update it
         setElapsedTime(newValue);
       }
@@ -149,7 +182,7 @@ const WorkTimeTracker = () => {
           ["elapsedTime", JSON.stringify(elapsedTime)],
           ["lastActiveTime", nowISO],
         ]);
-        console.log(` Save elapsedTime: ${elapsedTime}, Time: ${nowISO}`);
+        // console.log(` Save elapsedTime: ${elapsedTime}, Time: ${nowISO}`);
       }
       // if the app returns to "active" from a state that was not "active"
       // and the timer is running (isWorking === true), calculate the elapsed time
@@ -173,12 +206,12 @@ const WorkTimeTracker = () => {
           // calculate the elapsed time since the last active time (in hours)
           const elapsedMs = Date.now() - new Date(lastTime).getTime();
           const elapsedHours = elapsedMs / (1000 * 60 * 60);
-          console.log(`App was inactive for ${elapsedHours.toFixed(2)} Hours.`);
+          // console.log(`App was inactive for ${elapsedHours.toFixed(2)} Hours.`);
           // update the elapsed time
           const newElapsed = savedElapsedTime + elapsedHours;
-          console.log(
-            ` Calculate new time: ${savedElapsedTime} + ${elapsedHours.toFixed(2)} = ${newElapsed.toFixed(2)}`
-          );
+          // console.log(
+          //   ` Calculate new time: ${savedElapsedTime} + ${elapsedHours.toFixed(2)} = ${newElapsed.toFixed(2)}`
+          // );
           // update only with newValue if the new elapsed time is greater than the current
           const newValue = newElapsed > elapsedTime ? newElapsed : elapsedTime;
           setElapsedTime(newValue);
@@ -209,8 +242,7 @@ const WorkTimeTracker = () => {
 
   // function to start work
   const handleStartWork = async () => {
-    console.log("Starting work...");
-
+    // console.log("Starting work...");
     const userId = getAuth().currentUser?.uid;
     if (!userId) {
       console.error("User ID not available.");
@@ -220,7 +252,6 @@ const WorkTimeTracker = () => {
     const workDay = dayjs().tz(userTimeZone).format("YYYY-MM-DD");
     setCurrentDocId(workDay);
     setIsWorking(true);
-
     try {
       const workRef = doc(
         FIREBASE_FIRESTORE,
@@ -231,29 +262,16 @@ const WorkTimeTracker = () => {
         "WorkHours",
         workDay
       );
-
       const docSnap = await getDoc(workRef);
       let newStartTime;
       if (docSnap.exists()) {
         const workData = docSnap.data();
         const expectedHoursFromFirestore = workData?.expectedHours;
-
-        // condition to check if expectedHoursFromFirestore is null else set alert and return
-        if (
-          expectedHoursFromFirestore == null ||
-          isNaN(expectedHoursFromFirestore)
-        ) {
-          alert("First add your expected hours.");
-          return;
-        }
-
         // current accumulated duration (if exists)
         const prevDuration = Number(workData?.duration) || 0;
         setAccumulatedDuration(prevDuration);
-
         // set new start time, so that already tracked time is considered
         newStartTime = new Date();
-
         await setDoc(
           workRef,
           {
@@ -264,12 +282,12 @@ const WorkTimeTracker = () => {
           },
           { merge: true }
         );
-        console.log(
-          "Resuming work. Previous duration:",
-          prevDuration,
-          "hours. New start time:",
-          newStartTime
-        );
+        // console.log(
+        //   "Resuming work. Previous duration:",
+        //   prevDuration,
+        //   "hours. New start time:",
+        //   newStartTime
+        // );
         setStartWorkTime(newStartTime);
       } else {
         console.log("No Document found.");
@@ -280,24 +298,21 @@ const WorkTimeTracker = () => {
       console.error("Error starting work:", error);
     }
   };
+
   // function to stop work
   const handleStopWork = async () => {
-    console.log("Stopping work...");
+    // console.log("Stopping work...");
     setIsWorking(false);
-
     if (!startWorkTime || !currentDocId) {
       console.warn("Missing startWorkTime or currentDocId.");
       return;
     }
-
     const userId = getAuth().currentUser?.uid;
     if (!userId) {
       console.error("No user ID found.");
       return;
     }
-
     const endTime = new Date();
-
     // calculate the duration of the current session (in hours)
     const sessionDurationHours = calculateElapsedTime(startWorkTime);
     // full duration = accumulated duration + current session
@@ -305,7 +320,6 @@ const WorkTimeTracker = () => {
     const roundedDuration = parseFloat(totalDuration.toFixed(2));
     const overHours = roundedDuration - parseFloat(expectedHours);
     const roundedOverHours = parseFloat(overHours.toFixed(2));
-
     const workRef = doc(
       FIREBASE_FIRESTORE,
       "Users",
@@ -327,10 +341,10 @@ const WorkTimeTracker = () => {
         duration: roundedDuration,
         overHours: Math.max(roundedOverHours, 0),
       });
-      console.log(
-        "Data successfully updated with total duration:",
-        roundedDuration
-      );
+      // console.log(
+      //   "Data successfully updated with total duration:",
+      //   roundedDuration
+      // );
       // load global state new to update the chart
       await loadState();
       setRefreshTrigger((prev) => prev + 1);
@@ -382,14 +396,13 @@ const WorkTimeTracker = () => {
         })
         // filter out null values
         .filter((item) => item !== null);
-
-      console.log("Formatted data:", formattedData);
+      // console.log("Formatted data:", formattedData);
       setData(formattedData as DataPoint[]);
     };
-
     fetchData();
   }, [user, currentDocId, refreshTrigger]);
 
+  // hook to update the local accumulated duration
   useEffect(() => {
     setAccumulatedDuration(elapsedTime);
   }, []); // once when the component mounts
@@ -423,9 +436,11 @@ const WorkTimeTracker = () => {
       >
         WorkTime Tracker
       </Text>
+      {/* Start/Stop Button with  enable condition when user adds a expected hours */}
       {!isWorking ? (
         <TouchableOpacity
-          onPress={handleStartWork}
+          onPress={docExists ? handleStartWork : undefined}
+          disabled={!docExists}
           style={{
             width: 280,
             borderRadius: 12,
@@ -433,10 +448,11 @@ const WorkTimeTracker = () => {
             borderWidth: 3,
             borderColor: "white",
             marginBottom: 25,
+            opacity: docExists ? 1 : 0.5,
           }}
         >
           <LinearGradient
-            colors={["#00FFFF", "#FFFFFF"]}
+            colors={docExists ? ["#00FFFF", "#FFFFFF"] : ["#666", "#999"]}
             style={{
               alignItems: "center",
               justifyContent: "center",
@@ -448,7 +464,7 @@ const WorkTimeTracker = () => {
               style={{
                 fontFamily: "MPLUSLatin_Bold",
                 fontSize: 22,
-                color: "grey",
+                color: docExists ? "grey" : "darkgrey",
                 marginBottom: 5,
                 paddingRight: 10,
               }}
