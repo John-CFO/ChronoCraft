@@ -19,6 +19,7 @@ interface WorkHoursStateProps {
   useTimeZone: string;
   workData: any[];
   expectedHours: string;
+  docExists: boolean;
   startWorkTime: Date | null;
   isWorking: boolean;
   elapsedTime: number;
@@ -29,6 +30,7 @@ interface WorkHoursStateProps {
 
   saveState: () => Promise<void>;
   loadState: () => Promise<void>;
+  setDocExists: (value: boolean) => void;
   setUserTimeZone: (timeZone: string) => void;
   setWorkData: (data: any[]) => void;
   setExpectedHours: (hours: string) => void;
@@ -49,6 +51,7 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
   useTimeZone: "",
   workData: [],
   expectedHours: "",
+  docExists: false,
   startWorkTime: null,
   isWorking: false,
   elapsedTime: 0,
@@ -109,13 +112,14 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
       state.currentDocId || "defaultDocId"
     );
 
-    await setDoc(docRef, stateToSave); // save only the necessary fields
+    await setDoc(docRef, stateToSave);
   },
 
   // actions to update the workhoursstate
   setUserTimeZone: (timeZone) => set({ useTimeZone: timeZone }),
   setWorkData: (data) => set({ workData: data }),
   setExpectedHours: (hours) => set({ expectedHours: hours }),
+  setDocExists: (value) => set({ docExists: value }),
   setStartWorkTime: (time) => set({ startWorkTime: time }),
   setIsWorking: (working) => set({ isWorking: working }),
   setElapsedTime: (time) => set({ elapsedTime: time }),
