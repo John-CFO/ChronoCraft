@@ -12,6 +12,7 @@ import { setDoc, doc, getDoc } from "firebase/firestore";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import dayjs from "../dayjsConfig";
+import WorkHoursState from "../components/WorkHoursState";
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -24,6 +25,8 @@ const WorkHoursInput = () => {
   const [userTimeZone, setUserTimeZone] = useState<string>(dayjs.tz.guess());
   // state to store the temporary expected hours
   const [tempExpectedHours, setTempExpectedHours] = useState("");
+  // gets the current document ID from the WorkHoursState
+  const { setDocExists, setCurrentDocId: setGlobalDocId } = WorkHoursState();
 
   // hook to fetch the expected hours from Firestore by mount
   useEffect(() => {
@@ -31,10 +34,8 @@ const WorkHoursInput = () => {
       try {
         const userId = getAuth().currentUser?.uid;
         if (!userId) return;
-
         const tz = dayjs.tz.guess();
         const workDay = dayjs().tz(tz).format("YYYY-MM-DD");
-
         const docRef = doc(
           FIREBASE_FIRESTORE,
           "Users",
@@ -44,24 +45,23 @@ const WorkHoursInput = () => {
           "WorkHours",
           workDay
         );
-
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           const data = docSnap.data();
           setExpectedHours(data.expectedHours.toString());
+          setDocExists(true);
+          setGlobalDocId(docRef.id);
         }
       } catch (error) {
         console.error("Error fetching hours:", error);
       }
     };
-
     fetchExpectedHours();
   }, []); // empty array enshures that this runs only once by mount
 
   // function to save the expected hours
   const handleSaveMinHours = async () => {
     const hours = parseFloat(tempExpectedHours); // parse the expected hours
-
     if (!tempExpectedHours || isNaN(hours) || hours <= 0) {
       Alert.alert(
         "Invalid Input",
@@ -79,7 +79,6 @@ const WorkHoursInput = () => {
       }
       // use the user's time zone
       const workDay = dayjs().tz(userTimeZone).format("YYYY-MM-DD");
-
       // reference for the document based on the workDay
       const docRef = doc(
         FIREBASE_FIRESTORE,
@@ -90,23 +89,22 @@ const WorkHoursInput = () => {
         "WorkHours",
         workDay // date as document ID
       );
-
       // condition to check if the currentDocId is null and set it
       if (!currentDocId) {
         setCurrentDocId(docRef.id);
       }
-
       // save the data to Firestore
       await setDoc(docRef, {
         userId,
         expectedHours: hours,
         workDay,
       });
-
       setCurrentDocId(docRef.id);
-      console.log("Expected hours saved:", hours);
+      // console.log("Expected hours saved:", hours);
       setExpectedHours(tempExpectedHours);
       setTempExpectedHours(""); // clear temp value
+      setDocExists(true);
+      setGlobalDocId(docRef.id);
     } catch (error) {
       console.error("Error saving expected hours:", error);
       if (error instanceof Error) {

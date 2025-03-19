@@ -10,8 +10,8 @@ import { View, Text, TouchableOpacity, Alert } from "react-native";
 import Modal from "react-native-modal";
 import { LinearGradient } from "expo-linear-gradient";
 import { doc, setDoc, getDoc } from "firebase/firestore";
-import { NotificationManager } from "./services/PushNotifications";
 
+import { NotificationManager } from "./services/PushNotifications";
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import CheckmarkAnimation from "./Checkmark";
 
