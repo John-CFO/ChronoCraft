@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { ScrollView, View, Text, ActivityIndicator } from "react-native";
 import { collection, query, getDocs, DocumentData } from "firebase/firestore";
+import { Alert } from "react-native";
 
 import NoteCard from "./NoteCard";
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
@@ -69,8 +70,30 @@ const NoteList: React.FC<{ projectId: string }> = ({ projectId }) => {
 
   // function to handle note deletion
   const handleDeleteNote = (noteId: string) => {
-    setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
+    // warning alert
+    Alert.alert(
+      "Delete Note",
+      "Are you sure you want to delete this note?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            // delete the note
+            setNotes((prevNotes) =>
+              prevNotes.filter((note) => note.id !== noteId)
+            );
+          },
+        },
+      ],
+      { cancelable: true }
+    );
   };
+
   // condition: if the loading is true show the loading indicator
   if (loading) {
     return (
