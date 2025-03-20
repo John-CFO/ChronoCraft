@@ -315,7 +315,6 @@ const WorkTimeTracker = () => {
     const endTime = new Date();
     // calculate the duration of the current session (in hours)
     const sessionDurationHours = calculateElapsedTime(startWorkTime);
-    // full duration = accumulated duration + current session
     const totalDuration = accumulatedDuration + sessionDurationHours;
     const roundedDuration = parseFloat(totalDuration.toFixed(2));
     const overHours = roundedDuration - parseFloat(expectedHours);
@@ -340,6 +339,7 @@ const WorkTimeTracker = () => {
         endTime: endTime.toISOString(),
         duration: roundedDuration,
         overHours: Math.max(roundedOverHours, 0),
+        elapsedTime: roundedDuration,
       });
       // console.log(
       //   "Data successfully updated with total duration:",
@@ -354,6 +354,7 @@ const WorkTimeTracker = () => {
     // update the local accumulated duration and reset the start time
     setAccumulatedDuration(roundedDuration);
     setStartWorkTime(null);
+    setElapsedTime(roundedDuration); // to hold the total duration only if it´s the current day
   };
 
   // function to get the data from firestore
