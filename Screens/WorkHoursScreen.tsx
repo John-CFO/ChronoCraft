@@ -7,6 +7,7 @@ import WorkHoursState from "../components/WorkHoursState";
 import WorkHoursInput from "../components/WorkHoursInput";
 import WorkTimeTracker from "../components/WorkTimeTracker";
 import WorkHoursChart from "../components/WorkHoursChart";
+import ErrorBoundary from "../components/ErrorBoundary";
 
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -50,7 +51,9 @@ const WorkHoursScreen = () => {
           <WorkHoursInput />
           <View style={{ marginTop: 50, width: "100%" }}>
             {/* Worktime Tracker */}
-            <WorkTimeTracker />
+            <ErrorBoundary>
+              <WorkTimeTracker />
+            </ErrorBoundary>
           </View>
           {/* Workhours Chart */}
           <WorkHoursChart />

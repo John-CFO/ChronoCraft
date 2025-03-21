@@ -5,7 +5,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-import { View, ScrollView, ActivityIndicator } from "react-native";
+import { View, ScrollView } from "react-native";
 import React, { useEffect, useState } from "react";
 import { query, getDocs, collection } from "firebase/firestore";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -19,6 +19,7 @@ import NoteList from "../components/NoteList";
 import { useStore } from "../components/TimeTrackingState";
 import { EarningsCalculatorCardProp } from "../components/EarningsCalculatorCard";
 import RoutingLoader from "../components/RoutingLoader";
+import ErrorBoundary from "../components/ErrorBoundary";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -142,14 +143,20 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
     <ScrollView style={{ backgroundColor: "black" }}>
       <View style={{ flex: 1, paddingHorizontal: 20, paddingBottom: 20 }}>
         {/* Project-Card */}
-        <DetailsProjectCard />
+        <ErrorBoundary>
+          <DetailsProjectCard />
+        </ErrorBoundary>
         {/* Time-Tracker */}
-        <TimeTrackerCard projectId={projectId} />
+        <ErrorBoundary>
+          <TimeTrackerCard projectId={projectId} />
+        </ErrorBoundary>
         {/* Earn-Calculator-Card */}
-        <EarningsCalculatorCard
-          route={route as EarningsCalculatorCardProp} // route is importent to fetch the earnings state from firestore when user navigate to details screen
-          projectId={projectId}
-        />
+        <ErrorBoundary>
+          <EarningsCalculatorCard
+            route={route as EarningsCalculatorCardProp} // route is importent to fetch the earnings state from firestore when user navigate to details screen
+            projectId={projectId}
+          />
+        </ErrorBoundary>
         {/* Success Chart */}
         {/* Notes Card */}
         <NoteList projectId={projectId} />
