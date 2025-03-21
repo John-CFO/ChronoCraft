@@ -320,7 +320,10 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                   lineHeight: 20,
                 }}
               >
-                ....................................
+                Leaf the app with Logout and you will navigate to the login
+                screen. There you can change your password with press on forgot
+                password. Whe will send you an email with instructions on how to
+                reset your password.
               </Text>
             </Collapsible>
 
