@@ -139,7 +139,7 @@ const WorkTimeTracker = () => {
         setElapsedTime(accumulatedDuration + currentSession);
       };
       updateElapsedTime();
-      timer = setInterval(updateElapsedTime, 1000);
+      timer = setInterval(updateElapsedTime, 60000);
     } else if (timer) {
       clearInterval(timer);
       timer = null;
