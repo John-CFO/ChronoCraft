@@ -1,6 +1,13 @@
 //////////////////////////////////// Note Modal Component //////////////////////////////
 
-import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  Dimensions,
+} from "react-native";
 import React, { useState, useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -30,6 +37,9 @@ const NoteModal: React.FC<NoteModalProps> = ({
   onClose: () => void;
 }) => {
   const [comment, setComment] = useState("");
+
+  // screensize for dynamic size calculation
+  const screenWidth = Dimensions.get("window").width;
 
   // dot animation
   const [dots, setDots] = useState(".");
@@ -126,13 +136,16 @@ const NoteModal: React.FC<NoteModalProps> = ({
       {/*modal settings */}
       <View
         style={{
-          width: "90%",
+          width: screenWidth * 0.9, // use 90% of the screen width
+          maxWidth: 600,
           height: "auto",
           backgroundColor: "black",
           padding: 20,
           borderRadius: 15,
           borderWidth: 2,
           borderColor: "lightgrey",
+          justifyContent: "center",
+          alignItems: "center",
         }}
       >
         {/* header*/}
@@ -174,6 +187,8 @@ const NoteModal: React.FC<NoteModalProps> = ({
               borderRadius: 5,
               padding: 10,
               marginBottom: 20,
+              width: screenWidth * 0.7, // use 70% of the screen width
+              maxWidth: 420,
               minHeight: 100,
               minWidth: 330,
               color: "white",
@@ -198,7 +213,8 @@ const NoteModal: React.FC<NoteModalProps> = ({
               )
             }
             style={{
-              width: 280,
+              width: screenWidth * 0.7, // use 70% of the screen width
+              maxWidth: 400,
               borderRadius: 12,
               overflow: "hidden",
               borderWidth: 3,
@@ -211,9 +227,9 @@ const NoteModal: React.FC<NoteModalProps> = ({
               style={{
                 alignItems: "center",
                 justifyContent: "center",
-
+                width: screenWidth * 0.7, // use 70% of the screen width
+                maxWidth: 400,
                 height: 45,
-                width: 280,
               }}
             >
               <Text

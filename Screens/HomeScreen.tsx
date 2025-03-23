@@ -17,6 +17,7 @@ import {
   TouchableOpacity,
   Animated,
   LayoutChangeEvent,
+  Dimensions,
 } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigation } from "@react-navigation/native";
@@ -82,6 +83,9 @@ const HomeScreen: React.FC = () => {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   // handle refresh state to update the date
   const [refresh, setRefresh] = useState(false);
+
+  // screensize for dynamic size calculation
+  const screenWidth = Dimensions.get("window").width;
 
   // scroll animation declaration
   const ITEM_HEIGHT: number = 100;
@@ -247,7 +251,7 @@ const HomeScreen: React.FC = () => {
 
               // optional: refresh the list
               setRefresh(!refresh);
-              console.log("Project and related notes deleted successfully.");
+              // console.log("Project and related notes deleted successfully.");
             } catch (error) {
               console.error("Delete project or notes failed", error);
             }
@@ -261,7 +265,7 @@ const HomeScreen: React.FC = () => {
 
   // function to navigate to the details screen if user pressed an a listed project
   const handleProjectPress = (projectId: string, projectName: string) => {
-    console.log("navigate to details screen", projectId);
+    // console.log("navigate to details screen", projectId);
     setProjectId(projectId); // to send it global to the details screen to reset all components in the details screen
     navigation.navigate("Details", { projectId, projectName });
   };
@@ -275,7 +279,7 @@ const HomeScreen: React.FC = () => {
 
   // function to close the note-modal
   const closeNoteModal = () => {
-    console.log("Note modal closed");
+    // console.log("Note modal closed");
     setNoteModalVisible(false);
   };
 
@@ -502,6 +506,7 @@ const HomeScreen: React.FC = () => {
               left: 0,
               right: 0,
               width: "100%",
+
               height: 80,
               backgroundColor: "transparent",
               flexDirection: "row",
@@ -512,7 +517,8 @@ const HomeScreen: React.FC = () => {
           >
             <TextInput
               style={{
-                width: 320,
+                width: screenWidth * 0.9, // Dynamische Breite (90%)
+                maxWidth: 320,
                 borderColor: "aqua",
                 borderWidth: 1.5,
                 borderRadius: 12,

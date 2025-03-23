@@ -89,8 +89,9 @@ function VacationScreen() {
           {/* Calendar */}
           <View
             style={{
-              width: 420,
-              height: 360,
+              width: "100%",
+              justifyContent: "center",
+              alignItems: "center",
               backgroundColor: "black",
             }}
           >
@@ -100,7 +101,7 @@ function VacationScreen() {
             />
           </View>
           {/* VacationForm */}
-          <View>
+          <View style={{ alignItems: "center", backgroundColor: "black" }}>
             <VacationForm />
           </View>
         </>

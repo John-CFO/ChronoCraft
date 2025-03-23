@@ -6,7 +6,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-import { View, Text, FlatList } from "react-native";
+import { View, Text, FlatList, Dimensions } from "react-native";
 import React, { useEffect, useState } from "react";
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { TouchableOpacity } from "react-native-gesture-handler";
@@ -35,6 +35,9 @@ const VacationList = () => {
   >([]);
 
   const [user, setUser] = useState<any>(null);
+
+  // screensize for dynamic size calculation
+  const screenWidth = Dimensions.get("window").width;
 
   // handle reminder modal state
   const [reminderModalVisible, setReminderModalVisible] = useState(false);
@@ -166,7 +169,8 @@ const VacationList = () => {
     // vacation list container
     <View
       style={{
-        width: "95%",
+        width: screenWidth * 0.7, // use 70% of the screen width
+        minWidth: 380,
         minHeight: 200,
         marginTop: 20,
         marginBottom: 20,
@@ -253,7 +257,9 @@ const VacationList = () => {
                 <View
                   style={{
                     height: 60,
-                    width: 360,
+                    minWidth: 350,
+                    width: screenWidth * 0.8, // use 80% of the screen width
+                    maxWidth: 400,
                     flexDirection: "row",
                     justifyContent: "space-around",
                     paddingTop: 15,

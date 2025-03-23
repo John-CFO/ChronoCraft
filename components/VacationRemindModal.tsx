@@ -6,7 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Alert } from "react-native";
+import { View, Text, TouchableOpacity, Alert, Dimensions } from "react-native";
 import Modal from "react-native-modal";
 import { LinearGradient } from "expo-linear-gradient";
 import { doc, setDoc, getDoc } from "firebase/firestore";
@@ -31,6 +31,9 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
   onClose,
   vacationId,
 }) => {
+  // screensize for dynamic size calculation
+  const screenWidth = Dimensions.get("window").width;
+
   // state for selected reminder option
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
 
@@ -241,7 +244,8 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
           <TouchableOpacity
             style={{
               marginTop: 10,
-              width: 280,
+              width: screenWidth * 0.7, // use 70% of the screen width
+              maxWidth: 400,
               borderRadius: 12,
               overflow: "hidden",
               borderWidth: 3,
@@ -267,7 +271,8 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
                 alignItems: "center",
                 justifyContent: "center",
                 height: 45,
-                width: 280,
+                width: screenWidth * 0.7, // use 70% of the screen width
+                maxWidth: 400,
               }}
             >
               <Text

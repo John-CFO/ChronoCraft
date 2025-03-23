@@ -1,7 +1,13 @@
 /////////////////////////////////////////CheckmarkReminder Component////////////////////////////////
 
 import React, { useRef } from "react";
-import { View, TouchableOpacity, Animated, Text } from "react-native";
+import {
+  View,
+  TouchableOpacity,
+  Animated,
+  Text,
+  Dimensions,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -16,6 +22,9 @@ const CheckmarkReminder: React.FC<CheckmarkReminderProps> = ({
   onSelect,
   selectedOption,
 }) => {
+  // screensize for dynamic size calculation
+  const screenWidth = Dimensions.get("window").width;
+
   //function to initialize the animation using useRef
   const animations = Array.from({ length: 3 }, () => ({
     translateYAnim: useRef(new Animated.Value(0)).current, // move up or down animation of the point
@@ -86,7 +95,8 @@ const CheckmarkReminder: React.FC<CheckmarkReminderProps> = ({
           flexDirection: "row",
           justifyContent: "space-between",
           marginBottom: 20,
-          width: "80%",
+          width: screenWidth * 0.7, // use 70% of the screen width
+          maxWidth: 350,
         }}
       >
         {animations.map((anim, index) => (
@@ -128,7 +138,8 @@ const CheckmarkReminder: React.FC<CheckmarkReminderProps> = ({
         style={{
           flexDirection: "row",
           justifyContent: "space-between",
-          width: "80%",
+          width: screenWidth * 0.7, // use 70% of the screen width
+          maxWidth: 350,
         }}
       >
         {["1 Day", "3 Days", "7 Days"].map((label, index) => (

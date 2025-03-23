@@ -5,7 +5,14 @@
 /////////////////////////////////////////////////////////////////////////////////
 
 import React, { useState, useEffect } from "react";
-import { Text, View, TouchableOpacity, TextInput, Alert } from "react-native";
+import {
+  Text,
+  View,
+  TouchableOpacity,
+  TextInput,
+  Alert,
+  Dimensions,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { getAuth } from "firebase/auth";
 import { setDoc, doc, getDoc } from "firebase/firestore";
@@ -27,6 +34,9 @@ const WorkHoursInput = () => {
   const [tempExpectedHours, setTempExpectedHours] = useState("");
   // gets the current document ID from the WorkHoursState
   const { setDocExists, setCurrentDocId: setGlobalDocId } = WorkHoursState();
+
+  // screensize for dynamic size calculation
+  const screenWidth = Dimensions.get("window").width;
 
   // hook to fetch the expected hours from Firestore by mount
   useEffect(() => {
@@ -122,8 +132,8 @@ const WorkHoursInput = () => {
   return (
     <View
       style={{
-        width: "100%",
-        maxWidth: 400,
+        width: screenWidth * 0.9, // use 90% of the screen width
+        maxWidth: 600,
         alignItems: "center",
         backgroundColor: "#191919",
         borderRadius: 12,
@@ -163,7 +173,7 @@ const WorkHoursInput = () => {
       </Text>
       <View
         style={{
-          marginTop: 30,
+          marginTop: 20,
           width: "100%",
           backgroundColor: "#191919",
           alignItems: "center",
@@ -178,7 +188,8 @@ const WorkHoursInput = () => {
           onChangeText={setTempExpectedHours}
           style={{
             marginBottom: 15,
-            width: 280,
+            width: screenWidth * 0.7, // dynamic with of 70%
+            maxWidth: 400,
             borderColor: "aqua",
             borderWidth: 1.5,
             borderRadius: 12,
@@ -197,7 +208,8 @@ const WorkHoursInput = () => {
       <TouchableOpacity
         onPress={handleSaveMinHours}
         style={{
-          width: 280,
+          width: screenWidth * 0.7, // dynamic with of 70%
+          maxWidth: 400,
           borderRadius: 12,
           overflow: "hidden",
           borderWidth: 3,
@@ -211,7 +223,8 @@ const WorkHoursInput = () => {
             alignItems: "center",
             justifyContent: "center",
             height: 45,
-            width: 280,
+            width: screenWidth * 0.7, // dynamic with of 70%
+            maxWidth: 400,
           }}
         >
           <Text
