@@ -12,6 +12,7 @@ import {
   Text,
   TouchableWithoutFeedback,
   LayoutChangeEvent,
+  Dimensions,
 } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 
@@ -41,6 +42,9 @@ const WorkHoursChart = () => {
   const scrollViewRef = useRef<ScrollView>(null);
   // state for the card width
   const [cardWidth, setCardWidth] = useState<number>(0);
+
+  // screensize for dynamic size calculation
+  const screenWidth = Dimensions.get("window").width;
 
   // card padding in px to calculate the inner width for the frame
   const cardPadding = 16;
@@ -275,7 +279,8 @@ const WorkHoursChart = () => {
         }
         style={{
           marginTop: 50,
-          width: "100%",
+          width: screenWidth * 0.9, // dynamic 90% of the screen width
+          maxWidth: 600,
           height: 480,
           borderWidth: 1,
           borderColor: "aqua",

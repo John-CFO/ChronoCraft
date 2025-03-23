@@ -6,7 +6,13 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Dimensions,
+} from "react-native";
 import React, { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
@@ -40,6 +46,9 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
   // navigation
   const route = useRoute<EarningsCalculatorRouteProp>();
   const navigation = useNavigation();
+
+  // screensize for dynamic size calculation
+  const screenWidth = Dimensions.get("window").width;
 
   // route params
   const { projectId } = route.params;
@@ -287,7 +296,8 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
             onChangeText={handleRateChange}
             style={{
               marginBottom: 15,
-              width: 280,
+              width: screenWidth * 0.7, // use 70% of the screen width
+              maxWidth: 400,
               borderColor: "aqua",
               borderWidth: 1.5,
               borderRadius: 12,
@@ -306,7 +316,8 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
           <TouchableOpacity
             onPress={handleSave}
             style={{
-              width: 280,
+              width: screenWidth * 0.7, // use 70% of the screen width
+              maxWidth: 400,
               borderRadius: 12,
               overflow: "hidden",
               borderWidth: 3,
@@ -320,7 +331,8 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
                 alignItems: "center",
                 justifyContent: "center",
                 height: 45,
-                width: 280,
+                width: screenWidth * 0.7, // use 70% of the screen width
+                maxWidth: 400,
               }}
             >
               <Text

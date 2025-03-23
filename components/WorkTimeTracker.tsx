@@ -14,6 +14,7 @@ import {
   AppStateStatus,
   TouchableOpacity,
   Alert,
+  Dimensions,
 } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
@@ -59,6 +60,9 @@ const WorkTimeTracker = () => {
   const prevAppStateRef = useRef<AppStateStatus>(AppState.currentState);
   // state to get the work day from firestore to update the state wich is needed to enable the timer start button
   const [workDay, setWorkDay] = useState("");
+
+  // screensize for dynamic size calculation
+  const screenWidth = Dimensions.get("window").width;
 
   // global WorkHoursState
   const {
@@ -411,8 +415,8 @@ const WorkTimeTracker = () => {
   return (
     <View
       style={{
-        width: "100%",
-        maxWidth: 400,
+        width: screenWidth * 0.9, // use 90% of the screen width
+        maxWidth: 600,
         alignItems: "center",
         backgroundColor: "#191919",
         borderRadius: 12,
@@ -443,7 +447,8 @@ const WorkTimeTracker = () => {
           onPress={docExists ? handleStartWork : undefined}
           disabled={!docExists}
           style={{
-            width: 280,
+            width: screenWidth * 0.7, // dynamic with of 70%
+            maxWidth: 400,
             borderRadius: 12,
             overflow: "hidden",
             borderWidth: 3,
@@ -458,7 +463,8 @@ const WorkTimeTracker = () => {
               alignItems: "center",
               justifyContent: "center",
               height: 45,
-              width: 280,
+              width: screenWidth * 0.7, // dynamic with of 70%
+              maxWidth: 400,
             }}
           >
             <Text

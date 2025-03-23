@@ -14,6 +14,7 @@ import {
   TouchableOpacity,
   AppState,
   AppStateStatus,
+  Dimensions,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
@@ -45,6 +46,9 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   // initialize the routing
   const route = useRoute<TimeTrackerRouteProp>();
   const { projectId } = route.params;
+
+  // screensize for dynamic size calculation
+  const screenWidth = Dimensions.get("window").width;
 
   // use the global state to fetch data from firestore
   const { lastStartTime, endTime, originalStartTime } = useStore((state) => ({
@@ -344,7 +348,8 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
             alignItems: "center",
             marginBottom: 10,
             marginTop: 30,
-            width: "100%",
+            width: screenWidth * 0.7, // use 70% of the screen width
+            maxWidth: 320,
             backgroundColor: "#191919",
           }}
         >
@@ -375,7 +380,8 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
           <TouchableOpacity
             onPress={handleReset}
             style={{
-              width: 280,
+              width: screenWidth * 0.7, // use 70% of the screen width
+              maxWidth: 400,
               borderRadius: 12,
               overflow: "hidden",
               borderWidth: 3,
@@ -389,7 +395,8 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
                 alignItems: "center",
                 justifyContent: "center",
                 height: 45,
-                width: 280,
+                width: screenWidth * 0.7, // use 70% of the screen width
+                maxWidth: 400,
               }}
             >
               <Text

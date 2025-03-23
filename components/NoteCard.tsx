@@ -2,7 +2,7 @@
 
 // NOTE: the NodeCard is nested in the NoteList Component
 
-import { View, Text } from "react-native";
+import { View, Text, Dimensions } from "react-native";
 import React from "react";
 import { AntDesign } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native-gesture-handler";
@@ -30,6 +30,9 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
   if (!note) {
     return null;
   }
+
+  // screensize for dynamic size calculation
+  const screenWidth = Dimensions.get("window").width;
 
   // function to handle note deletion in firestore
   const handleDeletComment = async () => {
@@ -65,9 +68,10 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
     <View
       style={{
         backgroundColor: "#191919",
-        minWidth: 350,
+        minWidth: 320,
         marginBottom: 20,
-        // borderWidth: 0.5,
+        width: screenWidth * 0.7, // use 70% of the screen width
+        maxWidth: 400,
         borderColor: "grey",
         borderRadius: 10,
         padding: 10,

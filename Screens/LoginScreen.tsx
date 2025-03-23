@@ -11,7 +11,7 @@ import {
   TextInput,
   Text,
   Platform,
-  ActivityIndicator,
+  Dimensions,
   StatusBar,
   ImageBackground,
   KeyboardAvoidingView,
@@ -43,6 +43,9 @@ import LostPasswordModal from "../components/LostPasswordModal";
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 const LoginScreen: React.FC = () => {
+  // screensize for dynamic size calculation
+  const screenWidth = Dimensions.get("window").width;
+
   // declaire the navigation to user get in after logein
   const navigation = useNavigation();
 
@@ -160,13 +163,15 @@ const LoginScreen: React.FC = () => {
               width: "100%",
               height: "100%",
               overflow: "hidden",
+              alignItems: "center",
             }}
           >
             <View
               style={{
                 paddingTop: 170,
                 position: "absolute",
-                width: "100%",
+                width: screenWidth * 0.9, // use 90% of the screen width
+                maxWidth: 320,
               }}
             >
               {/* App logo */}
@@ -174,10 +179,10 @@ const LoginScreen: React.FC = () => {
               <View
                 style={{
                   bottom: 10,
-                  marginLeft: 45,
-                  justifyContent: "center",
-                  zIndex: +3,
-                  width: 250,
+                  justifyContent: "flex-start",
+                  alignItems: "center",
+                  zIndex: 3,
+                  width: "auto",
                   height: 30,
                 }}
               >
@@ -210,7 +215,8 @@ const LoginScreen: React.FC = () => {
                     fontSize: 22,
                     paddingBottom: 5,
                     height: 50,
-                    width: 280,
+                    width: screenWidth * 0.7, // use 70% of the screen width
+                    maxWidth: 400,
                     color: "white",
                     backgroundColor: "#191919",
                   }}
@@ -220,7 +226,14 @@ const LoginScreen: React.FC = () => {
                   onChangeText={(text) => setEmail(text)}
                   value={email}
                 />
-                <View style={{ position: "relative", width: 280, height: 40 }}>
+                <View
+                  style={{
+                    position: "relative",
+                    width: screenWidth * 0.7, // use 70% of the screen width
+                    maxWidth: 400,
+                    height: 40,
+                  }}
+                >
                   {/* Password input */}
                   <TextInput
                     style={{
@@ -266,7 +279,8 @@ const LoginScreen: React.FC = () => {
                 <TouchableOpacity
                   onPress={handleLogin}
                   style={{
-                    width: 280,
+                    width: screenWidth * 0.7, // use 70% of the screen width
+                    maxWidth: 400,
                     borderRadius: 12,
                     overflow: "hidden",
                     borderWidth: 3,
@@ -280,7 +294,8 @@ const LoginScreen: React.FC = () => {
                       alignItems: "center",
                       justifyContent: "center",
                       height: 45,
-                      width: 280,
+                      width: screenWidth * 0.7, // use 70% of the screen width
+                      maxWidth: 400,
                     }}
                   >
                     <Text
@@ -300,7 +315,8 @@ const LoginScreen: React.FC = () => {
                 <TouchableOpacity
                   onPress={handleRegister}
                   style={{
-                    width: 280,
+                    width: screenWidth * 0.7, // use 70% of the screen width
+                    maxWidth: 400,
                     borderRadius: 12,
                     overflow: "hidden",
                     borderWidth: 3,
@@ -313,7 +329,8 @@ const LoginScreen: React.FC = () => {
                       alignItems: "center",
                       justifyContent: "center",
                       height: 45,
-                      width: 280,
+                      width: screenWidth * 0.7, // use 70% of the screen width
+                      maxWidth: 400,
                     }}
                   >
                     <Text

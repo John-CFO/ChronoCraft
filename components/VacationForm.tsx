@@ -6,7 +6,14 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 import React, { useState, useEffect } from "react";
-import { Text, View, ScrollView, TouchableOpacity, Alert } from "react-native";
+import {
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  Dimensions,
+} from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -19,6 +26,9 @@ import { useCalendarStore } from "../components/CalendarState";
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const VacationForm = () => {
+  // screensize for dynamic size calculation
+  const screenWidth = Dimensions.get("window").width;
+
   // initial start and end dates states
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
@@ -116,6 +126,7 @@ const VacationForm = () => {
           backgroundColor: "black",
           width: "100%",
           height: 80,
+          justifyContent: "center",
         }}
       >
         <View
@@ -136,7 +147,7 @@ const VacationForm = () => {
             style={{
               margin: 5,
               backgroundColor: "#191919",
-              width: 180,
+              width: 160,
               height: 50,
               borderWidth: 1,
               borderColor: "aqua",
@@ -171,6 +182,7 @@ const VacationForm = () => {
                   fontSize: 18,
                   fontWeight: "bold",
                   color: "white",
+                  left: 10,
                 }}
               >
                 {startDate || "Start Date"}
@@ -196,7 +208,7 @@ const VacationForm = () => {
             style={{
               margin: 5,
               backgroundColor: "#191919",
-              width: 180,
+              width: 160,
               height: 50,
               borderWidth: 1,
               borderColor: "aqua",
@@ -230,6 +242,7 @@ const VacationForm = () => {
                   fontSize: 18,
                   fontWeight: "bold",
                   color: "white",
+                  left: 10,
                 }}
               >
                 {endDate || "End Date"}
@@ -299,6 +312,7 @@ const VacationForm = () => {
           borderBottomColor: "grey",
           borderWidth: 0.5,
           backgroundColor: "black",
+          gap: 20,
         }}
       >
         {/* Save Button */}
