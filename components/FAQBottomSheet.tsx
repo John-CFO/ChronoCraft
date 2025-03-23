@@ -6,8 +6,15 @@
 // And also the aswer to change the user´s password
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-import React, { useState, useRef } from "react";
-import { View, Text, TouchableOpacity, Alert, TextInput } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Alert,
+  TextInput,
+  Dimensions,
+} from "react-native";
 import Collapsible from "react-native-collapsible";
 import { LinearGradient } from "expo-linear-gradient";
 import { doc, updateDoc } from "firebase/firestore";
@@ -36,6 +43,9 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
     faq2: false,
     faq3: false,
   });
+
+  // screensize for dynamic size calculation
+  const screenWidth = Dimensions.get("window").width;
 
   // function to open or close a FAQ section
   const toggleSection = (section: string) => {
@@ -374,7 +384,8 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                   value={password}
                   onChangeText={setPassword}
                   style={{
-                    width: 280,
+                    width: screenWidth * 0.7, // use 70% of the screen width
+                    maxWidth: 600,
                     marginVertical: 10,
                     borderColor: "aqua",
                     borderWidth: 1.5,
@@ -401,7 +412,8 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                     )
                   }
                   style={{
-                    width: 280,
+                    width: screenWidth * 0.7, // use 70% of the screen width
+                    maxWidth: 600,
                     borderRadius: 12,
                     overflow: "hidden",
                     borderWidth: 3,
@@ -415,7 +427,8 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                       alignItems: "center",
                       justifyContent: "center",
                       height: 45,
-                      width: 280,
+                      width: screenWidth * 0.7, // use 70% of the screen width
+                      maxWidth: 600,
                     }}
                   >
                     <Text

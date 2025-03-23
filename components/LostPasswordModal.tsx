@@ -4,7 +4,14 @@
 // it will send an email to the user with instructions on how to reset the password
 
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  Dimensions,
+} from "react-native";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { LinearGradient } from "expo-linear-gradient";
 import Modal from "react-native-modal";
@@ -24,6 +31,9 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
   visible,
   onClose,
 }) => {
+  // screensize for dynamic size calculation
+  const screenWidth = Dimensions.get("window").width;
+
   // state to hold the email
   const [email, setEmail] = useState("");
 
@@ -93,7 +103,8 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
         {/* modal header */}
         <View
           style={{
-            width: "90%",
+            width: screenWidth * 0.9, // use 90% of the screen width
+            maxWidth: 600,
             height: "auto",
             backgroundColor: "black",
             alignItems: "center",
@@ -131,7 +142,8 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
 
           <View
             style={{
-              width: 280,
+              width: screenWidth * 0.7, // use 70% of the screen width
+              maxWidth: 400,
               height: 50,
               borderWidth: 2,
               marginBottom: 20,
@@ -164,7 +176,8 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
           <TouchableOpacity
             onPress={handlePasswordReset}
             style={{
-              width: 280,
+              width: screenWidth * 0.7, // use 70% of the screen width
+              maxWidth: 400,
               borderRadius: 12,
               overflow: "hidden",
               borderWidth: 3,
@@ -178,7 +191,8 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
                 alignItems: "center",
                 justifyContent: "center",
                 height: 45,
-                width: 280,
+                width: screenWidth * 0.7, // use 70% of the screen width
+                maxWidth: 400,
               }}
             >
               <Text

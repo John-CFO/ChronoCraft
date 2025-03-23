@@ -14,6 +14,7 @@ import {
   ImageBackground,
   Image,
   Alert,
+  Dimensions,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
@@ -49,6 +50,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   const [newName, setNewName] = useState("");
   const [newPersonalID, setNewPersonalID] = useState("");
   const [imageUri, setImageUri] = useState<string | null>(null);
+
+  // screensize for dynamic size calculation
+  const screenWidth = Dimensions.get("window").width;
 
   if (!user) {
     return null;
@@ -153,13 +157,16 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
       <View
         style={{
-          width: "90%",
+          width: screenWidth * 0.9, // use 90% of the screen width
+          maxWidth: 600,
           height: "auto",
           backgroundColor: "black",
           padding: 20,
           borderRadius: 15,
           borderWidth: 2,
           borderColor: "lightgrey",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
         {/* header */}

@@ -25,7 +25,8 @@ const AnimatedText = () => {
       style={{
         color: "white",
         fontWeight: "bold",
-
+        textAlign: "left",
+        alignSelf: "flex-start",
         fontSize: 22,
       }}
       cursorStyle={{ color: "aqua" }}

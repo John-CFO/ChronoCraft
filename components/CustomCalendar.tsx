@@ -76,6 +76,7 @@ const CustomCalendar = forwardRef<CustomCalendarRef, CustomCalendarProps>(
           maxDate={"2030-12-31"}
           style={{
             height: 350,
+            width: 430,
             marginBottom: 50,
           }}
           theme={{

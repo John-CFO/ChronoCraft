@@ -23,7 +23,11 @@ const WorkHoursScreen = () => {
       }}
     >
       <SafeAreaView
-        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
       >
         <View
           style={{
@@ -49,7 +53,7 @@ const WorkHoursScreen = () => {
           </Text>
           {/* WorkHours Input */}
           <WorkHoursInput />
-          <View style={{ marginTop: 50, width: "100%" }}>
+          <View style={{ marginTop: 50, width: "100%", alignItems: "center" }}>
             {/* Worktime Tracker */}
             <ErrorBoundary>
               <WorkTimeTracker />
