@@ -49,7 +49,7 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
   const screenWidth = Dimensions.get("window").width;
 
   // state for the password visibility
-  const [secureTextEntry, setSecureTextEntry] = useState(true);
+  const [passwordVisibility, setPasswordVisibility] = useState(true);
 
   // function to open or close a FAQ section
   const toggleSection = (section: string) => {
@@ -177,8 +177,8 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
   };
 
   // function to handle password visibility
-  const toggleSecureTextEntry = () => {
-    setSecureTextEntry(!secureTextEntry);
+  const deleteAccountVisibility = () => {
+    setPasswordVisibility(!passwordVisibility);
   };
 
   return (
@@ -396,7 +396,7 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                   <TextInput
                     placeholder="Enter your password"
                     placeholderTextColor="#888"
-                    secureTextEntry={secureTextEntry}
+                    secureTextEntry={passwordVisibility}
                     value={password}
                     onChangeText={setPassword}
                     style={{
@@ -417,11 +417,11 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                   />
                   {/* Visibility eye button */}
                   <TouchableOpacity
-                    onPress={toggleSecureTextEntry}
+                    onPress={deleteAccountVisibility}
                     style={{ position: "absolute", right: 15, top: 25 }}
                   >
                     <FontAwesome5
-                      name={secureTextEntry ? "eye" : "eye-slash"}
+                      name={passwordVisibility ? "eye" : "eye-slash"}
                       size={20}
                       color="darkgrey"
                     />
