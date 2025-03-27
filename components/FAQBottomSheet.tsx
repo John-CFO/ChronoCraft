@@ -21,6 +21,7 @@ import { doc, updateDoc } from "firebase/firestore";
 import { deleteObject, ref, getStorage } from "firebase/storage";
 import { EmailAuthProvider } from "firebase/auth";
 import { reauthenticateWithCredential } from "firebase/auth";
+import { FontAwesome5 } from "@expo/vector-icons";
 
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { ScrollView } from "react-native-gesture-handler";
@@ -46,6 +47,9 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
+
+  // state for the password visibility
+  const [secureTextEntry, setSecureTextEntry] = useState(true);
 
   // function to open or close a FAQ section
   const toggleSection = (section: string) => {
@@ -170,6 +174,11 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // function to handle password visibility
+  const toggleSecureTextEntry = () => {
+    setSecureTextEntry(!secureTextEntry);
   };
 
   return (
@@ -377,29 +386,47 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                 will be permanently removed from our servers.
               </Text>
               <View style={{ alignItems: "center" }}>
-                <TextInput
-                  placeholder="Enter your password"
-                  placeholderTextColor="#888"
-                  secureTextEntry
-                  value={password}
-                  onChangeText={setPassword}
+                <View
                   style={{
+                    position: "relative",
                     width: screenWidth * 0.7, // use 70% of the screen width
-                    maxWidth: 600,
-                    marginVertical: 10,
-                    borderColor: "aqua",
-                    borderWidth: 1.5,
-                    borderRadius: 12,
-                    paddingLeft: 15,
-                    paddingRight: 40,
-                    paddingBottom: 5,
-                    fontSize: 22,
-                    height: 50,
-                    color: "white",
-                    backgroundColor: "#191919",
+                    maxWidth: 400,
                   }}
-                />
-
+                >
+                  <TextInput
+                    placeholder="Enter your password"
+                    placeholderTextColor="#888"
+                    secureTextEntry={secureTextEntry}
+                    value={password}
+                    onChangeText={setPassword}
+                    style={{
+                      width: screenWidth * 0.7, // use 70% of the screen width
+                      maxWidth: 600,
+                      marginVertical: 10,
+                      borderColor: "aqua",
+                      borderWidth: 1.5,
+                      borderRadius: 12,
+                      paddingLeft: 15,
+                      paddingRight: 40,
+                      paddingBottom: 5,
+                      fontSize: 22,
+                      height: 50,
+                      color: "white",
+                      backgroundColor: "#191919",
+                    }}
+                  />
+                  {/* Visibility eye button */}
+                  <TouchableOpacity
+                    onPress={toggleSecureTextEntry}
+                    style={{ position: "absolute", right: 15, top: 25 }}
+                  >
+                    <FontAwesome5
+                      name={secureTextEntry ? "eye" : "eye-slash"}
+                      size={20}
+                      color="darkgrey"
+                    />
+                  </TouchableOpacity>
+                </View>
                 <TouchableOpacity
                   onPress={() =>
                     Alert.alert(
