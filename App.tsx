@@ -20,7 +20,9 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-gesture-handler";
 import "react-native-reanimated";
 import "text-encoding-polyfill"; //bugfix: for delete project with notes
+import { CopilotProvider } from "react-native-copilot";
 
+import TourStatus from "./components/TourStatus";
 import LoginScreen from "./Screens/LoginScreen";
 import HomeScreen from "./Screens/HomeScreen";
 import DetailsScreen from "./Screens/DetailsScreen";
@@ -205,100 +207,125 @@ const App = () => {
       {/* <GestureHandlerRootView style={{ flex: 1 }}> important to set the bottomsheetmodal in the app, not the drawer */}
       <GestureHandlerRootView style={{ flex: 1 }}>
         <BottomSheetModalProvider>
-          <NavigationContainer>
-            {fontsLoaded && (
-              <Stack.Navigator
-                screenOptions={{
-                  headerShown: false,
-                  animationEnabled: false, // importent to disable the default animation wich produces a header jump bug
-                  // This part is used to slide the stack from the right into the screen
-                  gestureEnabled: true,
-                  gestureDirection: "horizontal",
-                  transitionSpec: {
-                    open: { animation: "timing", config: { duration: 300 } },
-                    close: { animation: "timing", config: { duration: 300 } },
-                  },
-                  // function to slide the stack from the right into the screen
-                  cardStyleInterpolator: ({ current, layouts }) => {
-                    return {
-                      cardStyle: {
-                        transform: [
-                          {
-                            translateX: current.progress.interpolate({
-                              inputRange: [0, 1],
-                              outputRange: [layouts.screen.width, 0],
-                            }),
-                          },
-                        ],
-                      },
-                    };
-                  },
-                }}
-              >
-                {/* Login navigation when user is logged in or logged out */}
-                {user ? (
-                  <Stack.Screen
-                    name="Inside"
-                    component={AppDrawerNavigator}
-                    options={{ headerShown: false }}
-                  />
-                ) : (
-                  <Stack.Screen
-                    name="Login"
-                    component={LoginScreen}
-                    options={{ headerShown: false }}
-                  />
-                )}
-                {/* Details Screen direkt im Stack Navigator */}
-                <Stack.Screen
-                  name="Details"
-                  component={DetailsScreen as any}
-                  initialParams={{
-                    projectId: "",
+          <CopilotProvider
+            overlay="view"
+            verticalOffset={40}
+            tooltipStyle={{
+              backgroundColor: "#fff",
+              padding: 10,
+              borderRadius: 8,
+              marginTop: -10,
+            }}
+            labels={{
+              previous: "Before",
+              next: "Next",
+              skip: "Skip",
+              finish: "Close",
+            }}
+          >
+            <TourStatus />
+            <NavigationContainer>
+              {fontsLoaded && (
+                <Stack.Navigator
+                  screenOptions={{
+                    headerShown: false,
+                    animationEnabled: false, // importent to disable the default animation wich produces a header jump bug
+                    // This part is used to slide the stack from the right into the screen
+                    gestureEnabled: true,
+                    gestureDirection: "horizontal",
+                    transitionSpec: {
+                      open: { animation: "timing", config: { duration: 300 } },
+                      close: { animation: "timing", config: { duration: 300 } },
+                    },
+                    // function to slide the stack from the right into the screen
+                    cardStyleInterpolator: ({ current, layouts }) => {
+                      return {
+                        cardStyle: {
+                          transform: [
+                            {
+                              translateX: current.progress.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [layouts.screen.width, 0],
+                              }),
+                            },
+                          ],
+                        },
+                      };
+                    },
                   }}
-                  // custom header config. for Details Screen
-                  options={({ navigation }) => ({
-                    headerShown: true,
-                    presentation: "modal",
-                    animationTypeForReplace: "push",
-                    headerRight: () => (
-                      <HeaderHelpComponent navigation={navigation} />
-                    ),
-                    // Back button includes the if statement to check if the project is still running
-                    headerLeft: () => (
-                      <TouchableOpacity
-                        onPress={async () => {
-                          const projectId = useStore.getState().getProjectId();
-                          const isTracking = await useStore
-                            .getState()
-                            .getProjectTrackingState(projectId);
+                >
+                  {/* Login navigation when user is logged in or logged out */}
+                  {user ? (
+                    <Stack.Screen
+                      name="Inside"
+                      component={AppDrawerNavigator}
+                      options={{ headerShown: false }}
+                    />
+                  ) : (
+                    <Stack.Screen
+                      name="Login"
+                      component={LoginScreen}
+                      options={{ headerShown: false }}
+                    />
+                  )}
 
-                          if (isTracking) {
-                            Alert.alert(
-                              "Project is still running.",
-                              " You can't leave the app. Please stop the project first."
-                            );
-                          } else {
-                            navigation.goBack();
-                          }
-                        }}
-                        style={{ marginLeft: 20 }}
-                      >
-                        <AntDesign name="doubleleft" size={28} color="white" />
-                      </TouchableOpacity>
-                    ),
-                    headerStyle: {
-                      backgroundColor: "black",
-                    },
-                    headerTintColor: "black",
-                    headerTitleStyle: {
-                      fontSize: 24,
-                    },
-                  })}
-                />
-              </Stack.Navigator>
-            )}
-          </NavigationContainer>
+                  {/* Details Screen direkt im Stack Navigator */}
+                  <Stack.Screen
+                    name="Details"
+                    component={DetailsScreen as any}
+                    initialParams={{
+                      projectId: "",
+                    }}
+                    // custom header config. for Details Screen
+                    options={({ navigation }) => ({
+                      headerShown: true,
+                      presentation: "modal",
+                      animationTypeForReplace: "push",
+                      headerRight: () => (
+                        <HeaderHelpComponent navigation={navigation} />
+                      ),
+                      // Back button includes the if statement to check if the project is still running
+                      headerLeft: () => (
+                        <TouchableOpacity
+                          onPress={async () => {
+                            const projectId = useStore
+                              .getState()
+                              .getProjectId();
+                            const isTracking = await useStore
+                              .getState()
+                              .getProjectTrackingState(projectId);
+
+                            if (isTracking) {
+                              Alert.alert(
+                                "Project is still running.",
+                                " You can't leave the app. Please stop the project first."
+                              );
+                            } else {
+                              navigation.goBack();
+                            }
+                          }}
+                          style={{ marginLeft: 20 }}
+                        >
+                          <AntDesign
+                            name="doubleleft"
+                            size={28}
+                            color="white"
+                          />
+                        </TouchableOpacity>
+                      ),
+                      headerStyle: {
+                        backgroundColor: "black",
+                      },
+                      headerTintColor: "black",
+                      headerTitleStyle: {
+                        fontSize: 24,
+                      },
+                    })}
+                  />
+                </Stack.Navigator>
+              )}
+            </NavigationContainer>
+          </CopilotProvider>
         </BottomSheetModalProvider>
       </GestureHandlerRootView>
     </SafeAreaProvider>

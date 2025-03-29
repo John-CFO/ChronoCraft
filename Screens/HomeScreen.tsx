@@ -36,11 +36,14 @@ import { LinearGradient } from "expo-linear-gradient";
 import { AntDesign } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
 import dayjs from "dayjs";
+import { CopilotStep, walkthroughable, useCopilot } from "react-native-copilot";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { useStore } from "../components/TimeTrackingState";
 import NoteModal from "../components/NoteModal";
 import RoutingLoader from "../components/RoutingLoader";
+import TourStatus from "../components/TourStatus";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -59,6 +62,10 @@ const HomeScreen: React.FC = () => {
   // state to handle the loading animation
   const [isLoading, setIsLoading] = useState(true);
 
+  // states to handle the copilot tour
+  const WalkthroughText = walkthroughable(Text);
+  const WalkthroughTouchableOpacity = walkthroughable(TouchableOpacity);
+  const WalkthroughTextInput = walkthroughable(TextInput);
   // initialize the project id globally to reset all components in the details screen
   const { setProjectId } = useStore();
 
@@ -86,6 +93,34 @@ const HomeScreen: React.FC = () => {
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
+
+  // declare the firstLogin state
+  const [firstLogin, setFirstLogin] = useState(false);
+  // declare the useCopilot hook
+  const { start } = useCopilot();
+
+  // hook to load the firstLogin state from AsyncStorage or set it if not yet set
+  useEffect(() => {
+    const loadFirstLogin = async () => {
+      const hasSeenTour = await AsyncStorage.getItem("hasSeenTour");
+      // if the flag isn´t set yet, we assume it's the first login
+      if (!hasSeenTour) {
+        setFirstLogin(true);
+      }
+    };
+
+    loadFirstLogin();
+  }, []);
+
+  // hook to start the tour if it is true
+  useEffect(() => {
+    if (firstLogin) {
+      // console.log( "Start the Copilot-Tour...");
+      start();
+      // set the flag to true to show the tour only once
+      AsyncStorage.setItem("hasSeenTour", "true");
+    }
+  }, [firstLogin, start]);
 
   // scroll animation declaration
   const ITEM_HEIGHT: number = 100;
@@ -499,6 +534,7 @@ const HomeScreen: React.FC = () => {
             </View>
           )}
           {/* Project input */}
+
           <View
             style={{
               position: "absolute",
@@ -515,66 +551,78 @@ const HomeScreen: React.FC = () => {
               gap: 20,
             }}
           >
-            <TextInput
-              style={{
-                width: screenWidth * 0.9, // Dynamische Breite (90%)
-                maxWidth: 320,
-                borderColor: "aqua",
-                borderWidth: 1.5,
-                borderRadius: 12,
-                paddingLeft: 15,
-                paddingRight: 40,
-                paddingBottom: 5,
-                fontSize: 22,
-                height: 50,
-                color: "white",
-                fontWeight: "bold",
-                backgroundColor: "#191919",
-              }}
-              placeholder={`Add new Project${dots}`}
-              placeholderTextColor="grey"
-              editable={true}
-              onChangeText={setNewProjectName}
-              maxLength={48}
-              value={newProjectName}
-            />
-            {/* + Button to add a new project */}
-            <TouchableOpacity onPress={handleAddProject}>
-              <LinearGradient
-                colors={["#00FFFF", "#FFFFFF"]}
+            <TourStatus />
+
+            <CopilotStep
+              text="Add her the name of your project."
+              order={0}
+              name="Add Name"
+            >
+              <WalkthroughTextInput
                 style={{
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: 25,
+                  width: screenWidth * 0.9, // dynamische width (90%)
+                  maxWidth: 320,
+                  borderColor: "aqua",
+                  borderWidth: 1.5,
+                  borderRadius: 12,
+                  paddingLeft: 15,
+                  paddingRight: 40,
+                  paddingBottom: 5,
+                  fontSize: 22,
                   height: 50,
-                  width: 50,
+                  color: "white",
+                  fontWeight: "bold",
+                  backgroundColor: "#191919",
                 }}
-              >
-                <View
+                placeholder={`Add new Project${dots}`}
+                placeholderTextColor="grey"
+                editable={true}
+                onChangeText={setNewProjectName}
+                maxLength={48}
+                value={newProjectName}
+              />
+            </CopilotStep>
+
+            {/* + Button to add a new project */}
+
+            <CopilotStep text="Add the project." order={1} name="Add Project">
+              <WalkthroughTouchableOpacity onPress={handleAddProject}>
+                <LinearGradient
+                  colors={["#00FFFF", "#FFFFFF"]}
                   style={{
-                    width: 50,
-                    height: 50,
-                    borderRadius: 25,
-                    backgroundColor: "transparent",
-                    borderWidth: 3,
-                    borderColor: "white",
-                    justifyContent: "center",
                     alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 25,
+                    height: 50,
+                    width: 50,
                   }}
                 >
-                  <Text
+                  <View
                     style={{
-                      fontSize: 60,
-                      fontWeight: "bold",
-                      lineHeight: 57,
-                      color: "grey",
+                      width: 50,
+                      height: 50,
+                      borderRadius: 25,
+                      backgroundColor: "transparent",
+                      borderWidth: 3,
+                      borderColor: "white",
+                      justifyContent: "center",
+                      alignItems: "center",
                     }}
                   >
-                    +
-                  </Text>
-                </View>
-              </LinearGradient>
-            </TouchableOpacity>
+                    <Text
+                      style={{
+                        fontSize: 60,
+                        fontWeight: "bold",
+                        lineHeight: 57,
+                        color: "grey",
+                      }}
+                    >
+                      +
+                    </Text>
+                  </View>
+                </LinearGradient>
+              </WalkthroughTouchableOpacity>
+            </CopilotStep>
           </View>
           {/* Note Modal */}
           <Modal
