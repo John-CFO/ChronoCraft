@@ -12,6 +12,6 @@
       "@firebase/auth": ["./node_modules/@firebase/auth/dist/index.rn.d.ts"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx", "react-native-copilot.d.ts"],
   "rootDir": "./"
 }
