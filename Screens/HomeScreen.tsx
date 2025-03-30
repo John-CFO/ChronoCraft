@@ -560,7 +560,7 @@ const HomeScreen: React.FC = () => {
             >
               <WalkthroughTextInput
                 style={{
-                  width: screenWidth * 0.9, // dynamische width (90%)
+                  width: screenWidth * 0.9, // use 90% of the screen width
                   maxWidth: 320,
                   borderColor: "aqua",
                   borderWidth: 1.5,

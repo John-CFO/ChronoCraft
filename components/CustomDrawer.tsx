@@ -52,6 +52,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
   // BottomSheetModal settings
   // reference to the bottom sheet modal
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+
   // snap points for the bottom sheet modal
   const snapPoints = useMemo(() => ["25%", "50%"], []);
   // callback to handle the presentation of the bottom sheet modal
