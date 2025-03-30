@@ -22,9 +22,9 @@ import { deleteObject, ref, getStorage } from "firebase/storage";
 import { EmailAuthProvider } from "firebase/auth";
 import { reauthenticateWithCredential } from "firebase/auth";
 import { FontAwesome5 } from "@expo/vector-icons";
+import { ScrollView } from "react-native-gesture-handler";
 
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
-import { ScrollView } from "react-native-gesture-handler";
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -154,19 +154,10 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
       Alert.alert("Success", "Your account has been deleted.", [
         {
           text: "OK",
-          onPress: () => {
-            navigation.reset({
-              index: 0,
-              routes: [{ name: "LoginScreen" }],
-            });
-          },
         },
       ]);
       // delete account from Firebase after navigate to LoginScreen
       await FIREBASE_AUTH.currentUser?.delete();
-
-      // alert info to user that account has been deleted
-      Alert.alert("Success", "Your account has been deleted.");
     } catch (error: any) {
       console.error("Error deleting account:", error);
       // alert error to user
