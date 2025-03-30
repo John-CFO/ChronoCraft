@@ -22,9 +22,9 @@ import { deleteObject, ref, getStorage } from "firebase/storage";
 import { EmailAuthProvider } from "firebase/auth";
 import { reauthenticateWithCredential } from "firebase/auth";
 import { FontAwesome5 } from "@expo/vector-icons";
+import { ScrollView } from "react-native-gesture-handler";
 
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
-import { ScrollView } from "react-native-gesture-handler";
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -149,21 +149,15 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
       await reauthenticateUser(password);
       await deleteImageFromStorage(`profilePictures/${userUid}`);
       await markUserDataAsInactive(userUid); // mark data as inactive before deletion
-      await FIREBASE_AUTH.currentUser?.delete();
-      // alert info to user that account has been deleted
-      Alert.alert("Success", "Your account has been deleted.");
-
       closeFAQSheet();
 
-      // navigate to the login screen with a small delay
-      setTimeout(() => {
-        if (navigation && navigation.reset) {
-          navigation.reset({
-            index: 0,
-            routes: [{ name: "LoginScreen" }],
-          });
-        }
-      }, 500); // a small delay to ensure smooth transition
+      Alert.alert("Success", "Your account has been deleted.", [
+        {
+          text: "OK",
+        },
+      ]);
+      // delete account from Firebase after navigate to LoginScreen
+      await FIREBASE_AUTH.currentUser?.delete();
     } catch (error: any) {
       console.error("Error deleting account:", error);
       // alert error to user
