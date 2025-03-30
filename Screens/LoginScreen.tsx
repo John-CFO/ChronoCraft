@@ -25,7 +25,8 @@ import {
   createUserWithEmailAndPassword,
   Auth,
 } from "firebase/auth";
-import { setDoc, doc } from "firebase/firestore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { setDoc, doc, getDoc } from "firebase/firestore";
 import {
   ALERT_TYPE,
   Toast,
@@ -73,6 +74,19 @@ const LoginScreen: React.FC = () => {
       const response = await signInWithEmailAndPassword(auth, email, password);
       console.log(response);
 
+      const userRef = doc(FIREBASE_FIRESTORE, "Users", response.user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        // condition to check if firstLogin is true
+        if (userData.firstLogin) {
+          console.log("First-time login detected");
+          // set firstLogin to false
+          await setDoc(userRef, { firstLogin: false }, { merge: true });
+        }
+      }
+
       navigation.navigate("Home" as never);
       console.log("Login successfully");
     } catch (error) {
@@ -100,7 +114,13 @@ const LoginScreen: React.FC = () => {
       );
       console.log("Registration successfully:", response);
 
-      await createUserDocument(response.user.uid, { email: email });
+      await createUserDocument(response.user.uid, {
+        email: email,
+        firstLogin: true,
+      });
+
+      // important: remove the tour flag, so that the tour is displayed on the next login
+      await AsyncStorage.removeItem("hasSeenTour");
 
       // call the push token
       const token = await NotificationManager.registerForPushNotifications();
