@@ -454,6 +454,9 @@ const HomeScreen: React.FC = () => {
     );
   };
 
+  // definition of the walkthroughable component to handle the copilot
+  const CopilotView = walkthroughable(View);
+
   return (
     <View style={{ flex: 1, width: "100%", backgroundColor: "black" }}>
       {/* RoutingLoader section */}
@@ -542,7 +545,6 @@ const HomeScreen: React.FC = () => {
               left: 0,
               right: 0,
               width: "100%",
-
               height: 80,
               backgroundColor: "transparent",
               flexDirection: "row",
@@ -553,15 +555,17 @@ const HomeScreen: React.FC = () => {
           >
             <TourStatus />
 
-            <CopilotStep
-              text="Add her the name of your project."
-              order={0}
-              name="Add Name"
+            {/* CopilotStep wrapped around the TextInput */}
+            <View
+              style={{
+                position: "relative",
+                width: screenWidth * 0.9,
+                maxWidth: 320,
+              }}
             >
-              <WalkthroughTextInput
+              <TextInput
                 style={{
-                  width: screenWidth * 0.9, // use 90% of the screen width
-                  maxWidth: 320,
+                  width: "100%",
                   borderColor: "aqua",
                   borderWidth: 1.5,
                   borderRadius: 12,
@@ -581,10 +585,28 @@ const HomeScreen: React.FC = () => {
                 maxLength={48}
                 value={newProjectName}
               />
-            </CopilotStep>
+
+              {/* CopilotView settled over the Text Input */}
+              <CopilotStep
+                text="Enter the name of your project here."
+                order={0}
+                name="Add Name"
+              >
+                <CopilotView
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: "transparent",
+                    pointerEvents: "none",
+                  }}
+                />
+              </CopilotStep>
+            </View>
 
             {/* + Button to add a new project */}
-
             <CopilotStep text="Add the project." order={1} name="Add Project">
               <WalkthroughTouchableOpacity onPress={handleAddProject}>
                 <LinearGradient
