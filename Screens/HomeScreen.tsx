@@ -555,7 +555,7 @@ const HomeScreen: React.FC = () => {
           >
             <TourStatus />
 
-            {/* CopilotStep auf eine umgebende View setzen */}
+            {/* CopilotStep wrapped around the TextInput */}
             <View
               style={{
                 position: "relative",
@@ -563,7 +563,6 @@ const HomeScreen: React.FC = () => {
                 maxWidth: 320,
               }}
             >
-              {/* TextInput bleibt standardmäßig klickbar */}
               <TextInput
                 style={{
                   width: "100%",
@@ -587,7 +586,7 @@ const HomeScreen: React.FC = () => {
                 value={newProjectName}
               />
 
-              {/* Copilot View um das Input-Feld */}
+              {/* CopilotView settled over the Text Input */}
               <CopilotStep
                 text="Enter the name of your project here."
                 order={0}
