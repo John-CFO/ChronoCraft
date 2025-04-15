@@ -32,18 +32,23 @@ import {
   addDoc,
   serverTimestamp,
 } from "firebase/firestore";
+import { getAuth, Auth } from "firebase/auth";
 import { LinearGradient } from "expo-linear-gradient";
 import { AntDesign } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
 import dayjs from "dayjs";
-import { CopilotStep, walkthroughable, useCopilot } from "react-native-copilot";
+import { CopilotStep, walkthroughable } from "react-native-copilot";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
+import {
+  FIREBASE_FIRESTORE,
+  FIREBASE_AUTH,
+  FIREBASE_APP,
+} from "../firebaseConfig";
 import { useStore } from "../components/TimeTrackingState";
 import NoteModal from "../components/NoteModal";
 import RoutingLoader from "../components/RoutingLoader";
-import TourStatus from "../components/TourStatus";
+import TourButton from "../components/TourButton";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -62,10 +67,14 @@ const HomeScreen: React.FC = () => {
   // state to handle the loading animation
   const [isLoading, setIsLoading] = useState(true);
 
-  // states to handle the copilot tour
-  const WalkthroughText = walkthroughable(Text);
+  // definition of the walkthroughable component to handle the copilot with (TouchableOpacity)
   const WalkthroughTouchableOpacity = walkthroughable(TouchableOpacity);
-  const WalkthroughTextInput = walkthroughable(TextInput);
+
+  // definition of the walkthroughable component to handle the copilot with (View)
+  const CopilotView = walkthroughable(View);
+
+  // declaire the firebase authentication
+  const auth: Auth = getAuth(FIREBASE_APP);
   // initialize the project id globally to reset all components in the details screen
   const { setProjectId } = useStore();
 
@@ -93,34 +102,6 @@ const HomeScreen: React.FC = () => {
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
-
-  // declare the firstLogin state
-  const [firstLogin, setFirstLogin] = useState(false);
-  // declare the useCopilot hook
-  const { start } = useCopilot();
-
-  // hook to load the firstLogin state from AsyncStorage or set it if not yet set
-  useEffect(() => {
-    const loadFirstLogin = async () => {
-      const hasSeenTour = await AsyncStorage.getItem("hasSeenTour");
-      // if the flag isn´t set yet, we assume it's the first login
-      if (!hasSeenTour) {
-        setFirstLogin(true);
-      }
-    };
-
-    loadFirstLogin();
-  }, []);
-
-  // hook to start the tour if it is true
-  useEffect(() => {
-    if (firstLogin) {
-      // console.log( "Start the Copilot-Tour...");
-      start();
-      // set the flag to true to show the tour only once
-      AsyncStorage.setItem("hasSeenTour", "true");
-    }
-  }, [firstLogin, start]);
 
   // scroll animation declaration
   const ITEM_HEIGHT: number = 100;
@@ -254,10 +235,10 @@ const HomeScreen: React.FC = () => {
                 "Notes"
               );
 
-              // Snapshot to delete notes
+              // snapshot to delete notes
               const notesSnapshot = await getDocs(noteCollection);
 
-              // Delete each note
+              // delete each note
               const deleteNotesPromises = notesSnapshot.docs.map(
                 async (doc) => {
                   await deleteDoc(doc.ref);
@@ -454,8 +435,14 @@ const HomeScreen: React.FC = () => {
     );
   };
 
-  // definition of the walkthroughable component to handle the copilot
-  const CopilotView = walkthroughable(View);
+  useEffect(() => {
+    const checkStorage = async () => {
+      const value = await AsyncStorage.getItem("hasSeenHomeTour");
+      console.log("Storage-Wert:", value);
+    };
+
+    checkStorage();
+  }, []);
 
   return (
     <View style={{ flex: 1, width: "100%", backgroundColor: "black" }}>
@@ -489,6 +476,12 @@ const HomeScreen: React.FC = () => {
               - Your Projects -
             </Text>
           </View>
+          {/* Copilot tour button */}
+          <TourButton
+            storageKey="hasSeenHomeTour"
+            userId={auth.currentUser?.uid ?? ""}
+            needsRefCheck={false}
+          />
           {/* Section to scroll the projects list with the scroll animation */}
           {projects.length > 0 ? (
             <Animated.FlatList
@@ -553,8 +546,6 @@ const HomeScreen: React.FC = () => {
               gap: 20,
             }}
           >
-            <TourStatus />
-
             {/* CopilotStep wrapped around the TextInput */}
             <View
               style={{
@@ -586,12 +577,13 @@ const HomeScreen: React.FC = () => {
                 value={newProjectName}
               />
 
-              {/* CopilotView settled over the Text Input */}
+              {/* Copilot tour for the HomeScreen step 1 */}
               <CopilotStep
                 text="Enter the name of your project here."
-                order={0}
+                order={1}
                 name="Add Name"
               >
+                {/* CopilotView settled over the Text Input */}
                 <CopilotView
                   style={{
                     position: "absolute",
@@ -606,8 +598,9 @@ const HomeScreen: React.FC = () => {
               </CopilotStep>
             </View>
 
-            {/* + Button to add a new project */}
-            <CopilotStep text="Add the project." order={1} name="Add Project">
+            {/* Copilot tour for the HomeScreen step 2 */}
+            <CopilotStep text="Add the project." order={2} name="Add Project">
+              {/* + Button to add a new project */}
               <WalkthroughTouchableOpacity onPress={handleAddProject}>
                 <LinearGradient
                   colors={["#00FFFF", "#FFFFFF"]}

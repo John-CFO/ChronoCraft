@@ -1,8 +1,13 @@
 //////////////////////////////DetailsProjectCard Component////////////////////////
 
+// This component shows the project name and the local time.
+
+//////////////////////////////////////////////////////////////////////////////////
+
 import { View, Text } from "react-native";
 import React from "react";
 import { useRoute, RouteProp } from "@react-navigation/native";
+import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import DigitalClock from "../components/DigitalClock";
 
@@ -14,11 +19,19 @@ type RootStackParamList = {
 
 type DetailsProjectRouteProps = RouteProp<RootStackParamList>;
 
+interface DetailsProjectCardProps {
+  showTour?: boolean;
+}
+
 //////////////////////////////////////////////////////////////////////////////////
-const DetailsProjectCard: React.FC = () => {
+const DetailsProjectCard: React.FC<DetailsProjectCardProps> = () => {
   // route params
   const route = useRoute<DetailsProjectRouteProps>();
   const { projectName } = route.params;
+
+  // modified walkthroughable for copilot tour
+  const CopilotTouchableView = walkthroughable(View);
+
   return (
     <View>
       <View
@@ -42,43 +55,52 @@ const DetailsProjectCard: React.FC = () => {
           - Project Details -
         </Text>
       </View>
-      {/* project name */}
-      <View
-        style={{
-          marginBottom: 20,
-          backgroundColor: "#191919",
-          borderWidth: 1,
-          borderColor: "aqua",
-          borderRadius: 8,
-          minHeight: 150,
-          padding: 10,
-          justifyContent: "center",
-          alignItems: "center",
-        }}
+      {/* DetailsScreen copilot tour step 1 */}
+      <CopilotStep
+        name="InfoCard"
+        order={1}
+        text="This Info Card shows the name of the project and your local time."
       >
-        <Text
+        {/* project name */}
+        <CopilotTouchableView
           style={{
-            fontFamily: "MPLUSLatin_Bold",
-            fontSize: 32,
-            color: "white",
-            marginBottom: 10,
+            marginBottom: 20,
+            backgroundColor: "#191919",
+            borderWidth: 1,
+            borderColor: "aqua",
+            borderRadius: 8,
+            minHeight: 150,
+            padding: 10,
+            justifyContent: "center",
+            alignItems: "center",
           }}
         >
-          {projectName}
-        </Text>
-        {/* digital clock */}
-        <Text
-          style={{
-            fontFamily: "MPLUSLatin_ExtraLight",
-            fontSize: 18,
-            color: "lightgrey",
-            marginTop: 30,
-          }}
-        >
-          Current Time
-        </Text>
-        <DigitalClock />
-      </View>
+          <Text
+            style={{
+              fontFamily: "MPLUSLatin_Bold",
+              fontSize: 32,
+              color: "white",
+              marginBottom: 10,
+            }}
+          >
+            {projectName}
+          </Text>
+
+          {/* digital clock */}
+          <Text
+            style={{
+              fontFamily: "MPLUSLatin_ExtraLight",
+              fontSize: 18,
+              color: "lightgrey",
+              marginTop: 30,
+            }}
+          >
+            Current Time
+          </Text>
+
+          <DigitalClock />
+        </CopilotTouchableView>
+      </CopilotStep>
     </View>
   );
 };

@@ -18,6 +18,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Alert } from "react-native";
+import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { updateProjectData } from "../components/FirestoreService";
@@ -46,6 +47,8 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
   // navigation
   const route = useRoute<EarningsCalculatorRouteProp>();
   const navigation = useNavigation();
+  // modified walkthroughable for copilot tour
+  const CopilotTouchableView = walkthroughable(View);
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
@@ -143,7 +146,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
     }
     if (projectId && rateInput === "") {
       try {
-        // Reference to the document in Firestore
+        // reference to the document in Firestore
         const docRef = doc(
           FIREBASE_FIRESTORE,
           "Users",
@@ -154,10 +157,10 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
           projectId
         );
 
-        // Get document snapshot
+        // get document snapshot
         const docSnap = await getDoc(docRef);
 
-        // If document exists, retrieve the data
+        // if document exists, retrieve the data
         if (docSnap.exists()) {
           const data = docSnap.data();
 
@@ -231,163 +234,170 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
 
   return (
     <View>
-      {/* Earnings Calculator Card */}
-      <View
-        style={{
-          height: 420,
-          marginBottom: 20,
-          backgroundColor: "#191919",
-          borderWidth: 1,
-          borderColor: "aqua",
-          borderRadius: 8,
-          padding: 20,
-          alignItems: "center",
-        }}
+      {/* DetailsScreen copilot tour step 3 */}
+      <CopilotStep
+        name="EarningsCard"
+        order={3}
+        text="In this card you can set the hourly rate and the earnings will be calculated based on the time tracked by the Time Tracker Card."
       >
-        {/* title */}
-        <Text
+        {/* Earnings Calculator Card */}
+        <CopilotTouchableView
           style={{
-            fontFamily: "MPLUSLatin_Bold",
-            fontSize: 25,
-            color: "white",
+            height: 420,
             marginBottom: 20,
-            textAlign: "center",
-          }}
-        >
-          Earnings Calculator
-        </Text>
-        {/* Total Earnings viewport */}
-        <View
-          style={{
-            width: "80%",
-            height: 100,
             backgroundColor: "#191919",
+            borderWidth: 1,
             borderColor: "aqua",
-          }}
-        >
-          <Text
-            style={{
-              fontWeight: "bold",
-              fontSize: 55,
-              color: "white",
-              marginBottom: 5,
-              textAlign: "center",
-            }}
-          >
-            {/*the Number wrapper converts the totalEarnings into a Number to format it into a string with toFixed(2). 
-            this is important to display the totalEarnings in the correct format to lively tracking the earnings*/}
-            ${Number(projectState.totalEarnings || 0).toFixed(2)}
-          </Text>
-        </View>
-        {/* Hourly Rate TextInput field*/}
-        <View
-          style={{
-            marginTop: 30,
-            width: "100%",
-            backgroundColor: "#191919",
+            borderRadius: 8,
+            padding: 20,
             alignItems: "center",
           }}
         >
-          <TextInput
-            placeholder="Enter your hourly rate"
-            placeholderTextColor="grey"
-            keyboardType="numeric"
-            value={rateInput}
-            onChangeText={handleRateChange}
+          {/* title */}
+          <Text
             style={{
-              marginBottom: 15,
-              width: screenWidth * 0.7, // use 70% of the screen width
-              maxWidth: 400,
-              borderColor: "aqua",
-              borderWidth: 1.5,
-              borderRadius: 12,
-              paddingLeft: 15,
-              paddingRight: 40,
-              paddingBottom: 5,
-              fontSize: 22,
-              height: 50,
+              fontFamily: "MPLUSLatin_Bold",
+              fontSize: 25,
               color: "white",
-              fontWeight: "bold",
-              backgroundColor: "black",
-            }}
-          />
-
-          {/* Save button */}
-          <TouchableOpacity
-            onPress={handleSave}
-            style={{
-              width: screenWidth * 0.7, // use 70% of the screen width
-              maxWidth: 400,
-              borderRadius: 12,
-              overflow: "hidden",
-              borderWidth: 3,
-              borderColor: "white",
               marginBottom: 20,
+              textAlign: "center",
             }}
           >
-            <LinearGradient
-              colors={["#00FFFF", "#FFFFFF"]}
-              style={{
-                alignItems: "center",
-                justifyContent: "center",
-                height: 45,
-                width: screenWidth * 0.7, // use 70% of the screen width
-                maxWidth: 400,
-              }}
-            >
-              <Text
-                style={{
-                  fontFamily: "MPLUSLatin_Bold",
-                  fontSize: 22,
-                  color: "grey",
-                  marginBottom: 5,
-                }}
-              >
-                Save
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
-          {/* Hourly Rate info container */}
+            Earnings Calculator
+          </Text>
+          {/* Total Earnings viewport */}
           <View
             style={{
-              width: "100%",
-              height: 50,
-              alignItems: "flex-start",
-              justifyContent: "center",
-              paddingLeft: 10,
-              borderRadius: 10,
-              //shadow options for android
-              shadowColor: "#ffffff",
-              elevation: 2,
-              //shadow options for ios
-              shadowOffset: { width: 2, height: 2 },
-              shadowOpacity: 0.3,
-              shadowRadius: 3,
+              width: "80%",
+              height: 100,
               backgroundColor: "#191919",
+              borderColor: "aqua",
             }}
           >
             <Text
               style={{
-                fontSize: 30,
                 fontWeight: "bold",
+                fontSize: 55,
                 color: "white",
                 marginBottom: 5,
+                textAlign: "center",
+              }}
+            >
+              {/*the Number wrapper converts the totalEarnings into a Number to format it into a string with toFixed(2). 
+            this is important to display the totalEarnings in the correct format to lively tracking the earnings*/}
+              ${Number(projectState.totalEarnings || 0).toFixed(2)}
+            </Text>
+          </View>
+          {/* Hourly Rate TextInput field*/}
+          <View
+            style={{
+              marginTop: 30,
+              width: "100%",
+              backgroundColor: "#191919",
+              alignItems: "center",
+            }}
+          >
+            <TextInput
+              placeholder="Enter your hourly rate"
+              placeholderTextColor="grey"
+              keyboardType="numeric"
+              value={rateInput}
+              onChangeText={handleRateChange}
+              style={{
+                marginBottom: 15,
+                width: screenWidth * 0.7, // use 70% of the screen width
+                maxWidth: 400,
+                borderColor: "aqua",
+                borderWidth: 1.5,
+                borderRadius: 12,
+                paddingLeft: 15,
+                paddingRight: 40,
+                paddingBottom: 5,
+                fontSize: 22,
+                height: 50,
+                color: "white",
+                fontWeight: "bold",
+                backgroundColor: "black",
+              }}
+            />
+
+            {/* Save button */}
+            <TouchableOpacity
+              onPress={handleSave}
+              style={{
+                width: screenWidth * 0.7, // use 70% of the screen width
+                maxWidth: 400,
+                borderRadius: 12,
+                overflow: "hidden",
+                borderWidth: 3,
+                borderColor: "white",
+                marginBottom: 20,
+              }}
+            >
+              <LinearGradient
+                colors={["#00FFFF", "#FFFFFF"]}
+                style={{
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: 45,
+                  width: screenWidth * 0.7, // use 70% of the screen width
+                  maxWidth: 400,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "MPLUSLatin_Bold",
+                    fontSize: 22,
+                    color: "grey",
+                    marginBottom: 5,
+                  }}
+                >
+                  Save
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            {/* Hourly Rate info container */}
+            <View
+              style={{
+                width: "100%",
+                height: 50,
+                alignItems: "flex-start",
+                justifyContent: "center",
+                paddingLeft: 10,
+                borderRadius: 10,
+                //shadow options for android
+                shadowColor: "#ffffff",
+                elevation: 2,
+                //shadow options for ios
+                shadowOffset: { width: 2, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 3,
+                backgroundColor: "#191919",
               }}
             >
               <Text
                 style={{
-                  color: "grey",
-                  fontSize: 16,
-                  fontFamily: "MPLUSLatin_Bold",
+                  fontSize: 30,
+                  fontWeight: "bold",
+                  color: "white",
+                  marginBottom: 5,
                 }}
               >
-                Your Hourly Rate:{" "}
+                <Text
+                  style={{
+                    color: "grey",
+                    fontSize: 16,
+                    fontFamily: "MPLUSLatin_Bold",
+                  }}
+                >
+                  Your Hourly Rate:{" "}
+                </Text>
+                {projectState?.hourlyRate}
               </Text>
-              {projectState?.hourlyRate}
-            </Text>
+            </View>
           </View>
-        </View>
-      </View>
+        </CopilotTouchableView>
+      </CopilotStep>
     </View>
   );
 };

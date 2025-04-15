@@ -8,10 +8,12 @@
     "outDir": "lib",
     "strict": true,
     "esModuleInterop": true,
+    "types": ["@react-native-async-storage/async-storage"],
     "paths": {
       "@firebase/auth": ["./node_modules/@firebase/auth/dist/index.rn.d.ts"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", "react-native-copilot.d.ts"],
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"],
   "rootDir": "./"
 }

@@ -117,10 +117,18 @@ const LoginScreen: React.FC = () => {
       await createUserDocument(response.user.uid, {
         email: email,
         firstLogin: true,
+        hasSeenTour: false,
       });
 
       // important: remove the tour flag, so that the tour is displayed on the next login
-      await AsyncStorage.removeItem("hasSeenTour");
+      //await AsyncStorage.removeItem("hasSeenTour");
+      await AsyncStorage.multiRemove([
+        "hasSeenTour",
+        "hasSeenHomeTour",
+        "hasSeenDetailsTour",
+        "hasSeenWorkHoursTour",
+        "hasSeenVacationTour",
+      ]);
 
       // call the push token
       const token = await NotificationManager.registerForPushNotifications();
