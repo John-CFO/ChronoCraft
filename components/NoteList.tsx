@@ -1,9 +1,12 @@
 ////////////////////////////Note List Component///////////////////////////////////////////////
 
+// This component is used to show the notes in a list
+
+//////////////////////////////////////////////////////////////////////////////////////////////
 import React, { useState, useEffect } from "react";
 import { ScrollView, View, Text, ActivityIndicator } from "react-native";
 import { collection, query, getDocs, DocumentData } from "firebase/firestore";
-import { Alert } from "react-native";
+import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import NoteCard from "./NoteCard";
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
@@ -18,11 +21,15 @@ interface Note {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 const NoteList: React.FC<{ projectId: string }> = ({ projectId }) => {
-  // state to manage the  useEffect to show the notes
+  // note state
   const [notes, setNotes] = useState<Note[]>([]);
-
-  // state to manage the loading Indicator
+  // error handling stae
+  const [error, setError] = useState<Error | null>(null);
+  // loading state if backend isn´t ready
   const [loading, setLoading] = useState<boolean>(true);
+
+  // modified walkthroughable for copilot tour
+  const CopilotTouchableView = walkthroughable(View);
 
   // hook to fetch the notes from Firestore with snapshot
   useEffect(() => {
@@ -68,33 +75,6 @@ const NoteList: React.FC<{ projectId: string }> = ({ projectId }) => {
     fetchNotes();
   }, [projectId]);
 
-  // function to handle note deletion
-  const handleDeleteNote = (noteId: string) => {
-    // warning alert
-    Alert.alert(
-      "Delete Note",
-      "Are you sure you want to delete this note?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            // delete the note
-            setNotes((prevNotes) =>
-              prevNotes.filter((note) => note.id !== noteId)
-            );
-          },
-        },
-      ],
-      { cancelable: true }
-    );
-  };
-
-  // condition: if the loading is true show the loading indicator
   if (loading) {
     return (
       <View>
@@ -103,59 +83,76 @@ const NoteList: React.FC<{ projectId: string }> = ({ projectId }) => {
     );
   }
 
+  if (error) {
+    return (
+      <View>
+        <Text style={{ color: "red" }}>Error: {error.message}</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView>
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <View
-          style={{
-            width: "100%",
-
-            marginBottom: 20,
-            backgroundColor: "#191919",
-            borderWidth: 1,
-            borderColor: "aqua",
-            borderRadius: 8,
-            padding: 20,
-            alignItems: "center",
-            overflow: "hidden",
-            flexShrink: 1,
-            flexGrow: 0,
-          }}
+        {/* DetailsScreen copilot tour step 2 */}
+        <CopilotStep
+          name="NodeCard"
+          order={2}
+          text="This card shows your notes for this project, if you have added any in the Home-Sceen Project-Card. You can delete them here."
         >
-          {/* Title */}
-          <Text
+          <CopilotTouchableView
             style={{
-              fontFamily: "MPLUSLatin_Bold",
-              fontSize: 25,
-              color: "white",
-              marginBottom: 40,
+              width: "100%",
+              marginBottom: 20,
+              backgroundColor: "#191919",
+              borderWidth: 1,
+              borderColor: "aqua",
+              borderRadius: 8,
+              padding: 20,
+              alignItems: "center",
+              overflow: "hidden",
             }}
           >
-            Your Notes
-          </Text>
-          {notes.length > 0 ? (
-            notes.map((note) => (
-              <NoteCard
-                key={note.id}
-                note={note}
-                projectId={projectId}
-                onDelete={handleDeleteNote}
-              />
-            ))
-          ) : (
-            // if there is no note
+            {/* Card Title */}
             <Text
               style={{
-                textAlign: "center",
+                fontFamily: "MPLUSLatin_Bold",
+                fontSize: 25,
                 color: "white",
-                fontSize: 18,
-                fontFamily: "MPLUSLatin_ExtraLight",
+                marginBottom: 40,
               }}
             >
-              You haven't any notes for this project yet.
+              Your Notes
             </Text>
-          )}
-        </View>
+            {/* map the notes in the NoteList using the NoteCard component */}
+            {notes.length > 0 ? (
+              notes.map((note) => (
+                <NoteCard
+                  key={note.id}
+                  note={note}
+                  projectId={projectId}
+                  onDelete={(noteId: string) =>
+                    setNotes((prevNotes) =>
+                      prevNotes.filter((n) => n.id !== noteId)
+                    )
+                  }
+                />
+              ))
+            ) : (
+              // alternative text if no notes exists
+              <Text
+                style={{
+                  textAlign: "center",
+                  color: "white",
+                  fontSize: 18,
+                  fontFamily: "MPLUSLatin_ExtraLight",
+                }}
+              >
+                You haven't any notes for this project yet.
+              </Text>
+            )}
+          </CopilotTouchableView>
+        </CopilotStep>
       </View>
     </ScrollView>
   );
