@@ -25,6 +25,7 @@ import { getAuth } from "firebase/auth";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useStore, ProjectState } from "./TimeTrackingState";
@@ -46,6 +47,8 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   // initialize the routing
   const route = useRoute<TimeTrackerRouteProp>();
   const { projectId } = route.params;
+  // modified walkthroughable for copilot tour
+  const CopilotTouchableView = walkthroughable(View);
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
@@ -227,7 +230,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
   // hook to calculate and update the timer
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: number;
     if (projectState.isTracking) {
       interval = setInterval(() => {
         setLocalTimer((prevTimer) => prevTimer + 1);
@@ -293,195 +296,202 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
   return (
     <View>
-      {/* Time Tracker Card */}
-      <View
-        style={{
-          height: 600,
-          marginBottom: 20,
-          backgroundColor: "#191919",
-          borderWidth: 1,
-          borderColor: "aqua",
-          borderRadius: 8,
-          padding: 20,
-          alignItems: "center",
-        }}
+      {/* DetailsScreen copilot tour step 4 */}
+      <CopilotStep
+        name="TrackingCard"
+        order={4}
+        text="The Time Tracker Card lets you track your working time on this project and shows the session state."
       >
-        <Text
+        {/* Time Tracker Card */}
+        <CopilotTouchableView
           style={{
-            fontFamily: "MPLUSLatin_Bold",
-            fontSize: 25,
-            color: "white",
+            height: 600,
             marginBottom: 20,
-            textAlign: "center",
-          }}
-        >
-          Time Tracker
-        </Text>
-
-        <View
-          style={{
-            width: "80%",
-            height: 100,
             backgroundColor: "#191919",
+            borderWidth: 1,
             borderColor: "aqua",
+            borderRadius: 8,
+            padding: 20,
+            alignItems: "center",
           }}
         >
-          {/* Timer */}
           <Text
             style={{
-              fontWeight: "bold",
-              fontSize: 55,
+              fontFamily: "MPLUSLatin_Bold",
+              fontSize: 25,
               color: "white",
-              marginBottom: 5,
+              marginBottom: 20,
               textAlign: "center",
             }}
           >
-            {formatTime(localTimer)}
+            Time Tracker
           </Text>
-        </View>
 
-        {/* Start, Pause, Stop Buttons */}
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-evenly",
-            alignItems: "center",
-            marginBottom: 10,
-            marginTop: 30,
-            width: screenWidth * 0.7, // use 70% of the screen width
-            maxWidth: 320,
-            backgroundColor: "#191919",
-          }}
-        >
-          <TouchableOpacity onPress={handlePause}>
-            <FontAwesome6 name="pause" size={65} color="lightgrey" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleStart}>
-            <Animatable.View animation="pulse" iterationCount="infinite">
-              <FontAwesome5 name="play" size={85} color="lightgrey" />
-            </Animatable.View>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleStop}>
-            <FontAwesome5 name="stop" size={52} color="lightgrey" />
-          </TouchableOpacity>
-        </View>
-
-        <View
-          style={{
-            paddingTop: 30,
-            width: "100%",
-            height: 100,
-            backgroundColor: "#191919",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          {/* Reset Button */}
-          <TouchableOpacity
-            onPress={handleReset}
+          <View
             style={{
-              width: screenWidth * 0.7, // use 70% of the screen width
-              maxWidth: 400,
-              borderRadius: 12,
-              overflow: "hidden",
-              borderWidth: 3,
-              borderColor: "white",
-              marginBottom: 25,
+              width: "80%",
+              height: 100,
+              backgroundColor: "#191919",
+              borderColor: "aqua",
             }}
           >
-            <LinearGradient
-              colors={["#00FFFF", "#FFFFFF"]}
+            {/* Timer */}
+            <Text
               style={{
-                alignItems: "center",
-                justifyContent: "center",
-                height: 45,
-                width: screenWidth * 0.7, // use 70% of the screen width
-                maxWidth: 400,
+                fontWeight: "bold",
+                fontSize: 55,
+                color: "white",
+                marginBottom: 5,
+                textAlign: "center",
               }}
             >
-              <Text
+              {formatTime(localTimer)}
+            </Text>
+          </View>
+
+          {/* Start, Pause, Stop Buttons */}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-evenly",
+              alignItems: "center",
+              marginBottom: 10,
+              marginTop: 30,
+              width: screenWidth * 0.7, // use 70% of the screen width
+              maxWidth: 320,
+              backgroundColor: "#191919",
+            }}
+          >
+            <TouchableOpacity onPress={handlePause}>
+              <FontAwesome6 name="pause" size={65} color="lightgrey" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleStart}>
+              <Animatable.View animation="pulse" iterationCount="infinite">
+                <FontAwesome5 name="play" size={85} color="lightgrey" />
+              </Animatable.View>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleStop}>
+              <FontAwesome5 name="stop" size={52} color="lightgrey" />
+            </TouchableOpacity>
+          </View>
+
+          <View
+            style={{
+              paddingTop: 30,
+              width: "100%",
+              height: 100,
+              backgroundColor: "#191919",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            {/* Reset Button */}
+            <TouchableOpacity
+              onPress={handleReset}
+              style={{
+                width: screenWidth * 0.7, // use 70% of the screen width
+                maxWidth: 400,
+                borderRadius: 12,
+                overflow: "hidden",
+                borderWidth: 3,
+                borderColor: "white",
+                marginBottom: 25,
+              }}
+            >
+              <LinearGradient
+                colors={["#00FFFF", "#FFFFFF"]}
                 style={{
-                  fontFamily: "MPLUSLatin_Bold",
-                  fontSize: 22,
-                  color: "grey",
-                  marginBottom: 5,
-                  paddingRight: 10,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: 45,
+                  width: screenWidth * 0.7, // use 70% of the screen width
+                  maxWidth: 400,
                 }}
               >
-                Reset
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-        {/* info container */}
-        <View
-          style={{
-            width: "100%",
-            height: 165,
-            marginBottom: 20,
-            padding: 5,
-            paddingLeft: 15,
-            borderRadius: 10,
-            backgroundColor: "#191919",
-            alignItems: "flex-start",
-            justifyContent: "flex-start",
-            //shadow options for android
-            shadowColor: "#ffffff",
-            elevation: 2,
-            //shadow options for ios
-            shadowOffset: { width: 2, height: 2 },
-            shadowOpacity: 0.3,
-            shadowRadius: 3,
-          }}
-        >
-          {/*last session info*/}
-          <Text
+                <Text
+                  style={{
+                    fontFamily: "MPLUSLatin_Bold",
+                    fontSize: 22,
+                    color: "grey",
+                    marginBottom: 5,
+                    paddingRight: 10,
+                  }}
+                >
+                  Reset
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+          {/* info container */}
+          <View
             style={{
-              fontFamily: "MPLUSLatin_Bold",
-              fontSize: 16,
-              color: "white",
-              marginBottom: 5,
+              width: "100%",
+              height: 165,
+              marginBottom: 20,
+              padding: 5,
+              paddingLeft: 15,
+              borderRadius: 10,
+              backgroundColor: "#191919",
+              alignItems: "flex-start",
+              justifyContent: "flex-start",
+              //shadow options for android
+              shadowColor: "#ffffff",
+              elevation: 2,
+              //shadow options for ios
+              shadowOffset: { width: 2, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 3,
             }}
           >
-            <Text style={{ color: "grey" }}>Last Session:</Text>
-            {"\n"}
-            {/*to prevent konflicts with Date types and timestamps it´s important to use not both*/}
-            {endTime instanceof Date ? endTime.toLocaleString() : "N/A"}
-          </Text>
-          {/*last tracking info*/}
-          <Text
-            style={{
-              fontFamily: "MPLUSLatin_Bold",
-              fontSize: 16,
-              color: "white",
-              marginBottom: 5,
-            }}
-          >
-            <Text style={{ color: "grey" }}>Last Tracking Started:</Text>
-            {"\n"}
-            {lastStartTime instanceof Date
-              ? lastStartTime.toLocaleString()
-              : "N/A"}
-          </Text>
-          {/*original tracking info*/}
-          <Text
-            style={{
-              fontFamily: "MPLUSLatin_Bold",
-              fontSize: 16,
-              color: "white",
-              marginBottom: 5,
-            }}
-          >
-            <Text style={{ color: "grey" }}>Original Tracking Started:</Text>
-            {"\n"}
-            {originalStartTime
-              ? originalStartTime instanceof Date
-                ? originalStartTime.toLocaleString()
-                : "N/A"
-              : "N/A"}
-          </Text>
-        </View>
-      </View>
+            {/*last session info*/}
+            <Text
+              style={{
+                fontFamily: "MPLUSLatin_Bold",
+                fontSize: 16,
+                color: "white",
+                marginBottom: 5,
+              }}
+            >
+              <Text style={{ color: "grey" }}>Last Session:</Text>
+              {"\n"}
+              {/*to prevent konflicts with Date types and timestamps it´s important to use not both*/}
+              {endTime instanceof Date ? endTime.toLocaleString() : "N/A"}
+            </Text>
+            {/*last tracking info*/}
+            <Text
+              style={{
+                fontFamily: "MPLUSLatin_Bold",
+                fontSize: 16,
+                color: "white",
+                marginBottom: 5,
+              }}
+            >
+              <Text style={{ color: "grey" }}>Last Tracking Started:</Text>
+              {"\n"}
+              {lastStartTime instanceof Date
+                ? lastStartTime.toLocaleString()
+                : "N/A"}
+            </Text>
+            {/*original tracking info*/}
+            <Text
+              style={{
+                fontFamily: "MPLUSLatin_Bold",
+                fontSize: 16,
+                color: "white",
+                marginBottom: 5,
+              }}
+            >
+              <Text style={{ color: "grey" }}>Original Tracking Started:</Text>
+              {"\n"}
+              {originalStartTime
+                ? originalStartTime instanceof Date
+                  ? originalStartTime.toLocaleString()
+                  : "N/A"
+                : "N/A"}
+            </Text>
+          </View>
+        </CopilotTouchableView>
+      </CopilotStep>
     </View>
   );
 };

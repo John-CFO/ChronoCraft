@@ -6,12 +6,14 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 import { View, ScrollView } from "react-native";
-import React, { useEffect, useState } from "react";
-import { query, getDocs, collection } from "firebase/firestore";
+import React, { useEffect, useState, useRef } from "react";
+import { getAuth, Auth } from "firebase/auth";
 import { StackNavigationProp } from "@react-navigation/stack";
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { useRoute, RouteProp } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { CopilotProvider } from "react-native-copilot";
 
-import { FIREBASE_FIRESTORE } from "../firebaseConfig";
+import { FIREBASE_APP } from "../firebaseConfig";
 import DetailsProjectCard from "../components/DetailsProjectCard";
 import TimeTrackerCard from "../components/TimeTrackerCard";
 import EarningsCalculatorCard from "../components/EarningsCalculatorCard";
@@ -20,6 +22,7 @@ import { useStore } from "../components/TimeTrackingState";
 import { EarningsCalculatorCardProp } from "../components/EarningsCalculatorCard";
 import RoutingLoader from "../components/RoutingLoader";
 import ErrorBoundary from "../components/ErrorBoundary";
+import TourButton from "../components/TourButton";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -40,76 +43,27 @@ type RootStackParamList = {
   };
 };
 
-interface Note {
-  id: string;
-  comment: string;
-  createdAt: Date;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const DetailsScreen: React.FC<DetailsScreenProps> = () => {
-  // navigation
   const route = useRoute<DetailsScreenRouteProp>();
-  const navigation = useNavigation();
 
-  // initialize the states from TimeTrackingState
-  const {
-    projectId = "No ID received",
-    userId = "No User ID",
-    serviceId = "No Service ID",
-  } = route.params || {};
+  // initialize firebase auth
+  const auth: Auth = getAuth(FIREBASE_APP);
+
+  // route the projectId to the earnings calculator
+  const { projectId } = route.params || {};
+
   const { setProjectId } = useStore();
 
-  // states to manage the NoteCard Value fetching
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  // state to manage the loading Indicator time
-  const [minTimePassed, setMinTimePassed] = useState(false);
-
-  // hook to set the projectId
+  // save projectID in the state
   useEffect(() => {
     setProjectId(projectId);
   }, [projectId, setProjectId]);
 
-  // hook to fetch the notes from Firestore with snapshot
+  // function to ensure a minimum time that the routing loader is shown
+  const [minTimePassed, setMinTimePassed] = useState(false);
   useEffect(() => {
-    const fetchNotes = async () => {
-      try {
-        const notesQuery = query(
-          collection(
-            FIREBASE_FIRESTORE,
-            `Users/${userId}/Services/${serviceId}/Projects/${projectId}/Notes`
-          )
-        );
-        const notesSnapshot = await getDocs(notesQuery);
-        // condition to check if notesSnapshot is empty, then setNotes([])
-        if (!notesSnapshot.empty) {
-          const fetchedNotes: Note[] = notesSnapshot.docs.map((doc) => {
-            const data = doc.data();
-            return {
-              id: doc.id,
-              comment: data.comment,
-              createdAt: data.createdAt.toDate(),
-            };
-          });
-          setNotes(fetchedNotes);
-        } else {
-          console.log("No notes found for this project.");
-        }
-      } catch (error) {
-        console.error("Error fetching notes: ", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchNotes();
-  }, [projectId, userId, serviceId]);
-
-  // hook to manage the loading indicator time
-  useEffect(() => {
-    // set minTimePassed to true after 3 seconds
     const timer = setTimeout(() => {
       setMinTimePassed(true);
     }, 3000);
@@ -117,14 +71,22 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    if (!loading && minTimePassed) {
-      setLoading(false);
-    }
-  }, [loading, minTimePassed]);
+  // ref for the Scrollview to navigate to the copilot tour
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [scrollReady, setScrollReady] = useState(false);
 
-  // loading indicator when data is loading from firebase
-  if (loading || !minTimePassed) {
+  // state to show the copilot tour
+  const [showTour, setShowTour] = useState<boolean>(false);
+
+  useEffect(() => {
+    // check if the user has seen the tour
+    const hasSeenTour = AsyncStorage.getItem("hasSeenDetailsTour");
+    if (!hasSeenTour) {
+      setShowTour(true);
+    }
+  }, [projectId]);
+
+  if (!minTimePassed) {
     return (
       <View
         style={{
@@ -140,28 +102,57 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
   }
 
   return (
-    <ScrollView style={{ backgroundColor: "black" }}>
-      <View style={{ flex: 1, paddingHorizontal: 20, paddingBottom: 20 }}>
-        {/* Project-Card */}
-        <ErrorBoundary>
-          <DetailsProjectCard />
-        </ErrorBoundary>
-        {/* Time-Tracker */}
-        <ErrorBoundary>
-          <TimeTrackerCard projectId={projectId} />
-        </ErrorBoundary>
-        {/* Earn-Calculator-Card */}
-        <ErrorBoundary>
-          <EarningsCalculatorCard
-            route={route as EarningsCalculatorCardProp} // route is importent to fetch the earnings state from firestore when user navigate to details screen
-            projectId={projectId}
-          />
-        </ErrorBoundary>
-        {/* Success Chart */}
-        {/* Notes Card */}
-        <NoteList projectId={projectId} />
+    // local DetailsScreen Provider (important if you need to call a child component to the copilot tour)
+    <CopilotProvider
+      overlay="view"
+      verticalOffset={40}
+      backdropColor="rgba(5, 5, 5, 0.59)"
+      arrowColor="#ffffff"
+      tooltipStyle={{
+        backgroundColor: "#ffffff",
+        padding: 10,
+        borderRadius: 8,
+        marginTop: -10,
+      }}
+    >
+      <View style={{ flex: 1 }}>
+        <ScrollView
+          // scrollview ref and onlayout to navigate to the copilot tour
+          ref={scrollViewRef}
+          onLayout={() => setScrollReady(true)}
+          style={{ backgroundColor: "black" }}
+        >
+          <View style={{ flex: 1, paddingHorizontal: 20, paddingBottom: 20 }}>
+            {/* Project-Card */}
+            <ErrorBoundary>
+              <DetailsProjectCard showTour={showTour} />
+            </ErrorBoundary>
+            {/* Time-Tracker */}
+            <ErrorBoundary>
+              <TimeTrackerCard projectId={projectId} />
+            </ErrorBoundary>
+            {/* Earnings Calculator Card */}
+            <ErrorBoundary>
+              <EarningsCalculatorCard
+                route={route as EarningsCalculatorCardProp}
+                projectId={projectId}
+              />
+            </ErrorBoundary>
+            {/* Notes Card */}
+
+            <NoteList projectId={projectId} />
+          </View>
+        </ScrollView>
+        {/* Tour button for the copilot tour in the DetailsScreen */}
+        <TourButton
+          storageKey={`hasSeenDetailsTour`}
+          userId={auth.currentUser?.uid ?? ""}
+          scrollViewRef={scrollViewRef}
+          scrollViewReady={scrollReady}
+          needsRefCheck={true}
+        />
       </View>
-    </ScrollView>
+    </CopilotProvider>
   );
 };
 

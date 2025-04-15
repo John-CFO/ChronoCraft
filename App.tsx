@@ -1,5 +1,9 @@
 /////////////////////app navigator and stack navigator///////////////////////
 
+// This file is used to create the app navigator and the stack navigator
+// It includes the whole app three(stack navigator, drawer navigator and app navigator)
+// Also it inclues the dropdown menu for the help button nad the global provider for the Copilot guided tour
+
 import { Text, TouchableOpacity, View, Alert } from "react-native";
 import React, { useEffect, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -22,7 +26,6 @@ import "react-native-reanimated";
 import "text-encoding-polyfill"; //bugfix: for delete project with notes
 import { CopilotProvider } from "react-native-copilot";
 
-import TourStatus from "./components/TourStatus";
 import LoginScreen from "./Screens/LoginScreen";
 import HomeScreen from "./Screens/HomeScreen";
 import DetailsScreen from "./Screens/DetailsScreen";
@@ -204,14 +207,17 @@ const App = () => {
 
   return (
     <SafeAreaProvider>
-      {/* <GestureHandlerRootView style={{ flex: 1 }}> important to set the bottomsheetmodal in the app, not the drawer */}
+      {/* <GestureHandlerRootView style={{ flex: 1 }}> //important to set the bottomsheetmodal in the app, not the drawer */}
       <GestureHandlerRootView style={{ flex: 1 }}>
         <BottomSheetModalProvider>
+          {/* global copilot tour provider with tooltip options */}
           <CopilotProvider
             overlay="view"
             verticalOffset={40}
+            backdropColor="rgba(5, 5, 5, 0.59)"
+            arrowColor="#ffffff"
             tooltipStyle={{
-              backgroundColor: "#fff",
+              backgroundColor: "#ffffff",
               padding: 10,
               borderRadius: 8,
               marginTop: -10,
@@ -223,7 +229,7 @@ const App = () => {
               finish: "Close",
             }}
           >
-            <TourStatus />
+            {/* navigation container */}
             <NavigationContainer>
               {fontsLoaded && (
                 <Stack.Navigator
@@ -256,12 +262,14 @@ const App = () => {
                 >
                   {/* Login navigation when user is logged in or logged out */}
                   {user ? (
+                    // Inside Screen with drawer navigation
                     <Stack.Screen
                       name="Inside"
                       component={AppDrawerNavigator}
                       options={{ headerShown: false }}
                     />
                   ) : (
+                    // Login Screen
                     <Stack.Screen
                       name="Login"
                       component={LoginScreen}
@@ -269,7 +277,7 @@ const App = () => {
                     />
                   )}
 
-                  {/* Details Screen direkt im Stack Navigator */}
+                  {/* Details Screen */}
                   <Stack.Screen
                     name="Details"
                     component={DetailsScreen as any}
@@ -279,7 +287,7 @@ const App = () => {
                     // custom header config. for Details Screen
                     options={({ navigation }) => ({
                       headerShown: true,
-                      presentation: "modal",
+                      presentation: "modal", //card test
                       animationTypeForReplace: "push",
                       headerRight: () => (
                         <HeaderHelpComponent navigation={navigation} />
