@@ -19,6 +19,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FontAwesome } from "@expo/vector-icons";
 import { serverTimestamp, collection, addDoc } from "firebase/firestore";
+import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useCalendarStore } from "../components/CalendarState";
@@ -115,276 +116,290 @@ const VacationForm = () => {
     };
   }, []);
 
+  // modified walkthroughable for copilot tour
+  const CopilotTouchableView = walkthroughable(View);
+
   return (
     <ScrollView>
-      <View
-        style={{
-          paddingTop: 15,
-          alignItems: "center",
-          borderTopColor: "grey",
-          borderWidth: 0.5,
-          backgroundColor: "black",
-          width: "100%",
-          height: 80,
-          justifyContent: "center",
-        }}
+      {/* VacationScreen copilot tour step 2 */}
+      <CopilotStep
+        name="selectDate"
+        order={2}
+        text="Select the start and end dates of your vacation. You can then save the date in the calendar or cancel it. Saving the date will add it to the Booked Vacation card."
       >
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 25,
-          }}
-        >
-          {/*  Start Date and End Date Buttons  */}
-          <TouchableOpacity
-            // validate start date
-            onPress={() => {
-              if (!tempStartDate) {
-                setTempStartDate(new Date().toISOString().split("T")[0]);
-              }
-            }}
+        <CopilotTouchableView>
+          <View
             style={{
-              margin: 5,
-              backgroundColor: "#191919",
-              width: 160,
-              height: 50,
-              borderWidth: 1,
-              borderColor: "aqua",
-              borderRadius: 8,
-              justifyContent: "center",
+              paddingTop: 15,
               alignItems: "center",
-            }}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-                position: "relative",
-                alignItems: "center",
-                justifyContent: "flex-end",
-                paddingRight: 20,
-                width: "100%",
-              }}
-            >
-              <MaterialCommunityIcons
-                name="calendar-text"
-                size={40}
-                color="grey"
-                style={{
-                  position: "absolute",
-                  left: 5,
-                }}
-              />
-
-              <Text
-                style={{
-                  textAlign: "center",
-                  fontSize: 18,
-                  fontWeight: "bold",
-                  color: "white",
-                  left: 10,
-                }}
-              >
-                {startDate || "Start Date"}
-              </Text>
-            </View>
-          </TouchableOpacity>
-
-          {/* End Date Button */}
-          <TouchableOpacity
-            onPress={() => {
-              // condition to prevent selecting an end date before a start date with an alert
-              if (!startDate) {
-                Alert.alert("Sorry", "Please select a start date first.", [
-                  {
-                    text: "OK",
-                  },
-                ]);
-                return;
-              }
-
-              setTempEndDate(new Date().toISOString().split("T")[0]);
-            }}
-            style={{
-              margin: 5,
-              backgroundColor: "#191919",
-              width: 160,
-              height: 50,
-              borderWidth: 1,
-              borderColor: "aqua",
-              borderRadius: 8,
+              borderTopColor: "grey",
+              borderWidth: 0.5,
+              backgroundColor: "black",
+              width: "100%",
+              height: 80,
               justifyContent: "center",
             }}
           >
             <View
               style={{
                 flexDirection: "row",
-                position: "relative",
                 alignItems: "center",
-                justifyContent: "flex-end",
-                paddingRight: 20,
-                width: "100%",
+                gap: 25,
               }}
             >
-              <FontAwesome
-                name="arrow-circle-right"
-                size={40}
-                color="grey"
-                style={{
-                  position: "absolute",
-                  left: 5,
+              {/* Start Date and End Date Buttons */}
+              <TouchableOpacity
+                // validate start date
+                onPress={() => {
+                  if (!tempStartDate) {
+                    setTempStartDate(new Date().toISOString().split("T")[0]);
+                  }
                 }}
-              />
-
-              <Text
                 style={{
-                  textAlign: "center",
-                  fontSize: 18,
-                  fontWeight: "bold",
-                  color: "white",
-                  left: 10,
+                  margin: 5,
+                  backgroundColor: "#191919",
+                  width: 160,
+                  height: 50,
+                  borderWidth: 1,
+                  borderColor: "aqua",
+                  borderRadius: 8,
+                  justifyContent: "center",
+                  alignItems: "center",
                 }}
               >
-                {endDate || "End Date"}
-              </Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    position: "relative",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    paddingRight: 20,
+                    width: "100%",
+                  }}
+                >
+                  {/* form icon for start date */}
+                  <MaterialCommunityIcons
+                    name="calendar-text"
+                    size={40}
+                    color="grey"
+                    style={{
+                      position: "absolute",
+                      left: 5,
+                    }}
+                  />
+                  {/* start date value */}
+                  <Text
+                    style={{
+                      textAlign: "center",
+                      fontSize: 18,
+                      fontWeight: "bold",
+                      color: "white",
+                      left: 10,
+                    }}
+                  >
+                    {startDate || "Start Date"}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+
+              {/* End Date Button */}
+              <TouchableOpacity
+                onPress={() => {
+                  // condition to prevent selecting an end date before a start date with an alert
+                  if (!startDate) {
+                    Alert.alert("Sorry", "Please select a start date first.", [
+                      {
+                        text: "OK",
+                      },
+                    ]);
+                    return;
+                  }
+
+                  setTempEndDate(new Date().toISOString().split("T")[0]);
+                }}
+                style={{
+                  margin: 5,
+                  backgroundColor: "#191919",
+                  width: 160,
+                  height: 50,
+                  borderWidth: 1,
+                  borderColor: "aqua",
+                  borderRadius: 8,
+                  justifyContent: "center",
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    position: "relative",
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    paddingRight: 20,
+                    width: "100%",
+                  }}
+                >
+                  {/* form icon for end date */}
+                  <FontAwesome
+                    name="arrow-circle-right"
+                    size={40}
+                    color="grey"
+                    style={{
+                      position: "absolute",
+                      left: 5,
+                    }}
+                  />
+                  {/* end date value */}
+                  <Text
+                    style={{
+                      textAlign: "center",
+                      fontSize: 18,
+                      fontWeight: "bold",
+                      color: "white",
+                      left: 10,
+                    }}
+                  >
+                    {endDate || "End Date"}
+                  </Text>
+                </View>
+              </TouchableOpacity>
             </View>
-          </TouchableOpacity>
-        </View>
-      </View>
-      {/* Date Picker Modals */}
-      {tempStartDate !== null && (
-        <DateTimePicker
-          value={tempStartDate ? new Date(tempStartDate) : new Date()}
-          minimumDate={new Date()}
-          mode="date"
-          display="spinner"
-          themeVariant="dark" // IOS only
-          accentColor="aqua" //IOS only
-          textColor="white" //IOS only
-          onChange={(event, selectedDate) => {
-            //console.log("DatePicker event type:", event.type);
-            // condition to delete value if user pressed cancel
-            if (event.type === "dismissed") {
-              setTempStartDate(null);
-              return;
-            }
-            //condition to add the selected date
-            if (selectedDate) {
-              setTempStartDate(null); // delete the temporary display
-              setStartDate(selectedDate.toISOString().split("T")[0]);
-            }
-          }}
-        />
-      )}
+          </View>
+          {/* Date Picker Modals */}
+          {tempStartDate !== null && (
+            <DateTimePicker
+              value={tempStartDate ? new Date(tempStartDate) : new Date()}
+              minimumDate={new Date()}
+              mode="date"
+              display="spinner"
+              themeVariant="dark" // IOS only
+              accentColor="aqua" //IOS only
+              textColor="white" //IOS only
+              onChange={(event, selectedDate) => {
+                //console.log("DatePicker event type:", event.type);
+                // condition to delete value if user pressed cancel
+                if (event.type === "dismissed") {
+                  setTempStartDate(null);
+                  return;
+                }
+                //condition to add the selected date
+                if (selectedDate) {
+                  setTempStartDate(null); // delete the temporary display
+                  setStartDate(selectedDate.toISOString().split("T")[0]);
+                }
+              }}
+            />
+          )}
 
-      {tempEndDate !== null && (
-        <DateTimePicker
-          value={tempEndDate ? new Date(tempEndDate) : new Date()}
-          minimumDate={new Date()}
-          mode="date"
-          display="spinner"
-          themeVariant="dark" // IOS only
-          accentColor="aqua" //IOS only
-          textColor="white" //IOS only
-          onChange={(event, selectedDate) => {
-            // condition to delete value if user pressed cancel
-            //console.log("DatePicker event type:", event.type);
-            if (event.type === "dismissed") {
-              setTempEndDate(null);
-              return;
-            }
-            //condition to add the selected date
-            if (selectedDate) {
-              setTempEndDate(null); // delete the temporary display
-              setEndDate(selectedDate.toISOString().split("T")[0]);
-            }
-          }}
-        />
-      )}
+          {tempEndDate !== null && (
+            <DateTimePicker
+              value={tempEndDate ? new Date(tempEndDate) : new Date()}
+              minimumDate={new Date()}
+              mode="date"
+              display="spinner"
+              themeVariant="dark" // IOS only
+              accentColor="aqua" //IOS only
+              textColor="white" //IOS only
+              onChange={(event, selectedDate) => {
+                // condition to delete value if user pressed cancel
+                //console.log("DatePicker event type:", event.type);
+                if (event.type === "dismissed") {
+                  setTempEndDate(null);
+                  return;
+                }
+                //condition to add the selected date
+                if (selectedDate) {
+                  setTempEndDate(null); // delete the temporary display
+                  setEndDate(selectedDate.toISOString().split("T")[0]);
+                }
+              }}
+            />
+          )}
 
-      <View
-        style={{
-          height: 80,
-          flexDirection: "row",
-          justifyContent: "space-around",
-          paddingHorizontal: 70,
-          alignItems: "center",
-          borderBottomColor: "grey",
-          borderWidth: 0.5,
-          backgroundColor: "black",
-          gap: 20,
-        }}
-      >
-        {/* Save Button */}
-        <TouchableOpacity
-          style={{
-            height: 45,
-            width: 120,
-            borderRadius: 8,
-            borderWidth: 3,
-            borderColor: "white",
-            overflow: "hidden",
-          }}
-          onPress={handleSave}
-        >
-          <LinearGradient
-            colors={["#00FFFF", "#FFFFFF"]}
+          <View
             style={{
+              height: 80,
+              flexDirection: "row",
+              justifyContent: "space-around",
+              paddingHorizontal: 70,
               alignItems: "center",
-              justifyContent: "center",
-              height: 45,
-              width: 120,
+              borderBottomColor: "grey",
+              borderWidth: 0.5,
+              backgroundColor: "black",
+              gap: 20,
             }}
           >
-            <Text
+            {/* Save Button */}
+            <TouchableOpacity
               style={{
-                color: "grey",
-                fontSize: 18,
-                fontFamily: "MPLUSLatin_Bold",
-                marginBottom: 11,
-                marginRight: 9,
+                height: 45,
+                width: 120,
+                borderRadius: 8,
+                borderWidth: 3,
+                borderColor: "white",
+                overflow: "hidden",
               }}
+              onPress={handleSave}
             >
-              Save
-            </Text>
-          </LinearGradient>
-        </TouchableOpacity>
+              <LinearGradient
+                colors={["#00FFFF", "#FFFFFF"]}
+                style={{
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: 45,
+                  width: 120,
+                }}
+              >
+                <Text
+                  style={{
+                    color: "grey",
+                    fontSize: 18,
+                    fontFamily: "MPLUSLatin_Bold",
+                    marginBottom: 11,
+                    marginRight: 9,
+                  }}
+                >
+                  Save
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
 
-        {/* Cancel Button */}
-        <TouchableOpacity
-          style={{
-            height: 45,
-            width: 120,
-            borderRadius: 8,
-            borderWidth: 3,
-            borderColor: "white",
-            overflow: "hidden",
-          }}
-          onPress={handleCancel}
-        >
-          <LinearGradient
-            colors={["#00FFFF", "#FFFFFF"]}
-            style={{
-              alignItems: "center",
-              justifyContent: "center",
-              height: 45,
-              width: 120,
-            }}
-          >
-            <Text
+            {/* Cancel Button */}
+            <TouchableOpacity
               style={{
-                color: "grey",
-                fontSize: 18,
-                fontFamily: "MPLUSLatin_Bold",
-                marginBottom: 11,
-                marginRight: 9,
+                height: 45,
+                width: 120,
+                borderRadius: 8,
+                borderWidth: 3,
+                borderColor: "white",
+                overflow: "hidden",
               }}
+              onPress={handleCancel}
             >
-              Cancel
-            </Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
+              <LinearGradient
+                colors={["#00FFFF", "#FFFFFF"]}
+                style={{
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: 45,
+                  width: 120,
+                }}
+              >
+                <Text
+                  style={{
+                    color: "grey",
+                    fontSize: 18,
+                    fontFamily: "MPLUSLatin_Bold",
+                    marginBottom: 11,
+                    marginRight: 9,
+                  }}
+                >
+                  Cancel
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </CopilotTouchableView>
+      </CopilotStep>
     </ScrollView>
   );
 };
