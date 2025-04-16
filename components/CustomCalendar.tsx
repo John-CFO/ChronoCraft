@@ -1,5 +1,9 @@
 ////////////////////////// CustomCalendar Component //////////////////////////////
 
+// This component shows the customised calendar and the functiont to navigate iside the calendar.
+
+//////////////////////////////////////////////////////////////////////////////////
+
 import { View } from "react-native";
 import React, {
   useImperativeHandle,
@@ -8,6 +12,7 @@ import React, {
   useEffect,
 } from "react";
 import { Calendar } from "react-native-calendars";
+import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import { useCalendarStore } from "../components/CalendarState";
 
@@ -58,53 +63,65 @@ const CustomCalendar = forwardRef<CustomCalendarRef, CustomCalendarProps>(
         setCurrentMonth(today); // set the calendar to the current month
       },
     }));
+    // modified walkthroughable for copilot tour
+    const CopilotTouchableView = walkthroughable(View);
+
     return (
-      <View>
-        {/* Calendar - style and handle options*/}
-        <Calendar
-          key={currentMonth}
-          current={currentMonth}
-          markedDates={useCalendarStore((state) => state.markedDates)}
-          onPress={(day: { dateString: any }) => {
-            console.log("Selected day", day.dateString);
-          }}
-          onMonthChange={(date: { dateString: any }) =>
-            setCurrentMonth(date.dateString)
-          }
-          markingType={"custom"}
-          minDate={"2024-01-01"}
-          maxDate={"2030-12-31"}
-          style={{
-            height: 350,
-            width: 430,
-            marginBottom: 50,
-          }}
-          theme={{
-            backgroundColor: "#ffffff",
-            calendarBackground: "#000000",
-            textSectionTitleColor: "lightgrey",
-            selectedDayBackgroundColor: "#00adf5",
-            selectedDayTextColor: "#ffffff",
-            todayTextColor: "aqua",
-            dayTextColor: "white",
-            textDisabledColor: "#595959",
-            dotColor: "#00adf5",
-            selectedDotColor: "#ffffff",
-            arrowColor: "aqua",
-            monthTextColor: "aqua",
-            indicatorColor: "red",
-            textDayFontFamily: "monospace",
-            textMonthFontFamily: "monospace",
-            textDayHeaderFontFamily: "monospace",
-            textDayFontWeight: "300",
-            textMonthFontWeight: "bold",
-            textDayHeaderFontWeight: "100",
-            textDayFontSize: 16,
-            textMonthFontSize: 18,
-            textDayHeaderFontSize: 16,
-          }}
-        />
-      </View>
+      <>
+        {/* VacationScreen copilot tour step 1 */}
+        <CopilotStep
+          name="Calendar"
+          order={1}
+          text="In this area you can view your calendar."
+        >
+          <CopilotTouchableView>
+            {/* Calendar - style and handle options*/}
+            <Calendar
+              key={currentMonth}
+              current={currentMonth}
+              markedDates={useCalendarStore((state) => state.markedDates)}
+              onPress={(day: { dateString: any }) => {
+                console.log("Selected day", day.dateString);
+              }}
+              onMonthChange={(date: { dateString: any }) =>
+                setCurrentMonth(date.dateString)
+              }
+              markingType={"custom"}
+              minDate={"2024-01-01"}
+              maxDate={"2030-12-31"}
+              style={{
+                height: 350,
+                width: 430,
+                marginBottom: 50,
+              }}
+              theme={{
+                backgroundColor: "#ffffff",
+                calendarBackground: "#000000",
+                textSectionTitleColor: "lightgrey",
+                selectedDayBackgroundColor: "#00adf5",
+                selectedDayTextColor: "#ffffff",
+                todayTextColor: "aqua",
+                dayTextColor: "white",
+                textDisabledColor: "#595959",
+                dotColor: "#00adf5",
+                selectedDotColor: "#ffffff",
+                arrowColor: "aqua",
+                monthTextColor: "aqua",
+                indicatorColor: "red",
+                textDayFontFamily: "monospace",
+                textMonthFontFamily: "monospace",
+                textDayHeaderFontFamily: "monospace",
+                textDayFontWeight: "300",
+                textMonthFontWeight: "bold",
+                textDayHeaderFontWeight: "100",
+                textDayFontSize: 16,
+                textMonthFontSize: 18,
+                textDayHeaderFontSize: 16,
+              }}
+            />
+          </CopilotTouchableView>
+        </CopilotStep>
+      </>
     );
   }
 );
