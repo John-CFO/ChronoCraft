@@ -102,7 +102,7 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
   }
 
   return (
-    // local DetailsScreen Provider (important if you need to call a child component to the copilot tour)
+    // local DetailsScreen Provider (important if you need to adress a child component to the copilot tour)
     <CopilotProvider
       overlay="view"
       verticalOffset={40}
