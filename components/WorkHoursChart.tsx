@@ -15,6 +15,7 @@ import {
   Dimensions,
 } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
+import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import WorkHoursState from "../components/WorkHoursState";
 import ChartRadioButtons from "./ChartRadioButtons";
@@ -270,159 +271,177 @@ const WorkHoursChart = () => {
 
   const dynamicMaxValue = getDynamicMaxValue();
 
+  // modified walkthroughable for copilot tour
+  const CopilotTouchableView = walkthroughable(View);
+
   return (
-    // TouchableWithoutFeedback to close the tooltip
-    <TouchableWithoutFeedback onPress={() => setTooltipData(null)}>
-      <View
-        onLayout={(event: LayoutChangeEvent) =>
-          setCardWidth(event.nativeEvent.layout.width)
-        }
-        style={{
-          marginTop: 50,
-          width: screenWidth * 0.9, // dynamic 90% of the screen width
-          maxWidth: 600,
-          height: 480,
-          borderWidth: 1,
-          borderColor: "aqua",
-          borderRadius: 12,
-          backgroundColor: "#191919",
-        }}
+    <>
+      {/* DetailsScreen copilot tour step 2 */}
+      <CopilotStep
+        name="WorkHoursChart"
+        order={3}
+        text="This card shows the workhours and you overhours for the selected period. You can push on a bar to see the tracked details."
       >
-        {/* Titel */}
-        <Text
-          style={{
-            fontFamily: "MPLUSLatin_Bold",
-            fontSize: 25,
-            color: "white",
-            marginBottom: 80,
-            marginTop: 25,
-            textAlign: "center",
-          }}
-        >
-          Workhours Chart
-        </Text>
-        <ChartRadioButtons
-          chartType={chartType as "week" | "month" | "year"}
-          setChartType={(type) => {
-            setChartType(type);
-            setTooltipData(null); // close tooltip if chart type changes
-          }}
-        />
-        {/* Frame-Container with horizontal scrollbar */}
-        <View style={{ paddingHorizontal: cardPadding }}>
-          {/* Horizontal scrollbarer container for the BarChart */}
-          <ScrollView
-            horizontal
-            ref={scrollViewRef}
-            onScroll={(e) => setScrollX(e.nativeEvent.contentOffset.x)}
-            scrollEventThrottle={16}
-            contentContainerStyle={{ paddingRight: spacing + barWidth / 2 }}
-          >
-            <BarChart
-              width={computedChartWidth}
-              yAxisLabelSuffix="h"
-              stackData={stackData}
-              maxValue={dynamicMaxValue} // regulate the size of the Y-Axis
-              barWidth={barWidth}
-              initialSpacing={initialSpacing}
-              spacing={spacing}
-              barBorderRadius={2.5}
-              isAnimated
-              yAxisColor={"white"}
-              xAxisColor={"white"}
-              rulesColor={"dimgray"} // color for the horizontal break lines
-              xAxisLabelTextStyle={{ color: "white" }}
-              yAxisTextStyle={{ color: "white" }}
-              onPress={(item: any, index: number) =>
-                handleBarPress(item, index)
+        <CopilotTouchableView>
+          {/* TouchableWithoutFeedback to close the tooltip */}
+          <TouchableWithoutFeedback onPress={() => setTooltipData(null)}>
+            <View
+              onLayout={(event: LayoutChangeEvent) =>
+                setCardWidth(event.nativeEvent.layout.width)
               }
-            />
-          </ScrollView>
-        </View>
-        {/* Legend */}
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "center",
-            alignItems: "center",
-            marginTop: 25,
-            marginBottom: 15,
-          }}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginHorizontal: 10,
-            }}
-          >
-            <View
               style={{
-                height: 12,
-                width: 12,
-                borderRadius: 6,
-                backgroundColor: "gray",
+                marginTop: 50,
+                width: screenWidth * 0.9, // dynamic 90% of the screen width
+                maxWidth: 600,
+                height: 480,
+                borderWidth: 1,
+                borderColor: "aqua",
+                borderRadius: 12,
+                backgroundColor: "#191919",
               }}
-            />
-            <Text style={{ marginLeft: 5, fontSize: 14, color: "white" }}>
-              Expected Hours
-            </Text>
-          </View>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginHorizontal: 10,
-            }}
-          >
-            <View
-              style={{
-                height: 12,
-                width: 12,
-                borderRadius: 6,
-                backgroundColor: "aqua",
-              }}
-            />
-            <Text style={{ marginLeft: 5, fontSize: 14, color: "white" }}>
-              Over Hours
-            </Text>
-          </View>
-        </View>
-        {/* Tooltip */}
-        {tooltipData && (
-          <View
-            style={{
-              position: "absolute",
-              width: 120,
-              height: 90,
-              justifyContent: "space-around",
-              top: tooltipData.y,
-              left: tooltipData.x,
-              backgroundColor: "#333",
-              padding: 8,
-              borderRadius: 8,
-              elevation: 5,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.5,
-              shadowRadius: 4,
-            }}
-          >
-            <Text style={{ fontSize: 14, color: "white", fontWeight: "bold" }}>
-              {`📅 ${formatTooltipDate(tooltipData.date, chartType)}`}
-            </Text>
-            <Text style={{ fontSize: 11, color: "white" }}>
-              {tooltipData.baseValue < tooltipData.plannedHours
-                ? `⏳ Duration: ${formatTime(tooltipData.baseValue)}h`
-                : `⏳ Expected: ${formatTime(tooltipData.baseValue)}h`}
-            </Text>
-            <Text style={{ fontSize: 11, color: "aqua" }}>
-              {`🚀 Over: ${formatTime(tooltipData.overHours || 0)}h`}
-            </Text>
-          </View>
-        )}
-      </View>
-    </TouchableWithoutFeedback>
+            >
+              {/* Titel */}
+              <Text
+                style={{
+                  fontFamily: "MPLUSLatin_Bold",
+                  fontSize: 25,
+                  color: "white",
+                  marginBottom: 80,
+                  marginTop: 25,
+                  textAlign: "center",
+                }}
+              >
+                Workhours Chart
+              </Text>
+              <ChartRadioButtons
+                chartType={chartType as "week" | "month" | "year"}
+                setChartType={(type) => {
+                  setChartType(type);
+                  setTooltipData(null); // close tooltip if chart type changes
+                }}
+              />
+              {/* Frame-Container with horizontal scrollbar */}
+              <View style={{ paddingHorizontal: cardPadding }}>
+                {/* Horizontal scrollbarer container for the BarChart */}
+                <ScrollView
+                  horizontal
+                  ref={scrollViewRef}
+                  onScroll={(e) => setScrollX(e.nativeEvent.contentOffset.x)}
+                  scrollEventThrottle={16}
+                  contentContainerStyle={{
+                    paddingRight: spacing + barWidth / 2,
+                  }}
+                >
+                  <BarChart
+                    width={computedChartWidth}
+                    yAxisLabelSuffix="h"
+                    stackData={stackData}
+                    maxValue={dynamicMaxValue} // regulate the size of the Y-Axis
+                    barWidth={barWidth}
+                    initialSpacing={initialSpacing}
+                    spacing={spacing}
+                    barBorderRadius={2.5}
+                    isAnimated
+                    yAxisColor={"white"}
+                    xAxisColor={"white"}
+                    rulesColor={"dimgray"} // color for the horizontal break lines
+                    xAxisLabelTextStyle={{ color: "white" }}
+                    yAxisTextStyle={{ color: "white" }}
+                    onPress={(item: any, index: number) =>
+                      handleBarPress(item, index)
+                    }
+                  />
+                </ScrollView>
+              </View>
+              {/* Legend */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  marginTop: 25,
+                  marginBottom: 15,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginHorizontal: 10,
+                  }}
+                >
+                  <View
+                    style={{
+                      height: 12,
+                      width: 12,
+                      borderRadius: 6,
+                      backgroundColor: "gray",
+                    }}
+                  />
+                  <Text style={{ marginLeft: 5, fontSize: 14, color: "white" }}>
+                    Expected Hours
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginHorizontal: 10,
+                  }}
+                >
+                  <View
+                    style={{
+                      height: 12,
+                      width: 12,
+                      borderRadius: 6,
+                      backgroundColor: "aqua",
+                    }}
+                  />
+                  <Text style={{ marginLeft: 5, fontSize: 14, color: "white" }}>
+                    Over Hours
+                  </Text>
+                </View>
+              </View>
+              {/* Tooltip */}
+              {tooltipData && (
+                <View
+                  style={{
+                    position: "absolute",
+                    width: 120,
+                    height: 90,
+                    justifyContent: "space-around",
+                    top: tooltipData.y,
+                    left: tooltipData.x,
+                    backgroundColor: "#333",
+                    padding: 8,
+                    borderRadius: 8,
+                    elevation: 5,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.5,
+                    shadowRadius: 4,
+                  }}
+                >
+                  <Text
+                    style={{ fontSize: 14, color: "white", fontWeight: "bold" }}
+                  >
+                    {`📅 ${formatTooltipDate(tooltipData.date, chartType)}`}
+                  </Text>
+                  <Text style={{ fontSize: 11, color: "white" }}>
+                    {tooltipData.baseValue < tooltipData.plannedHours
+                      ? `⏳ Duration: ${formatTime(tooltipData.baseValue)}h`
+                      : `⏳ Expected: ${formatTime(tooltipData.baseValue)}h`}
+                  </Text>
+                  <Text style={{ fontSize: 11, color: "aqua" }}>
+                    {`🚀 Over: ${formatTime(tooltipData.overHours || 0)}h`}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </TouchableWithoutFeedback>
+        </CopilotTouchableView>
+      </CopilotStep>
+    </>
   );
 };
 

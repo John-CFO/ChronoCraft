@@ -43,6 +43,8 @@ interface WorkHoursStateProps {
   setSelectedBar: (bar: any) => void;
 }
 
+////////////////////////////////////////////////////////////////////////////
+
 // declare firebase auth
 const auth = getAuth();
 

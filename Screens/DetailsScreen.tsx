@@ -78,8 +78,8 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
   // state to show the copilot tour
   const [showTour, setShowTour] = useState<boolean>(false);
 
+  // hook to check AsyncStorage if the user has already seen the tour
   useEffect(() => {
-    // check if the user has seen the tour
     const hasSeenTour = AsyncStorage.getItem("hasSeenDetailsTour");
     if (!hasSeenTour) {
       setShowTour(true);
@@ -104,7 +104,7 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
   return (
     // local DetailsScreen Provider (important if you need to adress a child component to the copilot tour)
     <CopilotProvider
-      overlay="view"
+      overlay="svg"
       verticalOffset={40}
       backdropColor="rgba(5, 5, 5, 0.59)"
       arrowColor="#ffffff"
