@@ -123,7 +123,7 @@ const AppDrawerNavigator = () => {
 
       <Drawer.Screen
         name="Flex"
-        component={WorkHoursScreen}
+        component={WorkHoursScreen as any}
         options={{
           // function to change the icon color when focused
           drawerActiveTintColor: "white",
@@ -143,7 +143,7 @@ const AppDrawerNavigator = () => {
       />
       <Drawer.Screen
         name="Vacation"
-        component={VacationScreen}
+        component={VacationScreen as any}
         options={{
           // function to change the icon color when focused
           drawerLabel: ({ focused }) => (
@@ -212,7 +212,7 @@ const App = () => {
         <BottomSheetModalProvider>
           {/* global copilot tour provider with tooltip options */}
           <CopilotProvider
-            overlay="view"
+            overlay="svg"
             verticalOffset={40}
             backdropColor="rgba(5, 5, 5, 0.59)"
             arrowColor="#ffffff"
