@@ -9,7 +9,6 @@ import { View, Text, ScrollView } from "react-native";
 import React, { useEffect, useState, useRef } from "react";
 import { useRoute } from "@react-navigation/native";
 import { getAuth, Auth } from "firebase/auth";
-import { FIREBASE_APP } from "../firebaseConfig";
 import LottieView from "lottie-react-native";
 import { useIsFocused } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -18,6 +17,7 @@ import { CopilotProvider } from "react-native-copilot";
 import CustomCalendar from "../components/CustomCalendar";
 import VacationForm from "../components/VacationForm";
 import VacationList from "../components/VacationList";
+import { FIREBASE_APP } from "../firebaseConfig";
 import TourButton from "../components/TourButton";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -47,6 +47,7 @@ const VacationScreen: React.FC<VacationScreenRouteProps> = () => {
   // state to show the copilot tour
   const [showTour, setShowTour] = useState<boolean>(false);
 
+  // hook to check AsyncStorage if the user has already seen the tour
   useEffect(() => {
     AsyncStorage.getItem("hasSeenVacationTour").then((hasSeenTour) => {
       if (!hasSeenTour) {
@@ -72,7 +73,7 @@ const VacationScreen: React.FC<VacationScreenRouteProps> = () => {
   return (
     // local VacationScreen Provider (important if you need to adress a child component to the copilot tour)
     <CopilotProvider
-      overlay="view"
+      overlay="svg"
       verticalOffset={40}
       backdropColor="rgba(5, 5, 5, 0.59)"
       arrowColor="#ffffff"

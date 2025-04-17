@@ -16,6 +16,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { getAuth } from "firebase/auth";
 import { setDoc, doc, getDoc } from "firebase/firestore";
+import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import dayjs from "../dayjsConfig";
@@ -37,6 +38,9 @@ const WorkHoursInput = () => {
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
+
+  // modified walkthroughable for copilot tour
+  const CopilotTouchableView = walkthroughable(View);
 
   // hook to fetch the expected hours from Firestore by mount
   useEffect(() => {
@@ -130,156 +134,165 @@ const WorkHoursInput = () => {
   };
 
   return (
-    <View
-      style={{
-        width: screenWidth * 0.9, // use 90% of the screen width
-        maxWidth: 600,
-        alignItems: "center",
-        backgroundColor: "#191919",
-        borderRadius: 12,
-        padding: 20,
-        shadowColor: "#000",
-        shadowOpacity: 0.2,
-        shadowRadius: 10,
-        shadowOffset: { width: 0, height: 4 },
-        elevation: 4,
-        borderWidth: 1,
-        borderColor: "aqua",
-      }}
-    >
-      {/* title and subtitle */}
-      <Text
-        style={{
-          fontFamily: "MPLUSLatin_Bold",
-          fontSize: 25,
-          color: "white",
-          marginBottom: 60,
-          textAlign: "center",
-        }}
+    <>
+      {/* DetailsScreen copilot tour step 2 */}
+      <CopilotStep
+        name="WorkHoursCard"
+        order={1}
+        text="In this card you have to set the expected work hours for today and save them."
       >
-        Daily Workhours
-      </Text>
-
-      <Text
-        style={{
-          fontSize: 18,
-          fontFamily: "MPLUSLatin_ExtraLight",
-          color: "white",
-          textAlign: "center",
-          marginBottom: 10,
-        }}
-      >
-        "add your minimum working hours"
-      </Text>
-      <View
-        style={{
-          marginTop: 20,
-          width: "100%",
-          backgroundColor: "#191919",
-          alignItems: "center",
-        }}
-      >
-        {/* Text Input to enter the expected hours */}
-        <TextInput
-          placeholder="(e.g. 8)"
-          placeholderTextColor="grey"
-          value={tempExpectedHours}
-          keyboardType="numeric"
-          onChangeText={setTempExpectedHours}
+        <CopilotTouchableView
           style={{
-            marginBottom: 15,
-            width: screenWidth * 0.7, // dynamic with of 70%
-            maxWidth: 400,
-            borderColor: "aqua",
-            borderWidth: 1.5,
-            borderRadius: 12,
-            paddingLeft: 15,
-            paddingRight: 40,
-            paddingBottom: 5,
-            fontSize: 22,
-            height: 50,
-            color: "white",
-            fontWeight: "bold",
-            backgroundColor: "black",
-          }}
-        />
-      </View>
-      {/* Save Button */}
-      <TouchableOpacity
-        onPress={handleSaveMinHours}
-        style={{
-          width: screenWidth * 0.7, // dynamic with of 70%
-          maxWidth: 400,
-          borderRadius: 12,
-          overflow: "hidden",
-          borderWidth: 3,
-          borderColor: "white",
-          marginBottom: 25,
-        }}
-      >
-        <LinearGradient
-          colors={["#00FFFF", "#FFFFFF"]}
-          style={{
+            width: screenWidth * 0.9, // use 90% of the screen width
+            maxWidth: 600,
             alignItems: "center",
-            justifyContent: "center",
-            height: 45,
-            width: screenWidth * 0.7, // dynamic with of 70%
-            maxWidth: 400,
+            backgroundColor: "#191919",
+            borderRadius: 12,
+            padding: 20,
+            shadowColor: "#000",
+            shadowOpacity: 0.2,
+            shadowRadius: 10,
+            shadowOffset: { width: 0, height: 4 },
+            elevation: 4,
+            borderWidth: 1,
+            borderColor: "aqua",
           }}
         >
+          {/* title and subtitle */}
           <Text
             style={{
               fontFamily: "MPLUSLatin_Bold",
-              fontSize: 22,
-              color: "grey",
-              marginBottom: 5,
-              paddingRight: 10,
+              fontSize: 25,
+              color: "white",
+              marginBottom: 60,
+              textAlign: "center",
             }}
           >
-            Save
+            Daily Workhours
           </Text>
-        </LinearGradient>
-      </TouchableOpacity>
-      {/* Hourly Rate info container */}
-      <View
-        style={{
-          width: "100%",
-          height: 50,
-          alignItems: "flex-start",
-          justifyContent: "center",
-          paddingLeft: 10,
-          borderRadius: 10,
-          //shadow options for android
-          shadowColor: "#ffffff",
-          elevation: 2,
-          //shadow options for ios
-          shadowOffset: { width: 2, height: 2 },
-          shadowOpacity: 0.3,
-          shadowRadius: 3,
-          backgroundColor: "#191919",
-        }}
-      >
-        <Text
-          style={{
-            fontSize: 30,
-            fontWeight: "bold",
-            color: "white",
-            marginBottom: 5,
-          }}
-        >
+
           <Text
             style={{
-              color: "grey",
-              fontSize: 16,
-              fontFamily: "MPLUSLatin_Bold",
+              fontSize: 18,
+              fontFamily: "MPLUSLatin_ExtraLight",
+              color: "white",
+              textAlign: "center",
+              marginBottom: 10,
             }}
           >
-            Your expected WorkHours:{" "}
+            "add your minimum working hours"
           </Text>
-          {expectedHours || "Not set"}
-        </Text>
-      </View>
-    </View>
+          <View
+            style={{
+              marginTop: 20,
+              width: "100%",
+              backgroundColor: "#191919",
+              alignItems: "center",
+            }}
+          >
+            {/* Text Input to enter the expected hours */}
+            <TextInput
+              placeholder="(e.g. 8)"
+              placeholderTextColor="grey"
+              value={tempExpectedHours}
+              keyboardType="numeric"
+              onChangeText={setTempExpectedHours}
+              style={{
+                marginBottom: 15,
+                width: screenWidth * 0.7, // dynamic with of 70%
+                maxWidth: 400,
+                borderColor: "aqua",
+                borderWidth: 1.5,
+                borderRadius: 12,
+                paddingLeft: 15,
+                paddingRight: 40,
+                paddingBottom: 5,
+                fontSize: 22,
+                height: 50,
+                color: "white",
+                fontWeight: "bold",
+                backgroundColor: "black",
+              }}
+            />
+          </View>
+          {/* Save Button */}
+          <TouchableOpacity
+            onPress={handleSaveMinHours}
+            style={{
+              width: screenWidth * 0.7, // dynamic with of 70%
+              maxWidth: 400,
+              borderRadius: 12,
+              overflow: "hidden",
+              borderWidth: 3,
+              borderColor: "white",
+              marginBottom: 25,
+            }}
+          >
+            <LinearGradient
+              colors={["#00FFFF", "#FFFFFF"]}
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+                height: 45,
+                width: screenWidth * 0.7, // dynamic with of 70%
+                maxWidth: 400,
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: "MPLUSLatin_Bold",
+                  fontSize: 22,
+                  color: "grey",
+                  marginBottom: 5,
+                  paddingRight: 10,
+                }}
+              >
+                Save
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
+          {/* Hourly Rate info container */}
+          <View
+            style={{
+              width: "100%",
+              height: 50,
+              alignItems: "flex-start",
+              justifyContent: "center",
+              paddingLeft: 10,
+              borderRadius: 10,
+              //shadow options for android
+              shadowColor: "#ffffff",
+              elevation: 2,
+              //shadow options for ios
+              shadowOffset: { width: 2, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 3,
+              backgroundColor: "#191919",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 30,
+                fontWeight: "bold",
+                color: "white",
+                marginBottom: 5,
+              }}
+            >
+              <Text
+                style={{
+                  color: "grey",
+                  fontSize: 16,
+                  fontFamily: "MPLUSLatin_Bold",
+                }}
+              >
+                Your expected WorkHours:{" "}
+              </Text>
+              {expectedHours || "Not set"}
+            </Text>
+          </View>
+        </CopilotTouchableView>
+      </CopilotStep>
+    </>
   );
 };
 

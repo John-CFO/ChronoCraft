@@ -28,6 +28,7 @@ import {
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import dayjs from "../dayjsConfig";
@@ -63,6 +64,9 @@ const WorkTimeTracker = () => {
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
+
+  // modified walkthroughable for copilot tour
+  const CopilotTouchableView = walkthroughable(View);
 
   // global WorkHoursState
   const {
@@ -136,7 +140,7 @@ const WorkTimeTracker = () => {
 
   // hook to update elapsed time
   useEffect(() => {
-    let timer: NodeJS.Timeout | null = null;
+    let timer: number | null = null;
     if (isWorking && startWorkTime) {
       const updateElapsedTime = () => {
         const currentSession = calculateElapsedTime(startWorkTime);
@@ -295,7 +299,7 @@ const WorkTimeTracker = () => {
         setStartWorkTime(newStartTime);
       } else {
         console.log("No Document found.");
-        alert("First add your expected hours.");
+        Alert.alert("First add your expected hours.");
         return;
       }
     } catch (error) {
@@ -378,7 +382,7 @@ const WorkTimeTracker = () => {
       );
       // condition to check if the snapshot is empty
       if (snapshot.empty) {
-        console.warn("No data found in Firestore.");
+        console.log("No data found.");
         return;
       }
       // initialize the data with the fetched data from firestore
@@ -413,125 +417,134 @@ const WorkTimeTracker = () => {
   }, []); // once when the component mounts
 
   return (
-    <View
-      style={{
-        width: screenWidth * 0.9, // use 90% of the screen width
-        maxWidth: 600,
-        alignItems: "center",
-        backgroundColor: "#191919",
-        borderRadius: 12,
-        padding: 20,
-        shadowColor: "#000",
-        shadowOpacity: 0.2,
-        shadowRadius: 10,
-        shadowOffset: { width: 0, height: 4 },
-        elevation: 4,
-        borderWidth: 1,
-        borderColor: "aqua",
-      }}
-    >
-      <Text
-        style={{
-          fontFamily: "MPLUSLatin_Bold",
-          fontSize: 25,
-          color: "white",
-          marginBottom: 60,
-          textAlign: "center",
-        }}
+    <>
+      {/* DetailsScreen copilot tour step 2 */}
+      <CopilotStep
+        name="WorkHoursTracker"
+        order={2}
+        text="In this area you can track your daily work hours."
       >
-        WorkTime Tracker
-      </Text>
-      {/* Start/Stop Button with  enable condition when user adds a expected hours */}
-      {!isWorking ? (
-        <TouchableOpacity
-          onPress={docExists ? handleStartWork : undefined}
-          disabled={!docExists}
+        <CopilotTouchableView
           style={{
-            width: screenWidth * 0.7, // dynamic with of 70%
-            maxWidth: 400,
+            width: screenWidth * 0.9, // use 90% of the screen width
+            maxWidth: 600,
+            alignItems: "center",
+            backgroundColor: "#191919",
             borderRadius: 12,
-            overflow: "hidden",
-            borderWidth: 3,
-            borderColor: "white",
-            marginBottom: 25,
-            opacity: docExists ? 1 : 0.5,
+            padding: 20,
+            shadowColor: "#000",
+            shadowOpacity: 0.2,
+            shadowRadius: 10,
+            shadowOffset: { width: 0, height: 4 },
+            elevation: 4,
+            borderWidth: 1,
+            borderColor: "aqua",
           }}
         >
-          <LinearGradient
-            colors={docExists ? ["#00FFFF", "#FFFFFF"] : ["#666", "#999"]}
+          <Text
             style={{
-              alignItems: "center",
-              justifyContent: "center",
-              height: 45,
-              width: screenWidth * 0.7, // dynamic with of 70%
-              maxWidth: 400,
+              fontFamily: "MPLUSLatin_Bold",
+              fontSize: 25,
+              color: "white",
+              marginBottom: 60,
+              textAlign: "center",
             }}
           >
-            <Text
+            WorkTime Tracker
+          </Text>
+          {/* Start/Stop Button with  enable condition when user adds a expected hours */}
+          {!isWorking ? (
+            <TouchableOpacity
+              onPress={docExists ? handleStartWork : undefined}
+              disabled={!docExists}
               style={{
-                fontFamily: "MPLUSLatin_Bold",
-                fontSize: 22,
-                color: docExists ? "grey" : "darkgrey",
-                marginBottom: 5,
-                paddingRight: 10,
+                width: screenWidth * 0.7, // dynamic with of 70%
+                maxWidth: 400,
+                borderRadius: 12,
+                overflow: "hidden",
+                borderWidth: 3,
+                borderColor: "white",
+                marginBottom: 25,
+                opacity: docExists ? 1 : 0.5,
               }}
             >
-              Start
-            </Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      ) : (
-        <TouchableOpacity
-          onPress={handleStopWork}
-          style={{
-            width: 280,
-            borderRadius: 12,
-            overflow: "hidden",
-            borderWidth: 3,
-            borderColor: "white",
-            marginBottom: 25,
-          }}
-        >
-          <LinearGradient
-            colors={["#00FFFF", "#FFFFFF"]}
+              <LinearGradient
+                colors={docExists ? ["#00FFFF", "#FFFFFF"] : ["#666", "#999"]}
+                style={{
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: 45,
+                  width: screenWidth * 0.7, // dynamic with of 70%
+                  maxWidth: 400,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "MPLUSLatin_Bold",
+                    fontSize: 22,
+                    color: docExists ? "grey" : "darkgrey",
+                    marginBottom: 5,
+                    paddingRight: 10,
+                  }}
+                >
+                  Start
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={handleStopWork}
+              style={{
+                width: 280,
+                borderRadius: 12,
+                overflow: "hidden",
+                borderWidth: 3,
+                borderColor: "white",
+                marginBottom: 25,
+              }}
+            >
+              <LinearGradient
+                colors={["#00FFFF", "#FFFFFF"]}
+                style={{
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: 45,
+                  width: 280,
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "MPLUSLatin_Bold",
+                    fontSize: 22,
+                    color: "grey",
+                    marginBottom: 5,
+                    paddingRight: 10,
+                  }}
+                >
+                  Stop
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+          {/* Tracking Animation */}
+          <View style={{ position: "relative", height: 20 }}>
+            {isWorking && <WorkTimeAnimation />}
+          </View>
+          {/* Tracking Time */}
+          <Text
             style={{
-              alignItems: "center",
-              justifyContent: "center",
-              height: 45,
-              width: 280,
+              fontWeight: "bold",
+              fontSize: 55,
+              color: isWorking ? "white" : "gray",
+              marginBottom: 5,
+              textAlign: "center",
             }}
           >
-            <Text
-              style={{
-                fontFamily: "MPLUSLatin_Bold",
-                fontSize: 22,
-                color: "grey",
-                marginBottom: 5,
-                paddingRight: 10,
-              }}
-            >
-              Stop
-            </Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      )}
-      {/* Tracking Animation */}
-      <View style={{ position: "relative", height: 20 }}>
-        {isWorking && <WorkTimeAnimation />}
-      </View>
-      {/* Tracking Time */}
-      <Text
-        style={{
-          fontWeight: "bold",
-          fontSize: 55,
-          color: isWorking ? "white" : "gray",
-          marginBottom: 5,
-          textAlign: "center",
-        }}
-      >
-        {formatTime(elapsedTime)}
-      </Text>
-    </View>
+            {formatTime(elapsedTime)}
+          </Text>
+        </CopilotTouchableView>
+      </CopilotStep>
+    </>
   );
 };
 
