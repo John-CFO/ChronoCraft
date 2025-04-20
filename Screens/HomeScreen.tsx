@@ -49,6 +49,7 @@ import { useStore } from "../components/TimeTrackingState";
 import NoteModal from "../components/NoteModal";
 import RoutingLoader from "../components/RoutingLoader";
 import TourButton from "../components/services/copilotTour/TourButton";
+import DismissKeyboard from "../components/DismissKeyboard";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -445,219 +446,221 @@ const HomeScreen: React.FC = () => {
   }, []);
 
   return (
-    <View style={{ flex: 1, width: "100%", backgroundColor: "black" }}>
-      {/* RoutingLoader section */}
-      {isLoading ? (
-        <View
-          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-        >
-          <RoutingLoader />
-        </View>
-      ) : (
-        <>
-          {/* Header section */}
+    <DismissKeyboard containerStyle={{ justifyContent: "center" }}>
+      <View style={{ flex: 1, width: "100%", backgroundColor: "black" }}>
+        {/* RoutingLoader section */}
+        {isLoading ? (
           <View
-            style={{
-              width: "100%",
-              height: 50,
-              marginBottom: 20,
-              backgroundColor: "transparent",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
+            style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
           >
-            <Text
-              style={{
-                fontFamily: "MPLUSLatin_Bold",
-                fontSize: 25,
-                color: "white",
-              }}
-            >
-              - Your Projects -
-            </Text>
+            <RoutingLoader />
           </View>
-          {/* Copilot tour button */}
-          <TourButton
-            storageKey="hasSeenHomeTour"
-            userId={auth.currentUser?.uid ?? ""}
-            needsRefCheck={false}
-          />
-          {/* Section to scroll the projects list with the scroll animation */}
-          {projects.length > 0 ? (
-            <Animated.FlatList
-              style={{
-                flex: 1,
-                marginHorizontal: "3%",
-                marginBottom: "20%",
-                height: "50%",
-                borderRadius: 12,
-                borderWidth: 0.5,
-              }}
-              contentContainerStyle={{
-                width: "100%",
-                alignItems: "center",
-              }}
-              scrollEnabled={true}
-              data={projects}
-              keyExtractor={(item) => item.id}
-              onScroll={Animated.event(
-                [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                { useNativeDriver: true }
-              )}
-              scrollEventThrottle={16}
-              renderItem={renderItem}
-            />
-          ) : (
+        ) : (
+          <>
+            {/* Header section */}
             <View
               style={{
                 width: "100%",
-                height: "80%",
-                alignItems: "center",
-                justifyContent: "center",
+                height: 50,
+                marginBottom: 20,
                 backgroundColor: "transparent",
+                justifyContent: "center",
+                alignItems: "center",
               }}
             >
               <Text
                 style={{
-                  textAlign: "center",
+                  fontFamily: "MPLUSLatin_Bold",
+                  fontSize: 25,
                   color: "white",
-                  fontSize: 18,
-                  fontFamily: "MPLUSLatin_ExtraLight",
                 }}
               >
-                You haven't any projects yet.
+                - Your Projects -
               </Text>
             </View>
-          )}
-          {/* Project input */}
-
-          <View
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              width: "100%",
-              height: 80,
-              backgroundColor: "transparent",
-              flexDirection: "row",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: 20,
-            }}
-          >
-            {/* CopilotStep wrapped around the TextInput */}
-            <View
-              style={{
-                position: "relative",
-                width: screenWidth * 0.9,
-                maxWidth: 320,
-              }}
-            >
-              <TextInput
+            {/* Copilot tour button */}
+            <TourButton
+              storageKey="hasSeenHomeTour"
+              userId={auth.currentUser?.uid ?? ""}
+              needsRefCheck={false}
+            />
+            {/* Section to scroll the projects list with the scroll animation */}
+            {projects.length > 0 ? (
+              <Animated.FlatList
+                style={{
+                  flex: 1,
+                  marginHorizontal: "3%",
+                  marginBottom: "20%",
+                  height: "50%",
+                  borderRadius: 12,
+                  borderWidth: 0.5,
+                }}
+                contentContainerStyle={{
+                  width: "100%",
+                  alignItems: "center",
+                }}
+                scrollEnabled={true}
+                data={projects}
+                keyExtractor={(item) => item.id}
+                onScroll={Animated.event(
+                  [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                  { useNativeDriver: true }
+                )}
+                scrollEventThrottle={16}
+                renderItem={renderItem}
+              />
+            ) : (
+              <View
                 style={{
                   width: "100%",
-                  borderColor: "aqua",
-                  borderWidth: 1.5,
-                  borderRadius: 12,
-                  paddingLeft: 15,
-                  paddingRight: 40,
-                  paddingBottom: 5,
-                  fontSize: 22,
-                  height: 50,
-                  color: "white",
-                  fontWeight: "bold",
-                  backgroundColor: "#191919",
+                  height: "80%",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "transparent",
                 }}
-                placeholder={`Add new Project${dots}`}
-                placeholderTextColor="grey"
-                editable={true}
-                onChangeText={setNewProjectName}
-                maxLength={48}
-                value={newProjectName}
-              />
-
-              {/* Copilot tour for the HomeScreen step 1 */}
-              <CopilotStep
-                text="Enter the name of your project here."
-                order={1}
-                name="Add Name"
               >
-                {/* CopilotView settled over the Text Input */}
-                <CopilotView
+                <Text
                   style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: "transparent",
-                    pointerEvents: "none",
-                  }}
-                />
-              </CopilotStep>
-            </View>
-
-            {/* Copilot tour for the HomeScreen step 2 */}
-            <CopilotStep text="Add the project." order={2} name="Add Project">
-              {/* + Button to add a new project */}
-              <WalkthroughTouchableOpacity onPress={handleAddProject}>
-                <LinearGradient
-                  colors={["#00FFFF", "#FFFFFF"]}
-                  style={{
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: 25,
-                    height: 50,
-                    width: 50,
+                    textAlign: "center",
+                    color: "white",
+                    fontSize: 18,
+                    fontFamily: "MPLUSLatin_ExtraLight",
                   }}
                 >
-                  <View
+                  You haven't any projects yet.
+                </Text>
+              </View>
+            )}
+            {/* Project input */}
+
+            <View
+              style={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                width: "100%",
+                height: 80,
+                backgroundColor: "transparent",
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 20,
+              }}
+            >
+              {/* CopilotStep wrapped around the TextInput */}
+              <View
+                style={{
+                  position: "relative",
+                  width: screenWidth * 0.9,
+                  maxWidth: 320,
+                }}
+              >
+                <TextInput
+                  style={{
+                    width: "100%",
+                    borderColor: "aqua",
+                    borderWidth: 1.5,
+                    borderRadius: 12,
+                    paddingLeft: 15,
+                    paddingRight: 40,
+                    paddingBottom: 5,
+                    fontSize: 22,
+                    height: 50,
+                    color: "white",
+                    fontWeight: "bold",
+                    backgroundColor: "#191919",
+                  }}
+                  placeholder={`Add new Project${dots}`}
+                  placeholderTextColor="grey"
+                  editable={true}
+                  onChangeText={setNewProjectName}
+                  maxLength={48}
+                  value={newProjectName}
+                />
+
+                {/* Copilot tour for the HomeScreen step 1 */}
+                <CopilotStep
+                  text="Enter the name of your project here."
+                  order={1}
+                  name="Add Name"
+                >
+                  {/* CopilotView settled over the Text Input */}
+                  <CopilotView
                     style={{
-                      width: 50,
-                      height: 50,
-                      borderRadius: 25,
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
                       backgroundColor: "transparent",
-                      borderWidth: 3,
-                      borderColor: "white",
-                      justifyContent: "center",
+                      pointerEvents: "none",
+                    }}
+                  />
+                </CopilotStep>
+              </View>
+
+              {/* Copilot tour for the HomeScreen step 2 */}
+              <CopilotStep text="Add the project." order={2} name="Add Project">
+                {/* + Button to add a new project */}
+                <WalkthroughTouchableOpacity onPress={handleAddProject}>
+                  <LinearGradient
+                    colors={["#00FFFF", "#FFFFFF"]}
+                    style={{
                       alignItems: "center",
+                      justifyContent: "center",
+                      borderRadius: 25,
+                      height: 50,
+                      width: 50,
                     }}
                   >
-                    <Text
+                    <View
                       style={{
-                        fontSize: 60,
-                        fontWeight: "bold",
-                        lineHeight: 57,
-                        color: "grey",
+                        width: 50,
+                        height: 50,
+                        borderRadius: 25,
+                        backgroundColor: "transparent",
+                        borderWidth: 3,
+                        borderColor: "white",
+                        justifyContent: "center",
+                        alignItems: "center",
                       }}
                     >
-                      +
-                    </Text>
-                  </View>
-                </LinearGradient>
-              </WalkthroughTouchableOpacity>
-            </CopilotStep>
-          </View>
-          {/* Note Modal */}
-          <Modal
-            isVisible={noteModalVisible}
-            backdropColor="black"
-            onBackdropPress={closeNoteModal}
-            swipeDirection={["up", "down"]}
-            onSwipeComplete={closeNoteModal}
-            style={{ justifyContent: "center", alignItems: "center" }}
-          >
-            <NoteModal
-              projectId={selectedProjectId}
-              onClose={() => {
-                setNoteModalVisible(false);
-              }}
-            />
-          </Modal>
-        </>
-      )}
-    </View>
+                      <Text
+                        style={{
+                          fontSize: 60,
+                          fontWeight: "bold",
+                          lineHeight: 57,
+                          color: "grey",
+                        }}
+                      >
+                        +
+                      </Text>
+                    </View>
+                  </LinearGradient>
+                </WalkthroughTouchableOpacity>
+              </CopilotStep>
+            </View>
+            {/* Note Modal */}
+            <Modal
+              isVisible={noteModalVisible}
+              backdropColor="black"
+              onBackdropPress={closeNoteModal}
+              swipeDirection={["up", "down"]}
+              onSwipeComplete={closeNoteModal}
+              style={{ justifyContent: "center", alignItems: "center" }}
+            >
+              <NoteModal
+                projectId={selectedProjectId}
+                onClose={() => {
+                  setNoteModalVisible(false);
+                }}
+              />
+            </Modal>
+          </>
+        )}
+      </View>
+    </DismissKeyboard>
   );
 };
 
