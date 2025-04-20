@@ -40,6 +40,7 @@ import { FIREBASE_APP, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import AppLogo from "../components/AppLogo";
 import AnimatedText from "../components/AnimatedText";
 import LostPasswordModal from "../components/LostPasswordModal";
+import DismissKeyboard from "../components/DismissKeyboard";
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -177,10 +178,7 @@ const LoginScreen: React.FC = () => {
 
   return (
     <AlertNotificationRoot>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
-      >
+      <DismissKeyboard containerStyle={{ justifyContent: "center" }}>
         <View style={{ flex: 1 }}>
           {/* Background image */}
           <ImageBackground
@@ -400,7 +398,7 @@ const LoginScreen: React.FC = () => {
             />
           </ImageBackground>
         </View>
-      </KeyboardAvoidingView>
+      </DismissKeyboard>
     </AlertNotificationRoot>
   );
 };
