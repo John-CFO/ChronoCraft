@@ -446,7 +446,7 @@ const HomeScreen: React.FC = () => {
   }, []);
 
   return (
-    <DismissKeyboard containerStyle={{ justifyContent: "center" }}>
+    <DismissKeyboard>
       <View style={{ flex: 1, width: "100%", backgroundColor: "black" }}>
         {/* RoutingLoader section */}
         {isLoading ? (
