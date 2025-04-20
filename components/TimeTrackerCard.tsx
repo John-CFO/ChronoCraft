@@ -48,7 +48,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   const route = useRoute<TimeTrackerRouteProp>();
   const { projectId } = route.params;
   // modified walkthroughable for copilot tour
-  const CopilotTouchableView = walkthroughable(View);
+  const CopilotWalkthroughView = walkthroughable(View);
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
@@ -303,7 +303,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
         text="The Time Tracker Card lets you track your working time on this project and shows the session state."
       >
         {/* Time Tracker Card */}
-        <CopilotTouchableView
+        <CopilotWalkthroughView
           style={{
             height: 600,
             marginBottom: 20,
@@ -490,7 +490,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
                 : "N/A"}
             </Text>
           </View>
-        </CopilotTouchableView>
+        </CopilotWalkthroughView>
       </CopilotStep>
     </View>
   );
