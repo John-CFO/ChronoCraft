@@ -5,7 +5,7 @@ import { View, Text, SafeAreaView, ScrollView } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import { getAuth, Auth } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { CopilotProvider } from "react-native-copilot";
+import { CopilotProvider, useCopilot } from "react-native-copilot";
 
 import { FIREBASE_APP } from "../firebaseConfig";
 import WorkHoursState from "../components/WorkHoursState";
@@ -14,8 +14,7 @@ import WorkTimeTracker from "../components/WorkTimeTracker";
 import WorkHoursChart from "../components/WorkHoursChart";
 import ErrorBoundary from "../components/ErrorBoundary";
 import TourButton from "../components/TourButton";
-import { customSvgMaskPath } from "../components/CustomSVGMaskPath";
-
+import CustomTooltip from "../components/CustomToolTip";
 /////////////////////////////////////////////////////////////////////////////////////
 
 type WorkHoursScreenRouteProps = {
@@ -60,14 +59,18 @@ const WorkHoursScreen: React.FC<WorkHoursScreenRouteProps> = () => {
       overlay="svg"
       verticalOffset={40}
       // custom maskpath for the WorkHoursChart
-      svgMaskPath={customSvgMaskPath}
       backdropColor="rgba(5, 5, 5, 0.59)"
       arrowColor="#ffffff"
+      labels={{
+        previous: "Previous",
+        next: "Next",
+        skip: "Skip",
+        finish: "Finish",
+      }}
       tooltipStyle={{
         backgroundColor: "#ffffff",
-        padding: 10,
         borderRadius: 8,
-        marginTop: -10,
+        padding: 0,
       }}
     >
       <ScrollView
