@@ -28,6 +28,7 @@ import {
   FIREBASE_AUTH,
   FIREBASE_APP,
 } from "../firebaseConfig";
+import DismissKeyboard from "../components/DismissKeyboard";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -154,246 +155,247 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   };
 
   return (
-    <View>
-      {/* modal settings */}
-
-      <View
-        style={{
-          width: screenWidth * 0.9, // use 90% of the screen width
-          maxWidth: 600,
-          height: "auto",
-          backgroundColor: "black",
-          padding: 20,
-          borderRadius: 15,
-          borderWidth: 2,
-          borderColor: "lightgrey",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {/* header */}
-
+    <DismissKeyboard containerStyle={{ justifyContent: "center" }}>
+      <View>
+        {/* modal settings */}
         <View
           style={{
-            width: 330,
-            height: 80,
-            borderBottomColor: "lightgrey",
-            borderBottomWidth: 0.5,
-            backgroundColor: "transparent",
-            justifyContent: "flex-end",
+            width: screenWidth * 0.9, // use 90% of the screen width
+            maxWidth: 600,
+            height: "auto",
+            backgroundColor: "black",
+            padding: 20,
+            borderRadius: 15,
+            borderWidth: 2,
+            borderColor: "lightgrey",
             alignItems: "center",
-          }}
-        >
-          <Text
-            style={{
-              color: "white",
-              fontSize: 32,
-              fontFamily: "MPLUSLatin_Bold",
-              marginBottom: 11,
-            }}
-          >
-            Profile Settings
-          </Text>
-        </View>
-
-        <View
-          style={{
-            width: 330,
-            height: 280,
-            backgroundColor: "transparent",
             justifyContent: "center",
-            alignItems: "center",
           }}
         >
-          {/* user profile image upload */}
+          {/* header */}
 
-          <ImageBackground>
-            <TouchableOpacity onPress={pickImage}>
-              <View
-                style={{
-                  zIndex: 5,
-                  position: "absolute",
-                  left: 80,
-                  bottom: 80,
-                  width: 42,
-                  height: 82,
-                  backgroundColor: "transparent",
-                  justifyContent: "center",
-                }}
-              >
-                <Text
-                  style={{
-                    textAlign: "center",
-                    fontSize: 62,
-                    fontWeight: "bold",
-                    color: "grey",
-                  }}
-                >
-                  +
-                </Text>
-              </View>
-              <Image
-                source={
-                  imageUri
-                    ? { uri: imageUri }
-                    : require("../assets/profile_avatar.png")
-                }
-                style={{
-                  height: 135,
-                  width: 130,
-                  borderRadius: 65,
-                  marginTop: 5,
-                  borderWidth: 2,
-                  borderColor: "aqua",
-                }}
-              />
-            </TouchableOpacity>
-          </ImageBackground>
-        </View>
-
-        {/* change user name */}
-        <View
-          style={{ width: 330, height: 300, backgroundColor: "transparent" }}
-        >
           <View
             style={{
-              flexDirection: "row",
-              borderTopWidth: 0.5,
-              borderTopColor: "lightgrey",
               width: 330,
               height: 80,
-              padding: 5,
-              justifyContent: "center",
-              alignItems: "center",
+              borderBottomColor: "lightgrey",
+              borderBottomWidth: 0.5,
               backgroundColor: "transparent",
-            }}
-          >
-            <TextInput
-              placeholder="Name"
-              placeholderTextColor="grey"
-              value={newName}
-              onChangeText={setNewName}
-              style={{
-                width: 280,
-                borderColor: "aqua",
-                borderWidth: 1.5,
-                borderRadius: 12,
-                paddingLeft: 15,
-                paddingRight: 40,
-                paddingBottom: 5,
-                fontSize: 22,
-                height: 50,
-                color: "white",
-                backgroundColor: "#191919",
-              }}
-            />
-          </View>
-          <View
-            style={{
-              flexDirection: "row",
-              width: 330,
-              height: 50,
-              padding: 5,
-              justifyContent: "center",
-              alignItems: "center",
-              backgroundColor: "transparent",
-            }}
-          >
-            {/* change user personal-ID */}
-
-            <TextInput
-              placeholder="Personal-ID"
-              placeholderTextColor="grey"
-              value={newPersonalID}
-              onChangeText={setNewPersonalID}
-              keyboardType="numeric"
-              style={{
-                width: 280,
-                borderColor: "aqua",
-                borderWidth: 1.5,
-                borderRadius: 12,
-                paddingLeft: 15,
-                paddingRight: 40,
-                paddingBottom: 5,
-                fontSize: 22,
-                height: 50,
-                color: "white",
-                backgroundColor: "#191919",
-              }}
-            />
-          </View>
-          <View
-            style={{
-              marginTop: 15,
-              width: 330,
-              height: 100,
-              borderTopWidth: 0.5,
-              borderTopColor: "lightgrey",
-              backgroundColor: "transparent",
-              justifyContent: "center",
+              justifyContent: "flex-end",
               alignItems: "center",
             }}
           >
-            {/* update button */}
-            <TouchableOpacity
-              onPress={handleSave}
-              style={{
-                marginTop: 30,
-                width: 280,
-                borderRadius: 12,
-                overflow: "hidden",
-                borderWidth: 3,
-                borderColor: "white",
-                marginBottom: 20,
-              }}
-            >
-              <LinearGradient
-                colors={["#00FFFF", "#FFFFFF"]}
-                style={{
-                  alignItems: "center",
-                  justifyContent: "center",
-                  height: 45,
-                  width: 280,
-                }}
-              >
-                <Text
-                  style={{
-                    color: "grey",
-                    fontSize: 22,
-                    fontFamily: "MPLUSLatin_Bold",
-                    marginBottom: 11,
-                    marginRight: 9,
-                  }}
-                >
-                  Update
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-          <View
-            style={{
-              height: 45,
-              width: 330,
-
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            {/* navigation tip */}
             <Text
               style={{
-                marginTop: 20,
-                fontSize: 18,
-                color: "lightgrey",
-                fontFamily: "MPLUSLatin_ExtraLight",
+                color: "white",
+                fontSize: 32,
+                fontFamily: "MPLUSLatin_Bold",
+                marginBottom: 11,
               }}
             >
-              swipe up or down to close
+              Profile Settings
             </Text>
+          </View>
+
+          <View
+            style={{
+              width: 330,
+              height: 280,
+              backgroundColor: "transparent",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            {/* user profile image upload */}
+
+            <ImageBackground>
+              <TouchableOpacity onPress={pickImage}>
+                <View
+                  style={{
+                    zIndex: 5,
+                    position: "absolute",
+                    left: 80,
+                    bottom: 80,
+                    width: 42,
+                    height: 82,
+                    backgroundColor: "transparent",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      textAlign: "center",
+                      fontSize: 62,
+                      fontWeight: "bold",
+                      color: "grey",
+                    }}
+                  >
+                    +
+                  </Text>
+                </View>
+                <Image
+                  source={
+                    imageUri
+                      ? { uri: imageUri }
+                      : require("../assets/profile_avatar.png")
+                  }
+                  style={{
+                    height: 135,
+                    width: 130,
+                    borderRadius: 65,
+                    marginTop: 5,
+                    borderWidth: 2,
+                    borderColor: "aqua",
+                  }}
+                />
+              </TouchableOpacity>
+            </ImageBackground>
+          </View>
+
+          {/* change user name */}
+          <View
+            style={{ width: 330, height: 300, backgroundColor: "transparent" }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                borderTopWidth: 0.5,
+                borderTopColor: "lightgrey",
+                width: 330,
+                height: 80,
+                padding: 5,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "transparent",
+              }}
+            >
+              <TextInput
+                placeholder="Name"
+                placeholderTextColor="grey"
+                value={newName}
+                onChangeText={setNewName}
+                style={{
+                  width: 280,
+                  borderColor: "aqua",
+                  borderWidth: 1.5,
+                  borderRadius: 12,
+                  paddingLeft: 15,
+                  paddingRight: 40,
+                  paddingBottom: 5,
+                  fontSize: 22,
+                  height: 50,
+                  color: "white",
+                  backgroundColor: "#191919",
+                }}
+              />
+            </View>
+            <View
+              style={{
+                flexDirection: "row",
+                width: 330,
+                height: 50,
+                padding: 5,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "transparent",
+              }}
+            >
+              {/* change user personal-ID */}
+
+              <TextInput
+                placeholder="Personal-ID"
+                placeholderTextColor="grey"
+                value={newPersonalID}
+                onChangeText={setNewPersonalID}
+                keyboardType="numeric"
+                style={{
+                  width: 280,
+                  borderColor: "aqua",
+                  borderWidth: 1.5,
+                  borderRadius: 12,
+                  paddingLeft: 15,
+                  paddingRight: 40,
+                  paddingBottom: 5,
+                  fontSize: 22,
+                  height: 50,
+                  color: "white",
+                  backgroundColor: "#191919",
+                }}
+              />
+            </View>
+            <View
+              style={{
+                marginTop: 15,
+                width: 330,
+                height: 100,
+                borderTopWidth: 0.5,
+                borderTopColor: "lightgrey",
+                backgroundColor: "transparent",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              {/* update button */}
+              <TouchableOpacity
+                onPress={handleSave}
+                style={{
+                  marginTop: 30,
+                  width: 280,
+                  borderRadius: 12,
+                  overflow: "hidden",
+                  borderWidth: 3,
+                  borderColor: "white",
+                  marginBottom: 20,
+                }}
+              >
+                <LinearGradient
+                  colors={["#00FFFF", "#FFFFFF"]}
+                  style={{
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: 45,
+                    width: 280,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "grey",
+                      fontSize: 22,
+                      fontFamily: "MPLUSLatin_Bold",
+                      marginBottom: 11,
+                      marginRight: 9,
+                    }}
+                  >
+                    Update
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+            <View
+              style={{
+                height: 45,
+                width: 330,
+
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              {/* navigation tip */}
+              <Text
+                style={{
+                  marginTop: 20,
+                  fontSize: 18,
+                  color: "lightgrey",
+                  fontFamily: "MPLUSLatin_ExtraLight",
+                }}
+              >
+                swipe up or down to close
+              </Text>
+            </View>
           </View>
         </View>
       </View>
-    </View>
+    </DismissKeyboard>
   );
 };
 
