@@ -272,7 +272,7 @@ const WorkHoursChart = () => {
   const dynamicMaxValue = getDynamicMaxValue();
 
   // modified walkthroughable for copilot tour
-  const CopilotTouchableView = walkthroughable(View);
+  const CopilotWalkthroughView = walkthroughable(View);
 
   return (
     <>
@@ -282,7 +282,7 @@ const WorkHoursChart = () => {
         order={3}
         text="This card shows the workhours and you overhours for the selected period. You can push on a bar to see the tracked details."
       >
-        <CopilotTouchableView>
+        <CopilotWalkthroughView>
           {/* TouchableWithoutFeedback to close the tooltip */}
           <TouchableWithoutFeedback onPress={() => setTooltipData(null)}>
             <View
@@ -290,7 +290,6 @@ const WorkHoursChart = () => {
                 setCardWidth(event.nativeEvent.layout.width)
               }
               style={{
-                marginTop: 50,
                 width: screenWidth * 0.9, // dynamic 90% of the screen width
                 maxWidth: 600,
                 height: 480,
@@ -439,7 +438,7 @@ const WorkHoursChart = () => {
               )}
             </View>
           </TouchableWithoutFeedback>
-        </CopilotTouchableView>
+        </CopilotWalkthroughView>
       </CopilotStep>
     </>
   );

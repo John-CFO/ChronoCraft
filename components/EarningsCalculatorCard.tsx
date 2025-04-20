@@ -48,7 +48,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
   const route = useRoute<EarningsCalculatorRouteProp>();
   const navigation = useNavigation();
   // modified walkthroughable for copilot tour
-  const CopilotTouchableView = walkthroughable(View);
+  const CopilotWalkthroughView = walkthroughable(View);
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
@@ -241,7 +241,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
         text="In this card you can set the hourly rate and the earnings will be calculated based on the time tracked by the Time Tracker Card."
       >
         {/* Earnings Calculator Card */}
-        <CopilotTouchableView
+        <CopilotWalkthroughView
           style={{
             height: 420,
             marginBottom: 20,
@@ -396,7 +396,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
               </Text>
             </View>
           </View>
-        </CopilotTouchableView>
+        </CopilotWalkthroughView>
       </CopilotStep>
     </View>
   );
