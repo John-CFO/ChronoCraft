@@ -1,11 +1,15 @@
 /////////////////////////////////Workhours Screen////////////////////////////////////
 
+// This file shows the workhours screen with the workhours input card, the workhours chart card and the workhours tracker card
+
+/////////////////////////////////////////////////////////////////////////////////////
+
 import React, { useEffect, useState, useRef } from "react";
 import { View, Text, SafeAreaView, ScrollView } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import { getAuth, Auth } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { CopilotProvider, useCopilot } from "react-native-copilot";
+import { CopilotProvider } from "react-native-copilot";
 
 import { FIREBASE_APP } from "../firebaseConfig";
 import WorkHoursState from "../components/WorkHoursState";
@@ -13,8 +17,8 @@ import WorkHoursInput from "../components/WorkHoursInput";
 import WorkTimeTracker from "../components/WorkTimeTracker";
 import WorkHoursChart from "../components/WorkHoursChart";
 import ErrorBoundary from "../components/ErrorBoundary";
-import TourButton from "../components/TourButton";
-import CustomTooltip from "../components/CustomToolTip";
+import TourButton from "../components/services/copilotTour/TourButton";
+
 /////////////////////////////////////////////////////////////////////////////////////
 
 type WorkHoursScreenRouteProps = {
@@ -28,7 +32,7 @@ type WorkHoursScreenRouteProps = {
 //////////////////////////////////////////////////////////////////////////////////////
 
 const WorkHoursScreen: React.FC<WorkHoursScreenRouteProps> = () => {
-  //  initialize WorkHoursState
+  // initialize WorkHoursState
   const {} = WorkHoursState();
 
   // initialize Firebase Auth
@@ -58,7 +62,6 @@ const WorkHoursScreen: React.FC<WorkHoursScreenRouteProps> = () => {
     <CopilotProvider
       overlay="svg"
       verticalOffset={40}
-      // custom maskpath for the WorkHoursChart
       backdropColor="rgba(5, 5, 5, 0.59)"
       arrowColor="#ffffff"
       labels={{

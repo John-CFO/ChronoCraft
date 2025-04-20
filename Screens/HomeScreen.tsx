@@ -48,7 +48,7 @@ import {
 import { useStore } from "../components/TimeTrackingState";
 import NoteModal from "../components/NoteModal";
 import RoutingLoader from "../components/RoutingLoader";
-import TourButton from "../components/TourButton";
+import TourButton from "../components/services/copilotTour/TourButton";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -22,7 +22,7 @@ import { useStore } from "../components/TimeTrackingState";
 import { EarningsCalculatorCardProp } from "../components/EarningsCalculatorCard";
 import RoutingLoader from "../components/RoutingLoader";
 import ErrorBoundary from "../components/ErrorBoundary";
-import TourButton from "../components/TourButton";
+import TourButton from "../components/services/copilotTour/TourButton";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
