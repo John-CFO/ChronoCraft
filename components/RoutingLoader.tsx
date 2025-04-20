@@ -14,6 +14,7 @@ import Animated, {
   withRepeat,
   withTiming,
   interpolate,
+  withSequence,
 } from "react-native-reanimated";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -32,9 +33,14 @@ const JumpingDot = ({
 
   // hook to start the animation
   useEffect(() => {
-    progress.value = withDelay(
-      delay,
-      withRepeat(withTiming(1, { duration: 500 }), -1, true) // repeat forever
+    progress.value = withRepeat(
+      withSequence(
+        // 1) in every iteration, delay for `delay` ms
+        withDelay(delay, withTiming(1, { duration: 500 })),
+        // 2) back to 0 (here withTiming for smooth transition)
+        withTiming(0, { duration: 500 })
+      ),
+      -1
     );
   }, [delay, progress]);
 

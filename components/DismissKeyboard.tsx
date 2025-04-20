@@ -6,11 +6,9 @@
 
 import {
   Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
+  View,
   TouchableWithoutFeedback,
-  ViewStyle,
+  StyleSheet,
 } from "react-native";
 import React, { ReactNode } from "react";
 
@@ -18,36 +16,23 @@ import React, { ReactNode } from "react";
 
 type Props = {
   children: ReactNode;
-  containerStyle?: ViewStyle;
-  scroll?: boolean;
+  style?: any;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const DismissKeyboard = ({
-  children,
-  containerStyle,
-  scroll = true,
-}: Props) => {
-  // define the inner component
-  const Inner = scroll ? ScrollView : React.Fragment;
-
+const DismissKeyboard = ({ children, style }: Props) => {
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={{ flex: 1 }}
-    >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <Inner
-          {...(scroll
-            ? { contentContainerStyle: [{ flexGrow: 1 }, containerStyle] }
-            : {})}
-        >
-          {children}
-        </Inner>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View style={[styles.container, style]}>{children}</View>
+    </TouchableWithoutFeedback>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
 
 export default DismissKeyboard;
