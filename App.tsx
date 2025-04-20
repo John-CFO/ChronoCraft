@@ -4,6 +4,8 @@
 // It includes the whole app three(stack navigator, drawer navigator and app navigator)
 // Also it inclues the dropdown menu for the help button nad the global provider for the Copilot guided tour
 
+/////////////////////////////////////////////////////////////////////////////
+
 import { Text, TouchableOpacity, View, Alert } from "react-native";
 import React, { useEffect, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";

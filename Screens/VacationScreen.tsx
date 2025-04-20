@@ -18,7 +18,7 @@ import CustomCalendar from "../components/CustomCalendar";
 import VacationForm from "../components/VacationForm";
 import VacationList from "../components/VacationList";
 import { FIREBASE_APP } from "../firebaseConfig";
-import TourButton from "../components/TourButton";
+import TourButton from "../components/services/copilotTour/TourButton";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
