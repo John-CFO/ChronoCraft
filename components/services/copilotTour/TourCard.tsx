@@ -3,11 +3,21 @@
 // This comonent creates the copilot tour button and handles the tour status
 
 /////////////////////////////////////////////////////////////////////////////////////////
-import React, { useState, useEffect } from "react";
-import { TouchableOpacity, Text, View, ScrollView, Alert } from "react-native";
+
+import React, { useEffect } from "react";
+import {
+  TouchableOpacity,
+  Text,
+  View,
+  ScrollView,
+  Alert,
+  Dimensions,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCopilot } from "react-native-copilot";
 import { doc, updateDoc } from "firebase/firestore";
+import { LinearGradient } from "expo-linear-gradient";
+
 import { FIREBASE_FIRESTORE } from "../../../firebaseConfig";
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -20,6 +30,8 @@ interface TourButtonProps {
   scrollViewRef?: React.RefObject<ScrollView>;
   needsRefCheck?: boolean;
   scrollViewReady?: boolean;
+  showTourCard: boolean;
+  setShowTourCard: (visible: boolean) => void;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -31,11 +43,14 @@ const TourButton: React.FC<TourButtonProps> = ({
   scrollViewRef,
   needsRefCheck = false,
   scrollViewReady,
+  showTourCard,
+  setShowTourCard,
 }) => {
   // initialize start the tour with the useCopilot hook
   const { start } = useCopilot();
-  // state to show the tour button
-  const [showButton, setShowButton] = useState<boolean>(false);
+
+  // define the width of the screen
+  const screenWidth = Dimensions.get("window").width;
 
   // function to check if the ScrollView is ready
   const isScrollViewReady =
@@ -50,7 +65,7 @@ const TourButton: React.FC<TourButtonProps> = ({
         // check AsyncStorage if the user has already seen the tour
         const hasSeenTour = await AsyncStorage.getItem(storageKey);
         if (hasSeenTour !== "true") {
-          setShowButton(true);
+          setShowTourCard(true);
         }
       } catch (error) {
         console.log("Error checking tour status:", error);
@@ -100,7 +115,7 @@ const TourButton: React.FC<TourButtonProps> = ({
         // console.log("[Tour] start() call succeeded.");
       } catch (error) {
         console.error("[Tour] Error in start() call:", error);
-        throw error; // Fehler weiterwerfen, damit der äußere Catch-Block greift
+        throw error; // Rethrow the error
       }
       // console.log("[Tour] Tour started.");
       await AsyncStorage.setItem(storageKey, "true");
@@ -108,7 +123,7 @@ const TourButton: React.FC<TourButtonProps> = ({
 
       await updateFireStoreTourStatus(userId, true, storageKey);
       // console.log("[Tour] Firestore updated successfully.");
-      setShowButton(false);
+      setShowTourCard(false);
       // console.log("[Tour] Tour finished and button hidden.");
     } catch (error) {
       console.error("[Tour] Tour Start Error:", error);
@@ -137,53 +152,117 @@ const TourButton: React.FC<TourButtonProps> = ({
     try {
       await AsyncStorage.setItem(storageKey, "true");
       await updateFireStoreTourStatus(userId, true, storageKey);
-      setShowButton(false);
+      setShowTourCard(false);
       Alert.alert("Skipped tour", "You can start the tour later in the menu");
     } catch (error) {
       console.log("Error skipping tour:", error);
     }
   };
 
-  if (!showButton) return null;
-
   return (
-    <View
-      style={{
-        position: "absolute",
-        bottom: 30,
-        left: 0,
-        right: 0,
-        zIndex: 999,
-        elevation: 999, // shadow for Android
-        flexDirection: "row",
-        justifyContent: "space-around",
-        alignItems: "center",
-        backgroundColor: "transparent", // important for IOS
-      }}
-    >
-      <TouchableOpacity
-        onPress={handleStartTour}
-        style={{
-          backgroundColor: "#00FFFF",
-          paddingVertical: 10,
-          paddingHorizontal: 20,
-          borderRadius: 8,
-        }}
-      >
-        <Text style={{ fontSize: 16, color: "black" }}>Start Tour</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        onPress={handleSkipTour}
-        style={{
-          backgroundColor: "#AAAAAA",
-          paddingVertical: 10,
-          paddingHorizontal: 20,
-          borderRadius: 8,
-        }}
-      >
-        <Text style={{ fontSize: 16, color: "black" }}>Skip Tour</Text>
-      </TouchableOpacity>
-    </View>
+    <>
+      {showTourCard && (
+        <View
+          style={{
+            width: screenWidth * 0.9,
+            maxWidth: 600,
+            backgroundColor: "#191919",
+            padding: 20,
+            borderRadius: 15,
+            borderWidth: 2,
+            borderColor: "aqua",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 2,
+          }}
+        >
+          <Text
+            style={{
+              color: "white",
+              fontSize: 28,
+              fontFamily: "MPLUSLatin_Bold",
+              marginBottom: 20,
+              textAlign: "center",
+            }}
+          >
+            Start {"\n"} Introducing Tour
+          </Text>
+
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              width: 280,
+              gap: 15,
+            }}
+          >
+            {/* PLAY Button */}
+            <TouchableOpacity
+              onPress={handleStartTour}
+              style={{
+                borderRadius: 12,
+                overflow: "hidden",
+                borderWidth: 3,
+                borderColor: "white",
+                flex: 1,
+              }}
+            >
+              <LinearGradient
+                colors={["#00FFFF", "#FFFFFF"]}
+                style={{
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: 45,
+                  width: "100%",
+                }}
+              >
+                <Text
+                  style={{
+                    color: "grey",
+                    fontSize: 20,
+                    fontFamily: "MPLUSLatin_Bold",
+                  }}
+                >
+                  PLAY
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            {/* SKIP Button */}
+            <TouchableOpacity
+              onPress={handleSkipTour}
+              style={{
+                borderRadius: 12,
+                overflow: "hidden",
+                borderWidth: 3,
+                borderColor: "white",
+                flex: 1,
+              }}
+            >
+              <LinearGradient
+                colors={["#FFFFFF", "#AAAAAA"]}
+                style={{
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: 45,
+                  width: "100%",
+                }}
+              >
+                <Text
+                  style={{
+                    color: "black",
+                    fontSize: 20,
+                    fontFamily: "MPLUSLatin_Bold",
+                  }}
+                >
+                  SKIP
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+    </>
   );
 };
 

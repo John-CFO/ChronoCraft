@@ -13,12 +13,15 @@ import LottieView from "lottie-react-native";
 import { useIsFocused } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CopilotProvider } from "react-native-copilot";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import CustomCalendar from "../components/CustomCalendar";
 import VacationForm from "../components/VacationForm";
 import VacationList from "../components/VacationList";
 import { FIREBASE_APP } from "../firebaseConfig";
-import TourButton from "../components/services/copilotTour/TourButton";
+import TourCard from "../components/services/copilotTour/TourCard";
+import { useCopilotOffset } from "../components/services/copilotTour/CopilotOffset";
+import AnimatedText from "../components/AnimatedText";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -33,6 +36,9 @@ type VacationScreenRouteProps = {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const VacationScreen: React.FC<VacationScreenRouteProps> = () => {
+  // initialize the copilot offset
+  const offset = useCopilotOffset();
+
   // initialize Firebase Auth
   const auth: Auth = getAuth(FIREBASE_APP);
   // initialize routing
@@ -44,8 +50,11 @@ const VacationScreen: React.FC<VacationScreenRouteProps> = () => {
   const scrollViewRef = useRef<ScrollView>(null);
   const [scrollViewReady, setScrollViewReady] = useState(false);
 
-  // state to show the copilot tour
+  // state to manage the AsyncStorage copilot tour status
   const [showTour, setShowTour] = useState<boolean>(false);
+
+  // state to handle if the copilot card is visible
+  const [showTourCard, setShowTourCard] = useState(true);
 
   // hook to check AsyncStorage if the user has already seen the tour
   useEffect(() => {
@@ -71,113 +80,143 @@ const VacationScreen: React.FC<VacationScreenRouteProps> = () => {
   }, [isFocused]);
 
   return (
-    // local VacationScreen Provider (important if you need to adress a child component to the copilot tour)
-    <CopilotProvider
-      overlay="svg"
-      verticalOffset={40}
-      backdropColor="rgba(5, 5, 5, 0.59)"
-      arrowColor="#ffffff"
-      tooltipStyle={{
-        backgroundColor: "#ffffff",
-        padding: 10,
-        borderRadius: 8,
-        marginTop: -10,
-      }}
-    >
-      <ScrollView
-        // scrollview ref and onlayout to navigate to the copilot tour
-        ref={scrollViewRef}
-        onLayout={() => setScrollViewReady(true)}
-        contentContainerStyle={{ backgroundColor: "black" }}
+    <SafeAreaView style={{ flex: 1 }}>
+      {/* // local VacationScreen Provider (important if you need to adress a child
+      component to the copilot tour) */}
+      <CopilotProvider
+        overlay="svg"
+        verticalOffset={offset}
+        backdropColor="rgba(5, 5, 5, 0.59)"
+        arrowColor="#ffffff"
+        labels={{
+          previous: "Previous",
+          next: "Next",
+          skip: "Skip",
+          finish: "Finish",
+        }}
+        tooltipStyle={{
+          backgroundColor: "#ffffff",
+          padding: 10,
+          borderRadius: 8,
+          marginTop: -10,
+        }}
       >
-        {/* Header */}
-        <View
-          style={{
-            zIndex: 2,
-            paddingTop: 10,
-            alignItems: "center",
-            backgroundColor: "black",
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 25,
-              fontFamily: "MPLUSLatin_Bold",
-              color: "white",
-            }}
-          >
-            - Vacation Management -
-          </Text>
-          {/* Lottie animated picture */}
-          <View style={{ width: 420, height: 280, alignItems: "center" }}>
-            <LottieView
-              autoPlay
-              loop
-              style={{ height: 350, width: 350 }}
-              source={require("../assets/Lottie_files/beach-hero.json")}
-            />
-          </View>
-          <View
-            style={{
-              width: 420,
-              height: 40,
-              marginBottom: 15,
-              alignItems: "center",
-            }}
-          >
-            <Text
+        <View style={{ flex: 1, position: "relative", zIndex: 0 }}>
+          {/* Copilot Card with dark overlay */}
+          {showTourCard && (
+            <View
               style={{
-                zIndex: 2,
-                fontSize: 18,
-                fontFamily: "MPLUSLatin_ExtraLight",
-                color: "white",
+                position: "absolute",
+                width: "100%",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "rgba(0, 0, 0, 0.6)",
+                zIndex: 10,
               }}
             >
-              "Unplug from work, recharge your soul"
-            </Text>
-          </View>
+              <TourCard
+                storageKey={`hasSeenVacationTour`}
+                userId={auth.currentUser?.uid ?? ""}
+                scrollViewRef={scrollViewRef}
+                scrollViewReady={scrollViewReady}
+                needsRefCheck={true}
+                showTourCard={showTourCard}
+                setShowTourCard={setShowTourCard}
+              />
+            </View>
+          )}
+          <ScrollView
+            // scrollview ref and onlayout to navigate to the copilot tour
+            ref={scrollViewRef}
+            onLayout={() => setScrollViewReady(true)}
+            contentContainerStyle={{ backgroundColor: "black" }}
+          >
+            {/* Header */}
+            <View
+              style={{
+                zIndex: 2,
+                paddingTop: 10,
+                alignItems: "center",
+                backgroundColor: "black",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 25,
+                  fontFamily: "MPLUSLatin_Bold",
+                  color: "white",
+                }}
+              >
+                - Vacation Management -
+              </Text>
+              {/* Lottie animated picture */}
+              <View style={{ width: 420, height: 280, alignItems: "center" }}>
+                <LottieView
+                  autoPlay
+                  loop
+                  style={{ height: 350, width: 350 }}
+                  source={require("../assets/Lottie_files/beach-hero.json")}
+                />
+              </View>
+              <View
+                style={{
+                  width: 420,
+                  height: 40,
+                  marginBottom: 15,
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    zIndex: 2,
+                    fontSize: 18,
+                    fontFamily: "MPLUSLatin_ExtraLight",
+                    color: "white",
+                  }}
+                >
+                  "Unplug from work, recharge your soul"
+                </Text>
+              </View>
+            </View>
+            {/* Calender */}
+            <View
+              style={{
+                width: "100%",
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "black",
+              }}
+            >
+              <CustomCalendar
+                currentMonth={currentMonth}
+                markedDates={markedDates}
+              />
+            </View>
+            {/* VacationForm */}
+            <View style={{ alignItems: "center", backgroundColor: "black" }}>
+              <VacationForm />
+            </View>
+            {/* VacationList */}
+            <View
+              style={{
+                flex: 1,
+                height: "10%",
+                width: "100%",
+                backgroundColor: "black",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <VacationList />
+            </View>
+          </ScrollView>
         </View>
-        {/* Calender */}
-        <View
-          style={{
-            width: "100%",
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "black",
-          }}
-        >
-          <CustomCalendar
-            currentMonth={currentMonth}
-            markedDates={markedDates}
-          />
-        </View>
-        {/* VacationForm */}
-        <View style={{ alignItems: "center", backgroundColor: "black" }}>
-          <VacationForm />
-        </View>
-        {/* VacationList */}
-        <View
-          style={{
-            flex: 1,
-            height: "10%",
-            width: "100%",
-            backgroundColor: "black",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <VacationList />
-        </View>
-      </ScrollView>
-      {/* Tour button for the copilot tour */}
-      <TourButton
-        storageKey={`hasSeenVacationTour`}
-        userId={auth.currentUser?.uid ?? ""}
-        scrollViewRef={scrollViewRef}
-        scrollViewReady={scrollViewReady}
-        needsRefCheck={true}
-      />
-    </CopilotProvider>
+      </CopilotProvider>
+    </SafeAreaView>
   );
 };
 

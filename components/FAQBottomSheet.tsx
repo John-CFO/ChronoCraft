@@ -379,10 +379,10 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                 To delete your account, you must confirm your password. All data
                 will be permanently removed from our servers.
               </Text>
-              <View style={{ alignItems: "center" }}>
+              <View style={{ alignItems: "center", justifyContent: "center" }}>
                 <View
                   style={{
-                    position: "relative",
+                    // position: "relative",
                     width: screenWidth * 0.7, // use 70% of the screen width
                     maxWidth: 400,
                   }}
@@ -395,7 +395,7 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                     onChangeText={setPassword}
                     style={{
                       width: screenWidth * 0.7, // use 70% of the screen width
-                      maxWidth: 600,
+                      maxWidth: 400,
                       marginVertical: 10,
                       borderColor: "aqua",
                       borderWidth: 1.5,
@@ -434,7 +434,7 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                   }
                   style={{
                     width: screenWidth * 0.7, // use 70% of the screen width
-                    maxWidth: 600,
+                    maxWidth: 400,
                     borderRadius: 12,
                     overflow: "hidden",
                     borderWidth: 3,
@@ -448,7 +448,7 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                       alignItems: "center",
                       justifyContent: "center",
                       height: 45,
-                      width: screenWidth * 0.7, // use 70% of the screen width
+                      // width: screenWidth * 0.7, // use 70% of the screen width
                       maxWidth: 600,
                     }}
                   >
