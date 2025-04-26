@@ -17,7 +17,8 @@ import WorkHoursInput from "../components/WorkHoursInput";
 import WorkTimeTracker from "../components/WorkTimeTracker";
 import WorkHoursChart from "../components/WorkHoursChart";
 import ErrorBoundary from "../components/ErrorBoundary";
-import TourButton from "../components/services/copilotTour/TourButton";
+import TourCard from "../components/services/copilotTour/TourCard";
+import { useCopilotOffset } from "../components/services/copilotTour/CopilotOffset";
 
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -32,6 +33,9 @@ type WorkHoursScreenRouteProps = {
 //////////////////////////////////////////////////////////////////////////////////////
 
 const WorkHoursScreen: React.FC<WorkHoursScreenRouteProps> = () => {
+  // initialize the copilot offset
+  const offset = useCopilotOffset();
+
   // initialize WorkHoursState
   const {} = WorkHoursState();
 
@@ -46,8 +50,11 @@ const WorkHoursScreen: React.FC<WorkHoursScreenRouteProps> = () => {
   const scrollViewRef = useRef<ScrollView>(null);
   const [scrollViewReady, setScrollViewReady] = useState(false);
 
-  // state to show the copilot tour
+  // state to manage the AsyncStorage copilot tour status
   const [showTour, setShowTour] = useState<boolean>(false);
+
+  // state to handle if the copilot card is visible
+  const [showTourCard, setShowTourCard] = useState(true);
 
   // hook to check AsyncStorage if the user has already seen the tour
   useEffect(() => {
@@ -59,86 +66,105 @@ const WorkHoursScreen: React.FC<WorkHoursScreenRouteProps> = () => {
   }, [projectId]);
 
   return (
-    <CopilotProvider
-      overlay="svg"
-      verticalOffset={40}
-      backdropColor="rgba(5, 5, 5, 0.59)"
-      arrowColor="#ffffff"
-      labels={{
-        previous: "Previous",
-        next: "Next",
-        skip: "Skip",
-        finish: "Finish",
-      }}
-      tooltipStyle={{
-        backgroundColor: "#ffffff",
-        borderRadius: 8,
-        padding: 0,
+    <SafeAreaView
+      style={{
+        flex: 1,
       }}
     >
-      <ScrollView
-        // scrollview ref and onlayout to navigate to the copilot tour
-        ref={scrollViewRef}
-        onLayout={() => setScrollViewReady(true)}
-        style={{
-          flex: 1,
-          height: "100%",
-          width: "100%",
+      <CopilotProvider
+        overlay="svg"
+        verticalOffset={offset}
+        backdropColor="rgba(5, 5, 5, 0.59)"
+        arrowColor="#ffffff"
+        labels={{
+          previous: "Previous",
+          next: "Next",
+          skip: "Skip",
+          finish: "Finish",
+        }}
+        tooltipStyle={{
+          backgroundColor: "#ffffff",
+          borderRadius: 8,
+          padding: 0,
         }}
       >
-        <SafeAreaView
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <View
-            style={{
-              flex: 1,
-              minHeight: "100%",
-              justifyContent: "center",
-              alignItems: "center",
-              backgroundColor: "black",
-              padding: 16,
-              width: "100%",
-              height: "100%",
-            }}
-          >
-            <Text
+        <View style={{ flex: 1, position: "relative", zIndex: 0 }}>
+          {/* Copilot Card with dark overlay */}
+          {showTourCard && (
+            <View
               style={{
-                fontSize: 25,
-                fontFamily: "MPLUSLatin_Bold",
-                color: "white",
-                marginBottom: 50,
+                position: "absolute",
+                width: "100%",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "rgba(0, 0, 0, 0.6)",
+                zIndex: 10,
               }}
             >
-              - Workhours Management -
-            </Text>
-            {/* WorkHours Input */}
-            <WorkHoursInput />
-            <View
-              style={{ marginTop: 50, width: "100%", alignItems: "center" }}
-            >
-              {/* Worktime Tracker */}
-              <ErrorBoundary>
-                <WorkTimeTracker />
-              </ErrorBoundary>
+              <TourCard
+                storageKey={`hasSeenWorkHoursTour`}
+                userId={auth.currentUser?.uid ?? ""}
+                scrollViewRef={scrollViewRef}
+                scrollViewReady={scrollViewReady}
+                needsRefCheck={true}
+                showTourCard={showTourCard}
+                setShowTourCard={setShowTourCard}
+              />
             </View>
-            {/* Workhours Chart */}
-            <WorkHoursChart />
-          </View>
-        </SafeAreaView>
-      </ScrollView>
-      {/* Tour button for the copilot tour */}
-      <TourButton
-        storageKey={`hasSeenWorkHoursTour`}
-        userId={auth.currentUser?.uid ?? ""}
-        scrollViewRef={scrollViewRef}
-        scrollViewReady={scrollViewReady}
-        needsRefCheck={true}
-      />
-    </CopilotProvider>
+          )}
+          <ScrollView
+            // scrollview ref and onlayout to navigate to the copilot tour
+            ref={scrollViewRef}
+            onLayout={() => setScrollViewReady(true)}
+            style={{
+              flex: 1,
+              height: "100%",
+              width: "100%",
+            }}
+          >
+            <View
+              style={{
+                flex: 1,
+                minHeight: "100%",
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "black",
+                padding: 16,
+                width: "100%",
+                height: "100%",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 25,
+                  fontFamily: "MPLUSLatin_Bold",
+                  color: "white",
+                  marginBottom: 50,
+                }}
+              >
+                - Workhours Management -
+              </Text>
+              {/* WorkHours Input */}
+              <WorkHoursInput />
+              <View
+                style={{ marginTop: 50, width: "100%", alignItems: "center" }}
+              >
+                {/* Worktime Tracker */}
+                <ErrorBoundary>
+                  <WorkTimeTracker />
+                </ErrorBoundary>
+              </View>
+              {/* Workhours Chart */}
+              <WorkHoursChart />
+            </View>
+          </ScrollView>
+        </View>
+      </CopilotProvider>
+    </SafeAreaView>
   );
 };
 

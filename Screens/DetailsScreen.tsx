@@ -12,6 +12,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CopilotProvider } from "react-native-copilot";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { FIREBASE_APP } from "../firebaseConfig";
 import DetailsProjectCard from "../components/DetailsProjectCard";
@@ -22,7 +23,8 @@ import { useStore } from "../components/TimeTrackingState";
 import { EarningsCalculatorCardProp } from "../components/EarningsCalculatorCard";
 import RoutingLoader from "../components/RoutingLoader";
 import ErrorBoundary from "../components/ErrorBoundary";
-import TourButton from "../components/services/copilotTour/TourButton";
+import TourCard from "../components/services/copilotTour/TourCard";
+import { useCopilotOffset } from "../components/services/copilotTour/CopilotOffset";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -47,6 +49,9 @@ type RootStackParamList = {
 
 const DetailsScreen: React.FC<DetailsScreenProps> = () => {
   const route = useRoute<DetailsScreenRouteProp>();
+
+  // initialize the copilot offset
+  const offset = useCopilotOffset();
 
   // initialize firebase auth
   const auth: Auth = getAuth(FIREBASE_APP);
@@ -75,8 +80,11 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
   const scrollViewRef = useRef<ScrollView>(null);
   const [scrollReady, setScrollReady] = useState(false);
 
-  // state to show the copilot tour
+  // state to manage the AsyncStorage copilot tour status
   const [showTour, setShowTour] = useState<boolean>(false);
+
+  // state to handle if the copilot card is visible
+  const [showTourCard, setShowTourCard] = useState(true);
 
   // hook to check AsyncStorage if the user has already seen the tour
   useEffect(() => {
@@ -102,57 +110,86 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
   }
 
   return (
-    // local DetailsScreen Provider (important if you need to adress a child component to the copilot tour)
-    <CopilotProvider
-      overlay="svg"
-      verticalOffset={40}
-      backdropColor="rgba(5, 5, 5, 0.59)"
-      arrowColor="#ffffff"
-      tooltipStyle={{
-        backgroundColor: "#ffffff",
-        padding: 10,
-        borderRadius: 8,
-        marginTop: -10,
-      }}
-    >
-      <View style={{ flex: 1 }}>
-        <ScrollView
-          // scrollview ref and onlayout to navigate to the copilot tour
-          ref={scrollViewRef}
-          onLayout={() => setScrollReady(true)}
-          style={{ backgroundColor: "black" }}
-        >
-          <View style={{ flex: 1, paddingHorizontal: 20, paddingBottom: 20 }}>
-            {/* Project-Card */}
-            <ErrorBoundary>
-              <DetailsProjectCard showTour={showTour} />
-            </ErrorBoundary>
-            {/* Time-Tracker */}
-            <ErrorBoundary>
-              <TimeTrackerCard projectId={projectId} />
-            </ErrorBoundary>
-            {/* Earnings Calculator Card */}
-            <ErrorBoundary>
-              <EarningsCalculatorCard
-                route={route as EarningsCalculatorCardProp}
-                projectId={projectId}
+    <SafeAreaView style={{ flex: 1 }}>
+      {/* // local DetailsScreen Provider (important if you need to adress a child
+      component to the copilot tour) */}
+      <CopilotProvider
+        overlay="svg"
+        verticalOffset={offset}
+        backdropColor="rgba(5, 5, 5, 0.59)"
+        arrowColor="#ffffff"
+        labels={{
+          previous: "Previous",
+          next: "Next",
+          skip: "Skip",
+          finish: "Finish",
+        }}
+        tooltipStyle={{
+          backgroundColor: "#ffffff",
+          padding: 10,
+          borderRadius: 8,
+          marginTop: -10,
+        }}
+      >
+        <View style={{ flex: 1, position: "relative", zIndex: 0 }}>
+          {/* Copilot Card with dark overlay */}
+          {showTourCard && (
+            <View
+              style={{
+                position: "absolute",
+                width: "100%",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "rgba(0, 0, 0, 0.6)",
+                zIndex: 10,
+              }}
+            >
+              <TourCard
+                storageKey={`hasSeenDetailsTour`}
+                userId={auth.currentUser?.uid ?? ""}
+                scrollViewRef={scrollViewRef}
+                scrollViewReady={scrollReady}
+                needsRefCheck={true}
+                showTourCard={showTourCard}
+                setShowTourCard={setShowTourCard}
               />
-            </ErrorBoundary>
-            {/* Notes Card */}
+            </View>
+          )}
 
-            <NoteList projectId={projectId} />
-          </View>
-        </ScrollView>
-        {/* Tour button for the copilot tour in the DetailsScreen */}
-        <TourButton
-          storageKey={`hasSeenDetailsTour`}
-          userId={auth.currentUser?.uid ?? ""}
-          scrollViewRef={scrollViewRef}
-          scrollViewReady={scrollReady}
-          needsRefCheck={true}
-        />
-      </View>
-    </CopilotProvider>
+          <ScrollView
+            // scrollview ref and onlayout to navigate to the copilot tour
+            ref={scrollViewRef}
+            onLayout={() => setScrollReady(true)}
+            style={{ backgroundColor: "black" }}
+          >
+            <View style={{ flex: 1, paddingHorizontal: 20, paddingBottom: 20 }}>
+              {/* Project-Card */}
+              <ErrorBoundary>
+                <DetailsProjectCard showTour={showTour} />
+              </ErrorBoundary>
+              {/* Time-Tracker */}
+              <ErrorBoundary>
+                <TimeTrackerCard projectId={projectId} />
+              </ErrorBoundary>
+              {/* Earnings Calculator Card */}
+              <ErrorBoundary>
+                <EarningsCalculatorCard
+                  route={route as EarningsCalculatorCardProp}
+                  projectId={projectId}
+                />
+              </ErrorBoundary>
+              {/* Notes Card */}
+
+              <NoteList projectId={projectId} />
+            </View>
+          </ScrollView>
+        </View>
+      </CopilotProvider>
+    </SafeAreaView>
   );
 };
 

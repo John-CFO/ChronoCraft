@@ -155,7 +155,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   };
 
   return (
-    <DismissKeyboard containerStyle={{ justifyContent: "center" }}>
+    <DismissKeyboard>
       <View>
         {/* modal settings */}
         <View
