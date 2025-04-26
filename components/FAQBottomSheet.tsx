@@ -163,7 +163,7 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
       // alert error to user
       Alert.alert(
         "Error",
-        "There was an issue deleting your account: " + error.message
+        "There was an issue deleting your account. Please try again."
       );
     } finally {
       setLoading(false);
