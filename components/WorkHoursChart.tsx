@@ -278,7 +278,7 @@ const WorkHoursChart = () => {
     <>
       {/* DetailsScreen copilot tour step 2 */}
       <CopilotStep
-        name="WorkHoursChart"
+        name="Work-Hours Chart"
         order={3}
         text="This card shows the workhours and you overhours for the selected period. You can push on a bar to see the tracked details."
       >
@@ -310,7 +310,7 @@ const WorkHoursChart = () => {
                   textAlign: "center",
                 }}
               >
-                Workhours Chart
+                Work-Hours Chart
               </Text>
               <ChartRadioButtons
                 chartType={chartType as "week" | "month" | "year"}
