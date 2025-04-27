@@ -137,7 +137,7 @@ const WorkHoursInput = () => {
     <>
       {/* DetailsScreen copilot tour step 2 */}
       <CopilotStep
-        name="WorkHoursCard"
+        name="Daily Work-Hours"
         order={1}
         text="In this card you have to set the expected work hours for today and save them."
       >
@@ -168,7 +168,7 @@ const WorkHoursInput = () => {
               textAlign: "center",
             }}
           >
-            Daily Workhours
+            Daily Work-Hours
           </Text>
 
           <Text
