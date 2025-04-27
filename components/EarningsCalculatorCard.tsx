@@ -236,9 +236,9 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
     <View>
       {/* DetailsScreen copilot tour step 3 */}
       <CopilotStep
-        name="EarningsCard"
+        name="Earnings-Calculator"
         order={3}
-        text="In this card you can set the hourly rate and the earnings will be calculated based on the time tracked by the Time Tracker Card."
+        text="In this card you can set the hourly rate and the earnings will be calculated based on the time tracked by the Time-Tracker Card."
       >
         {/* Earnings Calculator Card */}
         <CopilotWalkthroughView
@@ -263,7 +263,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
               textAlign: "center",
             }}
           >
-            Earnings Calculator
+            Earnings-Calculator
           </Text>
           {/* Total Earnings viewport */}
           <View
