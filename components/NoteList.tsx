@@ -96,7 +96,7 @@ const NoteList: React.FC<{ projectId: string }> = ({ projectId }) => {
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         {/* DetailsScreen copilot tour step 2 */}
         <CopilotStep
-          name="NodeCard"
+          name="Your Notes"
           order={2}
           text="This card shows your notes for this project, if you have added any in the Home-Sceen Project-Card. You can delete them here."
         >

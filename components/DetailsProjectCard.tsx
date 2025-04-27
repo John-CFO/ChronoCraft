@@ -57,7 +57,7 @@ const DetailsProjectCard: React.FC<DetailsProjectCardProps> = () => {
       </View>
       {/* DetailsScreen copilot tour step 1 */}
       <CopilotStep
-        name="InfoCard"
+        name="Title and Time"
         order={1}
         text="This Info Card shows the name of the project and your local time."
       >
