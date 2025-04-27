@@ -19,6 +19,7 @@ import WorkHoursChart from "../components/WorkHoursChart";
 import ErrorBoundary from "../components/ErrorBoundary";
 import TourCard from "../components/services/copilotTour/TourCard";
 import { useCopilotOffset } from "../components/services/copilotTour/CopilotOffset";
+import CustomTooltip from "../components/services/copilotTour/CustomToolTip";
 
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -65,6 +66,11 @@ const WorkHoursScreen: React.FC<WorkHoursScreenRouteProps> = () => {
     });
   }, [projectId]);
 
+  // function to disable the copilot order and step number
+  const EmptyStepNumber = () => {
+    return null;
+  };
+
   return (
     <SafeAreaView
       style={{
@@ -72,20 +78,18 @@ const WorkHoursScreen: React.FC<WorkHoursScreenRouteProps> = () => {
       }}
     >
       <CopilotProvider
-        overlay="svg"
         verticalOffset={offset}
-        backdropColor="rgba(5, 5, 5, 0.59)"
-        arrowColor="#ffffff"
-        labels={{
-          previous: "Previous",
-          next: "Next",
-          skip: "Skip",
-          finish: "Finish",
-        }}
+        tooltipComponent={CustomTooltip}
+        stepNumberComponent={EmptyStepNumber}
+        overlay="svg"
+        arrowColor="aqua"
+        backdropColor="rgba(0,0,0,0.6)"
         tooltipStyle={{
-          backgroundColor: "#ffffff",
-          borderRadius: 8,
-          padding: 0,
+          backgroundColor: "#191919",
+          borderRadius: 12,
+          padding: 16,
+          borderWidth: 2,
+          borderColor: "aqua",
         }}
       >
         <View style={{ flex: 1, position: "relative", zIndex: 0 }}>

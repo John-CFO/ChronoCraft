@@ -140,7 +140,7 @@ const WorkTimeTracker = () => {
 
   // hook to update elapsed time
   useEffect(() => {
-    let timer: number | null = null;
+    let timer: ReturnType<typeof setInterval> | null = null;
     if (isWorking && startWorkTime) {
       const updateElapsedTime = () => {
         const currentSession = calculateElapsedTime(startWorkTime);
@@ -420,7 +420,7 @@ const WorkTimeTracker = () => {
     <>
       {/* DetailsScreen copilot tour step 2 */}
       <CopilotStep
-        name="WorkHoursTracker"
+        name="Work-Time Tracker"
         order={2}
         text="In this area you can track your daily work hours."
       >
@@ -451,7 +451,7 @@ const WorkTimeTracker = () => {
               textAlign: "center",
             }}
           >
-            WorkTime Tracker
+            Work-Time Tracker
           </Text>
           {/* Start/Stop Button with  enable condition when user adds a expected hours */}
           {!isWorking ? (
