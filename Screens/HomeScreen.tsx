@@ -460,25 +460,27 @@ const HomeScreen: React.FC = () => {
     checkStorage();
   }, []);
 
+  // function to disable the copilot order and step number
+  const EmptyStepNumber = () => {
+    return null;
+  };
+
   return (
     <DismissKeyboard>
       <SafeAreaView style={{ flex: 1 }}>
         <CopilotProvider
           overlay="svg"
           verticalOffset={offset}
+          tooltipComponent={CustomTooltip}
+          stepNumberComponent={EmptyStepNumber}
           backdropColor="rgba(0,0,0,0.6)"
-          arrowColor="#fff"
-          labels={{
-            previous: "Previous",
-            next: "Next",
-            skip: "Skip",
-            finish: "Finish",
-          }}
+          arrowColor="aqua"
           tooltipStyle={{
-            backgroundColor: "#fff",
-            padding: 10,
-            borderRadius: 8,
-            marginTop: -10,
+            backgroundColor: "#191919",
+            borderRadius: 12,
+            padding: 16,
+            borderWidth: 2,
+            borderColor: "aqua",
           }}
         >
           <View
