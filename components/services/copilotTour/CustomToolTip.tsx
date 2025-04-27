@@ -73,12 +73,14 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
       </Text>
 
       {/* Buttons*/}
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
         {/* Skip-Button, if it is not the last step*/}
         {!isLastStep && (
           <TouchableOpacity
             onPress={handleStop}
             style={{
+              borderWidth: 2,
+              borderColor: "white",
               backgroundColor: "lightgray",
               paddingHorizontal: 12,
               paddingVertical: 8,
@@ -96,6 +98,8 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
           <TouchableOpacity
             onPress={handlePrev}
             style={{
+              borderWidth: 2,
+              borderColor: "white",
               backgroundColor: "aqua",
               paddingHorizontal: 12,
               paddingVertical: 8,
@@ -113,6 +117,8 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
           <TouchableOpacity
             onPress={handleNext}
             style={{
+              borderWidth: 2,
+              borderColor: "white",
               backgroundColor: "aqua",
               paddingHorizontal: 12,
               paddingVertical: 8,
@@ -127,6 +133,8 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
           <TouchableOpacity
             onPress={handleStop}
             style={{
+              borderWidth: 2,
+              borderColor: "white",
               backgroundColor: "aqua",
               paddingHorizontal: 12,
               paddingVertical: 8,

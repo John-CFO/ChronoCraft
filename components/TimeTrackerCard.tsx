@@ -230,7 +230,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
   // hook to calculate and update the timer
   useEffect(() => {
-    let interval: number;
+    let interval: ReturnType<typeof setInterval> | number;
     if (projectState.isTracking) {
       interval = setInterval(() => {
         setLocalTimer((prevTimer) => prevTimer + 1);
@@ -298,7 +298,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
     <View>
       {/* DetailsScreen copilot tour step 4 */}
       <CopilotStep
-        name="TrackingCard"
+        name="Time-Tracker"
         order={4}
         text="The Time Tracker Card lets you track your working time on this project and shows the session state."
       >
@@ -324,7 +324,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
               textAlign: "center",
             }}
           >
-            Time Tracker
+            Time-Tracker
           </Text>
 
           <View
