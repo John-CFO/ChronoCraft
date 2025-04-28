@@ -21,7 +21,7 @@ import VacationList from "../components/VacationList";
 import { FIREBASE_APP } from "../firebaseConfig";
 import TourCard from "../components/services/copilotTour/TourCard";
 import { useCopilotOffset } from "../components/services/copilotTour/CopilotOffset";
-import AnimatedText from "../components/AnimatedText";
+import CustomTooltip from "../components/services/copilotTour/CustomToolTip";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -65,6 +65,11 @@ const VacationScreen: React.FC<VacationScreenRouteProps> = () => {
     });
   }, [projectId]);
 
+  // function to disable the copilot order and step number
+  const EmptyStepNumber = () => {
+    return null;
+  };
+
   // states for the marked dates in the calendar
   const [markedDates, setMarkedDates] = useState<{ [key: string]: any }>({});
   const [currentMonth, setCurrentMonth] = useState(
@@ -86,19 +91,16 @@ const VacationScreen: React.FC<VacationScreenRouteProps> = () => {
       <CopilotProvider
         overlay="svg"
         verticalOffset={offset}
+        tooltipComponent={CustomTooltip}
+        stepNumberComponent={EmptyStepNumber}
         backdropColor="rgba(5, 5, 5, 0.59)"
-        arrowColor="#ffffff"
-        labels={{
-          previous: "Previous",
-          next: "Next",
-          skip: "Skip",
-          finish: "Finish",
-        }}
+        arrowColor="aqua"
         tooltipStyle={{
-          backgroundColor: "#ffffff",
-          padding: 10,
-          borderRadius: 8,
-          marginTop: -10,
+          backgroundColor: "#191919",
+          borderRadius: 12,
+          padding: 16,
+          borderWidth: 2,
+          borderColor: "aqua",
         }}
       >
         <View style={{ flex: 1, position: "relative", zIndex: 0 }}>

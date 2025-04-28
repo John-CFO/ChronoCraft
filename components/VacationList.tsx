@@ -172,7 +172,7 @@ const VacationList = () => {
     <>
       {/* VacationScreen copilot tour step 3*/}
       <CopilotStep
-        name="VacationCard"
+        name="Booked Vacations"
         order={3}
         text="This card shows your vacations. You can delete them here and you can also set a reminder date."
       >
