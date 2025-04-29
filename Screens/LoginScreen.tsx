@@ -10,11 +10,9 @@ import {
   View,
   TextInput,
   Text,
-  Platform,
   Dimensions,
   StatusBar,
   ImageBackground,
-  KeyboardAvoidingView,
   TouchableOpacity,
 } from "react-native";
 import React, { useState } from "react";
@@ -182,8 +180,8 @@ const LoginScreen: React.FC = () => {
         <View
           style={{
             flex: 1,
-            backgroundColor: "black",
             justifyContent: "center",
+            backgroundColor: "black",
           }}
         >
           {/* Background image */}
