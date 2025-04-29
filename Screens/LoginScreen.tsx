@@ -177,7 +177,13 @@ const LoginScreen: React.FC = () => {
   return (
     <AlertNotificationRoot>
       <DismissKeyboard>
-        <View style={{ flex: 1, justifyContent: "center" }}>
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            backgroundColor: "black",
+          }}
+        >
           {/* Background image */}
           <ImageBackground
             source={require("../assets/Holo_GIF.gif")}
