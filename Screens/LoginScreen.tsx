@@ -10,11 +10,9 @@ import {
   View,
   TextInput,
   Text,
-  Platform,
   Dimensions,
   StatusBar,
   ImageBackground,
-  KeyboardAvoidingView,
   TouchableOpacity,
 } from "react-native";
 import React, { useState } from "react";
