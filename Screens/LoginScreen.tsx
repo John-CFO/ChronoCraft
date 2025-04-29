@@ -10,11 +10,9 @@ import {
   View,
   TextInput,
   Text,
-  Platform,
   Dimensions,
   StatusBar,
   ImageBackground,
-  KeyboardAvoidingView,
   TouchableOpacity,
 } from "react-native";
 import React, { useState } from "react";
@@ -178,8 +176,8 @@ const LoginScreen: React.FC = () => {
 
   return (
     <AlertNotificationRoot>
-      <DismissKeyboard containerStyle={{ justifyContent: "center" }}>
-        <View style={{ flex: 1 }}>
+      <DismissKeyboard>
+        <View style={{ flex: 1, justifyContent: "center" }}>
           {/* Background image */}
           <ImageBackground
             source={require("../assets/Holo_GIF.gif")}

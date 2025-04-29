@@ -17,7 +17,7 @@ import {
 } from "react-native";
 import Collapsible from "react-native-collapsible";
 import { LinearGradient } from "expo-linear-gradient";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, deleteDoc } from "firebase/firestore";
 import { deleteObject, ref, getStorage } from "firebase/storage";
 import { EmailAuthProvider } from "firebase/auth";
 import { reauthenticateWithCredential } from "firebase/auth";
@@ -119,48 +119,49 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
     }
   };
 
-  // function to mark user data as inactive
-  const markUserDataAsInactive = async (userUid: string) => {
-    try {
-      const userRef = doc(FIREBASE_FIRESTORE, "Users", userUid);
-      await updateDoc(userRef, { isActive: false }); // marking the data as inactive
-      // console.log("User data marked as inactive");
-    } catch (error) {
-      console.error("Error marking user data as inactive:", error);
-      throw error;
-    }
-  };
-
   // function to handle account deletion
   const handleDeleteAccount = async () => {
-    // condition to check if no password is entered
     if (!password) {
       Alert.alert("Error", "Please enter your password.");
       return;
     }
-
     setLoading(true);
-    // try to delete the account
     try {
       if (!userUid) {
         throw new Error("No user is signed in.");
       }
-
+      // reauth the user before deletion
       await reauthenticateUser(password);
-      await deleteImageFromStorage(`profilePictures/${userUid}`);
-      await markUserDataAsInactive(userUid); // mark data as inactive before deletion
-      closeFAQSheet();
+      // get the user document from Firestore
+      const db = FIREBASE_FIRESTORE;
+      const userDocRef = doc(db, "Users", userUid);
+      const userDoc = await getDoc(userDocRef);
 
-      Alert.alert("Success", "Your account has been deleted.", [
-        {
-          text: "OK",
-        },
-      ]);
-      // delete account from Firebase after navigate to LoginScreen
+      if (userDoc.exists()) {
+        // delete the user's profile picture
+        await deleteImageFromStorage(`profilePictures/${userUid}`);
+        // console.log("Document successfully updated before deletion!");
+        // delete the user document
+        await deleteDoc(userDocRef);
+        // console.log("Document successfully deleted!");
+      } else {
+        console.log("User document not found.");
+      }
+      closeFAQSheet();
+      // condfirmation that the account has been deleted
+      Alert.alert(
+        "Success",
+        "Your account has been deleted. All your data has been removed.",
+        [
+          {
+            text: "OK",
+          },
+        ]
+      );
+      // delete the user from Firebase Auth
       await FIREBASE_AUTH.currentUser?.delete();
     } catch (error: any) {
       console.error("Error deleting account:", error);
-      // alert error to user
       Alert.alert(
         "Error",
         "There was an issue deleting your account. Please try again."
