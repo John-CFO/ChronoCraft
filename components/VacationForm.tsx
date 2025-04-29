@@ -113,7 +113,7 @@ const VacationForm = () => {
     <ScrollView>
       {/* VacationScreen copilot tour step 2 */}
       <CopilotStep
-        name="selectDate"
+        name="Select-Form"
         order={2}
         text="Select the start and end dates of your vacation. You can then save the date in the calendar or cancel it. Saving the date will add it to the Booked Vacation card."
       >

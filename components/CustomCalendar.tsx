@@ -72,7 +72,7 @@ const CustomCalendar = forwardRef<CustomCalendarRef, CustomCalendarProps>(
         <CopilotStep
           name="Calendar"
           order={1}
-          text="In this area you can view your calendar."
+          text="In this area you can view your vacation-calendar."
         >
           <CopilotTouchableView>
             {/* Calendar - style and handle options*/}
