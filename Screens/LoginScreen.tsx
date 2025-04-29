@@ -180,8 +180,8 @@ const LoginScreen: React.FC = () => {
         <View
           style={{
             flex: 1,
-            backgroundColor: "black",
             justifyContent: "center",
+            backgroundColor: "black",
           }}
         >
           {/* Background image */}
