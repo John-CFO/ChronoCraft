@@ -14,6 +14,7 @@ import {
   StatusBar,
   ImageBackground,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import React, { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
@@ -33,6 +34,7 @@ import {
 import { NotificationManager } from "../components/services/PushNotifications";
 import { LinearGradient } from "expo-linear-gradient";
 import { FontAwesome5 } from "@expo/vector-icons";
+import { validate } from "react-email-validator";
 
 import { FIREBASE_APP, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import AppLogo from "../components/AppLogo";
@@ -66,8 +68,34 @@ const LoginScreen: React.FC = () => {
   // declaire the firebase authentication
   const auth: Auth = getAuth(FIREBASE_APP);
 
+  // function to validate the inputs
+  const validateInputs = () => {
+    if (!validate(email)) {
+      Alert.alert("Unvalid E-Mail", "Plese enter a validate E-Mail.");
+      return false;
+    }
+    if (password.length < 8) {
+      Alert.alert(
+        "Weak Password",
+        "The password must be at least 8 characters long."
+      );
+      return false;
+    }
+
+    const specialChars = password.match(/[-_!@#$%^&*(),.?":{}|<>]/g);
+    if (!specialChars || specialChars.length < 2) {
+      Alert.alert(
+        "Special characters missing",
+        "The password must contain at least 2 special characters."
+      );
+      return false;
+    }
+    return true;
+  };
+
   // function to handle the login process
   const handleLogin = async () => {
+    if (!validateInputs()) return;
     setLoading(true);
     try {
       const response = await signInWithEmailAndPassword(auth, email, password);
@@ -104,6 +132,7 @@ const LoginScreen: React.FC = () => {
 
   // funcion to handle the registry process
   const handleRegister = async () => {
+    if (!validateInputs()) return;
     setLoading(true);
     try {
       const response = await createUserWithEmailAndPassword(
@@ -180,8 +209,8 @@ const LoginScreen: React.FC = () => {
         <View
           style={{
             flex: 1,
-            backgroundColor: "black",
             justifyContent: "center",
+            backgroundColor: "black",
           }}
         >
           {/* Background image */}
