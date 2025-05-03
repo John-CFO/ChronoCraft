@@ -43,12 +43,13 @@ interface EarningsCalculatorCardProps {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// modified walkthroughable for copilot tour
+const CopilotWalkthroughView = walkthroughable(View);
+
 const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
   // navigation
   const route = useRoute<EarningsCalculatorRouteProp>();
   const navigation = useNavigation();
-  // modified walkthroughable for copilot tour
-  const CopilotWalkthroughView = walkthroughable(View);
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;

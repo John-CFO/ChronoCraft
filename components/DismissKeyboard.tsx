@@ -6,7 +6,8 @@
 
 import {
   Keyboard,
-  View,
+  KeyboardAvoidingView,
+  Platform,
   TouchableWithoutFeedback,
   StyleSheet,
 } from "react-native";
@@ -24,7 +25,12 @@ type Props = {
 const DismissKeyboard = ({ children, style }: Props) => {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <View style={[styles.container, style]}>{children}</View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={[styles.container, style]}
+      >
+        {children}
+      </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );
 };

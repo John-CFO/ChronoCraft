@@ -24,6 +24,9 @@ import WorkHoursState from "../components/WorkHoursState";
 
 //////////////////////////////////////////////////////////////////////////////////
 
+// modified walkthroughable for copilot tour
+const CopilotWalktroughView = walkthroughable(View);
+
 const WorkHoursInput = () => {
   // state to store the expected hours
   const [expectedHours, setExpectedHours] = useState("");
@@ -38,9 +41,6 @@ const WorkHoursInput = () => {
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
-
-  // modified walkthroughable for copilot tour
-  const CopilotTouchableView = walkthroughable(View);
 
   // hook to fetch the expected hours from Firestore by mount
   useEffect(() => {
@@ -141,7 +141,7 @@ const WorkHoursInput = () => {
         order={1}
         text="In this card you have to set the expected work hours for today and save them."
       >
-        <CopilotTouchableView
+        <CopilotWalktroughView
           style={{
             width: screenWidth * 0.9, // use 90% of the screen width
             maxWidth: 600,
@@ -290,7 +290,7 @@ const WorkHoursInput = () => {
               {expectedHours || "Not set"}
             </Text>
           </View>
-        </CopilotTouchableView>
+        </CopilotWalktroughView>
       </CopilotStep>
     </>
   );
