@@ -74,7 +74,7 @@ const TourButton: React.FC<TourButtonProps> = ({
           setShowTourCard(false);
         }
       } catch (error) {
-        console.log("Fehler beim Laden des Tour-Status aus Firestore:", error);
+        console.log("Error checking Firestore status:", error);
       }
     };
 
@@ -144,7 +144,7 @@ const TourButton: React.FC<TourButtonProps> = ({
   // function to skip the tour and set the tour status to true
   const handleSkipTour = async () => {
     try {
-      // set teh status to true in Firestore to show that the tour has been seen
+      // set the status to true in Firestore to show that the tour has been seen
       await updateFireStoreTourStatus(userId, true, storageKey);
       setShowTourCard(false);
       Alert.alert("Skip Tour", "You can start the tour later in the menu.");
