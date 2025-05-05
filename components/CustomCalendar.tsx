@@ -31,6 +31,10 @@ export interface CustomCalendarRef {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// modified walkthroughable for copilot tour
+const CopilotTouchableView = walkthroughable(View);
+
 const CustomCalendar = forwardRef<CustomCalendarRef, CustomCalendarProps>(
   (_, ref) => {
     // initialize the useCalendarStore and setCurrentMonth
@@ -63,8 +67,6 @@ const CustomCalendar = forwardRef<CustomCalendarRef, CustomCalendarProps>(
         setCurrentMonth(today); // set the calendar to the current month
       },
     }));
-    // modified walkthroughable for copilot tour
-    const CopilotTouchableView = walkthroughable(View);
 
     return (
       <>

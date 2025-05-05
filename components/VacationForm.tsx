@@ -19,10 +19,14 @@ import { useCalendarStore } from "../components/CalendarState";
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// modified walkthroughable for copilot tour
+const CopilotTouchableView = walkthroughable(View);
+
 const VacationForm = () => {
   // initial start and end dates states
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
+
   // states to open the date pickers and show the selected dates
   const [tempStartDate, setTempStartDate] = useState<string | null>(null);
   const [tempEndDate, setTempEndDate] = useState<string | null>(null);
@@ -41,7 +45,6 @@ const VacationForm = () => {
         console.error("No user logged in");
         return;
       }
-
       // reduce markedDates to remove `customStyles` property
       const filteredMarkedDates = Object.keys(markedDates).reduce(
         (acc, date) => {
@@ -51,7 +54,6 @@ const VacationForm = () => {
         },
         {} as { [key: string]: any }
       );
-
       const vacationsCollection = collection(
         FIREBASE_FIRESTORE,
         "Users",
@@ -60,10 +62,8 @@ const VacationForm = () => {
         "AczkjyWoOxdPAIRVxjy3",
         "Vacations"
       );
-
       // conducted by sorting the keys of `markedDates`
       const startDate = Object.keys(filteredMarkedDates).sort()[0];
-
       // create new document in `Vacations` collection
       await addDoc(vacationsCollection, {
         uid: user.uid,
@@ -71,7 +71,6 @@ const VacationForm = () => {
         markedDates: filteredMarkedDates,
         createdAt: serverTimestamp(),
       });
-
       resetMarkedDates(); // reset marked dates after saving
     } catch (error) {
       console.error("Error saving vacation:", error);
@@ -84,7 +83,6 @@ const VacationForm = () => {
       console.error("No data to save in markedDates");
       return;
     }
-
     await handleSaveVacation();
   };
 
@@ -105,9 +103,6 @@ const VacationForm = () => {
       setTempEndDate(null);
     };
   }, []);
-
-  // modified walkthroughable for copilot tour
-  const CopilotTouchableView = walkthroughable(View);
 
   return (
     <ScrollView>
@@ -191,7 +186,6 @@ const VacationForm = () => {
                   </Text>
                 </View>
               </TouchableOpacity>
-
               {/* End Date Button */}
               <TouchableOpacity
                 onPress={() => {
@@ -204,7 +198,6 @@ const VacationForm = () => {
                     ]);
                     return;
                   }
-
                   setTempEndDate(new Date().toISOString().split("T")[0]);
                 }}
                 style={{
@@ -279,7 +272,6 @@ const VacationForm = () => {
               }}
             />
           )}
-
           {tempEndDate !== null && (
             <DateTimePicker
               value={tempEndDate ? new Date(tempEndDate) : new Date()}
@@ -304,7 +296,6 @@ const VacationForm = () => {
               }}
             />
           )}
-
           <View
             style={{
               height: 80,
@@ -352,7 +343,6 @@ const VacationForm = () => {
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
-
             {/* Cancel Button */}
             <TouchableOpacity
               style={{

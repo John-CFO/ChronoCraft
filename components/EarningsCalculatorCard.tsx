@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
-import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
+import { RouteProp, useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Alert } from "react-native";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
@@ -30,14 +30,12 @@ type RootStackParamList = {
   Details: { projectId: string };
 };
 
-type EarningsCalculatorRouteProp = RouteProp<RootStackParamList, "Details">;
 export type EarningsCalculatorCardProp = RouteProp<
   RootStackParamList,
   "Details"
 >;
 
 interface EarningsCalculatorCardProps {
-  route: EarningsCalculatorRouteProp;
   projectId: string;
 }
 
@@ -46,17 +44,14 @@ interface EarningsCalculatorCardProps {
 // modified walkthroughable for copilot tour
 const CopilotWalkthroughView = walkthroughable(View);
 
-const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = () => {
+const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
+  projectId,
+}) => {
   // navigation
-  const route = useRoute<EarningsCalculatorRouteProp>();
   const navigation = useNavigation();
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
-
-  // route params
-  const { projectId } = route.params;
-  // console.log("route.params:", route.params);
 
   // console.log("EarningsCalculatorCard - projectId:", projectId);
 

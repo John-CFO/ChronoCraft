@@ -24,7 +24,6 @@ import {
   createUserWithEmailAndPassword,
   Auth,
 } from "firebase/auth";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { setDoc, doc, getDoc } from "firebase/firestore";
 import {
   ALERT_TYPE,
@@ -63,6 +62,8 @@ const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [secureTextEntry, setSecureTextEntry] = useState(true);
+
+  // state to handle the loading animation
   const [loading, setLoading] = useState<boolean>(false);
 
   // declaire the firebase authentication
@@ -147,15 +148,13 @@ const LoginScreen: React.FC = () => {
         firstLogin: true,
       });
 
-      // important: remove the tour flag, so that the tour is displayed on the next login
-      //await AsyncStorage.removeItem("hasSeenTour");
-      await AsyncStorage.multiRemove([
-        "hasSeenTour",
-        "hasSeenHomeTour",
-        "hasSeenDetailsTour",
-        "hasSeenWorkHoursTour",
-        "hasSeenVacationTour",
-      ]);
+      await setDoc(doc(FIREBASE_FIRESTORE, "Users", response.user.uid), {
+        hasSeenHomeTour: false,
+        hasSeenDetailsTour: false,
+        hasSeenVacationTour: false,
+        hasSeenWorkHoursTour: false,
+        firstLogin: true,
+      });
 
       // call the push token
       const token = await NotificationManager.registerForPushNotifications();
@@ -164,7 +163,7 @@ const LoginScreen: React.FC = () => {
         return;
       }
 
-      console.log("Expo Push Token:", token);
+      // console.log("Expo Push Token:", token);
 
       // save the push token to the firestore
       await NotificationManager.savePushTokenToDatabase(
@@ -197,7 +196,7 @@ const LoginScreen: React.FC = () => {
     try {
       const userRef = doc(FIREBASE_FIRESTORE, "Users", userId);
       await setDoc(userRef, userData, { merge: true });
-      console.log("User document created successfully");
+      // console.log("User document created successfully");
     } catch (error) {
       console.error("Error creating user document:", error);
     }

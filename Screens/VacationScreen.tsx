@@ -11,17 +11,17 @@ import { useRoute } from "@react-navigation/native";
 import { getAuth, Auth } from "firebase/auth";
 import LottieView from "lottie-react-native";
 import { useIsFocused } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CopilotProvider } from "react-native-copilot";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import CustomCalendar from "../components/CustomCalendar";
 import VacationForm from "../components/VacationForm";
 import VacationList from "../components/VacationList";
-import { FIREBASE_APP } from "../firebaseConfig";
+import { FIREBASE_APP, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import TourCard from "../components/services/copilotTour/TourCard";
 import { useCopilotOffset } from "../components/services/copilotTour/CopilotOffset";
 import CustomTooltip from "../components/services/copilotTour/CustomToolTip";
+import { doc, getDoc } from "firebase/firestore";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -41,29 +41,72 @@ const VacationScreen: React.FC<VacationScreenRouteProps> = () => {
 
   // initialize Firebase Auth
   const auth: Auth = getAuth(FIREBASE_APP);
+
   // initialize routing
   const route = useRoute<VacationScreenRouteProps>();
-  // get projectId from routing
-  const { projectId } = route.params || {};
 
   // ref for the Scrollview to navigate to the copilot tour
   const scrollViewRef = useRef<ScrollView>(null);
   const [scrollViewReady, setScrollViewReady] = useState(false);
 
-  // state to manage the AsyncStorage copilot tour status
-  const [showTour, setShowTour] = useState<boolean>(false);
+  // states to control the loading screen
+  const [minTimePassed, setMinTimePassed] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // state to handle if the copilot card is visible
-  const [showTourCard, setShowTourCard] = useState(true);
+  // state to control the copilot tour
+  const [showTour, setShowTour] = useState(false);
 
-  // hook to check AsyncStorage if the user has already seen the tour
+  // state to manage has the user already seen the tour
+  const [showTourCard, setShowTourCard] = useState<boolean | null>(null); // null = loading
+
+  // hook to check Firestore if the user has already seen the tour
   useEffect(() => {
-    AsyncStorage.getItem("hasSeenVacationTour").then((hasSeenTour) => {
-      if (!hasSeenTour) {
-        setShowTour(true);
+    const fetchTourStatus = async () => {
+      const docRef = doc(
+        FIREBASE_FIRESTORE,
+        "Users",
+        auth.currentUser?.uid ?? ""
+      );
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.hasSeenVacationTour === false) {
+          setShowTourCard(true);
+        } else {
+          setShowTourCard(false);
+        }
+      } else {
+        setShowTourCard(false); // default fallback
       }
-    });
-  }, [projectId]);
+    };
+
+    fetchTourStatus();
+  }, [auth.currentUser?.uid]);
+
+  // simulate loading state
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMinTimePassed(true);
+    }, 3000); // 3 seconds to simulate loading
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (minTimePassed) {
+      setLoading(false);
+    }
+  }, [minTimePassed]);
+
+  // delay the setting of showTourCard
+  useEffect(() => {
+    if (!loading && minTimePassed && showTour) {
+      const timer = setTimeout(() => {
+        setShowTourCard(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, minTimePassed, showTour]);
 
   // function to disable the copilot order and step number
   const EmptyStepNumber = () => {
@@ -105,7 +148,7 @@ const VacationScreen: React.FC<VacationScreenRouteProps> = () => {
       >
         <View style={{ flex: 1, position: "relative", zIndex: 0 }}>
           {/* Copilot Card with dark overlay */}
-          {showTourCard && (
+          {showTourCard == true && (
             <View
               style={{
                 position: "absolute",

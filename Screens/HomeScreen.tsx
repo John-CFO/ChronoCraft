@@ -18,13 +18,13 @@ import {
   Animated,
   LayoutChangeEvent,
   Dimensions,
+  Alert,
 } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import Modal from "react-native-modal";
-import { Alert } from "react-native";
 import {
   collection,
   getDocs,
@@ -32,6 +32,7 @@ import {
   deleteDoc,
   addDoc,
   serverTimestamp,
+  getDoc,
 } from "firebase/firestore";
 import { getAuth, Auth } from "firebase/auth";
 import { LinearGradient } from "expo-linear-gradient";
@@ -43,7 +44,6 @@ import {
   CopilotStep,
   walkthroughable,
 } from "react-native-copilot";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import {
   FIREBASE_FIRESTORE,
@@ -69,6 +69,12 @@ type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, "Home">;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
+// definition of the walkthroughable component to handle the copilot with (TouchableOpacity)
+const WalkthroughTouchableOpacity = walkthroughable(TouchableOpacity);
+
+// definition of the walkthroughable component to handle the copilot with (View)
+const CopilotView = walkthroughable(View);
+
 const HomeScreen: React.FC = () => {
   // initialize the copilot offset
   const offset = useCopilotOffset();
@@ -79,17 +85,19 @@ const HomeScreen: React.FC = () => {
   // state to handle the loading animation
   const [isLoading, setIsLoading] = useState(true);
 
+  // states to control the loading screen
+  const [minTimePassed, setMinTimePassed] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // state to control the copilot tour
+  const [showTour, setShowTour] = useState(false);
+
   // state to handle if the copilot card is visible
-  const [showTourCard, setShowTourCard] = useState(true);
-
-  // definition of the walkthroughable component to handle the copilot with (TouchableOpacity)
-  const WalkthroughTouchableOpacity = walkthroughable(TouchableOpacity);
-
-  // definition of the walkthroughable component to handle the copilot with (View)
-  const CopilotView = walkthroughable(View);
+  const [showTourCard, setShowTourCard] = useState<null | boolean>(null);
 
   // declaire the firebase authentication
   const auth: Auth = getAuth(FIREBASE_APP);
+
   // initialize the project id globally to reset all components in the details screen
   const { setProjectId } = useStore();
 
@@ -108,10 +116,13 @@ const HomeScreen: React.FC = () => {
 
   // new project name state
   const [newProjectName, setNewProjectName] = useState("");
+
   // handle note modal state
   const [noteModalVisible, setNoteModalVisible] = useState(false);
+
   // Note ID state
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
+
   // handle refresh state to update the date
   const [refresh, setRefresh] = useState(false);
 
@@ -450,15 +461,50 @@ const HomeScreen: React.FC = () => {
     );
   };
 
-  // hook to check if the user has seen the home tour
+  // hook to check Firestore if the user has seen the home tour
   useEffect(() => {
-    const checkStorage = async () => {
-      const value = await AsyncStorage.getItem("hasSeenHomeTour");
-      console.log("Storage-Wert:", value);
+    const fetchTourStatus = async () => {
+      try {
+        const user = FIREBASE_AUTH.currentUser;
+
+        if (!user?.uid) {
+          console.log("User not logged in to fetch tour status.");
+          return;
+        }
+
+        const docRef = doc(FIREBASE_FIRESTORE, "Users", user.uid);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          // console.log("Found user document:", data);
+          setShowTourCard(data?.hasSeenHomeTour === false);
+        } else {
+          console.warn("User-document not found.");
+          setShowTourCard(false);
+        }
+      } catch (error) {
+        console.error("Error fetching tour status:", error);
+        setShowTourCard(false);
+      }
     };
 
-    checkStorage();
+    const timer = setTimeout(() => {
+      fetchTourStatus();
+    }, 500);
+
+    return () => clearTimeout(timer);
   }, []);
+
+  // delay the setting of showTourCard
+  useEffect(() => {
+    if (!loading && minTimePassed && showTour) {
+      const timer = setTimeout(() => {
+        setShowTourCard(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, minTimePassed, showTour]);
 
   // function to disable the copilot order and step number
   const EmptyStepNumber = () => {
