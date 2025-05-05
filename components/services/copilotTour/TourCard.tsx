@@ -13,7 +13,7 @@ import {
   Alert,
   Dimensions,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getDoc } from "firebase/firestore";
 import { useCopilot } from "react-native-copilot";
 import { doc, updateDoc } from "firebase/firestore";
 import { LinearGradient } from "expo-linear-gradient";
@@ -60,19 +60,27 @@ const TourButton: React.FC<TourButtonProps> = ({
 
   // hook to check if the user has already seen the tour in every screen
   useEffect(() => {
-    const checkTourStatus = async () => {
+    const checkFirestoreTourStatus = async () => {
+      if (!showTourCard) return null;
       try {
-        // check AsyncStorage if the user has already seen the tour
-        const hasSeenTour = await AsyncStorage.getItem(storageKey);
-        if (hasSeenTour !== "true") {
+        const userRef = doc(FIREBASE_FIRESTORE, "Users", userId);
+        const docSnap = await getDoc(userRef);
+
+        const hasSeenTour = docSnap.exists() && docSnap.data()?.[storageKey];
+
+        if (!hasSeenTour) {
           setShowTourCard(true);
+        } else {
+          setShowTourCard(false);
         }
       } catch (error) {
-        console.log("Error checking tour status:", error);
+        console.log("Fehler beim Laden des Tour-Status aus Firestore:", error);
       }
     };
-    checkTourStatus();
-  }, [storageKey]);
+
+    checkFirestoreTourStatus();
+  }, [storageKey, userId]);
+
   // get a firestore reference for the tour status
   const updateFireStoreTourStatus = async (
     userId: string,
@@ -95,9 +103,8 @@ const TourButton: React.FC<TourButtonProps> = ({
   // function to start the tour
   const handleStartTour = async () => {
     try {
-      // console.log("[Tour] Starting tour with delay:", delay);
       await new Promise<void>((resolve) => setTimeout(resolve, delay));
-      // console.log("[Tour] Delay finished.");
+
       if (
         needsRefCheck &&
         (!scrollViewRef || !scrollViewRef.current || !isScrollViewReady)
@@ -108,23 +115,10 @@ const TourButton: React.FC<TourButtonProps> = ({
         });
         throw new Error("ScrollView is not ready");
       }
-      // console.log("[Tour] ScrollView is ready.");
-      try {
-        // console.log("[Tour] Calling start() now...");
-        await start(undefined, scrollViewRef?.current ?? undefined);
-        // console.log("[Tour] start() call succeeded.");
-      } catch (error) {
-        console.error("[Tour] Error in start() call:", error);
-        throw error; // Rethrow the error
-      }
-      // console.log("[Tour] Tour started.");
-      await AsyncStorage.setItem(storageKey, "true");
-      // console.log("[Tour] AsyncStorage updated successfully.");
-
+      await start(undefined, scrollViewRef?.current ?? undefined);
+      // update the tour status to true in Firestore to show that the tour has been seen
       await updateFireStoreTourStatus(userId, true, storageKey);
-      // console.log("[Tour] Firestore updated successfully.");
       setShowTourCard(false);
-      // console.log("[Tour] Tour finished and button hidden.");
     } catch (error) {
       console.error("[Tour] Tour Start Error:", error);
       if (error instanceof Error) {
@@ -150,10 +144,10 @@ const TourButton: React.FC<TourButtonProps> = ({
   // function to skip the tour and set the tour status to true
   const handleSkipTour = async () => {
     try {
-      await AsyncStorage.setItem(storageKey, "true");
+      // set teh status to true in Firestore to show that the tour has been seen
       await updateFireStoreTourStatus(userId, true, storageKey);
       setShowTourCard(false);
-      Alert.alert("Skipped tour", "You can start the tour later in the menu");
+      Alert.alert("Skip Tour", "You can start the tour later in the menu.");
     } catch (error) {
       console.log("Error skipping tour:", error);
     }

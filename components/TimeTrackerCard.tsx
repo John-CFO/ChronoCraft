@@ -43,12 +43,13 @@ interface TimeTrackingCardsProps {
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// modified walkthroughable for copilot tour
+const CopilotWalkthroughView = walkthroughable(View);
+
 const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   // initialize the routing
   const route = useRoute<TimeTrackerRouteProp>();
   const { projectId } = route.params;
-  // modified walkthroughable for copilot tour
-  const CopilotWalkthroughView = walkthroughable(View);
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
@@ -168,6 +169,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   const [delayedElapsedTime, setDelayedElapsedTime] = useState<number | null>(
     null
   );
+
   // function to handle app state changes if app is in background or foreground
   useEffect(() => {
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
@@ -184,7 +186,6 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
           const now = new Date().getTime();
           if (!isNaN(lastTimeMs) && lastTimeMs < now) {
             const elapsedTime = (now - lastTimeMs) / 1000;
-
             // safe the elapsed time to the state
             setDelayedElapsedTime(elapsedTime);
           }

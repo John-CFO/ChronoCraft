@@ -17,7 +17,7 @@ import {
 } from "react-native";
 import Collapsible from "react-native-collapsible";
 import { LinearGradient } from "expo-linear-gradient";
-import { doc, getDoc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
 import { deleteObject, ref, getStorage } from "firebase/storage";
 import { EmailAuthProvider } from "firebase/auth";
 import { reauthenticateWithCredential } from "firebase/auth";
@@ -119,46 +119,77 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
     }
   };
 
-  // function to handle account deletion
+  // recursive function to delete subcollections
+  const deleteSubcollections = async (
+    parentPath: string,
+    subcollections: string[]
+  ) => {
+    for (const sub of subcollections) {
+      const subCollectionRef = collection(
+        FIREBASE_FIRESTORE,
+        `${parentPath}/${sub}`
+      );
+      const subDocsSnapshot = await getDocs(subCollectionRef);
+
+      for (const subDoc of subDocsSnapshot.docs) {
+        const subDocPath = `${parentPath}/${sub}/${subDoc.id}`;
+
+        // for deeper nested subcollections
+        if (sub === "Projects") {
+          await deleteSubcollections(subDocPath, ["Notes"]);
+        }
+
+        await deleteDoc(subDoc.ref);
+      }
+    }
+  };
+
+  // function to delete the account
   const handleDeleteAccount = async () => {
     if (!password) {
       Alert.alert("Error", "Please enter your password.");
       return;
     }
+
     setLoading(true);
     try {
-      if (!userUid) {
-        throw new Error("No user is signed in.");
-      }
-      // reauth the user before deletion
-      await reauthenticateUser(password);
-      // get the user document from Firestore
-      const db = FIREBASE_FIRESTORE;
-      const userDocRef = doc(db, "Users", userUid);
-      const userDoc = await getDoc(userDocRef);
+      if (!userUid) throw new Error("No user is signed in.");
 
-      if (userDoc.exists()) {
-        // delete the user's profile picture
-        await deleteImageFromStorage(`profilePictures/${userUid}`);
-        // console.log("Document successfully updated before deletion!");
-        // delete the user document
-        await deleteDoc(userDocRef);
-        // console.log("Document successfully deleted!");
-      } else {
-        console.log("User document not found.");
+      await reauthenticateUser(password);
+      await deleteImageFromStorage(`profilePictures/${userUid}`);
+
+      // get all services
+      const servicesColRef = collection(
+        FIREBASE_FIRESTORE,
+        `Users/${userUid}/Services`
+      );
+      const servicesSnapshot = await getDocs(servicesColRef);
+
+      for (const serviceDoc of servicesSnapshot.docs) {
+        const servicePath = `Users/${userUid}/Services/${serviceDoc.id}`;
+
+        // delete all subcollections inside a service document
+        await deleteSubcollections(servicePath, [
+          "Projects",
+          "Vacations",
+          "WorkHours",
+        ]);
+
+        // delete the service document
+        await deleteDoc(serviceDoc.ref);
       }
+
+      // delete the user document
+      await deleteDoc(doc(FIREBASE_FIRESTORE, "Users", userUid));
+
       closeFAQSheet();
-      // condfirmation that the account has been deleted
+
       Alert.alert(
         "Success",
-        "Your account has been deleted. All your data has been removed.",
-        [
-          {
-            text: "OK",
-          },
-        ]
+        "Your account has been deleted. All your data has been removed."
       );
-      // delete the user from Firebase Auth
+
+      // delete the current user
       await FIREBASE_AUTH.currentUser?.delete();
     } catch (error: any) {
       console.error("Error deleting account:", error);
@@ -383,7 +414,6 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
               <View style={{ alignItems: "center", justifyContent: "center" }}>
                 <View
                   style={{
-                    // position: "relative",
                     width: screenWidth * 0.7, // use 70% of the screen width
                     maxWidth: 400,
                   }}

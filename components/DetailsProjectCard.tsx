@@ -24,13 +24,14 @@ interface DetailsProjectCardProps {
 }
 
 //////////////////////////////////////////////////////////////////////////////////
+
+// modified walkthroughable for copilot tour
+const CopilotTouchableView = walkthroughable(View);
+
 const DetailsProjectCard: React.FC<DetailsProjectCardProps> = () => {
   // route params
   const route = useRoute<DetailsProjectRouteProps>();
   const { projectName } = route.params;
-
-  // modified walkthroughable for copilot tour
-  const CopilotTouchableView = walkthroughable(View);
 
   return (
     <View>
