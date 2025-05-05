@@ -8,19 +8,17 @@
 import { View, ScrollView } from "react-native";
 import React, { useEffect, useState, useRef } from "react";
 import { getAuth, Auth } from "firebase/auth";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { doc, getDoc } from "firebase/firestore";
 import { useRoute, RouteProp } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CopilotProvider } from "react-native-copilot";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { FIREBASE_APP } from "../firebaseConfig";
+import { FIREBASE_APP, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import DetailsProjectCard from "../components/DetailsProjectCard";
 import TimeTrackerCard from "../components/TimeTrackerCard";
 import EarningsCalculatorCard from "../components/EarningsCalculatorCard";
 import NoteList from "../components/NoteList";
 import { useStore } from "../components/TimeTrackingState";
-import { EarningsCalculatorCardProp } from "../components/EarningsCalculatorCard";
 import RoutingLoader from "../components/RoutingLoader";
 import ErrorBoundary from "../components/ErrorBoundary";
 import TourCard from "../components/services/copilotTour/TourCard";
@@ -28,11 +26,6 @@ import { useCopilotOffset } from "../components/services/copilotTour/CopilotOffs
 import CustomTooltip from "../components/services/copilotTour/CustomToolTip";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-
-type DetailsScreenProps = {
-  navigation: StackNavigationProp<RootStackParamList, "Details">;
-  route: RouteProp<RootStackParamList, "Details"> | EarningsCalculatorCardProp;
-};
 
 type DetailsScreenRouteProp = RouteProp<RootStackParamList, "Details">;
 
@@ -48,27 +41,41 @@ type RootStackParamList = {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const DetailsScreen: React.FC<DetailsScreenProps> = () => {
+const DetailsScreen: React.FC = () => {
+  // declare the route params
   const route = useRoute<DetailsScreenRouteProp>();
 
-  // initialize the copilot offset
+  // declare the copilot offset
   const offset = useCopilotOffset();
 
-  // initialize firebase auth
+  // declare Firebase Auth
   const auth: Auth = getAuth(FIREBASE_APP);
 
-  // route the projectId to the earnings calculator
+  // use routing to get projectId
   const { projectId } = route.params || {};
 
   const { setProjectId } = useStore();
 
-  // save projectID in the state
+  // states to control the loading screen
+  const [minTimePassed, setMinTimePassed] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // state to control the copilot tour
+  const [showTour, setShowTour] = useState(false);
+
+  // state to control the copilot card
+  const [showTourCard, setShowTourCard] = useState<boolean | null>(null);
+
+  // states to control the scrollview
+  const [scrollReady, setScrollReady] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  // ensure state initialization consistency
   useEffect(() => {
-    setProjectId(projectId);
+    setProjectId(projectId); // set projectId on mount
   }, [projectId, setProjectId]);
 
-  // function to ensure a minimum time that the routing loader is shown
-  const [minTimePassed, setMinTimePassed] = useState(false);
+  // hook to set minTimePassed after 3 seconds
   useEffect(() => {
     const timer = setTimeout(() => {
       setMinTimePassed(true);
@@ -77,25 +84,49 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // ref for the Scrollview to navigate to the copilot tour
-  const scrollViewRef = useRef<ScrollView>(null);
-  const [scrollReady, setScrollReady] = useState(false);
-
-  // state to manage the AsyncStorage copilot tour status
-  const [showTour, setShowTour] = useState<boolean>(false);
-
-  // state to handle if the copilot card is visible
-  const [showTourCard, setShowTourCard] = useState(true);
-
-  // hook to check AsyncStorage if the user has already seen the tour
+  // hook to check Firestore if the user has already seen the tour
   useEffect(() => {
-    const hasSeenTour = AsyncStorage.getItem("hasSeenDetailsTour");
-    if (!hasSeenTour) {
-      setShowTour(true);
-    }
-  }, [projectId]);
+    const fetchTourStatus = async () => {
+      const docRef = doc(
+        FIREBASE_FIRESTORE,
+        "Users",
+        auth.currentUser?.uid ?? ""
+      );
+      const docSnap = await getDoc(docRef);
 
-  if (!minTimePassed) {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.hasSeenDetailsTour === false) {
+          setShowTourCard(true);
+        } else {
+          setShowTourCard(false);
+        }
+      } else {
+        setShowTourCard(false); // default fallback
+      }
+    };
+
+    fetchTourStatus();
+  }, [auth.currentUser?.uid]);
+
+  // loading state to false after minTimePassed
+  useEffect(() => {
+    if (minTimePassed) {
+      setLoading(false);
+    }
+  }, [minTimePassed]);
+
+  // delay the setting of showTourCard
+  useEffect(() => {
+    if (!loading && minTimePassed && showTour) {
+      const timer = setTimeout(() => {
+        setShowTourCard(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, minTimePassed, showTour]);
+
+  if (loading || !minTimePassed) {
     return (
       <View
         style={{
@@ -115,10 +146,9 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
     return null;
   };
 
+  // render always the same hooks
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      {/* // local DetailsScreen Provider (important if you need to adress a child
-      component to the copilot tour) */}
       <CopilotProvider
         overlay="svg"
         verticalOffset={offset}
@@ -135,8 +165,7 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
         }}
       >
         <View style={{ flex: 1, position: "relative", zIndex: 0 }}>
-          {/* Copilot Card with dark overlay */}
-          {showTourCard && (
+          {showTourCard == true && (
             <View
               style={{
                 position: "absolute",
@@ -152,7 +181,7 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
               }}
             >
               <TourCard
-                storageKey={`hasSeenDetailsTour`}
+                storageKey="hasSeenDetailsTour"
                 userId={auth.currentUser?.uid ?? ""}
                 scrollViewRef={scrollViewRef}
                 scrollViewReady={scrollReady}
@@ -164,7 +193,6 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
           )}
 
           <ScrollView
-            // scrollview ref and onlayout to navigate to the copilot tour
             ref={scrollViewRef}
             onLayout={() => setScrollReady(true)}
             style={{ backgroundColor: "black" }}
@@ -180,13 +208,9 @@ const DetailsScreen: React.FC<DetailsScreenProps> = () => {
               </ErrorBoundary>
               {/* Earnings Calculator Card */}
               <ErrorBoundary>
-                <EarningsCalculatorCard
-                  route={route as EarningsCalculatorCardProp}
-                  projectId={projectId}
-                />
+                <EarningsCalculatorCard projectId={projectId} />
               </ErrorBoundary>
               {/* Notes Card */}
-
               <NoteList projectId={projectId} />
             </View>
           </ScrollView>

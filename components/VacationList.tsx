@@ -28,6 +28,9 @@ import VacationRemindModal from "../components/VacationRemindModal";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// modified walkthroughable for copilot tour
+const CopilotTouchableView = walkthroughable(View);
+
 const VacationList = () => {
   //set state for vacations
   const [vacations, setVacations] = useState<
@@ -81,15 +84,12 @@ const VacationList = () => {
         const markedDatesArray = data.markedDates
           ? Object.keys(data.markedDates)
           : [];
-
         // console.log("Converted markedDates:", markedDatesArray);
-
         return {
           id: doc.id,
           markedDates: markedDatesArray,
         };
       });
-
       // sort the vacations by the first marked date
       vacationsData.sort((a, b) => {
         if (a.markedDates.length === 0 || b.markedDates.length === 0) return 0;
@@ -98,11 +98,9 @@ const VacationList = () => {
           new Date(b.markedDates[0]).getTime()
         );
       });
-
       // console.log("Vacations Data:", vacationsData);
       setVacations(vacationsData);
     });
-
     return () => unsubscribe();
   }, [user]);
 
@@ -142,13 +140,10 @@ const VacationList = () => {
                 });
               }
             }
-
             // delete the vacation
             batch.delete(vacationDoc);
-
             // commit the batch to the database
             await batch.commit();
-
             // console.log(`Vacation ${vacationId} was deleted.`);
           } catch (error) {
             console.error("Error deleting vacation:", error);
@@ -164,9 +159,6 @@ const VacationList = () => {
     setSelectedVacationId(id);
     setReminderModalVisible(true);
   };
-
-  // modified walkthroughable for copilot tour
-  const CopilotTouchableView = walkthroughable(View);
 
   return (
     <>
@@ -247,7 +239,6 @@ const VacationList = () => {
                   const sortedDates = item.markedDates
                     .map((date) => {
                       const [year, month, day] = date.split("-");
-
                       // parseInt is used to convert the string to a number to sort the dates list
                       return {
                         formatted: `${parseInt(day, 10)}.${parseInt(month, 10)}.${year}`,
@@ -261,7 +252,6 @@ const VacationList = () => {
                     .sort(
                       (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
                     ); // sort by timestamp
-
                   // extract the first and last date to show a range in the UI
                   const displayRange =
                     sortedDates.length > 1

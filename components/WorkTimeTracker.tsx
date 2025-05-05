@@ -47,26 +47,31 @@ interface DataPoint {
 
 ///////////////////////////////////////////////////////////////////////////////////
 
+// modified walkthroughable for copilot tour
+const CopilotTouchableView = walkthroughable(View);
+
 const WorkTimeTracker = () => {
   // state to store the user's time zone
   const [userTimeZone, setUserTimeZone] = useState<string>(dayjs.tz.guess());
+
   // local state for accumulated duration (in hours)
   const [accumulatedDuration, setAccumulatedDuration] = useState(0);
+
   // new trigger to reload the chart after stop
   // it is needed because the chart is not updated after stop the timer without reload
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
   // state to handle the app state
   const [appState, setAppState] = useState(AppState.currentState);
+
   // reference to the previous app state
   const prevAppStateRef = useRef<AppStateStatus>(AppState.currentState);
+
   // state to get the work day from firestore to update the state wich is needed to enable the timer start button
   const [workDay, setWorkDay] = useState("");
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
-
-  // modified walkthroughable for copilot tour
-  const CopilotTouchableView = walkthroughable(View);
 
   // global WorkHoursState
   const {
@@ -161,7 +166,6 @@ const WorkTimeTracker = () => {
 
   // hook to update the app state if the app is in the foreground or background
   useEffect(() => {
-    // function to load the elapsedTime from AsyncStorage
     const loadElapsedTime = async () => {
       const storedElapsedTime = await AsyncStorage.getItem("elapsedTime");
       if (storedElapsedTime) {

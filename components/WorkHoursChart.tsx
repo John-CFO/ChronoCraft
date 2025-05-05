@@ -24,11 +24,16 @@ import { formatTime } from "../components/WorkTimeCalc";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// modified walkthroughable for copilot tour
+const CopilotWalkthroughView = walkthroughable(View);
+
 const WorkHoursChart = () => {
   // get the data from the WorkHoursState
   const { data } = WorkHoursState();
+
   // initialstate for the chart type
   const [chartType, setChartType] = useState("week");
+
   // state and types for the tooltip
   const [tooltipData, setTooltipData] = useState<{
     date: string;
@@ -39,8 +44,10 @@ const WorkHoursChart = () => {
     x: number;
     y: number;
   } | null>(null);
+
   // ref for the scrollview
   const scrollViewRef = useRef<ScrollView>(null);
+
   // state for the card width
   const [cardWidth, setCardWidth] = useState<number>(0);
 
@@ -49,6 +56,7 @@ const WorkHoursChart = () => {
 
   // card padding in px to calculate the inner width for the frame
   const cardPadding = 16;
+
   // state for the scrollX to save the tooltip position in the chart
   const [scrollX, setScrollX] = useState(0);
 
@@ -270,9 +278,6 @@ const WorkHoursChart = () => {
   };
 
   const dynamicMaxValue = getDynamicMaxValue();
-
-  // modified walkthroughable for copilot tour
-  const CopilotWalkthroughView = walkthroughable(View);
 
   return (
     <>

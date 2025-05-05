@@ -20,16 +20,19 @@ interface Note {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
+
+// modified walkthroughable for copilot tour
+const CopilotTouchableView = walkthroughable(View);
+
 const NoteList: React.FC<{ projectId: string }> = ({ projectId }) => {
   // note state
   const [notes, setNotes] = useState<Note[]>([]);
+
   // error handling stae
   const [error, setError] = useState<Error | null>(null);
+
   // loading state if backend isn´t ready
   const [loading, setLoading] = useState<boolean>(true);
-
-  // modified walkthroughable for copilot tour
-  const CopilotTouchableView = walkthroughable(View);
 
   // hook to fetch the notes from Firestore with snapshot
   useEffect(() => {

@@ -8,10 +8,10 @@ import React, { useEffect, useState, useRef } from "react";
 import { View, Text, SafeAreaView, ScrollView } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import { getAuth, Auth } from "firebase/auth";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { doc } from "firebase/firestore";
 import { CopilotProvider } from "react-native-copilot";
 
-import { FIREBASE_APP } from "../firebaseConfig";
+import { FIREBASE_APP, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import WorkHoursState from "../components/WorkHoursState";
 import WorkHoursInput from "../components/WorkHoursInput";
 import WorkTimeTracker from "../components/WorkTimeTracker";
@@ -20,6 +20,7 @@ import ErrorBoundary from "../components/ErrorBoundary";
 import TourCard from "../components/services/copilotTour/TourCard";
 import { useCopilotOffset } from "../components/services/copilotTour/CopilotOffset";
 import CustomTooltip from "../components/services/copilotTour/CustomToolTip";
+import { getDoc } from "firebase/firestore";
 
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -42,29 +43,57 @@ const WorkHoursScreen: React.FC<WorkHoursScreenRouteProps> = () => {
 
   // initialize Firebase Auth
   const auth: Auth = getAuth(FIREBASE_APP);
+
   // initialize routing
   const route = useRoute<WorkHoursScreenRouteProps>();
-  // get projectId from routing
-  const { projectId } = route.params || {};
 
   // ref for the Scrollview to navigate to the copilot tour
   const scrollViewRef = useRef<ScrollView>(null);
   const [scrollViewReady, setScrollViewReady] = useState(false);
 
-  // state to manage the AsyncStorage copilot tour status
-  const [showTour, setShowTour] = useState<boolean>(false);
+  // states to control the loading screen
+  const [minTimePassed, setMinTimePassed] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // state to handle if the copilot card is visible
-  const [showTourCard, setShowTourCard] = useState(true);
+  // state to control the copilot tour
+  const [showTour, setShowTour] = useState(false);
 
-  // hook to check AsyncStorage if the user has already seen the tour
+  // state to manage has the user already seen the tour
+  const [showTourCard, setShowTourCard] = useState<boolean | null>(null); // null = loading
+
+  // hook to check Firestore if the user has already seen the tour
   useEffect(() => {
-    AsyncStorage.getItem("hasSeenWorkHoursTour").then((hasSeenTour) => {
-      if (!hasSeenTour) {
-        setShowTour(true);
+    const fetchTourStatus = async () => {
+      const userId = auth.currentUser?.uid;
+      if (!userId) return;
+
+      const docRef = doc(FIREBASE_FIRESTORE, "Users", userId);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.hasSeenWorkHoursTour === false) {
+          setShowTourCard(true);
+        } else {
+          setShowTourCard(false);
+        }
+      } else {
+        setShowTourCard(false);
       }
-    });
-  }, [projectId]);
+    };
+
+    fetchTourStatus();
+  }, [auth.currentUser?.uid]);
+
+  // delay the setting of showTourCard
+  useEffect(() => {
+    if (!loading && minTimePassed && showTour) {
+      const timer = setTimeout(() => {
+        setShowTourCard(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, minTimePassed, showTour]);
 
   // function to disable the copilot order and step number
   const EmptyStepNumber = () => {
@@ -94,7 +123,7 @@ const WorkHoursScreen: React.FC<WorkHoursScreenRouteProps> = () => {
       >
         <View style={{ flex: 1, position: "relative", zIndex: 0 }}>
           {/* Copilot Card with dark overlay */}
-          {showTourCard && (
+          {showTourCard == true && (
             <View
               style={{
                 position: "absolute",
