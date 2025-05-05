@@ -34,7 +34,7 @@ const CopilotTouchableView = walkthroughable(View);
 const VacationList = () => {
   //set state for vacations
   const [vacations, setVacations] = useState<
-    { id: string; markedDates: string[] }[]
+    { id: string; markedDates: string[]; reminderActive: boolean }[]
   >([]);
 
   const [user, setUser] = useState<any>(null);
@@ -88,6 +88,7 @@ const VacationList = () => {
         return {
           id: doc.id,
           markedDates: markedDatesArray,
+          reminderActive: !!data.reminderDuration,
         };
       });
       // sort the vacations by the first marked date
@@ -311,7 +312,11 @@ const VacationList = () => {
                         }}
                         onPress={() => openReminderModal(item.id)}
                       >
-                        <Entypo name="bell" size={24} color="gray" />
+                        <Entypo
+                          name="bell"
+                          size={24}
+                          color={item.reminderActive ? "aqua" : "grey"}
+                        />
                         {/* vacation delete button */}
                       </TouchableOpacity>
                       <TouchableOpacity
