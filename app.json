@@ -7,7 +7,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "splash": {
-      "resizeMode": "cover",
+      "resizeMode": "contain",
       "backgroundColor": "#000000"
     },
     "updates": {
@@ -16,11 +16,19 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yourcompany.yourapp"
+      "bundleIdentifier": "com.yourcompany.yourapp",
+      "splash": {
+        "resizeMode": "contain",
+        "backgroundColor": "#000000"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#000000"
+      },
+      "splash": {
+        "resizeMode": "contain",
         "backgroundColor": "#000000"
       },
       "package": "com.ChronoCraft_Android",
