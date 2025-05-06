@@ -2,7 +2,7 @@
 
 // NOTE: the NodeCard is nested in the NoteList Component
 
-import { View, Text, Dimensions } from "react-native";
+import { View, Text, Dimensions, Alert } from "react-native";
 import React from "react";
 import { AntDesign } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native-gesture-handler";
@@ -36,31 +36,48 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
 
   // function to handle note deletion in firestore
   const handleDeletComment = async () => {
-    // condition to check if user is authenticated
-    const user = FIREBASE_AUTH.currentUser;
-    if (!user) {
-      console.error("User is not authenticated.");
-      return false;
-    }
-    // try to delete the note from firestore whith the note id and useRef
-    try {
-      const noteDocRef = doc(
-        FIREBASE_FIRESTORE,
-        "Users",
-        user.uid,
-        "Services",
-        "AczkjyWoOxdPAIRVxjy3",
-        "Projects",
-        projectId,
-        "Notes",
-        note.id
-      );
-      await deleteDoc(noteDocRef);
-      // console.log("Note deleted successfully.");
-      onDelete(note.id);
-    } catch (error) {
-      console.error("Error deleting note:", error);
-    }
+    Alert.alert(
+      "Attention!",
+      "Do you really want to delete the note? This action cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Note deletion canceled"),
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          onPress: async () => {
+            // condition to check if user is authenticated
+            const user = FIREBASE_AUTH.currentUser;
+            if (!user) {
+              console.error("User is not authenticated.");
+              return false;
+            }
+            // try to delete the note from firestore whith the note id and useRef
+            try {
+              const noteDocRef = doc(
+                FIREBASE_FIRESTORE,
+                "Users",
+                user.uid,
+                "Services",
+                "AczkjyWoOxdPAIRVxjy3",
+                "Projects",
+                projectId,
+                "Notes",
+                note.id
+              );
+              await deleteDoc(noteDocRef);
+              // console.log("Note deleted successfully.");
+              onDelete(note.id);
+            } catch (error) {
+              console.error("Error deleting note:", error);
+            }
+          },
+          style: "destructive",
+        },
+      ]
+    );
   };
 
   return (
