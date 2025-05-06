@@ -6,7 +6,7 @@
 
 /////////////////////////////////////////////////////////////////////////////
 
-import { Text, TouchableOpacity, View, Alert, Dimensions } from "react-native";
+import { Text, TouchableOpacity, View, Alert } from "react-native";
 import React, { useEffect, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "react-native";
@@ -25,6 +25,7 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-gesture-handler";
 import "react-native-reanimated";
+import * as SplashScreen from "expo-splash-screen";
 import "text-encoding-polyfill"; //bugfix: for delete project with notes
 
 import LoginScreen from "./Screens/LoginScreen";
@@ -181,6 +182,9 @@ const CustomDrawerLabel: React.FC<CustomDrawerLabelProps> = ({
   </Text>
 );
 
+// disable splashscreen
+SplashScreen.preventAutoHideAsync();
+
 // drawer navigation for the app
 const App = () => {
   // statusbar content color
@@ -188,7 +192,14 @@ const App = () => {
     StatusBar.setBarStyle("light-content");
   }, 1000);
 
-  const { height } = Dimensions.get("window");
+  // hide splashscreen
+  useEffect(() => {
+    const hide = async () => {
+      // optional kannst du hier auf Fonts oder Daten warten
+      await SplashScreen.hideAsync();
+    };
+    hide();
+  }, []);
 
   // function for googe-fonts implemantation
   const [fontsLoaded] = useFonts({
