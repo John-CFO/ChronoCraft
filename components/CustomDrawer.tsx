@@ -34,6 +34,7 @@ import EditProfileModal from "./EditProfileModal";
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import FAQBottomSheet from "./FAQBottomSheet";
 import { CustomUser } from "./types/CustomUser"; // CustomUser type definition import to handle conflict with FirebaseUser
+import RestartTourButton from "./../components/services/copilotTour/RestartTourButton";
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -195,6 +196,9 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         contentContainerStyle={{ backgroundColor: "black" }}
       >
         <DrawerItemList {...props} />
+        <View style={{ paddingTop: 180 }}>
+          <RestartTourButton userId={user?.uid || ""} />
+        </View>
       </ScrollView>
 
       {/* drawer bottom section witch implemates FAQ and Logout */}

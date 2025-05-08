@@ -6,11 +6,11 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 import { View, Text, ScrollView } from "react-native";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useRoute } from "@react-navigation/native";
 import { getAuth, Auth } from "firebase/auth";
 import LottieView from "lottie-react-native";
-import { useIsFocused } from "@react-navigation/native";
+import { useIsFocused, useFocusEffect } from "@react-navigation/native";
 import { CopilotProvider } from "react-native-copilot";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -60,29 +60,26 @@ const VacationScreen: React.FC<VacationScreenRouteProps> = () => {
   const [showTourCard, setShowTourCard] = useState<boolean | null>(null); // null = loading
 
   // hook to check Firestore if the user has already seen the tour
-  useEffect(() => {
-    const fetchTourStatus = async () => {
-      const docRef = doc(
-        FIREBASE_FIRESTORE,
-        "Users",
-        auth.currentUser?.uid ?? ""
-      );
-      const docSnap = await getDoc(docRef);
+  useFocusEffect(
+    useCallback(() => {
+      const fetchTourStatus = async () => {
+        const userId = auth.currentUser?.uid;
+        if (!userId) return;
 
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (data.hasSeenVacationTour === false) {
-          setShowTourCard(true);
+        const docRef = doc(FIREBASE_FIRESTORE, "Users", userId);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setShowTourCard(data.hasSeenVacationTour === false);
         } else {
           setShowTourCard(false);
         }
-      } else {
-        setShowTourCard(false); // default fallback
-      }
-    };
+      };
 
-    fetchTourStatus();
-  }, [auth.currentUser?.uid]);
+      fetchTourStatus();
+    }, [])
+  );
 
   // simulate loading state
   useEffect(() => {

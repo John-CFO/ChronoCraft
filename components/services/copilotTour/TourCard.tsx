@@ -4,7 +4,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-import React, { useEffect } from "react";
+import React from "react";
 import {
   TouchableOpacity,
   Text,
@@ -13,7 +13,6 @@ import {
   Alert,
   Dimensions,
 } from "react-native";
-import { getDoc } from "firebase/firestore";
 import { useCopilot } from "react-native-copilot";
 import { doc, updateDoc } from "firebase/firestore";
 import { LinearGradient } from "expo-linear-gradient";
@@ -57,29 +56,6 @@ const TourButton: React.FC<TourButtonProps> = ({
     scrollViewRef && scrollViewRef.current && scrollViewReady !== undefined
       ? scrollViewReady
       : true;
-
-  // hook to check if the user has already seen the tour in every screen
-  useEffect(() => {
-    const checkFirestoreTourStatus = async () => {
-      if (!showTourCard) return null;
-      try {
-        const userRef = doc(FIREBASE_FIRESTORE, "Users", userId);
-        const docSnap = await getDoc(userRef);
-
-        const hasSeenTour = docSnap.exists() && docSnap.data()?.[storageKey];
-
-        if (!hasSeenTour) {
-          setShowTourCard(true);
-        } else {
-          setShowTourCard(false);
-        }
-      } catch (error) {
-        console.log("Error checking Firestore status:", error);
-      }
-    };
-
-    checkFirestoreTourStatus();
-  }, [storageKey, userId]);
 
   // get a firestore reference for the tour status
   const updateFireStoreTourStatus = async (
