@@ -6,10 +6,10 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 import { View, ScrollView } from "react-native";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { getAuth, Auth } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { useRoute, RouteProp } from "@react-navigation/native";
+import { useRoute, RouteProp, useFocusEffect } from "@react-navigation/native";
 import { CopilotProvider } from "react-native-copilot";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -85,29 +85,28 @@ const DetailsScreen: React.FC = () => {
   }, []);
 
   // hook to check Firestore if the user has already seen the tour
-  useEffect(() => {
-    const fetchTourStatus = async () => {
-      const docRef = doc(
-        FIREBASE_FIRESTORE,
-        "Users",
-        auth.currentUser?.uid ?? ""
-      );
-      const docSnap = await getDoc(docRef);
+  useFocusEffect(
+    useCallback(() => {
+      const checkTourStatus = async () => {
+        const userId = auth.currentUser?.uid;
+        if (!userId) return;
 
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (data.hasSeenDetailsTour === false) {
-          setShowTourCard(true);
-        } else {
+        try {
+          const docRef = doc(FIREBASE_FIRESTORE, "Users", userId);
+          const docSnap = await getDoc(docRef);
+
+          const hasSeenTour =
+            docSnap.exists() && docSnap.data()?.hasSeenDetailsTour === false;
+          setShowTourCard(hasSeenTour); // true if the user has not seen the tour
+        } catch (error) {
+          console.error("Error checking tour status:", error);
           setShowTourCard(false);
         }
-      } else {
-        setShowTourCard(false); // default fallback
-      }
-    };
+      };
 
-    fetchTourStatus();
-  }, [auth.currentUser?.uid]);
+      checkTourStatus();
+    }, [])
+  );
 
   // loading state to false after minTimePassed
   useEffect(() => {

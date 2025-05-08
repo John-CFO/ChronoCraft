@@ -20,9 +20,9 @@ import {
   Dimensions,
   Alert,
 } from "react-native";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import Modal from "react-native-modal";
 import {
@@ -462,39 +462,26 @@ const HomeScreen: React.FC = () => {
   };
 
   // hook to check Firestore if the user has seen the home tour
-  useEffect(() => {
-    const fetchTourStatus = async () => {
-      try {
-        const user = FIREBASE_AUTH.currentUser;
+  useFocusEffect(
+    useCallback(() => {
+      const fetchTourStatus = async () => {
+        const userId = auth.currentUser?.uid;
+        if (!userId) return;
 
-        if (!user?.uid) {
-          console.log("User not logged in to fetch tour status.");
-          return;
-        }
-
-        const docRef = doc(FIREBASE_FIRESTORE, "Users", user.uid);
+        const docRef = doc(FIREBASE_FIRESTORE, "Users", userId);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
           const data = docSnap.data();
-          // console.log("Found user document:", data);
-          setShowTourCard(data?.hasSeenHomeTour === false);
+          setShowTourCard(data.hasSeenHomeTour === false);
         } else {
-          console.warn("User-document not found.");
           setShowTourCard(false);
         }
-      } catch (error) {
-        console.error("Error fetching tour status:", error);
-        setShowTourCard(false);
-      }
-    };
+      };
 
-    const timer = setTimeout(() => {
       fetchTourStatus();
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, []);
+    }, [])
+  );
 
   // delay the setting of showTourCard
   useEffect(() => {
