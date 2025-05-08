@@ -4,12 +4,13 @@
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { View, Text, SafeAreaView, ScrollView } from "react-native";
-import { useRoute } from "@react-navigation/native";
+import { useRoute, useFocusEffect } from "@react-navigation/native";
 import { getAuth, Auth } from "firebase/auth";
 import { doc } from "firebase/firestore";
 import { CopilotProvider } from "react-native-copilot";
+import { getDoc } from "firebase/firestore";
 
 import { FIREBASE_APP, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import WorkHoursState from "../components/WorkHoursState";
@@ -20,7 +21,6 @@ import ErrorBoundary from "../components/ErrorBoundary";
 import TourCard from "../components/services/copilotTour/TourCard";
 import { useCopilotOffset } from "../components/services/copilotTour/CopilotOffset";
 import CustomTooltip from "../components/services/copilotTour/CustomToolTip";
-import { getDoc } from "firebase/firestore";
 
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -62,28 +62,26 @@ const WorkHoursScreen: React.FC<WorkHoursScreenRouteProps> = () => {
   const [showTourCard, setShowTourCard] = useState<boolean | null>(null); // null = loading
 
   // hook to check Firestore if the user has already seen the tour
-  useEffect(() => {
-    const fetchTourStatus = async () => {
-      const userId = auth.currentUser?.uid;
-      if (!userId) return;
+  useFocusEffect(
+    useCallback(() => {
+      const fetchTourStatus = async () => {
+        const userId = auth.currentUser?.uid;
+        if (!userId) return;
 
-      const docRef = doc(FIREBASE_FIRESTORE, "Users", userId);
-      const docSnap = await getDoc(docRef);
+        const docRef = doc(FIREBASE_FIRESTORE, "Users", userId);
+        const docSnap = await getDoc(docRef);
 
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (data.hasSeenWorkHoursTour === false) {
-          setShowTourCard(true);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setShowTourCard(data.hasSeenWorkHoursTour === false);
         } else {
           setShowTourCard(false);
         }
-      } else {
-        setShowTourCard(false);
-      }
-    };
+      };
 
-    fetchTourStatus();
-  }, [auth.currentUser?.uid]);
+      fetchTourStatus();
+    }, [])
+  );
 
   // delay the setting of showTourCard
   useEffect(() => {

@@ -27,6 +27,7 @@ import "react-native-gesture-handler";
 import "react-native-reanimated";
 import * as SplashScreen from "expo-splash-screen";
 import "text-encoding-polyfill"; //bugfix: for delete project with notes
+import { CopilotProvider } from "react-native-copilot";
 
 import LoginScreen from "./Screens/LoginScreen";
 import HomeScreen from "./Screens/HomeScreen";
@@ -83,86 +84,88 @@ const HeaderHelpComponent = ({ navigation }: { navigation: any }) => {
 
 const AppDrawerNavigator = () => {
   return (
-    <Drawer.Navigator
-      drawerContent={(props) => <CustomDrawer {...props} />}
-      screenOptions={{
-        drawerStyle: {
-          backgroundColor: "black",
-          width: 280,
-        },
+    <CopilotProvider>
+      <Drawer.Navigator
+        drawerContent={(props) => <CustomDrawer {...props} />}
+        screenOptions={{
+          drawerStyle: {
+            backgroundColor: "black",
+            width: 280,
+          },
 
-        // help button
-        headerRight: () => <HeaderHelpComponent navigation={undefined} />,
-        // custom hamburger menu
-        headerLeft: () => <CustomMenuBTN />,
-        headerStyle: {
-          backgroundColor: "black",
-        },
-        headerTintColor: "black",
-        headerTitleStyle: {
-          bottom: 15,
-          fontSize: 42,
-          fontFamily: "MPLUSLatin_Bold",
-        },
-        headerTitleAlign: "center",
-      }}
-    >
-      <Drawer.Screen
-        name="Home"
-        component={HomeScreen as any}
-        // function to change the icon color when focused
-        options={{
-          drawerLabel: ({ focused }) => (
-            <CustomDrawerLabel focused={focused} title="Home" />
-          ),
-          drawerActiveTintColor: "white",
-          drawerInactiveTintColor: "darkgrey",
-          drawerIcon: ({ color }) => (
-            <AntDesign name="home" size={26} color={color} />
-          ),
+          // help button
+          headerRight: () => <HeaderHelpComponent navigation={undefined} />,
+          // custom hamburger menu
+          headerLeft: () => <CustomMenuBTN />,
+          headerStyle: {
+            backgroundColor: "black",
+          },
+          headerTintColor: "black",
+          headerTitleStyle: {
+            bottom: 15,
+            fontSize: 42,
+            fontFamily: "MPLUSLatin_Bold",
+          },
+          headerTitleAlign: "center",
         }}
-      />
-
-      <Drawer.Screen
-        name="Flex"
-        component={WorkHoursScreen as any}
-        options={{
+      >
+        <Drawer.Screen
+          name="Home"
+          component={HomeScreen as any}
           // function to change the icon color when focused
-          drawerActiveTintColor: "white",
-          drawerInactiveTintColor: "darkgrey",
+          options={{
+            drawerLabel: ({ focused }) => (
+              <CustomDrawerLabel focused={focused} title="Home" />
+            ),
+            drawerActiveTintColor: "white",
+            drawerInactiveTintColor: "darkgrey",
+            drawerIcon: ({ color }) => (
+              <AntDesign name="home" size={26} color={color} />
+            ),
+          }}
+        />
 
-          drawerLabel: ({ focused }) => (
-            <CustomDrawerLabel focused={focused} title="Work-Hours" />
-          ),
-          drawerIcon: ({ focused, color }) => (
-            <MaterialCommunityIcons
-              name="clock-edit-outline"
-              size={24}
-              color={focused ? "white" : "darkgrey"}
-            />
-          ),
-        }}
-      />
-      <Drawer.Screen
-        name="Vacation"
-        component={VacationScreen as any}
-        options={{
-          // function to change the icon color when focused
-          drawerLabel: ({ focused }) => (
-            <CustomDrawerLabel focused={focused} title="Vacation" />
-          ),
-          drawerActiveTintColor: "white",
-          drawerInactiveTintColor: "darkgrey",
-          drawerIcon: ({ focused }) => (
-            <Fontisto
-              name="island"
-              size={24}
-              color={focused ? "white" : "darkgrey"}
-            />
-          ),
-        }}
-      />
-    </Drawer.Navigator>
+        <Drawer.Screen
+          name="WorkHours"
+          component={WorkHoursScreen as any}
+          options={{
+            // function to change the icon color when focused
+            drawerActiveTintColor: "white",
+            drawerInactiveTintColor: "darkgrey",
+
+            drawerLabel: ({ focused }) => (
+              <CustomDrawerLabel focused={focused} title="Work-Hours" />
+            ),
+            drawerIcon: ({ focused, color }) => (
+              <MaterialCommunityIcons
+                name="clock-edit-outline"
+                size={24}
+                color={focused ? "white" : "darkgrey"}
+              />
+            ),
+          }}
+        />
+        <Drawer.Screen
+          name="Vacation"
+          component={VacationScreen as any}
+          options={{
+            // function to change the icon color when focused
+            drawerLabel: ({ focused }) => (
+              <CustomDrawerLabel focused={focused} title="Vacation" />
+            ),
+            drawerActiveTintColor: "white",
+            drawerInactiveTintColor: "darkgrey",
+            drawerIcon: ({ focused }) => (
+              <Fontisto
+                name="island"
+                size={24}
+                color={focused ? "white" : "darkgrey"}
+              />
+            ),
+          }}
+        />
+      </Drawer.Navigator>
+    </CopilotProvider>
   );
 };
 
@@ -195,7 +198,6 @@ const App = () => {
   // hide splashscreen
   useEffect(() => {
     const hide = async () => {
-      // optional kannst du hier auf Fonts oder Daten warten
       await SplashScreen.hideAsync();
     };
     hide();
