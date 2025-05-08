@@ -18,6 +18,7 @@ import {
 } from "react-native";
 import React, { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -36,6 +37,7 @@ import { FontAwesome5 } from "@expo/vector-icons";
 import { validate } from "react-email-validator";
 
 import { FIREBASE_APP, FIREBASE_FIRESTORE } from "../firebaseConfig";
+import { RootStackParamList } from "../navigation/RootStackParams";
 import AppLogo from "../components/AppLogo";
 import AnimatedText from "../components/AnimatedText";
 import LostPasswordModal from "../components/LostPasswordModal";
@@ -43,12 +45,19 @@ import DismissKeyboard from "../components/DismissKeyboard";
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
+type RegisterScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "Home"
+>;
+
+////////////////////////////////////////////////////////////////////////////////////////////
+
 const LoginScreen: React.FC = () => {
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
 
   // declaire the navigation to user get in after logein
-  const navigation = useNavigation();
+  const navigation = useNavigation<RegisterScreenNavigationProp>();
 
   // states for LostPasswordModal
   const [isModalVisible, setModalVisible] = useState(false);
@@ -173,6 +182,8 @@ const LoginScreen: React.FC = () => {
 
       // welcome notification
       await NotificationManager.sendWelcomeNotification(token);
+      // navigate to the home screen with the flag
+      navigation.navigate("Home", { fromRegister: true });
     } catch (error) {
       console.log("Registration failed:", error);
       // alert notification toast
