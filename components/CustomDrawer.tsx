@@ -193,12 +193,12 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
       <ScrollView
         style={{ flex: 1 }}
         {...props}
-        contentContainerStyle={{ backgroundColor: "black" }}
+        contentContainerStyle={{
+          backgroundColor: "black",
+          paddingBottom: 320,
+        }}
       >
         <DrawerItemList {...props} />
-        <View style={{ paddingTop: 180 }}>
-          <RestartTourButton userId={user?.uid || ""} />
-        </View>
       </ScrollView>
 
       {/* drawer bottom section witch implemates FAQ and Logout */}
@@ -216,6 +216,17 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
           borderWidth: 0.5,
         }}
       >
+        {/* restart tour button */}
+        <View
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 150,
+          }}
+        >
+          <RestartTourButton userId={user?.uid || ""} />
+        </View>
         {/* FAQ Modal */}
         <BottomSheetModal
           ref={bottomSheetModalRef}
@@ -233,6 +244,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
           />
         </BottomSheetModal>
         {/* FAQ button */}
+
         <TouchableOpacity onPress={handlePresentModalPress}>
           <View
             style={{
@@ -243,6 +255,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
             }}
           >
             <AntDesign name="profile" size={26} color="white" />
+
             <Text
               style={{
                 color: "white",
