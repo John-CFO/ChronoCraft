@@ -31,14 +31,17 @@ const RestartTourButton: React.FC<RestartTourProps> = ({ userId }) => {
       }
       await resetTourFlags(userId!);
 
-      // Optional: Feedback to the user
+      // feedback to the user
       Alert.alert(
         "Restart Tour",
         "The tour will be shown again when opening the respective screens."
       );
 
-      // Optional: reload the screen
-      navigation.navigate("Home"); // or any other screen
+      //  reload the screen
+      navigation.navigate("Inside", {
+        screen: "Home",
+        params: { triggerReload: Date.now() },
+      });
     } catch (error) {
       console.log("Error restarting tour:", error);
     }

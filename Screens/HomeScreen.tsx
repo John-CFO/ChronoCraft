@@ -20,10 +20,15 @@ import {
   Dimensions,
   Alert,
 } from "react-native";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import {
+  useNavigation,
+  useRoute,
+  RouteProp,
+  useFocusEffect,
+} from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import Modal from "react-native-modal";
 import {
@@ -61,8 +66,11 @@ import { useCopilotOffset } from "../components/services/copilotTour/CopilotOffs
 import CustomTooltip from "../components/services/copilotTour/CustomToolTip";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
-
-type HomeScreenRouteProp = RouteProp<RootStackParamList, "Home">;
+type HomeScreenRouteProp = RouteProp<
+  { Home: { fromRegister?: boolean; triggerReload?: any } },
+  "Home"
+>;
+// type HomeScreenRouteProp = RouteProp<RootStackParamList, "Home">;
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, "Home">;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -77,8 +85,8 @@ const HomeScreen: React.FC = () => {
   // initialize the copilot offset
   const offset = useCopilotOffset();
 
+  // initialize routing
   const route = useRoute<HomeScreenRouteProp>();
-  const { fromRegister } = route.params ?? {};
 
   // navigation declaration to navigate from any project to DetailsScreen
   const navigation = useNavigation<HomeScreenNavigationProp>();
@@ -462,54 +470,39 @@ const HomeScreen: React.FC = () => {
     );
   };
 
-  // hook to check Firestore if the user has seen the home tour
-  // useFocusEffect(
-  //   useCallback(() => {
-  //     const fetchTourStatus = async () => {
-  //       const userId = auth.currentUser?.uid;
-  //       if (!userId) return;
+  // // hook to check Firestore if the user has seen the Copilot home tour
+  const fetchTourStatus = async () => {
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
 
-  //       const docRef = doc(FIREBASE_FIRESTORE, "Users", userId);
-  //       const docSnap = await getDoc(docRef);
+    const docRef = doc(FIREBASE_FIRESTORE, "Users", userId);
+    const docSnap = await getDoc(docRef);
 
-  //       if (docSnap.exists()) {
-  //         const data = docSnap.data();
-  //         setShowTourCard(data.hasSeenHomeTour === false);
-  //       } else {
-  //         setShowTourCard(false);
-  //       }
-  //     };
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      const shouldShow = data.hasSeenHomeTour === false;
 
-  //     fetchTourStatus();
-  //   }, [])
-  // );
+      // console.log("show tourcard (Home)?", shouldShow);
+      setShowTourCard(shouldShow);
+    } else {
+      setShowTourCard(false);
+    }
+  };
 
+  // hooks to update the screen state for the Copilot homeTour after registaration and after restarting the tour
+  // if it´s the first mount after registration
   useEffect(() => {
-    const fetchTourStatus = async () => {
-      const userId = auth.currentUser?.uid;
-      if (!userId) return;
-
-      const docRef = doc(FIREBASE_FIRESTORE, "Users", userId);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setShowTourCard(
-          data.firstLogin === true &&
-            data.hasSeenHomeTour === false &&
-            data.hasSeenDetailsTour === false &&
-            data.hasSeenVacationTour === false &&
-            data.hasSeenWorkHoursTour === false
-        );
-      } else {
-        setShowTourCard(false);
-      }
-    };
-
-    if (fromRegister) {
+    if (route.params?.fromRegister || route.params?.triggerReload) {
       fetchTourStatus();
     }
-  }, [fromRegister]);
+  }, [route.params?.fromRegister, route.params?.triggerReload]);
+
+  // hook for restarting the tour after restarting the tour
+  useFocusEffect(
+    useCallback(() => {
+      fetchTourStatus();
+    }, [])
+  );
 
   // delay the setting of showTourCard
   useEffect(() => {
