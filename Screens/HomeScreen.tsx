@@ -469,6 +469,7 @@ const HomeScreen: React.FC = () => {
     );
   };
 
+
   // hook to check Firestore if the user has seen the Copilot home tour
   const fetchTourStatus = async () => {
     const userId = auth.currentUser?.uid;
