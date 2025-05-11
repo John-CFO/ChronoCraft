@@ -63,6 +63,9 @@ const DetailsScreen: React.FC = () => {
   // state to control the copilot tour
   const [showTour, setShowTour] = useState(false);
 
+  // extra state to ensure tourCard is visible AFTER the routing loader
+  const [shouldShowTour, setShouldShowTour] = useState(false);
+
   // state to control the copilot card
   const [showTourCard, setShowTourCard] = useState<boolean | null>(null);
 
@@ -97,7 +100,8 @@ const DetailsScreen: React.FC = () => {
 
           const hasSeenTour =
             docSnap.exists() && docSnap.data()?.hasSeenDetailsTour === false;
-          setShowTourCard(hasSeenTour); // true if the user has not seen the tour
+          // setShowTourCard(hasSeenTour);
+          setShouldShowTour(true);
         } catch (error) {
           console.error("Error checking tour status:", error);
           setShowTourCard(false);
@@ -108,46 +112,46 @@ const DetailsScreen: React.FC = () => {
     }, [])
   );
 
-  // loading state to false after minTimePassed
+  // hook to control the copilot tour card + animation timing to get visibility
   useEffect(() => {
-    if (minTimePassed) {
-      setLoading(false);
+    if (!minTimePassed) return;
+    setLoading(false);
+    if (loading === false) {
+      setShowTour(true);
     }
-  }, [minTimePassed]);
-
-  // delay the setting of showTourCard
-  useEffect(() => {
-    if (!loading && minTimePassed && showTour) {
+    if (shouldShowTour && showTour) {
       const timer = setTimeout(() => {
         setShowTourCard(true);
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [loading, minTimePassed, showTour]);
-
-  if (loading || !minTimePassed) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "black",
-        }}
-      >
-        <RoutingLoader />
-      </View>
-    );
-  }
+  }, [shouldShowTour, loading, minTimePassed, showTour]);
 
   // function to disable the copilot order and step number
   const EmptyStepNumber = () => {
     return null;
   };
 
-  // render always the same hooks
   return (
     <SafeAreaView style={{ flex: 1 }}>
+      {/* Loading Screen */}
+      {(loading || !minTimePassed) && (
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 20,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "black",
+          }}
+        >
+          <RoutingLoader />
+        </View>
+      )}
       <CopilotProvider
         overlay="svg"
         verticalOffset={offset}
@@ -164,15 +168,13 @@ const DetailsScreen: React.FC = () => {
         }}
       >
         <View style={{ flex: 1, position: "relative", zIndex: 0 }}>
+          {/* Copilot Tour Card */}
           {showTourCard == true && (
             <View
               style={{
                 position: "absolute",
                 width: "100%",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
+                height: "100%",
                 justifyContent: "center",
                 alignItems: "center",
                 backgroundColor: "rgba(0, 0, 0, 0.6)",
@@ -185,7 +187,7 @@ const DetailsScreen: React.FC = () => {
                 scrollViewRef={scrollViewRef}
                 scrollViewReady={scrollReady}
                 needsRefCheck={true}
-                showTourCard={showTourCard}
+                showTourCard={showTourCard ?? false}
                 setShowTourCard={setShowTourCard}
               />
             </View>
