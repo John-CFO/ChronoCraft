@@ -21,7 +21,6 @@ import {
   Alert,
 } from "react-native";
 import React, { useState, useEffect, useRef, useCallback } from "react";
-
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   useNavigation,
@@ -70,7 +69,7 @@ type HomeScreenRouteProp = RouteProp<
   { Home: { fromRegister?: boolean; triggerReload?: any } },
   "Home"
 >;
-// type HomeScreenRouteProp = RouteProp<RootStackParamList, "Home">;
+
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, "Home">;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -470,7 +469,7 @@ const HomeScreen: React.FC = () => {
     );
   };
 
-  // // hook to check Firestore if the user has seen the Copilot home tour
+  // hook to check Firestore if the user has seen the Copilot home tour
   const fetchTourStatus = async () => {
     const userId = auth.currentUser?.uid;
     if (!userId) return;

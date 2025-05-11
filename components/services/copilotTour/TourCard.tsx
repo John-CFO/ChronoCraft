@@ -4,7 +4,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   TouchableOpacity,
   Text,
@@ -12,6 +12,7 @@ import {
   ScrollView,
   Alert,
   Dimensions,
+  Animated,
 } from "react-native";
 import { useCopilot } from "react-native-copilot";
 import { doc, updateDoc } from "firebase/firestore";
@@ -50,6 +51,40 @@ const TourButton: React.FC<TourButtonProps> = ({
 
   // define the width of the screen
   const screenWidth = Dimensions.get("window").width;
+  const screenHeight = Dimensions.get("window").height;
+  const translateY = useRef(new Animated.Value(screenHeight)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  // Animate on showTourCard change
+  useEffect(() => {
+    if (showTourCard) {
+      Animated.parallel([
+        Animated.timing(translateY, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(translateY, {
+          toValue: screenHeight,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [showTourCard, translateY, opacity]);
 
   // function to check if the ScrollView is ready
   const isScrollViewReady =
@@ -129,110 +164,124 @@ const TourButton: React.FC<TourButtonProps> = ({
     }
   };
 
+  if (!showTourCard) return null;
+
   return (
-    <>
-      {showTourCard && (
-        <View
+    <Animated.View
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "rgba(0, 0, 0, 0.6)",
+        transform: [{ translateY }],
+        opacity,
+        zIndex: 2,
+      }}
+    >
+      <Animated.View
+        style={{
+          width: screenWidth * 0.9,
+          maxWidth: 600,
+          backgroundColor: "#191919",
+          padding: 20,
+          borderRadius: 15,
+          borderWidth: 2,
+          borderColor: "aqua",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 2,
+        }}
+      >
+        <Text
           style={{
-            width: screenWidth * 0.9,
-            maxWidth: 600,
-            backgroundColor: "#191919",
-            padding: 20,
-            borderRadius: 15,
-            borderWidth: 2,
-            borderColor: "aqua",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 2,
+            color: "white",
+            fontSize: 28,
+            fontFamily: "MPLUSLatin_Bold",
+            marginBottom: 20,
+            textAlign: "center",
           }}
         >
-          <Text
+          Start {"\n"} Introducing Tour
+        </Text>
+
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            width: 280,
+            gap: 15,
+          }}
+        >
+          {/* PLAY Button */}
+          <TouchableOpacity
+            onPress={handleStartTour}
             style={{
-              color: "white",
-              fontSize: 28,
-              fontFamily: "MPLUSLatin_Bold",
-              marginBottom: 20,
-              textAlign: "center",
+              borderRadius: 12,
+              overflow: "hidden",
+              borderWidth: 3,
+              borderColor: "white",
+              flex: 1,
             }}
           >
-            Start {"\n"} Introducing Tour
-          </Text>
+            <LinearGradient
+              colors={["#00FFFF", "#FFFFFF"]}
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+                height: 45,
+                width: "100%",
+              }}
+            >
+              <Text
+                style={{
+                  color: "grey",
+                  fontSize: 20,
+                  fontFamily: "MPLUSLatin_Bold",
+                }}
+              >
+                PLAY
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
 
-          <View
+          {/* SKIP Button */}
+          <TouchableOpacity
+            onPress={handleSkipTour}
             style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              width: 280,
-              gap: 15,
+              borderRadius: 12,
+              overflow: "hidden",
+              borderWidth: 3,
+              borderColor: "white",
+              flex: 1,
             }}
           >
-            {/* PLAY Button */}
-            <TouchableOpacity
-              onPress={handleStartTour}
+            <LinearGradient
+              colors={["#FFFFFF", "#AAAAAA"]}
               style={{
-                borderRadius: 12,
-                overflow: "hidden",
-                borderWidth: 3,
-                borderColor: "white",
-                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+                height: 45,
+                width: "100%",
               }}
             >
-              <LinearGradient
-                colors={["#00FFFF", "#FFFFFF"]}
+              <Text
                 style={{
-                  alignItems: "center",
-                  justifyContent: "center",
-                  height: 45,
-                  width: "100%",
+                  color: "black",
+                  fontSize: 20,
+                  fontFamily: "MPLUSLatin_Bold",
                 }}
               >
-                <Text
-                  style={{
-                    color: "grey",
-                    fontSize: 20,
-                    fontFamily: "MPLUSLatin_Bold",
-                  }}
-                >
-                  PLAY
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
-
-            {/* SKIP Button */}
-            <TouchableOpacity
-              onPress={handleSkipTour}
-              style={{
-                borderRadius: 12,
-                overflow: "hidden",
-                borderWidth: 3,
-                borderColor: "white",
-                flex: 1,
-              }}
-            >
-              <LinearGradient
-                colors={["#FFFFFF", "#AAAAAA"]}
-                style={{
-                  alignItems: "center",
-                  justifyContent: "center",
-                  height: 45,
-                  width: "100%",
-                }}
-              >
-                <Text
-                  style={{
-                    color: "black",
-                    fontSize: 20,
-                    fontFamily: "MPLUSLatin_Bold",
-                  }}
-                >
-                  SKIP
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
+                SKIP
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
-      )}
-    </>
+      </Animated.View>
+    </Animated.View>
   );
 };
 
