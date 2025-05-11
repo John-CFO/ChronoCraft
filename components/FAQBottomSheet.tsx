@@ -304,7 +304,7 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                 style={{
                   fontSize: 16,
                   fontWeight: "600",
-                  color: "white",
+                  color: expandedSections.faq1 ? "aqua" : "white",
                   flex: 1,
                   marginRight: 16,
                 }}
@@ -345,7 +345,7 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                 style={{
                   fontSize: 16,
                   fontWeight: "600",
-                  color: "white",
+                  color: expandedSections.faq2 ? "aqua" : "white",
                   flex: 1,
                   marginRight: 16,
                 }}
@@ -388,7 +388,7 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                 style={{
                   fontSize: 16,
                   fontWeight: "600",
-                  color: "white",
+                  color: expandedSections.faq3 ? "aqua" : "white",
                   flex: 1,
                   marginRight: 16,
                 }}
