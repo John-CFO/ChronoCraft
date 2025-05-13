@@ -6,7 +6,7 @@
 
 /////////////////////////////////////////////////////////////////////////////
 
-import { Text, TouchableOpacity, View, Alert } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import React, { useEffect, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "react-native";
@@ -39,6 +39,8 @@ import CustomDrawer from "./components/CustomDrawer";
 import CustomMenuBTN from "./components/CustomMenuBTN";
 import HelpMenu from "./components/HelpMenu";
 import { useStore } from "./components/TimeTrackingState";
+import CustomAlert from "./components/services/customAlert/CustomAlert";
+import { useAlertStore } from "./components/services/customAlert/alertStore";
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -228,6 +230,7 @@ const App = () => {
         <BottomSheetModalProvider>
           {/* navigation container */}
           <NavigationContainer>
+            <CustomAlert />
             {fontsLoaded && (
               <Stack.Navigator
                 screenOptions={{
@@ -305,10 +308,12 @@ const App = () => {
                             .getProjectTrackingState(projectId);
 
                           if (isTracking) {
-                            Alert.alert(
-                              "Project is still running.",
-                              " You can't leave the app. Please stop the project first."
-                            );
+                            useAlertStore
+                              .getState()
+                              .showAlert(
+                                "Project is still running.",
+                                " You can't leave the app. Please stop the project first."
+                              );
                           } else {
                             navigation.goBack();
                           }

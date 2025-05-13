@@ -14,7 +14,6 @@ import {
   StatusBar,
   ImageBackground,
   TouchableOpacity,
-  Alert,
 } from "react-native";
 import React, { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
@@ -42,6 +41,7 @@ import AppLogo from "../components/AppLogo";
 import AnimatedText from "../components/AnimatedText";
 import LostPasswordModal from "../components/LostPasswordModal";
 import DismissKeyboard from "../components/DismissKeyboard";
+import { useAlertStore } from "../components/services/customAlert/alertStore";
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -81,23 +81,29 @@ const LoginScreen: React.FC = () => {
   // function to validate the inputs
   const validateInputs = () => {
     if (!validate(email)) {
-      Alert.alert("Unvalid E-Mail", "Plese enter a validate E-Mail.");
+      useAlertStore
+        .getState()
+        .showAlert("Unvalid E-Mail", "Plese enter a validate E-Mail.");
       return false;
     }
     if (password.length < 8) {
-      Alert.alert(
-        "Weak Password",
-        "The password must be at least 8 characters long."
-      );
+      useAlertStore
+        .getState()
+        .showAlert(
+          "Weak Password",
+          "The password must be at least 8 characters long."
+        );
       return false;
     }
 
     const specialChars = password.match(/[-_!@#$%^&*(),.?":{}|<>]/g);
     if (!specialChars || specialChars.length < 2) {
-      Alert.alert(
-        "Special characters missing",
-        "The password must contain at least 2 special characters."
-      );
+      useAlertStore
+        .getState()
+        .showAlert(
+          "Special characters missing",
+          "The password must contain at least 2 special characters."
+        );
       return false;
     }
     return true;

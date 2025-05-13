@@ -18,7 +18,6 @@ import {
   Animated,
   LayoutChangeEvent,
   Dimensions,
-  Alert,
 } from "react-native";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -63,6 +62,7 @@ import TourCard from "../components/services/copilotTour/TourCard";
 import DismissKeyboard from "../components/DismissKeyboard";
 import { useCopilotOffset } from "../components/services/copilotTour/CopilotOffset";
 import CustomTooltip from "../components/services/copilotTour/CustomToolTip";
+import { useAlertStore } from "../components/services/customAlert/alertStore";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 type HomeScreenRouteProp = RouteProp<
@@ -190,7 +190,9 @@ const HomeScreen: React.FC = () => {
   const handleAddProject = async () => {
     // check if project name is empty
     if (!newProjectName.trim()) {
-      Alert.alert("Sorry", "Add a project title first to continue.");
+      useAlertStore
+        .getState()
+        .showAlert("Sorry", "Add a project title first to continue.");
       return;
     }
     try {
@@ -238,7 +240,7 @@ const HomeScreen: React.FC = () => {
   // function to delete projects
   const handleDeleteProject = async (projectId: string) => {
     // alert to inform user what he has to do first before pressing the delete button
-    Alert.alert(
+    useAlertStore.getState().showAlert(
       "Attention!",
       "Do you really want to delete the project? If you delete the project, all notes will be deleted as well.",
       [
@@ -253,7 +255,9 @@ const HomeScreen: React.FC = () => {
             try {
               const user = FIREBASE_AUTH.currentUser;
               if (!user) {
-                Alert.alert("Error", "User not authenticated.");
+                useAlertStore
+                  .getState()
+                  .showAlert("Error", "User not authenticated.");
                 return;
               }
 
@@ -468,7 +472,6 @@ const HomeScreen: React.FC = () => {
       </Animated.View>
     );
   };
-
 
   // hook to check Firestore if the user has seen the Copilot home tour
   const fetchTourStatus = async () => {

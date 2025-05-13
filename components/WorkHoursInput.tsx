@@ -10,7 +10,6 @@ import {
   View,
   TouchableOpacity,
   TextInput,
-  Alert,
   Dimensions,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -21,6 +20,7 @@ import { CopilotStep, walkthroughable } from "react-native-copilot";
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import dayjs from "../dayjsConfig";
 import WorkHoursState from "../components/WorkHoursState";
+import { useAlertStore } from "./services/customAlert/alertStore";
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -77,11 +77,13 @@ const WorkHoursInput = () => {
   const handleSaveMinHours = async () => {
     const hours = parseFloat(tempExpectedHours); // parse the expected hours
     if (!tempExpectedHours || isNaN(hours) || hours <= 0) {
-      Alert.alert(
-        "Invalid Input",
-        "Please enter a valid number greater than 0.",
-        [{ text: "OK", style: "default" }]
-      );
+      useAlertStore
+        .getState()
+        .showAlert(
+          "Invalid Input",
+          "Please enter a valid number greater than 0.",
+          [{ text: "OK", style: "default" }]
+        );
       return;
     }
     // condition to check if the user is logged in
@@ -125,11 +127,13 @@ const WorkHoursInput = () => {
         console.error("Error message:", error.message);
       }
       // alert to inform the user about the error
-      Alert.alert(
-        "Error",
-        "During the saving process an error occurred. Please try again.",
-        [{ text: "OK", style: "default" }]
-      );
+      useAlertStore
+        .getState()
+        .showAlert(
+          "Error",
+          "During the saving process an error occurred. Please try again.",
+          [{ text: "OK", style: "default" }]
+        );
     }
   };
 
