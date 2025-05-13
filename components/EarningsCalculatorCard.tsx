@@ -17,12 +17,12 @@ import React, { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { RouteProp, useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Alert } from "react-native";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { updateProjectData } from "../components/FirestoreService";
 import { useStore } from "./TimeTrackingState";
+import { useAlertStore } from "../components/services/customAlert/alertStore";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -224,7 +224,9 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
       }
       // alert to inform user what he has to do first before pressed the save button
     } else {
-      Alert.alert("Sorry", "Please enter a hourly rate first.");
+      useAlertStore
+        .getState()
+        .showAlert("Sorry", "Please enter a hourly rate first.");
     }
   };
 

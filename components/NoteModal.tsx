@@ -5,7 +5,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   Dimensions,
 } from "react-native";
 import React, { useState, useEffect } from "react";
@@ -19,6 +18,7 @@ import {
 } from "firebase/firestore";
 
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
+import { useAlertStore } from "./services/customAlert/alertStore";
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -77,10 +77,12 @@ const NoteModal: React.FC<NoteModalProps> = ({
   ) => {
     // alert to inform user what he has to do first before pressed the send button
     if (!comment.trim()) {
-      Alert.alert(
-        "Sorry",
-        "Please write a comment first before pressing send."
-      );
+      useAlertStore
+        .getState()
+        .showAlert(
+          "Sorry",
+          "Please write a comment first before pressing send."
+        );
       return;
     }
 

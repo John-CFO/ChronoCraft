@@ -6,7 +6,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-import { View, Text, FlatList, Dimensions, Alert } from "react-native";
+import { View, Text, FlatList, Dimensions } from "react-native";
 import React, { useEffect, useState } from "react";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import {
@@ -25,6 +25,7 @@ import { CopilotStep, walkthroughable } from "react-native-copilot";
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { FIREBASE_AUTH } from "../firebaseConfig";
 import VacationRemindModal from "../components/VacationRemindModal";
+import { useAlertStore } from "./services/customAlert/alertStore";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -108,51 +109,53 @@ const VacationList = () => {
   // function to delete vacation dates
   const handleDeleteDate = async (vacationId: string) => {
     // alert to confirm deletion
-    Alert.alert("Attention!", "Do you really want to delete the vacation?", [
-      {
-        text: "Cancel",
-        onPress: () => console.log("Vacation deletion canceled"),
-        style: "cancel",
-      },
-      {
-        text: "Delete",
-        onPress: async () => {
-          try {
-            const vacationDoc = doc(
-              FIREBASE_FIRESTORE,
-              "Users",
-              user.uid,
-              "Services",
-              "AczkjyWoOxdPAIRVxjy3",
-              "Vacations",
-              vacationId
-            );
-
-            // firestore batch for atomic updates
-            const batch = writeBatch(FIREBASE_FIRESTORE);
-
-            // conditionally delete the reminderDuration field
-            const vacationData = await getDoc(vacationDoc);
-            if (vacationData.exists()) {
-              const data = vacationData.data();
-              if (data && data.reminderDuration) {
-                batch.update(vacationDoc, {
-                  reminderDuration: deleteField(), // delete the reminderDuration field
-                });
-              }
-            }
-            // delete the vacation
-            batch.delete(vacationDoc);
-            // commit the batch to the database
-            await batch.commit();
-            // console.log(`Vacation ${vacationId} was deleted.`);
-          } catch (error) {
-            console.error("Error deleting vacation:", error);
-          }
+    useAlertStore
+      .getState()
+      .showAlert("Attention!", "Do you really want to delete the vacation?", [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Vacation deletion canceled"),
+          style: "cancel",
         },
-        style: "destructive", // to visually indicate a destructive action
-      },
-    ]);
+        {
+          text: "Delete",
+          onPress: async () => {
+            try {
+              const vacationDoc = doc(
+                FIREBASE_FIRESTORE,
+                "Users",
+                user.uid,
+                "Services",
+                "AczkjyWoOxdPAIRVxjy3",
+                "Vacations",
+                vacationId
+              );
+
+              // firestore batch for atomic updates
+              const batch = writeBatch(FIREBASE_FIRESTORE);
+
+              // conditionally delete the reminderDuration field
+              const vacationData = await getDoc(vacationDoc);
+              if (vacationData.exists()) {
+                const data = vacationData.data();
+                if (data && data.reminderDuration) {
+                  batch.update(vacationDoc, {
+                    reminderDuration: deleteField(), // delete the reminderDuration field
+                  });
+                }
+              }
+              // delete the vacation
+              batch.delete(vacationDoc);
+              // commit the batch to the database
+              await batch.commit();
+              // console.log(`Vacation ${vacationId} was deleted.`);
+            } catch (error) {
+              console.error("Error deleting vacation:", error);
+            }
+          },
+          style: "destructive", // to visually indicate a destructive action
+        },
+      ]);
   };
 
   // function to show the reminder-modal

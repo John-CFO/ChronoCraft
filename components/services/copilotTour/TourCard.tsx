@@ -10,7 +10,6 @@ import {
   Text,
   View,
   ScrollView,
-  Alert,
   Dimensions,
   Animated,
 } from "react-native";
@@ -19,6 +18,7 @@ import { doc, updateDoc } from "firebase/firestore";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { FIREBASE_FIRESTORE } from "../../../firebaseConfig";
+import { useAlertStore } from "../customAlert/alertStore";
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -133,7 +133,7 @@ const TourButton: React.FC<TourButtonProps> = ({
     } catch (error) {
       console.error("[Tour] Tour Start Error:", error);
       if (error instanceof Error) {
-        Alert.alert(
+        useAlertStore.getState().showAlert(
           error.message.includes("ScrollView") ? "Loading Error" : "Tour Error",
           error.message.includes("ScrollView")
             ? "Please wait until the content is fully loaded"
@@ -158,7 +158,9 @@ const TourButton: React.FC<TourButtonProps> = ({
       // set the status to true in Firestore to show that the tour has been seen
       await updateFireStoreTourStatus(userId, true, storageKey);
       setShowTourCard(false);
-      Alert.alert("Skip Tour", "You can start the tour later in the menu.");
+      useAlertStore
+        .getState()
+        .showAlert("Skip Tour", "You can start the tour later in the menu.");
     } catch (error) {
       console.log("Error skipping tour:", error);
     }

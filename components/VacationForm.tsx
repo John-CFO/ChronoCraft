@@ -6,7 +6,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 import React, { useState, useEffect } from "react";
-import { Text, View, ScrollView, TouchableOpacity, Alert } from "react-native";
+import { Text, View, ScrollView, TouchableOpacity } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -16,6 +16,7 @@ import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useCalendarStore } from "../components/CalendarState";
+import { useAlertStore } from "./services/customAlert/alertStore";
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -191,11 +192,13 @@ const VacationForm = () => {
                 onPress={() => {
                   // condition to prevent selecting an end date before a start date with an alert
                   if (!startDate) {
-                    Alert.alert("Sorry", "Please select a start date first.", [
-                      {
-                        text: "OK",
-                      },
-                    ]);
+                    useAlertStore
+                      .getState()
+                      .showAlert("Sorry", "Please select a start date first.", [
+                        {
+                          text: "OK",
+                        },
+                      ]);
                     return;
                   }
                   setTempEndDate(new Date().toISOString().split("T")[0]);

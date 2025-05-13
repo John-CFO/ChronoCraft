@@ -6,7 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Alert, Dimensions } from "react-native";
+import { View, Text, TouchableOpacity, Dimensions } from "react-native";
 import Modal from "react-native-modal";
 import { LinearGradient } from "expo-linear-gradient";
 import { doc, setDoc, getDoc } from "firebase/firestore";
@@ -14,6 +14,7 @@ import { doc, setDoc, getDoc } from "firebase/firestore";
 import { NotificationManager } from "./services/PushNotifications";
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import CheckmarkAnimation from "./Checkmark";
+import { useAlertStore } from "./services/customAlert/alertStore";
 
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -65,7 +66,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
       // if no vacation is selected send alert
       if (!id) {
         // console.error("No vacation selected.");
-        Alert.alert("Error", "No vacation selected.");
+        useAlertStore.getState().showAlert("Error", "No vacation selected.");
         return;
       }
 
@@ -75,7 +76,9 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
 
       // if no user is logged in send alert
       if (!user) {
-        Alert.alert("Error", "You must be logged in to save a reminder.");
+        useAlertStore
+          .getState()
+          .showAlert("Error", "You must be logged in to save a reminder.");
         return;
       }
 
@@ -90,7 +93,9 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
       // if the user document does not exist send alert
       if (!userSnapshot.exists()) {
         // console.error("User document not found in Firestore.");
-        Alert.alert("Error", "User document not found in Firestore.");
+        useAlertStore
+          .getState()
+          .showAlert("Error", "User document not found in Firestore.");
         return;
       }
       // exract the push token from the user document
@@ -100,7 +105,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
       // if no push token is found send alert
       if (!pushToken) {
         //  console.error("Push Token not found.");
-        Alert.alert("Error", "Push Token not found.");
+        useAlertStore.getState().showAlert("Error", "Push Token not found.");
         return;
       }
 
@@ -120,7 +125,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
       // if the vacation document does not exist send alert
       if (!vacationSnapshot.exists()) {
         //  console.error("Vacation not found in Firestore.");
-        Alert.alert("Error", "Vacation not found.");
+        useAlertStore.getState().showAlert("Error", "Vacation not found.");
         return;
       }
       // make a snapshot of the vacation data
@@ -129,10 +134,12 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
 
       // if the vacation already has a reminder send alert
       if (vacationData?.reminderDuration) {
-        Alert.alert(
-          "Error",
-          "Vacation already has a reminder. If   you want to change it, delete vacation and create a new one."
-        );
+        useAlertStore
+          .getState()
+          .showAlert(
+            "Error",
+            "Vacation already has a reminder. If   you want to change it, delete vacation and create a new one."
+          );
         return; // stop the function if user tries to add a reminder to a vacation that already has one
       }
       // set the start date from the vacation data
@@ -141,14 +148,18 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
       // if the start date is invalid send alert
       if (isNaN(startDate.getTime())) {
         // console.error("Invalid vacation start date.");
-        Alert.alert("Error", "Invalid vacation start date.");
+        useAlertStore
+          .getState()
+          .showAlert("Error", "Invalid vacation start date.");
         return;
       }
       // console.log("Selected Option for reminderDuration:", selectedOption);
       // if selected option is undefined or invalid send alert
       if (selectedOption == null || selectedOption < 0) {
         // console.error("Selected Option is undefined or invalid.");
-        Alert.alert("Error", "Please select a reminder duration.");
+        useAlertStore
+          .getState()
+          .showAlert("Error", "Please select a reminder duration.");
         return;
       }
 
@@ -180,12 +191,16 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
       // console.log("Notification successfully scheduled.");
 
       // success alert
-      Alert.alert("Success", "Reminder saved successfully.");
+      useAlertStore
+        .getState()
+        .showAlert("Success", "Reminder saved successfully.");
       // console.log("Reminder save process completed.");
       onClose(); // close the modal after saving
     } catch (error) {
       //  console.error("Failed to save reminder:", error);
-      Alert.alert("Error", "Failed to save reminder. Please try again.");
+      useAlertStore
+        .getState()
+        .showAlert("Error", "Failed to save reminder. Please try again.");
     }
   };
 

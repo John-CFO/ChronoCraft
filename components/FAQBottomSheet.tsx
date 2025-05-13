@@ -11,7 +11,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Alert,
   TextInput,
   Dimensions,
 } from "react-native";
@@ -25,6 +24,7 @@ import { FontAwesome5 } from "@expo/vector-icons";
 import { ScrollView } from "react-native-gesture-handler";
 
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
+import { useAlertStore } from "./services/customAlert/alertStore";
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -146,8 +146,15 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
 
   // function to delete the account
   const handleDeleteAccount = async () => {
-    if (!password) {
-      Alert.alert("Error", "Please enter your password.");
+    if (!password?.trim()) {
+      // show an alert if no password is entered
+      useAlertStore
+        .getState()
+        .showAlert(
+          "No Password",
+          "Please enter your password before deleting your account.",
+          [{ text: "OK", onPress: () => useAlertStore.getState().hideAlert() }]
+        );
       return;
     }
 
@@ -184,19 +191,25 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
 
       closeFAQSheet();
 
-      Alert.alert(
-        "Success",
-        "Your account has been deleted. All your data has been removed."
-      );
+      useAlertStore
+        .getState()
+        .showAlert(
+          "Success",
+          "Your account has been deleted. All your data has been removed.",
+          [{ text: "OK", onPress: () => useAlertStore.getState().hideAlert() }]
+        );
 
       // delete the current user
       await FIREBASE_AUTH.currentUser?.delete();
     } catch (error: any) {
-      console.error("Error deleting account:", error);
-      Alert.alert(
-        "Error",
-        "There was an issue deleting your account. Please try again."
-      );
+      // console.error("Error deleting account:", error);
+      useAlertStore
+        .getState()
+        .showAlert(
+          "Error",
+          "There was an issue deleting your account. Please try again.",
+          [{ text: "OK", onPress: () => useAlertStore.getState().hideAlert() }]
+        );
     } finally {
       setLoading(false);
     }
@@ -454,14 +467,20 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                 </View>
                 <TouchableOpacity
                   onPress={() =>
-                    Alert.alert(
-                      "Delete Account",
-                      "Are you sure you want to delete your account?",
-                      [
-                        { text: "Cancel", style: "cancel" },
-                        { text: "Delete", onPress: handleDeleteAccount },
-                      ]
-                    )
+                    useAlertStore
+                      .getState()
+                      .showAlert(
+                        "Delete Account",
+                        "Are you sure you want to delete your account?",
+                        [
+                          { text: "Cancel", style: "cancel" },
+                          {
+                            text: "Delete",
+                            style: "destructive",
+                            onPress: handleDeleteAccount,
+                          },
+                        ]
+                      )
                   }
                   style={{
                     width: screenWidth * 0.7, // use 70% of the screen width
