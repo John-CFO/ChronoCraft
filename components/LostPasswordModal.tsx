@@ -9,7 +9,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   Dimensions,
 } from "react-native";
 import { sendPasswordResetEmail } from "firebase/auth";
@@ -17,6 +16,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import Modal from "react-native-modal";
 
 import { FIREBASE_AUTH } from "../firebaseConfig";
+import { useAlertStore } from "./services/customAlert/alertStore";
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -41,20 +41,24 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
   const handlePasswordReset = async () => {
     // condition: if no email is entered show an alert
     if (!email) {
-      Alert.alert("Error", "Please enter your email.");
+      useAlertStore.getState().showAlert("Error", "Please enter your email.");
       return;
     }
     // try to send the password reset email, if it was successful show an alert with instructions
     try {
       await sendPasswordResetEmail(FIREBASE_AUTH, email);
-      Alert.alert(
-        "E-Mails sent",
-        "An E-Mail has been sent to you with instructions on how to reset your password."
-      );
+      useAlertStore
+        .getState()
+        .showAlert(
+          "E-Mails sent",
+          "An E-Mail has been sent to you with instructions on how to reset your password."
+        );
       onClose(); // close the modal
     } catch (error) {
       console.error(error);
-      Alert.alert("Error", "There was an error resetting your password.");
+      useAlertStore
+        .getState()
+        .showAlert("Error", "There was an error resetting your password.");
     }
   };
 

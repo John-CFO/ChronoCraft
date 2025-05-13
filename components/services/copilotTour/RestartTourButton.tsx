@@ -5,11 +5,12 @@
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 import React from "react";
-import { TouchableOpacity, Text, View, Alert } from "react-native";
+import { TouchableOpacity, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Entypo from "@expo/vector-icons/Entypo";
 
 import { resetTourFlags } from "./TourService";
+import { useAlertStore } from "../customAlert/alertStore";
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -32,10 +33,12 @@ const RestartTourButton: React.FC<RestartTourProps> = ({ userId }) => {
       await resetTourFlags(userId!);
 
       // feedback to the user
-      Alert.alert(
-        "Restart Tour",
-        "The tour will be shown again when opening the respective screens."
-      );
+      useAlertStore
+        .getState()
+        .showAlert(
+          "Restart Tour",
+          "The tour will be shown again when opening the respective screens."
+        );
 
       //  reload the screen
       navigation.navigate("Inside", {

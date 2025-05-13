@@ -13,7 +13,6 @@ import {
   TouchableOpacity,
   ImageBackground,
   Image,
-  Alert,
   Dimensions,
 } from "react-native";
 import React, { useEffect, useState } from "react";
@@ -29,6 +28,7 @@ import {
   FIREBASE_APP,
 } from "../firebaseConfig";
 import DismissKeyboard from "../components/DismissKeyboard";
+import { useAlertStore } from "../components/services/customAlert/alertStore";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -65,9 +65,12 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       const { status } =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert(
-          "Sorry, we need camera roll permissions to make this work!"
-        );
+        useAlertStore
+          .getState()
+          .showAlert(
+            "Permission Error",
+            "Sorry, we need camera roll permissions to make this work!"
+          );
       }
     };
 
@@ -86,7 +89,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       setImageUri(result.assets[0].uri);
       // console.log("Image selected:", result.assets[0].uri);
     } else {
-      Alert.alert("You did not select any image.");
+      useAlertStore
+        .getState()
+        .showAlert("No Image Selected", "You did not select any image.");
     }
   };
 

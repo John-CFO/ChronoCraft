@@ -13,7 +13,6 @@ import {
   AppState,
   AppStateStatus,
   TouchableOpacity,
-  Alert,
   Dimensions,
 } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
@@ -35,6 +34,7 @@ import dayjs from "../dayjsConfig";
 import WorkHoursState from "../components/WorkHoursState";
 import { formatTime } from "../components/WorkTimeCalc";
 import WorkTimeAnimation from "../components/WorkTimeAnimation";
+import { useAlertStore } from "./services/customAlert/alertStore";
 
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -128,10 +128,12 @@ const WorkTimeTracker = () => {
         setCurrentDocId(today);
       } catch (error) {
         console.error("Error fetching expected hours:", error);
-        Alert.alert(
-          "Error",
-          "An error occurred while fetching the data. Please try again."
-        );
+        useAlertStore
+          .getState()
+          .showAlert(
+            "Error",
+            "An error occurred while fetching the data. Please try again."
+          );
       }
     };
     getExpectedHoursForToday();
@@ -303,7 +305,9 @@ const WorkTimeTracker = () => {
         setStartWorkTime(newStartTime);
       } else {
         console.log("No Document found.");
-        Alert.alert("First add your expected hours.");
+        useAlertStore
+          .getState()
+          .showAlert("Attention", "First add your expected hours.");
         return;
       }
     } catch (error) {
