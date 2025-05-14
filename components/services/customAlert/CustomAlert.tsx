@@ -4,8 +4,16 @@
 
 //////////////////////////////////////////////////////////////////////////////////
 
-import React from "react";
-import { Modal, View, Text, TouchableOpacity, Dimensions } from "react-native";
+import React, { useEffect, useRef } from "react";
+import {
+  Modal,
+  View,
+  Text,
+  TouchableOpacity,
+  Dimensions,
+  Animated,
+  Easing,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { useAlertStore } from "./alertStore";
@@ -18,10 +26,61 @@ const CustomAlert = () => {
 
   // define the width of the screen
   const screenWidth = Dimensions.get("window").width;
-  const screenHeight = Dimensions.get("window").height;
+
+  // state to show the modal
+  const [showModal, setShowModal] = React.useState(visible);
+
+  // states for the animation
+  const opacity = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0)).current;
+
+  // hook to open the modal with animation
+  useEffect(() => {
+    if (visible) {
+      setShowModal(true);
+
+      Animated.parallel([
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.bezier(0.25, 0.1, 0.25, 1)),
+        }),
+        Animated.timing(scale, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.bezier(0.25, 0.1, 0.25, 1)),
+        }),
+      ]).start();
+    }
+  }, [visible]);
+
+  // function to close the modal with animation
+  const handleCloseWithAnimation = () => {
+    Animated.parallel([
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+        easing: Easing.in(Easing.bezier(0.25, 0.1, 0.25, 1)),
+      }),
+      Animated.timing(scale, {
+        toValue: 0.5,
+        duration: 500,
+        useNativeDriver: true,
+        easing: Easing.in(Easing.bezier(0.25, 0.1, 0.25, 1)),
+      }),
+    ]).start(() => {
+      setShowModal(false);
+      hideAlert();
+    });
+  };
+
+  if (!showModal) return null;
 
   return (
-    <Modal visible={visible} transparent animationType="fade">
+    <Modal visible={visible} transparent animationType="none">
       <View
         style={{
           position: "absolute",
@@ -32,12 +91,10 @@ const CustomAlert = () => {
           justifyContent: "center",
           alignItems: "center",
           backgroundColor: "rgba(0, 0, 0, 0.6)",
-          // transform: [{ translateY }],
-          // opacity,
           zIndex: 2,
         }}
       >
-        <View
+        <Animated.View
           style={{
             width: screenWidth * 0.9,
             maxWidth: 600,
@@ -49,6 +106,9 @@ const CustomAlert = () => {
             alignItems: "center",
             justifyContent: "center",
             zIndex: 2,
+            // animation properties
+            transform: [{ scale }],
+            opacity,
           }}
         >
           <Text
@@ -82,7 +142,7 @@ const CustomAlert = () => {
                     if (button.onPress) {
                       button.onPress();
                     } else {
-                      hideAlert(); // fallback if onPress is not provided
+                      handleCloseWithAnimation(); // function to close the modal with animation
                     }
                   }}
                   style={{
@@ -124,7 +184,7 @@ const CustomAlert = () => {
               )
             )}
           </View>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );
