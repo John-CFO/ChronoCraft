@@ -65,7 +65,7 @@ const DetailsScreen: React.FC = () => {
 
   // state to control the copilot card
   const [showTourCard, setShowTourCard] = useState<boolean | null>(null);
-
+  // state to get the tour status
   const [hasNotSeenTour, setHasNotSeenTour] = useState<boolean | null>(null);
   const [isTourCardVisible, setIsTourCardVisible] = useState(false);
 
@@ -94,14 +94,11 @@ const DetailsScreen: React.FC = () => {
         const uid = auth.currentUser?.uid;
         if (!uid) return;
         try {
-          // 1) hol das gesamte Snapshot-Objekt
           const docRef = doc(FIREBASE_FIRESTORE, "Users", uid);
           const docSnap = await getDoc(docRef);
-
-          // 2) rufe die Methoden auf
           if (docSnap.exists()) {
             const data = docSnap.data();
-            // data() gibt dir das Feld-Objekt, also:
+
             setShowTourCard(data.hasSeenDetailsTour === false);
           } else {
             setShowTourCard(false);
@@ -111,7 +108,6 @@ const DetailsScreen: React.FC = () => {
           setShowTourCard(false);
         }
       };
-
       fetchTourStatus();
     }, [auth.currentUser?.uid])
   );
