@@ -63,11 +63,11 @@ const DetailsScreen: React.FC = () => {
   // state to control the copilot tour
   const [showTour, setShowTour] = useState(false);
 
-  // extra state to ensure tourCard is visible AFTER the routing loader
-  const [shouldShowTour, setShouldShowTour] = useState(false);
-
   // state to control the copilot card
   const [showTourCard, setShowTourCard] = useState<boolean | null>(null);
+  // state to get the tour status
+  const [hasNotSeenTour, setHasNotSeenTour] = useState<boolean | null>(null);
+  const [isTourCardVisible, setIsTourCardVisible] = useState(false);
 
   // states to control the scrollview
   const [scrollReady, setScrollReady] = useState(false);
@@ -90,42 +90,37 @@ const DetailsScreen: React.FC = () => {
   // hook to check Firestore if the user has already seen the tour
   useFocusEffect(
     useCallback(() => {
-      const checkTourStatus = async () => {
-        const userId = auth.currentUser?.uid;
-        if (!userId) return;
-
+      const fetchTourStatus = async () => {
+        const uid = auth.currentUser?.uid;
+        if (!uid) return;
         try {
-          const docRef = doc(FIREBASE_FIRESTORE, "Users", userId);
+          const docRef = doc(FIREBASE_FIRESTORE, "Users", uid);
           const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
 
-          const hasSeenTour =
-            docSnap.exists() && docSnap.data()?.hasSeenDetailsTour === false;
-          // setShowTourCard(hasSeenTour);
-          setShouldShowTour(true);
-        } catch (error) {
-          console.error("Error checking tour status:", error);
+            setShowTourCard(data.hasSeenDetailsTour === false);
+          } else {
+            setShowTourCard(false);
+          }
+        } catch (err) {
+          console.error("Error fetching tour status:", err);
           setShowTourCard(false);
         }
       };
-
-      checkTourStatus();
-    }, [])
+      fetchTourStatus();
+    }, [auth.currentUser?.uid])
   );
 
   // hook to control the copilot tour card + animation timing to get visibility
   useEffect(() => {
     if (!minTimePassed) return;
     setLoading(false);
-    if (loading === false) {
-      setShowTour(true);
-    }
-    if (shouldShowTour && showTour) {
-      const timer = setTimeout(() => {
-        setShowTourCard(true);
-      }, 500);
+    if (!loading && hasNotSeenTour) {
+      const timer = setTimeout(() => setIsTourCardVisible(true), 500);
       return () => clearTimeout(timer);
     }
-  }, [shouldShowTour, loading, minTimePassed, showTour]);
+  }, [minTimePassed, loading, hasNotSeenTour]);
 
   // function to disable the copilot order and step number
   const EmptyStepNumber = () => {
