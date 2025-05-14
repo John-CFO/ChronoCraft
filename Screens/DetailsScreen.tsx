@@ -65,8 +65,8 @@ const DetailsScreen: React.FC = () => {
 
   // state to control the copilot card
   const [showTourCard, setShowTourCard] = useState<boolean | null>(null);
-  // state to get the tour status
-  const [hasNotSeenTour, setHasNotSeenTour] = useState<boolean | null>(null);
+
+  // state to handle if the copilot card is visible
   const [isTourCardVisible, setIsTourCardVisible] = useState(false);
 
   // states to control the scrollview
@@ -98,14 +98,13 @@ const DetailsScreen: React.FC = () => {
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             const data = docSnap.data();
-
             setShowTourCard(data.hasSeenDetailsTour === false);
           } else {
-            setShowTourCard(false);
+            setShowTourCard(false); // if doc does not exist
           }
         } catch (err) {
           console.error("Error fetching tour status:", err);
-          setShowTourCard(false);
+          setShowTourCard(false); // if there is an error
         }
       };
       fetchTourStatus();
@@ -114,13 +113,23 @@ const DetailsScreen: React.FC = () => {
 
   // hook to control the copilot tour card + animation timing to get visibility
   useEffect(() => {
-    if (!minTimePassed) return;
-    setLoading(false);
-    if (!loading && hasNotSeenTour) {
-      const timer = setTimeout(() => setIsTourCardVisible(true), 500);
-      return () => clearTimeout(timer);
+    if (showTourCard === false) {
+      setIsTourCardVisible(false);
+      return;
     }
-  }, [minTimePassed, loading, hasNotSeenTour]);
+    if (!minTimePassed || loading || showTourCard !== true) return;
+    const timer = setTimeout(() => {
+      setIsTourCardVisible(true);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [minTimePassed, loading, showTourCard]);
+
+  // hook to control the loading screen
+  useEffect(() => {
+    if (minTimePassed) {
+      setLoading(false);
+    }
+  }, [minTimePassed]);
 
   // function to disable the copilot order and step number
   const EmptyStepNumber = () => {
@@ -164,7 +173,7 @@ const DetailsScreen: React.FC = () => {
       >
         <View style={{ flex: 1, position: "relative", zIndex: 0 }}>
           {/* Copilot Tour Card */}
-          {showTourCard == true && (
+          {isTourCardVisible == true && (
             <View
               style={{
                 position: "absolute",
