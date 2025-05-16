@@ -1,6 +1,7 @@
 /////////////////////////////////CUSTOM ALERT/////////////////////////////////////
 
-// This component is used to show an customised alert to the user
+// This component is used to show an customised alert modal to the user
+// It includes a fade in and fade out animation and a map of conditionally rendered buttons
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -57,7 +58,7 @@ const CustomAlert = () => {
   }, [visible]);
 
   // function to close the modal with animation
-  const handleCloseWithAnimation = () => {
+  const handleCloseWithAnimation = (callback?: () => void) => {
     Animated.parallel([
       Animated.timing(opacity, {
         toValue: 0,
@@ -74,6 +75,7 @@ const CustomAlert = () => {
     ]).start(() => {
       setShowModal(false);
       hideAlert();
+      if (callback) callback(); // important to ensure asyncronous execution after animation
     });
   };
 
@@ -111,6 +113,7 @@ const CustomAlert = () => {
             opacity,
           }}
         >
+          {/* Alert Title */}
           <Text
             style={{
               color: "white",
@@ -122,6 +125,7 @@ const CustomAlert = () => {
           >
             {title}
           </Text>
+          {/* Alert Message */}
           <Text
             style={{
               fontSize: 14,
@@ -132,7 +136,7 @@ const CustomAlert = () => {
           >
             {message}
           </Text>
-          {/* Ok Button */}
+          {/* conditionally render buttons */}
           <View style={{ flexDirection: "row", gap: 12, marginTop: 12 }}>
             {(buttons || [{ text: "OK", onPress: hideAlert }]).map(
               (button, index) => (
@@ -140,9 +144,9 @@ const CustomAlert = () => {
                   key={index}
                   onPress={() => {
                     if (button.onPress) {
-                      button.onPress();
+                      handleCloseWithAnimation(button.onPress);
                     } else {
-                      handleCloseWithAnimation(); // function to close the modal with animation
+                      handleCloseWithAnimation();
                     }
                   }}
                   style={{

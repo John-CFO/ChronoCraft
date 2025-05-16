@@ -148,13 +148,15 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
   const handleDeleteAccount = async () => {
     if (!password?.trim()) {
       // show an alert if no password is entered
-      useAlertStore
-        .getState()
-        .showAlert(
-          "No Password",
-          "Please enter your password before deleting your account.",
-          [{ text: "OK", onPress: () => useAlertStore.getState().hideAlert() }]
-        );
+      useAlertStore.getState().hideAlert();
+      setTimeout(() => {
+        useAlertStore
+          .getState()
+          .showAlert(
+            "No Password",
+            "Please enter your password before deleting your account."
+          );
+      }, 300);
       return;
     }
 
@@ -477,7 +479,7 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                           {
                             text: "Delete",
                             style: "destructive",
-                            onPress: handleDeleteAccount,
+                            onPress: handleDeleteAccount, // placed here to garantee first the animation
                           },
                         ]
                       )
