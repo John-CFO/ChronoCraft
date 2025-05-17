@@ -29,6 +29,11 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli
 
+      - name: Authenticate with Expo
+        uses: expo/expo-github-action@v8
+        with:
+          token: ${{ secrets.EXPO_TOKEN }}
+
       - name: Run Lint
         run: npm run lint || echo "No lint script defined"
 
@@ -39,11 +44,11 @@ jobs:
         run: npx expo prebuild --non-interactive || echo "Skip if not needed"
 
       - name: EAS Build (Android + iOS)
+        run: eas build --platform all --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: eas build --platform all --non-interactive
 
       - name: EAS Update (OTA)
+        run: eas update --branch main --message "OTA update from GitHub Actions"
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: eas update --branch main --message "OTA update from GitHub Actions"
