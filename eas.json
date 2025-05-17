@@ -5,11 +5,7 @@
   "build": {
     "production": {
       "android": {
-        "workflow": "generic",
         "buildType": "apk"
-      },
-      "ios": {
-        "workflow": "managed"
       },
       "env": {
         "EXPO_TOKEN": "${EXPO_TOKEN}"
