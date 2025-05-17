@@ -1,21 +1,18 @@
 {
   "cli": {
-    "appVersionSource": "local"
+    "version": ">=3.0.0"
   },
   "build": {
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal"
-    },
-    "preview": {
-      "distribution": "internal"
-    },
     "production": {
       "android": {
+        "workflow": "generic",
         "buildType": "apk"
       },
       "ios": {
-        "simulator": true
+        "workflow": "managed"
+      },
+      "env": {
+        "EXPO_TOKEN": "${EXPO_TOKEN}"
       }
     }
   }
