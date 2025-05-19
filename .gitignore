@@ -40,3 +40,7 @@ yarn-error.*
 _active.uuser
 %ProgramData%/Microsoft/Windows/UUS/State/_active.uusver
 
+
+# Native folders
+android/
+ios/
