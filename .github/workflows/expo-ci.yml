@@ -38,8 +38,8 @@ jobs:
       - name: Expo Prebuild (optional)
         run: npx expo prebuild --non-interactive || echo "Skip if not needed"
 
-      - name: EAS Build (Android + iOS)
-        run: eas build --platform all --non-interactive
+      - name: EAS Build (Android APK only)
+        run: eas build --platform android --profile android-apk --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
