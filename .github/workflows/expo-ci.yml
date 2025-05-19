@@ -1,14 +1,23 @@
+############ CI/CD Pipeline ############
+# This pipeline automates the Expo project build and OTA update process.
+# It is configured to run only when manually triggered via GitHub Actions UI
+# (using 'workflow_dispatch'), to preserve monthly build credits on the free Expo plan.
+#
+# Steps:
+# - Install dependencies
+# - Install EAS CLI
+# - Run optional linting and tests
+# - (Optional) Prebuild step for native code sync
+# - Trigger an Android APK build via EAS
+# - Push an OTA update to the specified branch (main)
+#
+# Note: The iOS build is excluded to avoid credential setup errors and because it's not needed.
+########################################
+
 name: Expo CI/CD Pipeline
 
 on:
-  push:
-    branches:
-      - main
-      - master
-  pull_request:
-    branches:
-      - main
-      - master
+  workflow_dispatch: # ⬅️ start the workflow manually from the GitHub UI
 
 jobs:
   build:
