@@ -6,7 +6,7 @@
 // And also the aswer to change the user´s password
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -161,6 +161,9 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
     }
 
     setLoading(true);
+    // timeout to make the dot animation inside the button visible
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
     try {
       if (!userUid) throw new Error("No user is signed in.");
 
@@ -221,6 +224,33 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
   const deleteAccountVisibility = () => {
     setPasswordVisibility(!passwordVisibility);
   };
+
+  // dot animation for TextInput
+  const [dots, setDots] = useState(".");
+
+  useEffect(() => {
+    // initial count
+    let count = 0;
+
+    // setInterval condition
+    const interval = setInterval(() => {
+      if (count === 0) {
+        setDots(".");
+      } else if (count === 1) {
+        setDots("..");
+      } else if (count === 2) {
+        setDots("...");
+      } else {
+        setDots("");
+        count = -1; // restart the animation
+      }
+
+      count += 1;
+    }, 700); // handle animation time
+
+    // clear the interval
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <View
@@ -504,17 +534,62 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                       maxWidth: 600,
                     }}
                   >
-                    <Text
+                    <View
                       style={{
-                        fontFamily: "MPLUSLatin_Bold",
-                        fontSize: 22,
-                        color: "grey",
-                        marginBottom: 5,
-                        paddingRight: 10,
+                        height: 50,
+                        width: 200,
+                        justifyContent: "center",
+                        alignItems: "center",
                       }}
                     >
-                      {loading ? "Deleting..." : "Delete Account"}
-                    </Text>
+                      {loading ? (
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Text
+                            style={{
+                              marginLeft: 100,
+                              marginBottom: 5,
+                              fontFamily: "MPLUSLatin_Bold",
+                              fontSize: 22,
+                              color: "grey",
+                              textAlign: "center",
+                              width: 100,
+                            }}
+                          >
+                            Deleting
+                          </Text>
+                          <Text
+                            style={{
+                              marginBottom: 5,
+                              fontFamily: "MPLUSLatin_Bold",
+                              fontSize: 22,
+                              color: "grey",
+                              width: 100,
+                              textAlign: "left",
+                            }}
+                          >
+                            {dots}
+                          </Text>
+                        </View>
+                      ) : (
+                        <Text
+                          style={{
+                            marginBottom: 5,
+                            fontFamily: "MPLUSLatin_Bold",
+                            fontSize: 22,
+                            color: "grey",
+                            textAlign: "center",
+                          }}
+                        >
+                          Delete Account
+                        </Text>
+                      )}
+                    </View>
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
