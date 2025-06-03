@@ -48,6 +48,7 @@ import {
   CopilotStep,
   walkthroughable,
 } from "react-native-copilot";
+import * as Animatable from "react-native-animatable";
 
 import {
   FIREBASE_FIRESTORE,
@@ -396,80 +397,88 @@ const HomeScreen: React.FC = () => {
     };
 
     return (
-      // Animation View parameters
-      <Animated.View
-        style={{
-          height: ITEM_HEIGHT,
-          transform: [{ scale }],
-          opacity,
-          margin: 5,
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          borderWidth: 1,
-          borderColor: "aqua",
-          minWidth: "98%",
-          backgroundColor: "#191919",
-          borderRadius: 8,
-        }}
-        onLayout={mesureItemHeight}
+      <Animatable.View
+        animation="zoomInUp"
+        duration={1500}
+        delay={index * 100}
+        useNativeDriver
       >
-        {/* Button to navigate to the details screen */}
-        <TouchableOpacity
-          onPress={() => handleProjectPress(item.id as string, item.name)}
-          style={{ alignItems: "center", justifyContent: "center", flex: 1 }}
+        {/* Animation View parameters */}
+        <Animated.View
+          style={{
+            height: ITEM_HEIGHT,
+            transform: [{ scale }],
+            opacity,
+            margin: 5,
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            borderWidth: 1,
+            borderColor: "aqua",
+            minWidth: "98%",
+            backgroundColor: "#191919",
+            borderRadius: 8,
+          }}
+          onLayout={mesureItemHeight}
         >
-          <View
-            style={{
-              height: "100%",
-              width: "100%",
-            }}
+          {/* Button to navigate to the details screen */}
+          <TouchableOpacity
+            onPress={() => handleProjectPress(item.id as string, item.name)}
+            style={{ alignItems: "center", justifyContent: "center", flex: 1 }}
           >
-            {/* Section with date in the project container */}
-            {item.createdAt && typeof item.createdAt.toDate === "function" && (
-              <Text
-                style={{
-                  color: "grey",
-                  paddingLeft: 10,
-                  marginTop: 5,
-                }}
-              >
-                {dayjs(item.createdAt.toDate()).format("DD.MM.YYYY")}
-              </Text>
-            )}
-            {/* Project name in the project container */}
-            <Text
+            <View
               style={{
-                marginTop: 5,
-                marginLeft: 30,
-                fontSize: 24,
-                fontFamily: "MPLUSLatin_Bold",
-                color: "white",
+                height: "100%",
+                width: "100%",
               }}
             >
-              {item.name}
-            </Text>
+              {/* Section with date in the project container */}
+              {item.createdAt &&
+                typeof item.createdAt.toDate === "function" && (
+                  <Text
+                    style={{
+                      color: "grey",
+                      paddingLeft: 10,
+                      marginTop: 5,
+                    }}
+                  >
+                    {dayjs(item.createdAt.toDate()).format("DD.MM.YYYY")}
+                  </Text>
+                )}
+              {/* Project name in the project container */}
+              <Text
+                style={{
+                  marginTop: 5,
+                  marginLeft: 30,
+                  fontSize: 24,
+                  fontFamily: "MPLUSLatin_Bold",
+                  color: "white",
+                }}
+              >
+                {item.name}
+              </Text>
+            </View>
+          </TouchableOpacity>
+          <View
+            style={{
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "space-evenly",
+              marginRight: 10,
+              height: "100%",
+            }}
+          >
+            {/* Button to delete a project */}
+            <TouchableOpacity onPress={() => handleDeleteProject(item.id)}>
+              <AntDesign name="delete" size={30} color="darkgrey" />
+            </TouchableOpacity>
+            {/* Button to add a note to a project */}
+            <TouchableOpacity onPress={() => openNoteModal(item.id)}>
+              <MaterialIcons name="edit-note" size={30} color="darkgrey" />
+            </TouchableOpacity>
           </View>
-        </TouchableOpacity>
-        <View
-          style={{
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "space-evenly",
-            marginRight: 10,
-            height: "100%",
-          }}
-        >
-          {/* Button to delete a project */}
-          <TouchableOpacity onPress={() => handleDeleteProject(item.id)}>
-            <AntDesign name="delete" size={30} color="darkgrey" />
-          </TouchableOpacity>
-          {/* Button to add a note to a project */}
-          <TouchableOpacity onPress={() => openNoteModal(item.id)}>
-            <MaterialIcons name="edit-note" size={30} color="darkgrey" />
-          </TouchableOpacity>
-        </View>
-      </Animated.View>
+        </Animated.View>
+      </Animatable.View>
     );
   };
 
