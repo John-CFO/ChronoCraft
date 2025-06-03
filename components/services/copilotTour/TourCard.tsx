@@ -178,7 +178,6 @@ const TourButton: React.FC<TourButtonProps> = ({
         bottom: 0,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "rgba(0, 0, 0, 0.6)",
         transform: [{ translateY }],
         opacity,
         zIndex: 2,
