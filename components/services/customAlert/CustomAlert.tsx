@@ -92,7 +92,7 @@ const CustomAlert = () => {
           bottom: 0,
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: "rgba(0, 0, 0, 0.6)",
+          paddingTop: 50,
           zIndex: 2,
         }}
       >
