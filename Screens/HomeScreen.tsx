@@ -64,6 +64,7 @@ import DismissKeyboard from "../components/DismissKeyboard";
 import { useCopilotOffset } from "../components/services/copilotTour/CopilotOffset";
 import CustomTooltip from "../components/services/copilotTour/CustomToolTip";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
+import { useDotAnimation } from "../components/DotAnimation";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 type HomeScreenRouteProp = RouteProp<
@@ -339,32 +340,8 @@ const HomeScreen: React.FC = () => {
     setNoteModalVisible(false);
   };
 
-  // dot animation for TextInput
-  const [dots, setDots] = useState(".");
-
-  useEffect(() => {
-    // initial count
-    let count = 0;
-
-    // setInterval condition
-    const interval = setInterval(() => {
-      if (count === 0) {
-        setDots(".");
-      } else if (count === 1) {
-        setDots("..");
-      } else if (count === 2) {
-        setDots("...");
-      } else {
-        setDots("");
-        count = -1; // restart the animation
-      }
-
-      count += 1;
-    }, 700); // handle animation time
-
-    // clear the interval
-    return () => clearInterval(interval);
-  }, []);
+  // define the dot animation with a delay
+  const dots = useDotAnimation(loading, 700);
 
   // scroll animation with parameters to handle the scroll animation
   const renderItem = ({ item }: { item: any }) => {
@@ -801,9 +778,8 @@ const HomeScreen: React.FC = () => {
                 >
                   <NoteModal
                     projectId={selectedProjectId}
-                    onClose={() => {
-                      setNoteModalVisible(false);
-                    }}
+                    onClose={() => setNoteModalVisible(false)}
+                    loading={false}
                   />
                 </Modal>
               </>

@@ -19,12 +19,14 @@ import {
 
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { useAlertStore } from "./services/customAlert/alertStore";
+import { useDotAnimation } from "../components/DotAnimation";
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
 interface NoteModalProps {
   projectId: string;
   onClose: () => void;
+  loading: boolean;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -32,41 +34,17 @@ interface NoteModalProps {
 const NoteModal: React.FC<NoteModalProps> = ({
   projectId,
   onClose,
-}: {
-  projectId: string;
-  onClose: () => void;
-}) => {
+}: NoteModalProps) => {
   const [comment, setComment] = useState("");
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
 
-  // dot animation
-  const [dots, setDots] = useState(".");
+  // state to handle the dot animation
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // initial count
-    let count = 0;
-
-    // setInterval condition
-    const interval = setInterval(() => {
-      if (count === 0) {
-        setDots(".");
-      } else if (count === 1) {
-        setDots("..");
-      } else if (count === 2) {
-        setDots("...");
-      } else {
-        setDots("");
-        count = -1; // restart the animation
-      }
-
-      count += 1;
-    }, 700); // handle animation time
-
-    // clear the interval
-    return () => clearInterval(interval);
-  }, []);
+  // define the dot animation with a delay
+  const dots = useDotAnimation(loading, 700);
 
   // function to handle comment submission
   const handleSubmitComment = async (
