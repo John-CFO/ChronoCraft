@@ -135,6 +135,9 @@ const HomeScreen: React.FC = () => {
   // handle refresh state to update the date
   const [refresh, setRefresh] = useState(false);
 
+  // ref to handle the delete aniamtion
+  const animationRefs = useRef<{ [key: string]: any }>({});
+
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
 
@@ -241,81 +244,79 @@ const HomeScreen: React.FC = () => {
   // function to delete projects
   const handleDeleteProject = async (projectId: string) => {
     // alert to inform user what he has to do first before pressing the delete button
-    useAlertStore.getState().showAlert(
-      "Attention!",
-      "Do you really want to delete the project? If you delete the project, all notes will be deleted as well.",
-      [
-        {
-          text: "Cancel",
-          onPress: () => console.log("Project deletion canceled"),
-          style: "cancel",
-        },
-        {
-          text: "Delete",
-          onPress: async () => {
-            try {
-              const user = FIREBASE_AUTH.currentUser;
-              if (!user) {
-                useAlertStore
-                  .getState()
-                  .showAlert("Error", "User not authenticated.");
-                return;
-              }
+    useAlertStore
+      .getState()
 
-              const db = FIREBASE_FIRESTORE;
-              const noteCollection = collection(
-                db,
-                "Users",
-                user.uid,
-                "Services",
-                "AczkjyWoOxdPAIRVxjy3",
-                "Projects",
-                projectId,
-                "Notes"
-              );
-
-              // snapshot to delete notes
-              const notesSnapshot = await getDocs(noteCollection);
-
-              // delete each note
-              const deleteNotesPromises = notesSnapshot.docs.map(
-                async (doc) => {
-                  await deleteDoc(doc.ref);
-                }
-              );
-
-              // wait for all note deletions to finish before deleting the project
-              await Promise.all(deleteNotesPromises);
-
-              // now delete the project
-              const projectDocRef = doc(
-                db,
-                "Users",
-                user.uid,
-                "Services",
-                "AczkjyWoOxdPAIRVxjy3",
-                "Projects",
-                projectId
-              );
-              await deleteDoc(projectDocRef);
-
-              // remove project from state
-              setProjects((prevProjects) =>
-                prevProjects.filter((project) => project.id !== projectId)
-              );
-
-              // optional: refresh the list
-              setRefresh(!refresh);
-              // console.log("Project and related notes deleted successfully.");
-            } catch (error) {
-              console.error("Delete project or notes failed", error);
-            }
+      .showAlert(
+        "Attention!",
+        "Do you really want to delete the project? If you delete the project, all notes will be deleted as well.",
+        [
+          {
+            text: "Cancel",
+            onPress: () => console.log("Project deletion canceled"),
+            style: "cancel",
           },
-          style: "destructive",
-        },
-      ],
-      { cancelable: true }
-    );
+          {
+            text: "Delete",
+            style: "destructive",
+            onPress: async () => {
+              try {
+                // use ref to animate deleting
+                const ref = animationRefs.current[projectId];
+                if (ref) {
+                  await ref.zoomOut(300);
+                }
+
+                // check if user is authenticated
+                const user = FIREBASE_AUTH.currentUser;
+                if (!user) {
+                  useAlertStore
+                    .getState()
+                    .showAlert("Error", "User not authenticated.");
+                  return;
+                }
+
+                const db = FIREBASE_FIRESTORE;
+                const noteCollection = collection(
+                  db,
+                  "Users",
+                  user.uid,
+                  "Services",
+                  "AczkjyWoOxdPAIRVxjy3",
+                  "Projects",
+                  projectId,
+                  "Notes"
+                );
+                // snapshot to delete notes
+                const notesSnapshot = await getDocs(noteCollection);
+
+                // wait for all note deletions to finish before deleting the project
+                await Promise.all(
+                  notesSnapshot.docs.map((doc) => deleteDoc(doc.ref))
+                );
+                // now delete the project
+                const projectDocRef = doc(
+                  db,
+                  "Users",
+                  user.uid,
+                  "Services",
+                  "AczkjyWoOxdPAIRVxjy3",
+                  "Projects",
+                  projectId
+                );
+                await deleteDoc(projectDocRef);
+
+                // remove project from state
+                setProjects((prev) => prev.filter((p) => p.id !== projectId));
+                // optional: refresh the list
+                setRefresh((prev) => !prev);
+              } catch (err) {
+                console.error("Delete project or notes failed", err);
+              }
+            },
+          },
+        ]
+      );
   };
 
   // function to navigate to the details screen if user pressed an a listed project
@@ -397,11 +398,18 @@ const HomeScreen: React.FC = () => {
     };
 
     return (
+      // add and delete  project card animation
       <Animatable.View
         animation="zoomInUp"
         duration={1500}
         delay={index * 100}
         useNativeDriver
+        // ref to animate the project deleting
+        ref={(ref) => {
+          if (ref && item.id) {
+            animationRefs.current[item.id] = ref;
+          }
+        }}
       >
         {/* Animation View parameters */}
         <Animated.View
