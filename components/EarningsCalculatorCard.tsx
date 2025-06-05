@@ -23,6 +23,7 @@ import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { updateProjectData } from "../components/FirestoreService";
 import { useStore } from "./TimeTrackingState";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
+import { sanitizeRateInput } from "./InputSanitizers";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -300,7 +301,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
               placeholderTextColor="grey"
               keyboardType="numeric"
               value={rateInput}
-              onChangeText={handleRateChange}
+              onChangeText={(text) => handleRateChange(sanitizeRateInput(text))}
               style={{
                 marginBottom: 15,
                 width: screenWidth * 0.7, // use 70% of the screen width

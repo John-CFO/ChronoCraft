@@ -21,6 +21,7 @@ import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import dayjs from "../dayjsConfig";
 import WorkHoursState from "../components/WorkHoursState";
 import { useAlertStore } from "./services/customAlert/alertStore";
+import { sanitizeHours } from "./InputSanitizers";
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -200,7 +201,7 @@ const WorkHoursInput = () => {
               placeholderTextColor="grey"
               value={tempExpectedHours}
               keyboardType="numeric"
-              onChangeText={setTempExpectedHours}
+              onChangeText={(text) => setTempExpectedHours(sanitizeHours(text))}
               style={{
                 marginBottom: 15,
                 width: screenWidth * 0.7, // dynamic with of 70%
