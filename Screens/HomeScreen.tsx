@@ -65,6 +65,7 @@ import { useCopilotOffset } from "../components/services/copilotTour/CopilotOffs
 import CustomTooltip from "../components/services/copilotTour/CustomToolTip";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { useDotAnimation } from "../components/DotAnimation";
+import { sanitizeTitle } from "../components/InputSanitizers";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 type HomeScreenRouteProp = RouteProp<
@@ -694,7 +695,9 @@ const HomeScreen: React.FC = () => {
                       placeholder={`Add new Project${dots}`}
                       placeholderTextColor="grey"
                       editable={true}
-                      onChangeText={setNewProjectName}
+                      onChangeText={(text) =>
+                        setNewProjectName(sanitizeTitle(text))
+                      }
                       maxLength={48}
                       value={newProjectName}
                     />

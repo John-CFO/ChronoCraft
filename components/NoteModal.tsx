@@ -20,6 +20,7 @@ import {
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useDotAnimation } from "../components/DotAnimation";
+import { sanitizeComment } from "./InputSanitizers";
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -179,7 +180,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
             placeholderTextColor="grey"
             multiline={true}
             value={comment}
-            onChangeText={handleCommentChange}
+            onChangeText={(text) => handleCommentChange(sanitizeComment(text))}
           />
 
           {/*submit button*/}
