@@ -29,6 +29,7 @@ import {
 } from "../firebaseConfig";
 import DismissKeyboard from "../components/DismissKeyboard";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
+import { sanitizeName, sanitizePersonalID } from "./InputSanitizers";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -278,7 +279,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 placeholder="Name"
                 placeholderTextColor="grey"
                 value={newName}
-                onChangeText={setNewName}
+                onChangeText={(text) => setNewName(sanitizeName(text))}
                 style={{
                   width: 280,
                   borderColor: "aqua",
@@ -311,7 +312,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 placeholder="Personal-ID"
                 placeholderTextColor="grey"
                 value={newPersonalID}
-                onChangeText={setNewPersonalID}
+                onChangeText={(text) =>
+                  setNewPersonalID(sanitizePersonalID(text))
+                }
                 keyboardType="numeric"
                 style={{
                   width: 280,
