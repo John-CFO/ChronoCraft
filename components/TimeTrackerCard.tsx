@@ -16,7 +16,7 @@ import {
   AppStateStatus,
   Dimensions,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import * as Animatable from "react-native-animatable";
@@ -30,6 +30,7 @@ import { CopilotStep, walkthroughable } from "react-native-copilot";
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useStore, ProjectState } from "./TimeTrackingState";
 import { updateProjectData } from "../components/FirestoreService";
+import { useAlertStore } from "../components/services/customAlert/alertStore";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 type RootStackParamList = {
@@ -241,11 +242,22 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   }, [projectState.isTracking]);
 
   // hook to update the timer,calculate the earnings and set them in the global state
+  // useRef flag to guard against updates after a reset and prevent infinite loops
+  const isResetting = useRef(false);
+  // hook to sync localTimer with global state and recalculate earnings
   useEffect(() => {
-    updateTimer(projectId, localTimer);
-    const earnings = (localTimer / 3600) * projectState.hourlyRate;
-    setTotalEarnings(projectId, earnings);
-  }, [localTimer, projectId, projectState.hourlyRate]);
+    // guard to skip updates during reset to avoid infinite loop
+    if (isResetting.current) {
+      isResetting.current = false; // reset the guard after one skip
+      return;
+    }
+
+    if (localTimer !== projectState.timer) {
+      updateTimer(projectId, localTimer);
+      const earnings = (localTimer / 3600) * projectState.hourlyRate;
+      setTotalEarnings(projectId, earnings);
+    }
+  }, [localTimer, projectState.timer, projectState.hourlyRate]);
 
   // function to start  the timer
   const handleStart = async () => {
@@ -275,8 +287,29 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
   // function to reset the timer
   const handleReset = async () => {
-    resetAll(projectId);
-    setLocalTimer(0);
+    // alert to inform user what he has to do first before pressing the reset button
+    useAlertStore
+      .getState()
+      .showAlert(
+        "Attention!",
+        "Do you really want to reset the project? If you reset the project, all data will be deleted.",
+        [
+          {
+            text: "Cancel",
+            onPress: () => console.log("Project reset canceled"),
+            style: "cancel",
+          },
+          {
+            text: "Reset",
+            style: "destructive",
+            onPress: async () => {
+              isResetting.current = true; // set guard to prevent updates in effect
+              await resetAll(projectId);
+              setLocalTimer(0); // reset local UI timer
+            },
+          },
+        ]
+      );
   };
 
   // function to format and round the time in the TimeTrackerCard
