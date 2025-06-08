@@ -18,6 +18,7 @@ import {
   Animated,
   LayoutChangeEvent,
   Dimensions,
+  FlatList,
 } from "react-native";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -66,6 +67,7 @@ import CustomTooltip from "../components/services/copilotTour/CustomToolTip";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { useDotAnimation } from "../components/DotAnimation";
 import { sanitizeTitle } from "../components/InputSanitizers";
+import SortModalFAB from "../components/SortModalFAB";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 type HomeScreenRouteProp = RouteProp<
@@ -127,6 +129,48 @@ const HomeScreen: React.FC = () => {
 
   // new project name state
   const [newProjectName, setNewProjectName] = useState("");
+
+  // state to handel sort modal
+  const [sortModalVisible, setSortModalVisible] = useState(false);
+
+  const openSortModal = () => {
+    setSortModalVisible(true);
+  };
+
+  const closeSortModal = () => {
+    setSortModalVisible(false);
+  };
+
+  // sort order state
+  const [sortOrder, setSortOrder] = useState("DATE_DESC");
+
+  // function to sort the projects
+  const sortedProjects = React.useMemo(() => {
+    return [...projects].sort((a, b) => {
+      switch (sortOrder) {
+        case "DATE_DESC":
+          return b.createdAt - a.createdAt;
+        case "DATE_ASC":
+          return a.createdAt - b.createdAt;
+        case "NAME_ASC":
+          return a.name.localeCompare(b.name);
+        case "NAME_DESC":
+          return b.name.localeCompare(a.name);
+        default:
+          return 0;
+      }
+    });
+  }, [projects, sortOrder]);
+
+  // ref to handle the flatlist scroll animation and refresh the projects list
+  const flatListRef = React.useRef<FlatList>(null);
+
+  React.useEffect(() => {
+    // if sortOrder or projects change, scroll back to the top
+    if (flatListRef.current) {
+      flatListRef.current.scrollToOffset({ offset: 0, animated: true });
+    }
+  }, [sortOrder, projects]);
 
   // handle note modal state
   const [noteModalVisible, setNoteModalVisible] = useState(false);
@@ -328,6 +372,12 @@ const HomeScreen: React.FC = () => {
     navigation.navigate("Details", { projectId, projectName });
   };
 
+  // function to handle sorting
+  const handleSortChange = (newSort: string) => {
+    // console.log("Sort order changed to:", newSort);
+    setSortOrder(newSort);
+  };
+
   // function to show the note-modal
   const openNoteModal = (projectId: string) => {
     // console.log("Note modal opened with ID:", projectId);
@@ -345,8 +395,7 @@ const HomeScreen: React.FC = () => {
   const dots = useDotAnimation(loading, 700);
 
   // scroll animation with parameters to handle the scroll animation
-  const renderItem = ({ item }: { item: any }) => {
-    const index = projects.indexOf(item);
+  const renderItem = ({ item, index }: { item: any; index: number }) => {
     const inputRange = [
       -1,
       0,
@@ -355,14 +404,12 @@ const HomeScreen: React.FC = () => {
       ITEM_HEIGHT * (index + 2),
     ];
 
-    // scale parameters
     const scale = scrollY.interpolate({
       inputRange,
       outputRange: [1, 1, 1, 0.8, 0.8],
-      extrapolate: "clamp", // ensures that container items remain in the container when it scaling
+      extrapolate: "clamp",
     });
 
-    // opacity parameters
     const opacity = scrollY.interpolate({
       inputRange,
       outputRange: [1, 1, 1, 0.5, 0],
@@ -604,12 +651,62 @@ const HomeScreen: React.FC = () => {
                     - Your Projects -
                   </Text>
                 </View>
-
+                {/* open SortModal button */}
+                <TouchableOpacity
+                  style={{
+                    position: "absolute",
+                    zIndex: 999,
+                    top: 50,
+                    left: 20,
+                    backgroundColor: "aqua",
+                    width: 60,
+                    height: 30,
+                    borderWidth: 2,
+                    borderColor: "white",
+                    borderRadius: 10,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    elevation: 5,
+                    shadowColor: "black",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 3,
+                  }}
+                  onPress={openSortModal}
+                  activeOpacity={0.7}
+                >
+                  <LinearGradient
+                    colors={["#00FFFF", "#FFFFFF"]}
+                    style={{
+                      alignItems: "center",
+                      justifyContent: "center",
+                      borderRadius: 12,
+                      height: 28,
+                      width: 58,
+                    }}
+                  >
+                    <MaterialIcons name="sort" size={28} color="grey" />
+                  </LinearGradient>
+                </TouchableOpacity>
+                {/* Sort Modal*/}
+                <Modal
+                  isVisible={sortModalVisible}
+                  onBackdropPress={closeSortModal}
+                  swipeDirection={["up", "down"]}
+                  onSwipeComplete={closeSortModal}
+                >
+                  <SortModalFAB
+                    currentSort={sortOrder}
+                    onSortChange={handleSortChange}
+                    onClose={closeSortModal}
+                  />
+                </Modal>
                 {/* Section to scroll the projects list with the scroll animation */}
                 {projects.length > 0 ? (
                   <Animated.FlatList
                     style={{
                       flex: 1,
+                      marginTop: "5%",
                       marginHorizontal: "3%",
                       marginBottom: "20%",
                       height: "50%",
@@ -621,7 +718,8 @@ const HomeScreen: React.FC = () => {
                       alignItems: "center",
                     }}
                     scrollEnabled={true}
-                    data={projects}
+                    ref={flatListRef}
+                    data={sortedProjects}
                     keyExtractor={(item) => item.id}
                     onScroll={Animated.event(
                       [{ nativeEvent: { contentOffset: { y: scrollY } } }],
