@@ -652,7 +652,7 @@ const HomeScreen: React.FC = () => {
                   </Text>
                 </View>
 
-                {/* CopilotStep wrapped around the SortModal button */}
+                {/* CopilotStep wrapped around the SortModal button - Step 1 */}
                 <CopilotStep
                   text="Here you can sort your projects by priority"
                   name="sort"
@@ -813,7 +813,7 @@ const HomeScreen: React.FC = () => {
                       value={newProjectName}
                     />
 
-                    {/* Copilot tour for the HomeScreen step 1 */}
+                    {/* Copilot tour for the HomeScreen step 2 */}
                     <CopilotStep
                       text="Enter the name of your project here."
                       order={2}
@@ -834,7 +834,7 @@ const HomeScreen: React.FC = () => {
                     </CopilotStep>
                   </View>
 
-                  {/* Copilot tour for the HomeScreen step 2 */}
+                  {/* Copilot tour for the HomeScreen step 3 */}
                   <CopilotStep
                     text="Add the project."
                     order={3}
