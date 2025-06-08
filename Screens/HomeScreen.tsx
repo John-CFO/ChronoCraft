@@ -67,7 +67,7 @@ import CustomTooltip from "../components/services/copilotTour/CustomToolTip";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { useDotAnimation } from "../components/DotAnimation";
 import { sanitizeTitle } from "../components/InputSanitizers";
-import SortModalFAB from "../components/SortModalFAB";
+import SortModal from "../components/SortModal";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 type HomeScreenRouteProp = RouteProp<
@@ -651,56 +651,69 @@ const HomeScreen: React.FC = () => {
                     - Your Projects -
                   </Text>
                 </View>
-                {/* open SortModal button */}
-                <TouchableOpacity
-                  style={{
-                    position: "absolute",
-                    zIndex: 999,
-                    top: 50,
-                    left: 20,
-                    backgroundColor: "aqua",
-                    width: 60,
-                    height: 30,
-                    borderWidth: 2,
-                    borderColor: "white",
-                    borderRadius: 10,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    elevation: 5,
-                    shadowColor: "black",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 3,
-                  }}
-                  onPress={openSortModal}
-                  activeOpacity={0.7}
+
+                {/* CopilotStep wrapped around the SortModal button */}
+                <CopilotStep
+                  text="Here you can sort your projects by priority"
+                  name="sort"
+                  order={1}
                 >
-                  <LinearGradient
-                    colors={["#00FFFF", "#FFFFFF"]}
+                  {/* open SortModal button */}
+                  <WalkthroughTouchableOpacity
                     style={{
-                      alignItems: "center",
+                      position: "absolute",
+                      top: 50,
+                      left: 20,
+                      backgroundColor: "aqua",
+                      width: 60,
+                      height: 30,
+                      borderWidth: 2,
+                      borderColor: "white",
+                      borderRadius: 10,
                       justifyContent: "center",
-                      borderRadius: 12,
-                      height: 28,
-                      width: 58,
+                      alignItems: "center",
+                      elevation: 5,
+                      shadowColor: "black",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 3,
                     }}
+                    onPress={openSortModal}
+                    activeOpacity={0.7}
                   >
-                    <MaterialIcons name="sort" size={28} color="grey" />
-                  </LinearGradient>
-                </TouchableOpacity>
+                    <LinearGradient
+                      colors={["#00FFFF", "#FFFFFF"]}
+                      style={{
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: 12,
+                        height: 28,
+                        width: 58,
+                      }}
+                    >
+                      <MaterialIcons name="sort" size={28} color="grey" />
+                    </LinearGradient>
+                  </WalkthroughTouchableOpacity>
+                </CopilotStep>
                 {/* Sort Modal*/}
+
                 <Modal
                   isVisible={sortModalVisible}
                   onBackdropPress={closeSortModal}
                   swipeDirection={["up", "down"]}
                   onSwipeComplete={closeSortModal}
+                  style={{
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
                 >
-                  <SortModalFAB
+                  <SortModal
                     currentSort={sortOrder}
                     onSortChange={handleSortChange}
                     onClose={closeSortModal}
                   />
                 </Modal>
+
                 {/* Section to scroll the projects list with the scroll animation */}
                 {projects.length > 0 ? (
                   <Animated.FlatList
@@ -803,7 +816,7 @@ const HomeScreen: React.FC = () => {
                     {/* Copilot tour for the HomeScreen step 1 */}
                     <CopilotStep
                       text="Enter the name of your project here."
-                      order={1}
+                      order={2}
                       name="Add Name"
                     >
                       {/* CopilotView settled over the Text Input */}
@@ -824,7 +837,7 @@ const HomeScreen: React.FC = () => {
                   {/* Copilot tour for the HomeScreen step 2 */}
                   <CopilotStep
                     text="Add the project."
-                    order={2}
+                    order={3}
                     name="Add Project"
                   >
                     {/* + Button to add a new project */}
