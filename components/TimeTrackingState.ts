@@ -31,6 +31,7 @@ export interface ProjectState {
   originalStartTime: Date | null;
   lastStartTime: Date | null;
   endTime: Date | null;
+  maxWorkHours: number;
 }
 
 interface TimeTrackingState {
@@ -56,7 +57,10 @@ interface TimeTrackingState {
   setIsInitialized: (value: boolean) => void;
   getProjectTrackingState(projectId: string | null): unknown;
   getProjectId: () => string | null;
-  setProjectData: (projectId: string, projectData: ProjectState) => void;
+  setProjectData: (
+    projectId: string,
+    projectData: Partial<ProjectState>
+  ) => void;
   setProjectTime: (field: keyof ProjectState, value: any) => void;
   setLastStartTime: (projectId: string, time: Date | null) => void; // Anpassung hier
   setOriginalStartTime: (projectId: string, time: Date | null) => void;
@@ -275,6 +279,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
         elapsedTime: finalElapsedTime, // round elapsed time with finalElapsedTime
         totalEarnings: earnings, // updated earnings
         pauseTime: null,
+        lastSession: new Date(),
         originalStartTime: project.originalStartTime || project.startTime,
       });
 
@@ -411,6 +416,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
             elapsedTime: 0,
             totalEarnings: 0,
             timer: 0,
+            maxWorkHours: 0,
             lastStartTime: null,
             originalStartTime: null,
           },
@@ -430,6 +436,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
         totalEarnings: 0,
         timer: 0,
         lastSession: 0,
+        maxWorkHours: 0,
         lastStartTime: null,
         originalStartTime: null,
       });

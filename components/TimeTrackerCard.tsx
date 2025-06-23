@@ -94,17 +94,6 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   // initialize local timer with project state
   const [localTimer, setLocalTimer] = useState(projectState?.timer || 0);
 
-  // hook to update localTimer when projectState.timer changes
-  useEffect(() => {
-    //  console.log("projectState.timer:", projectState?.timer);
-    if (
-      projectState?.timer !== undefined &&
-      projectState?.timer !== localTimer
-    ) {
-      setLocalTimer(projectState.timer);
-    }
-  }, [projectState?.timer]);
-
   // hook to fetch project data from firestore when navigate from home screen to details screen
   useEffect(() => {
     const fetchProjectData = async () => {
