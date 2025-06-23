@@ -24,6 +24,7 @@ import ErrorBoundary from "../components/ErrorBoundary";
 import TourCard from "../components/services/copilotTour/TourCard";
 import { useCopilotOffset } from "../components/services/copilotTour/CopilotOffset";
 import CustomTooltip from "../components/services/copilotTour/CustomToolTip";
+import ProgressCard from "../components/ProgressCard";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -54,7 +55,11 @@ const DetailsScreen: React.FC = () => {
   // use routing to get projectId
   const { projectId } = route.params || {};
 
+  // get the current project id from the store
   const { setProjectId } = useStore();
+
+  // state for max work hours
+  const [maxHoursFromDB, setMaxHoursFromDB] = useState<number | null>(null);
 
   // states to control the loading screen
   const [minTimePassed, setMinTimePassed] = useState(false);
@@ -214,6 +219,14 @@ const DetailsScreen: React.FC = () => {
               {/* Earnings Calculator Card */}
               <ErrorBoundary>
                 <EarningsCalculatorCard projectId={projectId} />
+              </ErrorBoundary>
+              <ErrorBoundary>
+                {/* Progress Card */}
+                <ProgressCard
+                  projectId={projectId}
+                  serviceId="AczkjyWoOxdPAIRVxjy3"
+                  maxHoursFromDB={maxHoursFromDB}
+                />
               </ErrorBoundary>
               {/* Notes Card */}
               <NoteList projectId={projectId} />
