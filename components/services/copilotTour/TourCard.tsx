@@ -110,11 +110,31 @@ const TourButton: React.FC<TourButtonProps> = ({
       console.log("Error updating Firestore status:", error);
     }
   };
+  // reference for the timeout
+  const tourTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // hook to clean up the timeout
+  useEffect(() => {
+    return () => {
+      if (tourTimeoutRef.current) {
+        clearTimeout(tourTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // function to sleep with cancel
+  const sleepWithCancel = (ms: number): Promise<void> => {
+    return new Promise((resolve) => {
+      const timeoutId = setTimeout(resolve, ms);
+      tourTimeoutRef.current = timeoutId;
+    });
+  };
 
   // function to start the tour
   const handleStartTour = async () => {
     try {
-      await new Promise<void>((resolve) => setTimeout(resolve, delay));
+      // use seleepWithCalcel to start the tour
+      await sleepWithCancel(delay);
 
       if (
         needsRefCheck &&
@@ -142,7 +162,13 @@ const TourButton: React.FC<TourButtonProps> = ({
             ? [
                 {
                   text: "Retry",
-                  onPress: () => setTimeout(handleStartTour, 200),
+                  onPress: () => {
+                    // delete previous timeout
+                    if (tourTimeoutRef.current) {
+                      clearTimeout(tourTimeoutRef.current);
+                    }
+                    handleStartTour();
+                  },
                 },
                 { text: "Cancel", style: "cancel" },
               ]

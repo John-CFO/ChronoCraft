@@ -6,7 +6,8 @@
 // And also the aswer to change the user´s password
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-import React, { useEffect, useState } from "react";
+
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -145,12 +146,45 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
     }
   };
 
+  // ref for alert timeout
+  const alertTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // hook to clean up the timeout
+  useEffect(() => {
+    return () => {
+      if (alertTimeoutRef.current) {
+        clearTimeout(alertTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // ref for animation timeout
+  const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // hook to clean up the timeout
+  useEffect(() => {
+    return () => {
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // function to sleep with cancel to make the dot animation visible
+  const sleepWithCancel = (ms: number): Promise<void> => {
+    return new Promise((resolve) => {
+      const timeoutId = setTimeout(resolve, ms);
+      animationTimeoutRef.current = timeoutId;
+    });
+  };
+
   // function to delete the account
   const handleDeleteAccount = async () => {
     if (!password?.trim()) {
+      // delete previous timeout
+      if (alertTimeoutRef.current) {
+        clearTimeout(alertTimeoutRef.current);
+      }
       // show an alert if no password is entered
-      useAlertStore.getState().hideAlert();
-      setTimeout(() => {
+      alertTimeoutRef.current = setTimeout(() => {
         useAlertStore
           .getState()
           .showAlert(
@@ -162,8 +196,8 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
     }
 
     setLoading(true);
-    // timeout to make the dot animation inside the button visible
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+    // use sleep to make the dot animation visible
+    await sleepWithCancel(5000);
 
     try {
       if (!userUid) throw new Error("No user is signed in.");

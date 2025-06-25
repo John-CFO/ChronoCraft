@@ -45,9 +45,6 @@ interface WorkHoursStateProps {
 
 ////////////////////////////////////////////////////////////////////////////
 
-// declare firebase auth
-const auth = getAuth();
-
 const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
   // statevariables
   useTimeZone: "",
