@@ -193,9 +193,13 @@ SplashScreen.preventAutoHideAsync();
 // drawer navigation for the app
 const App = () => {
   // statusbar content color
-  setTimeout(() => {
-    StatusBar.setBarStyle("light-content");
-  }, 1000);
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      StatusBar.setBarStyle("light-content");
+    }, 100); // delay in ms
+
+    return () => clearTimeout(timeoutId); // prevent memory leak
+  }, []); // only run once
 
   // hide splashscreen
   useEffect(() => {
