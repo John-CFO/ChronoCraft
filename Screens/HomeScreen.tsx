@@ -849,13 +849,13 @@ const HomeScreen: React.FC = () => {
                         height: 50,
                         borderRadius: 25,
                         elevation: 5,
-                        backgroundColor: "transparent", // sicherstellen
+                        backgroundColor: "transparent",
                         shadowColor: "black",
                         shadowOffset: { width: 0, height: 2 },
                         shadowOpacity: 0.3,
                         shadowRadius: 3,
                         borderWidth: 1.5,
-                        borderColor: "aqua", // der weiße Rand ist jetzt außen
+                        borderColor: "aqua",
                       }}
                     >
                       <LinearGradient
@@ -866,7 +866,7 @@ const HomeScreen: React.FC = () => {
                           flex: 1,
                           justifyContent: "center",
                           alignItems: "center",
-                          borderRadius: 25, // immer noch rund
+                          borderRadius: 25,
                         }}
                       >
                         <Text
