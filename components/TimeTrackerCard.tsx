@@ -82,6 +82,11 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   const hourlyRate = useStore((state) => state.projects[projectId]?.hourlyRate);
   const appState = useStore((state) => state.appState);
 
+  // state from useStore to update the UI(Earnings and Progress)
+  const isTracking = useStore((state) => state.projects[projectId]?.isTracking);
+  const hourlyRate = useStore((state) => state.projects[projectId]?.hourlyRate);
+  const appState = useStore((state) => state.appState);
+
   // global state
   const {
     currentProjectId,
@@ -95,6 +100,16 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
     setProjectData,
   } = useStore();
 
+  // refs for timer logic
+  const animationRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number | null>(null);
+  const accumulatedTimeRef = useRef<number>(projectState?.timer || 0);
+  const globalUpdateIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // state only for the UI
+  const [displayTime, setDisplayTime] = useState<number>(
+    projectState?.timer || 0
+  );
   // refs for timer logic
   const animationRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
@@ -147,6 +162,11 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
             accumulatedTimeRef.current = timerValue;
             setDisplayTime(timerValue);
 
+            // Update refs and state with Firestore data
+            const timerValue = projectData.timer || 0;
+            accumulatedTimeRef.current = timerValue;
+            setDisplayTime(timerValue);
+
             setProjectData(currentProjectId, formattedData as ProjectState);
           } else {
             console.error("No such document!");
@@ -179,6 +199,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
         if (lastTime) {
           const lastTimeMs = new Date(lastTime).getTime();
           const now = Date.now();
+          const now = Date.now();
           if (!isNaN(lastTimeMs) && lastTimeMs < now) {
             const elapsedTime = (now - lastTimeMs) / 1000;
             setDelayedElapsedTime(elapsedTime);
@@ -191,6 +212,17 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
         nextAppState.match(/inactive|background/) &&
         projectState.isTracking
       ) {
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+          animationRef.current = null;
+        }
+
+        // clear global update interval
+        if (globalUpdateIntervalRef.current) {
+          clearInterval(globalUpdateIntervalRef.current);
+          globalUpdateIntervalRef.current = null;
+        }
+
         if (animationRef.current) {
           cancelAnimationFrame(animationRef.current);
           animationRef.current = null;
@@ -233,10 +265,19 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
         projectId,
         (Math.floor(newTimer) / 3600) * projectState.hourlyRate
       );
+      const newTimer = accumulatedTimeRef.current + delayedElapsedTime;
+      accumulatedTimeRef.current = newTimer;
+      setDisplayTime(newTimer);
+      updateTimer(projectId, Math.floor(newTimer));
+      setTotalEarnings(
+        projectId,
+        (Math.floor(newTimer) / 3600) * projectState.hourlyRate
+      );
       setDelayedElapsedTime(null);
     }
   }, [delayedElapsedTime]);
 
+  // setup global state update interval
   // setup global state update interval
   useEffect(() => {
     // if App is foreground and tracking is active → start interval
@@ -263,7 +304,39 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   }, [isTracking, hourlyRate, appState]);
 
   // UI Timer with requestAnimationFrame
+    // if App is foreground and tracking is active → start interval
+    if (isTracking && appState === "active") {
+      globalUpdateIntervalRef.current = setInterval(() => {
+        const seconds = Math.floor(accumulatedTimeRef.current);
+        updateTimer(projectId, seconds);
+        setTotalEarnings(projectId, (seconds / 3600) * (hourlyRate ?? 0));
+      }, 10000);
+    } else {
+      // otherwise clear interval
+      if (globalUpdateIntervalRef.current) {
+        clearInterval(globalUpdateIntervalRef.current);
+        globalUpdateIntervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (globalUpdateIntervalRef.current) {
+        clearInterval(globalUpdateIntervalRef.current);
+        globalUpdateIntervalRef.current = null;
+      }
+    };
+  }, [isTracking, hourlyRate, appState]);
+
+  // UI Timer with requestAnimationFrame
   useEffect(() => {
+    let lastTimestamp: number | null = null;
+
+    const update = (timestamp: number) => {
+      if (!startTimeRef.current) {
+        lastTimestamp = timestamp;
+        animationRef.current = requestAnimationFrame(update);
+        return;
+      }
     let lastTimestamp: number | null = null;
 
     const update = (timestamp: number) => {
@@ -303,9 +376,48 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
       }
     };
   }, [projectState.isTracking, appState]);
+      if (lastTimestamp === null) {
+        lastTimestamp = timestamp;
+      }
+
+      const elapsed = (timestamp - lastTimestamp) / 1000; // in seconds
+      lastTimestamp = timestamp;
+
+      accumulatedTimeRef.current += elapsed;
+      setDisplayTime(accumulatedTimeRef.current);
+
+      animationRef.current = requestAnimationFrame(update);
+    };
+
+    if (projectState.isTracking && appState === "active") {
+      startTimeRef.current = Date.now();
+      lastTimestamp = null;
+      animationRef.current = requestAnimationFrame(update);
+    } else {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
+    }
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [projectState.isTracking, appState]);
 
   // function to start the timer
+  // function to start the timer
   const handleStart = async () => {
+    if (!projectState.isTracking) {
+      accumulatedTimeRef.current = displayTime;
+      startTimer(projectId);
+      await updateProjectData(projectId, {
+        startTime: new Date(),
+        isTracking: true,
+      });
+    }
     if (!projectState.isTracking) {
       accumulatedTimeRef.current = displayTime;
       startTimer(projectId);
@@ -326,7 +438,20 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
         projectId,
         (currentSeconds / 3600) * projectState.hourlyRate
       );
+    if (projectState.isTracking) {
+      stopTimer(projectId);
+      const currentSeconds = Math.floor(accumulatedTimeRef.current);
+      updateTimer(projectId, currentSeconds);
+      setTotalEarnings(
+        projectId,
+        (currentSeconds / 3600) * projectState.hourlyRate
+      );
 
+      await updateProjectData(projectId, {
+        isTracking: false,
+        pauseTime: new Date(),
+      });
+    }
       await updateProjectData(projectId, {
         isTracking: false,
         pauseTime: new Date(),
@@ -336,6 +461,9 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
   // function to stop the timer
   const handleStop = async () => {
+    if (projectState.isTracking) {
+      handlePause();
+    }
     if (projectState.isTracking) {
       handlePause();
     }
@@ -434,6 +562,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
                 textAlign: "center",
               }}
             >
+              {formatTime(displayTime)}
               {formatTime(displayTime)}
             </Text>
           </View>
