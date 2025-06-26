@@ -249,23 +249,27 @@ const TourButton: React.FC<TourButtonProps> = ({
             style={{
               borderRadius: 12,
               overflow: "hidden",
-              borderWidth: 3,
-              borderColor: "white",
+              borderWidth: 2,
+              borderColor: "aqua",
               flex: 1,
+              height: 50,
             }}
           >
             <LinearGradient
-              colors={["#00FFFF", "#FFFFFF"]}
+              colors={["#00f7f7", "#005757"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
               style={{
-                alignItems: "center",
+                paddingVertical: 6,
                 justifyContent: "center",
-                height: 45,
+                alignItems: "center",
+                height: 50,
                 width: "100%",
               }}
             >
               <Text
                 style={{
-                  color: "grey",
+                  color: "white",
                   fontSize: 20,
                   fontFamily: "MPLUSLatin_Bold",
                 }}
@@ -288,6 +292,8 @@ const TourButton: React.FC<TourButtonProps> = ({
           >
             <LinearGradient
               colors={["#FFFFFF", "#AAAAAA"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
               style={{
                 alignItems: "center",
                 justifyContent: "center",

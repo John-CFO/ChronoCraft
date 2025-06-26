@@ -73,6 +73,7 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
           {/* Close Button */}
           <TouchableOpacity
             onPress={closeMenu}
+            activeOpacity={0.7}
             style={{
               position: "absolute",
               top: 10,
@@ -80,30 +81,38 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
               width: 32,
               height: 32,
               borderRadius: 16,
-              borderColor: "white",
-              borderWidth: 1,
-              backgroundColor: "rgba(0, 0, 0, 0.3)",
+              borderWidth: 1.5,
+              borderColor: "aqua",
+              backgroundColor: "transparent",
               justifyContent: "center",
               alignItems: "center",
               zIndex: 999,
+              shadowColor: "black",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 3,
+              elevation: 4,
+              overflow: "hidden",
             }}
           >
             <LinearGradient
-              colors={["#00FFFF", "#FFFFFF"]}
+              colors={["#00f7f7", "#005757"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
               style={{
                 alignItems: "center",
                 justifyContent: "center",
-                height: 30,
-                width: 30,
+                height: "100%",
+                width: "100%",
                 borderRadius: 16,
               }}
             >
               <Text
                 style={{
-                  color: "gray",
-                  fontSize: 30,
-                  lineHeight: 32,
+                  color: "lightgray",
+                  fontSize: 24,
                   fontWeight: "bold",
+                  lineHeight: 26,
                 }}
               >
                 ×

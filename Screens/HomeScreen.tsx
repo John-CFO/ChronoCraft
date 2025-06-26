@@ -664,34 +664,33 @@ const HomeScreen: React.FC = () => {
                       position: "absolute",
                       top: 50,
                       left: 20,
-                      backgroundColor: "aqua",
                       width: 60,
                       height: 30,
-                      borderWidth: 2,
-                      borderColor: "white",
-                      borderRadius: 10,
-                      justifyContent: "center",
-                      alignItems: "center",
+                      borderRadius: 14,
+                      overflow: "hidden",
                       elevation: 5,
                       shadowColor: "black",
                       shadowOffset: { width: 0, height: 2 },
                       shadowOpacity: 0.3,
                       shadowRadius: 3,
+                      borderWidth: 1.5,
+                      borderColor: "aqua",
                     }}
                     onPress={openSortModal}
                     activeOpacity={0.7}
                   >
                     <LinearGradient
-                      colors={["#00FFFF", "#FFFFFF"]}
+                      colors={["#00f7f7", "#005757"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
                       style={{
-                        alignItems: "center",
+                        flex: 1,
                         justifyContent: "center",
+                        alignItems: "center",
                         borderRadius: 12,
-                        height: 28,
-                        width: 58,
                       }}
                     >
-                      <MaterialIcons name="sort" size={28} color="grey" />
+                      <MaterialIcons name="sort" size={28} color="lightgrey" />
                     </LinearGradient>
                   </WalkthroughTouchableOpacity>
                 </CopilotStep>
@@ -842,40 +841,45 @@ const HomeScreen: React.FC = () => {
                   >
                     {/* + Button to add a new project */}
 
-                    <WalkthroughTouchableOpacity onPress={handleAddProject}>
+                    <WalkthroughTouchableOpacity
+                      onPress={handleAddProject}
+                      activeOpacity={0.7}
+                      style={{
+                        width: 50,
+                        height: 50,
+                        borderRadius: 25,
+                        elevation: 5,
+                        backgroundColor: "transparent",
+                        shadowColor: "black",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 3,
+                        borderWidth: 1.5,
+                        borderColor: "aqua",
+                      }}
+                    >
                       <LinearGradient
-                        colors={["#00FFFF", "#FFFFFF"]}
+                        colors={["#00f7f7", "#005757"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
                         style={{
-                          alignItems: "center",
+                          flex: 1,
                           justifyContent: "center",
+                          alignItems: "center",
                           borderRadius: 25,
-                          height: 50,
-                          width: 50,
                         }}
                       >
-                        <View
+                        <Text
                           style={{
-                            width: 50,
-                            height: 50,
-                            borderRadius: 25,
-                            backgroundColor: "transparent",
-                            borderWidth: 3,
-                            borderColor: "white",
-                            justifyContent: "center",
-                            alignItems: "center",
+                            fontSize: 52,
+                            fontWeight: "bold",
+                            color: "lightgrey",
+                            lineHeight: 42,
+                            marginTop: 12,
                           }}
                         >
-                          <Text
-                            style={{
-                              fontSize: 60,
-                              fontWeight: "bold",
-                              lineHeight: 57,
-                              color: "grey",
-                            }}
-                          >
-                            +
-                          </Text>
-                        </View>
+                          +
+                        </Text>
                       </LinearGradient>
                     </WalkthroughTouchableOpacity>
                   </CopilotStep>

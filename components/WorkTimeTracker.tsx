@@ -473,34 +473,39 @@ const WorkTimeTracker = () => {
             <TouchableOpacity
               onPress={docExists ? handleStartWork : undefined}
               disabled={!docExists}
+              activeOpacity={0.7}
               style={{
-                width: screenWidth * 0.7, // dynamic with of 70%
+                width: screenWidth * 0.7,
                 maxWidth: 400,
-                borderRadius: 12,
-                overflow: "hidden",
-                borderWidth: 3,
-                borderColor: "white",
+                borderRadius: 14,
+                borderWidth: 1.5,
+                borderColor: "aqua",
+                backgroundColor: "transparent",
+                shadowColor: "black",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 3,
+                elevation: 5,
                 marginBottom: 25,
                 opacity: docExists ? 1 : 0.5,
               }}
             >
               <LinearGradient
-                colors={docExists ? ["#00FFFF", "#FFFFFF"] : ["#666", "#999"]}
+                colors={["#00f7f7", "#005757"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
                 style={{
-                  alignItems: "center",
+                  paddingVertical: 10,
                   justifyContent: "center",
-                  height: 45,
-                  width: screenWidth * 0.7, // dynamic with of 70%
-                  maxWidth: 400,
+                  alignItems: "center",
+                  borderRadius: 12,
                 }}
               >
                 <Text
                   style={{
                     fontFamily: "MPLUSLatin_Bold",
                     fontSize: 22,
-                    color: docExists ? "grey" : "darkgrey",
-                    marginBottom: 5,
-                    paddingRight: 10,
+                    color: docExists ? "white" : "#AAA",
                   }}
                 >
                   Start
@@ -510,31 +515,38 @@ const WorkTimeTracker = () => {
           ) : (
             <TouchableOpacity
               onPress={handleStopWork}
+              activeOpacity={0.7}
               style={{
-                width: 280,
-                borderRadius: 12,
-                overflow: "hidden",
-                borderWidth: 3,
-                borderColor: "white",
+                width: screenWidth * 0.7,
+                maxWidth: 400,
+                borderRadius: 14,
+                borderWidth: 1.5,
+                borderColor: "aqua",
+                backgroundColor: "transparent",
+                shadowColor: "black",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 3,
+                elevation: 5,
                 marginBottom: 25,
               }}
             >
               <LinearGradient
-                colors={["#00FFFF", "#FFFFFF"]}
+                colors={["#00f7f7", "#005757"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
                 style={{
-                  alignItems: "center",
+                  paddingVertical: 10,
                   justifyContent: "center",
-                  height: 45,
-                  width: 280,
+                  alignItems: "center",
+                  borderRadius: 12,
                 }}
               >
                 <Text
                   style={{
                     fontFamily: "MPLUSLatin_Bold",
                     fontSize: 22,
-                    color: "grey",
-                    marginBottom: 5,
-                    paddingRight: 10,
+                    color: "white",
                   }}
                 >
                   Stop

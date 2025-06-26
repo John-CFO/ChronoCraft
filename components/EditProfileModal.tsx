@@ -123,6 +123,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   };
 
   // handleSave function to check user auth and save data from current user in Firestore and then close modal
+  const [saving, setSaving] = useState(false);
   const handleSave = async () => {
     const currentUser = FIREBASE_AUTH.currentUser;
     if (!currentUser || !currentUser.uid) {
@@ -131,6 +132,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     }
 
     let imageUrl: string | undefined = "";
+    setSaving(true);
     try {
       if (imageUri) {
         //  console.log("Uploading image with URI:", imageUri);
@@ -158,6 +160,8 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     } catch (error) {
       // console.error("Error updating user profile:", error);
     }
+
+    setSaving(false);
   };
 
   return (
@@ -347,34 +351,35 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
               <TouchableOpacity
                 onPress={handleSave}
                 style={{
-                  marginTop: 30,
-                  width: 280,
+                  width: screenWidth * 0.7, // use 70% of the screen width
+                  maxWidth: 400,
                   borderRadius: 12,
                   overflow: "hidden",
-                  borderWidth: 3,
-                  borderColor: "white",
-                  marginBottom: 20,
+                  borderWidth: 2,
+                  borderColor: saving ? "lightgray" : "aqua",
+                  marginBottom: 30,
                 }}
               >
                 <LinearGradient
-                  colors={["#00FFFF", "#FFFFFF"]}
+                  colors={["#00f7f7", "#005757"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
                   style={{
-                    alignItems: "center",
+                    paddingVertical: 6,
                     justifyContent: "center",
-                    height: 45,
-                    width: 280,
+                    alignItems: "center",
                   }}
                 >
                   <Text
                     style={{
-                      color: "grey",
-                      fontSize: 22,
                       fontFamily: "MPLUSLatin_Bold",
-                      marginBottom: 11,
-                      marginRight: 9,
+                      fontSize: 22,
+                      color: saving ? "lightgray" : "white",
+                      marginBottom: 5,
+                      paddingRight: 10,
                     }}
                   >
-                    Update
+                    {saving ? "Updating..." : "Update"}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>

@@ -75,6 +75,7 @@ const WorkHoursInput = () => {
   }, []); // empty array enshures that this runs only once by mount
 
   // function to save the expected hours
+  const [saving, setSaving] = useState(false);
   const handleSaveMinHours = async () => {
     const hours = parseFloat(tempExpectedHours); // parse the expected hours
     if (!tempExpectedHours || isNaN(hours) || hours <= 0) {
@@ -88,6 +89,7 @@ const WorkHoursInput = () => {
       return;
     }
     // condition to check if the user is logged in
+    setSaving(true);
     try {
       const userId = getAuth().currentUser?.uid;
       if (!userId) {
@@ -136,6 +138,7 @@ const WorkHoursInput = () => {
           [{ text: "OK", style: "default" }]
         );
     }
+    setSaving(false);
   };
 
   return (
@@ -220,39 +223,39 @@ const WorkHoursInput = () => {
               }}
             />
           </View>
-          {/* Save Button */}
+          {/* Save button */}
           <TouchableOpacity
             onPress={handleSaveMinHours}
             style={{
-              width: screenWidth * 0.7, // dynamic with of 70%
+              width: screenWidth * 0.7, // use 70% of the screen width
               maxWidth: 400,
               borderRadius: 12,
               overflow: "hidden",
-              borderWidth: 3,
-              borderColor: "white",
-              marginBottom: 25,
+              borderWidth: 2,
+              borderColor: saving ? "lightgray" : "aqua",
+              marginBottom: 30,
             }}
           >
             <LinearGradient
-              colors={["#00FFFF", "#FFFFFF"]}
+              colors={["#00f7f7", "#005757"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
               style={{
-                alignItems: "center",
+                paddingVertical: 6,
                 justifyContent: "center",
-                height: 45,
-                width: screenWidth * 0.7, // dynamic with of 70%
-                maxWidth: 400,
+                alignItems: "center",
               }}
             >
               <Text
                 style={{
                   fontFamily: "MPLUSLatin_Bold",
                   fontSize: 22,
-                  color: "grey",
+                  color: saving ? "lightgray" : "white",
                   marginBottom: 5,
                   paddingRight: 10,
                 }}
               >
-                Save
+                {saving ? "Saving..." : "Save"}
               </Text>
             </LinearGradient>
           </TouchableOpacity>

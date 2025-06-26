@@ -48,6 +48,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
   const dots = useDotAnimation(loading, 700);
 
   // function to handle comment submission
+  const [saving, setSaving] = useState(false);
   const handleSubmitComment = async (
     projectId: string,
     comment: string,
@@ -66,6 +67,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
     }
 
     // console.log("Submitting comment with projectId:", projectId);
+    setSaving(true);
     try {
       if (!projectId || !userId || !serviceId) {
         // console.error("Invalid projectId:", projectId);
@@ -105,6 +107,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
     } catch (error) {
       console.error("Saving comment failed", error);
     }
+    setSaving(false);
   };
 
   // function to handle comment change
@@ -184,6 +187,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
           />
 
           {/*submit button*/}
+
           <TouchableOpacity
             onPress={() =>
               handleSubmitComment(
@@ -198,30 +202,31 @@ const NoteModal: React.FC<NoteModalProps> = ({
               maxWidth: 400,
               borderRadius: 12,
               overflow: "hidden",
-              borderWidth: 3,
-              borderColor: "white",
-              marginBottom: 20,
+              borderWidth: 2,
+              borderColor: saving ? "lightgray" : "aqua",
+              marginBottom: 30,
             }}
           >
             <LinearGradient
-              colors={["#00FFFF", "#FFFFFF"]}
+              colors={["#00f7f7", "#005757"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
               style={{
-                alignItems: "center",
+                paddingVertical: 6,
                 justifyContent: "center",
-                width: screenWidth * 0.7, // use 70% of the screen width
-                maxWidth: 400,
-                height: 45,
+                alignItems: "center",
               }}
             >
               <Text
                 style={{
                   fontFamily: "MPLUSLatin_Bold",
                   fontSize: 22,
-                  color: "grey",
+                  color: saving ? "lightgray" : "white",
                   marginBottom: 5,
+                  paddingRight: 10,
                 }}
               >
-                Save
+                {saving ? "Saving..." : "Save"}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
