@@ -206,9 +206,11 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
   };
 
   // function to save the hourly rate in firestore
+  const [saving, setSaving] = useState(false);
   const handleSave = async () => {
     const rate = parseFloat(rateInput);
     if (!isNaN(rate)) {
+      setSaving(true);
       try {
         /* console.log(
           "Saving hourly rate in Firestore with projectId:",
@@ -223,12 +225,14 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
       } catch (error) {
         console.error("Error saving hourly rate: ", error);
       }
+      setSaving(false);
       // alert to inform user what he has to do first before pressed the save button
     } else {
       useAlertStore
         .getState()
         .showAlert("Sorry", "Please enter a hourly rate first.");
     }
+    setSaving(false);
   };
 
   return (
@@ -328,30 +332,31 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
                 maxWidth: 400,
                 borderRadius: 12,
                 overflow: "hidden",
-                borderWidth: 3,
-                borderColor: "white",
-                marginBottom: 20,
+                borderWidth: 2,
+                borderColor: saving ? "lightgray" : "aqua",
+                marginBottom: 30,
               }}
             >
               <LinearGradient
-                colors={["#00FFFF", "#FFFFFF"]}
+                colors={["#00f7f7", "#005757"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
                 style={{
-                  alignItems: "center",
+                  paddingVertical: 6,
                   justifyContent: "center",
-                  height: 45,
-                  width: screenWidth * 0.7, // use 70% of the screen width
-                  maxWidth: 400,
+                  alignItems: "center",
                 }}
               >
                 <Text
                   style={{
                     fontFamily: "MPLUSLatin_Bold",
                     fontSize: 22,
-                    color: "grey",
+                    color: saving ? "lightgray" : "white",
                     marginBottom: 5,
+                    paddingRight: 10,
                   }}
                 >
-                  Save
+                  {saving ? "Saving..." : "Save"}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>

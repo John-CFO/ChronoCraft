@@ -150,35 +150,42 @@ const CustomAlert = () => {
                       handleCloseWithAnimation();
                     }
                   }}
+                  activeOpacity={0.7}
                   style={{
-                    borderColor: "white",
-                    backgroundColor:
-                      button.style === "destructive" ? "red" : "aqua",
-                    borderRadius: 12,
-                    overflow: "hidden",
-                    borderWidth: 3,
-                    height: 45,
                     width: 120,
+                    height: 45,
+                    borderRadius: 14,
+                    elevation: 5,
+                    backgroundColor: "transparent",
+                    shadowColor: "black",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 3,
+                    borderWidth: 1.5,
+                    borderColor:
+                      button.style === "destructive" ? "#FF4C4C" : "aqua",
                   }}
                 >
                   <LinearGradient
                     colors={
                       button.style === "destructive"
-                        ? ["red", "#FF9999"]
-                        : ["#00FFFF", "#FFFFFF"]
+                        ? ["#FF4C4C", "#FF9999"]
+                        : ["#00f7f7", "#005757"]
                     }
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
                     style={{
-                      alignItems: "center",
+                      flex: 1,
                       justifyContent: "center",
-                      height: "100%",
-                      width: "100%",
+                      alignItems: "center",
+                      borderRadius: 12,
                     }}
                   >
                     <Text
                       style={{
                         color:
-                          button.style === "destructive" ? "white" : "grey",
-                        fontSize: 20,
+                          button.style === "destructive" ? "white" : "white",
+                        fontSize: 22,
                         fontFamily: "MPLUSLatin_Bold",
                       }}
                     >

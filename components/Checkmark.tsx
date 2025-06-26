@@ -123,10 +123,14 @@ const CheckmarkReminder: React.FC<CheckmarkReminderProps> = ({
             >
               {/* gradiant color of the point */}
               <LinearGradient
-                colors={["#00FFFF", "#FFFFFF"]}
+                colors={["#00f7f7", "#005757"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                style={{ width: 20, height: 20, borderRadius: 25 }}
+                style={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: 25,
+                }}
               />
             </Animated.View>
           </TouchableOpacity>

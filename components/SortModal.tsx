@@ -12,6 +12,7 @@ import {
   Dimensions,
 } from "react-native";
 import React from "react";
+import { LinearGradient } from "expo-linear-gradient";
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -87,32 +88,65 @@ const SortModalFAB = ({
         style={{ marginTop: 20, marginBottom: 20, width: "100%" }}
         data={sortOptions}
         keyExtractor={(item) => item.value}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={{
-              paddingVertical: 12,
-              paddingHorizontal: 10,
-              borderRadius: 8,
-              backgroundColor:
-                item.value === currentSort ? "aqua" : "transparent",
-              marginBottom: 8,
-              alignItems: "center",
-            }}
-            onPress={() => handleSelect(item.value)}
-          >
-            <Text
-              style={{
-                fontSize: 16,
-                color: item.value === currentSort ? "#191919" : "white",
-                fontWeight: item.value === currentSort ? "bold" : "normal",
-              }}
-            >
-              {item.label}
-            </Text>
-          </TouchableOpacity>
-        )}
-      />
+        renderItem={({ item }) => {
+          const isSelected = item.value === currentSort;
 
+          return (
+            <TouchableOpacity
+              style={{
+                borderRadius: 8,
+                overflow: "hidden",
+                marginBottom: 8,
+                alignItems: "center",
+              }}
+              onPress={() => handleSelect(item.value)}
+            >
+              {isSelected ? (
+                <LinearGradient
+                  colors={["#00f7f7", "#005757"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    paddingVertical: 12,
+                    paddingHorizontal: 10,
+                    width: "100%",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      color: "#191919",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {item.label}
+                  </Text>
+                </LinearGradient>
+              ) : (
+                <View
+                  style={{
+                    paddingVertical: 12,
+                    paddingHorizontal: 10,
+                    width: "100%",
+                    alignItems: "center",
+                    backgroundColor: "transparent",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      color: "white",
+                    }}
+                  >
+                    {item.label}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        }}
+      />
       {/* navigation tip */}
       <View
         style={{

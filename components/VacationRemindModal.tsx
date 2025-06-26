@@ -55,13 +55,14 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
   };
 
   // save function with error handling for the button
+  const [saving, setSaving] = useState(false);
   const handleSaveReminder = async (
     id: string, // vacation ID
     uid: string, // user ID
     onClose: () => void // callback to close the modal
   ) => {
     // console.log("Reminder save process started.");
-
+    setSaving(true);
     try {
       // if no vacation is selected send alert
       if (!id) {
@@ -202,6 +203,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
         .getState()
         .showAlert("Error", "Failed to save reminder. Please try again.");
     }
+    setSaving(false);
   };
 
   return (
@@ -258,14 +260,13 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
           {/* Save Button */}
           <TouchableOpacity
             style={{
-              marginTop: 10,
               width: screenWidth * 0.7, // use 70% of the screen width
               maxWidth: 400,
               borderRadius: 12,
               overflow: "hidden",
-              borderWidth: 3,
-              borderColor: "white",
-              marginBottom: 55,
+              borderWidth: 2,
+              borderColor: saving ? "lightgray" : "aqua",
+              marginBottom: 30,
             }}
             onPress={() => {
               {
@@ -281,25 +282,25 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
             }}
           >
             <LinearGradient
-              colors={["#00FFFF", "#FFFFFF"]}
+              colors={["#00f7f7", "#005757"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
               style={{
-                alignItems: "center",
+                paddingVertical: 6,
                 justifyContent: "center",
-                height: 45,
-                width: screenWidth * 0.7, // use 70% of the screen width
-                maxWidth: 400,
+                alignItems: "center",
               }}
             >
               <Text
                 style={{
-                  color: "grey",
-                  fontSize: 22,
                   fontFamily: "MPLUSLatin_Bold",
-                  marginBottom: 11,
-                  marginRight: 9,
+                  fontSize: 22,
+                  color: saving ? "lightgray" : "white",
+                  marginBottom: 5,
+                  paddingRight: 10,
                 }}
               >
-                Save
+                {saving ? "Saving..." : "Save"}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
