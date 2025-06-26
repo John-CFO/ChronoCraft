@@ -163,7 +163,7 @@ const CustomAlert = () => {
                     shadowRadius: 3,
                     borderWidth: 1.5,
                     borderColor:
-                      button.style === "destructive" ? "#FF4C4C" : "aqua", // Dynamische Borderfarbe
+                      button.style === "destructive" ? "#FF4C4C" : "aqua",
                   }}
                 >
                   <LinearGradient

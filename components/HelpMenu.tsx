@@ -82,7 +82,7 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
               height: 32,
               borderRadius: 16,
               borderWidth: 1.5,
-              borderColor: "aqua", // <-- angepasst
+              borderColor: "aqua",
               backgroundColor: "transparent",
               justifyContent: "center",
               alignItems: "center",
