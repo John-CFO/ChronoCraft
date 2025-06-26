@@ -180,10 +180,14 @@ const WorkTimeTracker = () => {
     loadElapsedTime();
   }, []); // add the saved time once when the component mounts
 
+  // ref to store the timeout
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // hook to update the app state if the app is in the foreground or background using reference to the previous app state
   useEffect(() => {
     // flag to prevent multiple state changes when app goes from inactive to active
     let handledActive = false;
+
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
       // set the new app state
       setAppState(nextAppState);
@@ -236,7 +240,7 @@ const WorkTimeTracker = () => {
           setStartWorkTime(new Date());
         }
         // set the app state to active after 1 second
-        setTimeout(() => {
+        timeoutRef.current = setTimeout(() => {
           handledActive = false;
         }, 1000);
       }
@@ -251,6 +255,9 @@ const WorkTimeTracker = () => {
     // clear the event listener when the component unmounts
     return () => {
       subscription.remove();
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
   }, [elapsedTime, isWorking]);
 
