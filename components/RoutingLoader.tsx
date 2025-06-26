@@ -42,6 +42,9 @@ const JumpingDot = ({
       ),
       -1
     );
+    return () => {
+      progress.value = 0; // stop the animation on unmount
+    };
   }, [delay, progress]);
 
   // define the animation with useAnimatedStyle
