@@ -7,6 +7,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { useCopilot } from "react-native-copilot";
+import { LinearGradient } from "expo-linear-gradient";
 
 //////////////////////////////////////////////////////////////////////////////////////
 
@@ -79,17 +80,34 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
           <TouchableOpacity
             onPress={handleStop}
             style={{
-              borderWidth: 2,
-              borderColor: "white",
-              backgroundColor: "lightgray",
-              paddingHorizontal: 12,
-              paddingVertical: 8,
+              height: 40,
+              width: 65,
               borderRadius: 8,
+              borderWidth: 1.5,
+              borderColor: "white",
+              backgroundColor: "transparent",
+              shadowColor: "black",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 3,
+              elevation: 5,
             }}
           >
-            <Text style={{ color: "grey", fontSize: 14, fontWeight: "bold" }}>
-              {labels.skip ?? "Skip"}
-            </Text>
+            <LinearGradient
+              colors={["#FFFFFF", "#AAAAAA"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+                borderRadius: 6,
+              }}
+            >
+              <Text style={{ color: "grey", fontSize: 14, fontWeight: "bold" }}>
+                {labels.skip ?? "Skip"}
+              </Text>
+            </LinearGradient>
           </TouchableOpacity>
         )}
 
@@ -98,17 +116,36 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
           <TouchableOpacity
             onPress={handlePrev}
             style={{
-              borderWidth: 2,
-              borderColor: "white",
-              backgroundColor: "aqua",
-              paddingHorizontal: 12,
-              paddingVertical: 8,
+              height: 40,
+              width: 65,
               borderRadius: 8,
+              borderWidth: 1.5,
+              borderColor: "aqua",
+              backgroundColor: "transparent",
+              shadowColor: "black",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 3,
+              elevation: 5,
             }}
           >
-            <Text style={{ color: "gray", fontSize: 14, fontWeight: "bold" }}>
-              {labels.previous ?? "Previous"}
-            </Text>
+            <LinearGradient
+              colors={["#00f7f7", "#005757"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+                borderRadius: 6,
+              }}
+            >
+              <Text
+                style={{ color: "white", fontSize: 14, fontWeight: "bold" }}
+              >
+                {labels.previous ?? "Previous"}
+              </Text>
+            </LinearGradient>
           </TouchableOpacity>
         )}
 
@@ -117,33 +154,71 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
           <TouchableOpacity
             onPress={handleNext}
             style={{
-              borderWidth: 2,
-              borderColor: "white",
-              backgroundColor: "aqua",
-              paddingHorizontal: 12,
-              paddingVertical: 8,
+              height: 40,
+              width: 65,
               borderRadius: 8,
+              borderWidth: 1.5,
+              borderColor: "aqua",
+              backgroundColor: "transparent",
+              shadowColor: "black",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 3,
+              elevation: 5,
             }}
           >
-            <Text style={{ color: "grey", fontSize: 14, fontWeight: "bold" }}>
-              {labels.next ?? "Next"}
-            </Text>
+            <LinearGradient
+              colors={["#00f7f7", "#005757"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+                borderRadius: 6,
+              }}
+            >
+              <Text
+                style={{ color: "white", fontSize: 14, fontWeight: "bold" }}
+              >
+                {labels.next ?? "Next"}
+              </Text>
+            </LinearGradient>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
             onPress={handleStop}
             style={{
-              borderWidth: 2,
-              borderColor: "white",
-              backgroundColor: "aqua",
-              paddingHorizontal: 12,
-              paddingVertical: 8,
+              height: 40,
+              width: 80,
               borderRadius: 8,
+              borderWidth: 1.5,
+              borderColor: "aqua",
+              backgroundColor: "transparent",
+              shadowColor: "black",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 3,
+              elevation: 5,
             }}
           >
-            <Text style={{ color: "grey", fontSize: 14, fontWeight: "bold" }}>
-              {labels.finish ?? "Finish"}
-            </Text>
+            <LinearGradient
+              colors={["#00f7f7", "#005757"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+                borderRadius: 6,
+              }}
+            >
+              <Text
+                style={{ color: "white", fontSize: 14, fontWeight: "bold" }}
+              >
+                {labels.finish ?? "Finish"}
+              </Text>
+            </LinearGradient>
           </TouchableOpacity>
         )}
       </View>

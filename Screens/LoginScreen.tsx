@@ -357,13 +357,15 @@ const LoginScreen: React.FC = () => {
                     maxWidth: 400,
                     borderRadius: 12,
                     overflow: "hidden",
-                    borderWidth: 3,
-                    borderColor: "white",
+                    borderWidth: 1.5,
+                    borderColor: "aqua",
                     marginBottom: 8,
                   }}
                 >
                   <LinearGradient
-                    colors={["#00FFFF", "#FFFFFF"]}
+                    colors={["#00f7f7", "#005757"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
                     style={{
                       alignItems: "center",
                       justifyContent: "center",
@@ -376,7 +378,7 @@ const LoginScreen: React.FC = () => {
                       style={{
                         fontFamily: "MPLUSLatin_Bold",
                         fontSize: 22,
-                        color: "grey",
+                        color: "white",
                         marginBottom: 5,
                       }}
                     >
@@ -393,12 +395,14 @@ const LoginScreen: React.FC = () => {
                     maxWidth: 400,
                     borderRadius: 12,
                     overflow: "hidden",
-                    borderWidth: 3,
-                    borderColor: "white",
+                    borderWidth: 1.5,
+                    borderColor: "aqua",
                   }}
                 >
                   <LinearGradient
-                    colors={["#00FFFF", "#FFFFFF"]}
+                    colors={["#00f7f7", "#005757"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
                     style={{
                       alignItems: "center",
                       justifyContent: "center",
@@ -411,7 +415,7 @@ const LoginScreen: React.FC = () => {
                       style={{
                         fontFamily: "MPLUSLatin_Bold",
                         fontSize: 22,
-                        color: "grey",
+                        color: "white",
                         marginBottom: 5,
                       }}
                     >

@@ -80,8 +80,13 @@ const VacationForm = () => {
 
   // save function with error handling for the button
   const handleSave = async () => {
-    if (Object.keys(markedDates).length === 0) {
-      console.error("No data to save in markedDates");
+    if (!markedDates || Object.keys(markedDates).length === 0) {
+      // console.error("No data to save in markedDates");
+      useAlertStore
+        .getState()
+        .showAlert("Attention!", "First vote a vacation date.", [
+          { text: "OK" },
+        ]);
       return;
     }
     await handleSaveVacation();
@@ -314,66 +319,79 @@ const VacationForm = () => {
           >
             {/* Save Button */}
             <TouchableOpacity
+              onPress={handleSave}
+              activeOpacity={0.7}
               style={{
                 height: 45,
                 width: 120,
-                borderRadius: 8,
-                borderWidth: 3,
-                borderColor: "white",
-                overflow: "hidden",
+                borderRadius: 14,
+                borderWidth: 1.5,
+                borderColor: "aqua",
+                backgroundColor: "transparent",
+                shadowColor: "black",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 3,
+                elevation: 5,
               }}
-              onPress={handleSave}
             >
               <LinearGradient
-                colors={["#00FFFF", "#FFFFFF"]}
+                colors={["#00f7f7", "#005757"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
                 style={{
-                  alignItems: "center",
+                  flex: 1,
                   justifyContent: "center",
-                  height: 45,
-                  width: 120,
+                  alignItems: "center",
+                  borderRadius: 12,
                 }}
               >
                 <Text
                   style={{
-                    color: "grey",
-                    fontSize: 18,
+                    color: "white",
+                    fontSize: 22,
                     fontFamily: "MPLUSLatin_Bold",
-                    marginBottom: 11,
-                    marginRight: 9,
                   }}
                 >
                   Save
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
+
             {/* Cancel Button */}
             <TouchableOpacity
+              onPress={handleCancel}
+              activeOpacity={0.7}
               style={{
                 height: 45,
                 width: 120,
-                borderRadius: 8,
-                borderWidth: 3,
-                borderColor: "white",
-                overflow: "hidden",
+                borderRadius: 14,
+                borderWidth: 1.5,
+                borderColor: "aqua",
+                backgroundColor: "transparent",
+                shadowColor: "black",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 3,
+                elevation: 5,
               }}
-              onPress={handleCancel}
             >
               <LinearGradient
-                colors={["#00FFFF", "#FFFFFF"]}
+                colors={["#00f7f7", "#005757"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
                 style={{
-                  alignItems: "center",
+                  flex: 1,
                   justifyContent: "center",
-                  height: 45,
-                  width: 120,
+                  alignItems: "center",
+                  borderRadius: 12,
                 }}
               >
                 <Text
                   style={{
-                    color: "grey",
-                    fontSize: 18,
+                    color: "white",
+                    fontSize: 22,
                     fontFamily: "MPLUSLatin_Bold",
-                    marginBottom: 11,
-                    marginRight: 9,
                   }}
                 >
                   Cancel

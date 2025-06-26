@@ -266,7 +266,7 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
             width: 32,
             height: 32,
             borderRadius: 16,
-            borderColor: "white",
+            borderColor: "aqua",
             borderWidth: 1,
             backgroundColor: "rgba(0, 0, 0, 0.3)",
             justifyContent: "center",
@@ -275,7 +275,9 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
           }}
         >
           <LinearGradient
-            colors={["#00FFFF", "#FFFFFF"]}
+            colors={["#00f7f7", "#005757"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
             style={{
               alignItems: "center",
               justifyContent: "center",
@@ -286,7 +288,7 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
           >
             <Text
               style={{
-                color: "gray",
+                color: "lightgrey",
                 fontSize: 30,
                 lineHeight: 32,
                 fontWeight: "bold",
@@ -496,13 +498,15 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                     maxWidth: 400,
                     borderRadius: 12,
                     overflow: "hidden",
-                    borderWidth: 3,
-                    borderColor: "white",
+                    borderWidth: 1.5,
+                    borderColor: "aqua",
                     marginBottom: 25,
                   }}
                 >
                   <LinearGradient
-                    colors={["#00FFFF", "#FFFFFF"]}
+                    colors={["#00f7f7", "#005757"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
                     style={{
                       alignItems: "center",
                       justifyContent: "center",
@@ -533,7 +537,7 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                               marginBottom: 5,
                               fontFamily: "MPLUSLatin_Bold",
                               fontSize: 22,
-                              color: "grey",
+                              color: "white",
                               textAlign: "center",
                               width: 100,
                             }}
@@ -545,7 +549,7 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                               marginBottom: 5,
                               fontFamily: "MPLUSLatin_Bold",
                               fontSize: 22,
-                              color: "grey",
+                              color: "white",
                               width: 100,
                               textAlign: "left",
                             }}
@@ -559,7 +563,7 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                             marginBottom: 5,
                             fontFamily: "MPLUSLatin_Bold",
                             fontSize: 22,
-                            color: "grey",
+                            color: "white",
                             textAlign: "center",
                           }}
                         >

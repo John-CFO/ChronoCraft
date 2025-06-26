@@ -38,6 +38,7 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
   const [email, setEmail] = useState("");
 
   // function to handle the password reset
+  const [sending, setSending] = useState(false);
   const handlePasswordReset = async () => {
     // condition: if no email is entered show an alert
     if (!email) {
@@ -45,6 +46,7 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
       return;
     }
     // try to send the password reset email, if it was successful show an alert with instructions
+    setSending(true);
     try {
       await sendPasswordResetEmail(FIREBASE_AUTH, email);
       useAlertStore
@@ -60,6 +62,7 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
         .getState()
         .showAlert("Error", "There was an error resetting your password.");
     }
+    setSending(false);
   };
 
   // dot animation for TextInput
@@ -184,13 +187,15 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
               maxWidth: 400,
               borderRadius: 12,
               overflow: "hidden",
-              borderWidth: 3,
-              borderColor: "white",
+              borderWidth: 1.5,
+              borderColor: "aqua",
               marginBottom: 20,
             }}
           >
             <LinearGradient
-              colors={["#00FFFF", "#FFFFFF"]}
+              colors={["#00f7f7", "#005757"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
               style={{
                 alignItems: "center",
                 justifyContent: "center",
@@ -201,14 +206,14 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
             >
               <Text
                 style={{
-                  color: "grey",
+                  color: "white",
                   fontSize: 22,
                   fontFamily: "MPLUSLatin_Bold",
-                  marginBottom: 11,
+                  marginBottom: 5,
                   marginRight: 9,
                 }}
               >
-                Send
+                {sending ? "Sending..." : "Send Reset Link"}
               </Text>
             </LinearGradient>
           </TouchableOpacity>

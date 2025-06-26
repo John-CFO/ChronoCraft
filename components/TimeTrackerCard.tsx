@@ -275,6 +275,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   };
 
   // function to reset the timer
+  const [resetting, setResetting] = useState(false);
   const handleReset = async () => {
     // alert to inform user what he has to do first before pressing the reset button
     useAlertStore
@@ -292,9 +293,11 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
             text: "Reset",
             style: "destructive",
             onPress: async () => {
+              setResetting(true);
               isResetting.current = true; // set guard to prevent updates in effect
               await resetAll(projectId);
               setLocalTimer(0); // reset local UI timer
+              setResetting(false);
             },
           },
         ]
@@ -402,7 +405,6 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
             style={{
               paddingTop: 30,
               width: "100%",
-              height: 100,
               backgroundColor: "#191919",
               justifyContent: "center",
               alignItems: "center",
@@ -416,31 +418,31 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
                 maxWidth: 400,
                 borderRadius: 12,
                 overflow: "hidden",
-                borderWidth: 3,
-                borderColor: "white",
-                marginBottom: 25,
+                borderWidth: 2,
+                borderColor: resetting ? "lightgray" : "aqua",
+                marginBottom: 30,
               }}
             >
               <LinearGradient
-                colors={["#00FFFF", "#FFFFFF"]}
+                colors={["#00f7f7", "#005757"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
                 style={{
-                  alignItems: "center",
+                  paddingVertical: 6,
                   justifyContent: "center",
-                  height: 45,
-                  width: screenWidth * 0.7, // use 70% of the screen width
-                  maxWidth: 400,
+                  alignItems: "center",
                 }}
               >
                 <Text
                   style={{
                     fontFamily: "MPLUSLatin_Bold",
                     fontSize: 22,
-                    color: "grey",
+                    color: resetting ? "lightgray" : "white",
                     marginBottom: 5,
                     paddingRight: 10,
                   }}
                 >
-                  Reset
+                  {resetting ? "Resetting..." : "Reset"}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
