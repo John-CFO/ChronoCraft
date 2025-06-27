@@ -17,6 +17,7 @@ import Modal from "react-native-modal";
 
 import { FIREBASE_AUTH } from "../firebaseConfig";
 import { useAlertStore } from "./services/customAlert/alertStore";
+import { useDotAnimation } from "../components/DotAnimation";
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -65,32 +66,9 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
     setSending(false);
   };
 
-  // dot animation for TextInput
-  const [dots, setDots] = useState(".");
-
-  useEffect(() => {
-    // initial count
-    let count = 0;
-
-    // setInterval condition
-    const interval = setInterval(() => {
-      if (count === 0) {
-        setDots(".");
-      } else if (count === 1) {
-        setDots("..");
-      } else if (count === 2) {
-        setDots("...");
-      } else {
-        setDots("");
-        count = -1; // restart the animation
-      }
-
-      count += 1;
-    }, 700); // handle animation time
-
-    // clear the interval
-    return () => clearInterval(interval);
-  }, []);
+  // define the dot animation with a delay
+  const [loading, setLoading] = useState(true);
+  const dots = useDotAnimation(loading, 700);
 
   return (
     <Modal
@@ -163,7 +141,7 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
-              placeholderTextColor="#ccc"
+              placeholderTextColor="grey"
               style={{
                 borderColor: "aqua",
                 borderWidth: 1.5,
@@ -174,6 +152,7 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
                 fontSize: 22,
                 height: 50,
                 color: "white",
+
                 backgroundColor: "#191919",
               }}
             />
