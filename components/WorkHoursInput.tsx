@@ -218,7 +218,6 @@ const WorkHoursInput = () => {
                 fontSize: 22,
                 height: 50,
                 color: "white",
-                fontWeight: "bold",
                 backgroundColor: "black",
               }}
             />

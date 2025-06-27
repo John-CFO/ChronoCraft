@@ -295,7 +295,7 @@ const LoginScreen: React.FC = () => {
                     backgroundColor: "#191919",
                   }}
                   placeholder="Email"
-                  placeholderTextColor={"darkgrey"}
+                  placeholderTextColor={"grey"}
                   autoCapitalize="none"
                   onChangeText={(text) => setEmail(text)}
                   value={email}
@@ -323,7 +323,7 @@ const LoginScreen: React.FC = () => {
                       backgroundColor: "#191919",
                     }}
                     placeholder="Password"
-                    placeholderTextColor={"darkgrey"}
+                    placeholderTextColor={"grey"}
                     autoCapitalize="none"
                     secureTextEntry={secureTextEntry}
                     onChangeText={(text) => setPassword(text)}

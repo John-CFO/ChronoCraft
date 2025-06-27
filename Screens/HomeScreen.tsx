@@ -799,7 +799,6 @@ const HomeScreen: React.FC = () => {
                         fontSize: 22,
                         height: 50,
                         color: "white",
-                        fontWeight: "bold",
                         backgroundColor: "#191919",
                       }}
                       placeholder={`Add new Project${dots}`}
