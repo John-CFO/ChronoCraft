@@ -273,12 +273,14 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
         return;
       }
 
+
       if (lastTimestamp === null) {
         lastTimestamp = timestamp;
       }
 
       const elapsed = (timestamp - lastTimestamp) / 1000; // in seconds
       lastTimestamp = timestamp;
+
 
       accumulatedTimeRef.current += elapsed;
       setDisplayTime(accumulatedTimeRef.current);
@@ -367,6 +369,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
         ]
       );
   };
+
 
   // function to format and round the time in the TimeTrackerCard
   function formatTime(timeInSeconds: number): string {
