@@ -273,12 +273,14 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
         return;
       }
 
+
       if (lastTimestamp === null) {
         lastTimestamp = timestamp;
       }
 
       const elapsed = (timestamp - lastTimestamp) / 1000; // in seconds
       lastTimestamp = timestamp;
+
 
       accumulatedTimeRef.current += elapsed;
       setDisplayTime(accumulatedTimeRef.current);
@@ -344,29 +346,30 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   // function to reset the timer
   const [resetting, setResetting] = useState(false);
   const handleReset = async () => {
-  useAlertStore
-    .getState()
-    .showAlert(
-      "Attention!",
-      "Do you really want to reset the project? If you reset the project, all data will be deleted.",
-      [
-        {
-          text: "Cancel",
-          onPress: () => console.log("Project reset canceled"),
-          style: "cancel",
-        },
-        {
-          text: "Reset",
-          style: "destructive",
-          onPress: async () => {
-            await resetAll(projectId);
-            accumulatedTimeRef.current = 0;
-            setDisplayTime(0);
+    useAlertStore
+      .getState()
+      .showAlert(
+        "Attention!",
+        "Do you really want to reset the project? If you reset the project, all data will be deleted.",
+        [
+          {
+            text: "Cancel",
+            onPress: () => console.log("Project reset canceled"),
+            style: "cancel",
           },
-        },
-      ]
-    );
-};
+          {
+            text: "Reset",
+            style: "destructive",
+            onPress: async () => {
+              await resetAll(projectId);
+              accumulatedTimeRef.current = 0;
+              setDisplayTime(0);
+            },
+          },
+        ]
+      );
+  };
+
 
   // function to format and round the time in the TimeTrackerCard
   function formatTime(timeInSeconds: number): string {

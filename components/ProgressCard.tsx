@@ -191,7 +191,7 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
         </Text>
         {/* Input field to enter max work hours */}
         <TextInput
-          placeholder="e.g. 5"
+          placeholder="(e.g. 5)"
           placeholderTextColor="grey"
           value={inputMaxWorkHours}
           keyboardType="numeric"
@@ -213,7 +213,6 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
             fontSize: 22,
             height: 50,
             color: "white",
-            fontWeight: "bold",
             backgroundColor: "black",
           }}
         />
@@ -295,8 +294,10 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
             alignItems: "center",
             paddingLeft: 10,
             borderRadius: 10,
+            //shadow options for android
             shadowColor: "#ffffff",
             elevation: 2,
+            //shadow options for ios
             shadowOffset: { width: 2, height: 2 },
             shadowOpacity: 0.3,
             shadowRadius: 3,
@@ -310,7 +311,7 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
               color: "grey",
               fontSize: 16,
               fontFamily: "MPLUSLatin_Bold",
-              marginRight: 8,
+              marginRight: 5,
             }}
           >
             Your Deadline:
