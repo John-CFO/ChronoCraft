@@ -88,8 +88,8 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
     const progressRaw = useMemo(() => {
       return maxSeconds > 0 ? timer / maxSeconds : 0;
     }, [timer, maxSeconds]);
-    const progress = Math.min(progressRaw, 1); // 0 bis 1 → für Animated
-    const progressValue = Math.min(progressRaw * 100, 100); // 0 bis 100 → für CircularProgress
+    const progress = Math.min(progressRaw, 1); // 0 bis 1 → for Animated
+    const progressValue = Math.min(progressRaw * 100, 100); // 0 bis 100 → forCircularProgress
 
     // input state
     const [inputMaxWorkHours, setInputMaxWorkHours] = useState("");
@@ -148,7 +148,7 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
       }).start();
     }, [progress]);
 
-    // deathline arrived animation
+    // deathline reached animation
     const blinkOpacity = useRef(new Animated.Value(0)).current;
     // hook to animate the progress indicator on deathline with flickering
     useEffect(() => {
@@ -310,7 +310,7 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
               radius={100}
               activeStrokeWidth={15}
               inActiveStrokeWidth={15}
-              // if progress arrives at 100%, change color
+              // if progress reaches 100% change stroke color
               activeStrokeColor={progressValue < 100 ? "#00f7f7" : "#ff0000"}
               dashedStrokeConfig={{ count: 50, width: 4 }}
               inActiveStrokeColor="transparent"
