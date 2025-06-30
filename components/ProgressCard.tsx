@@ -24,6 +24,7 @@ import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useStore } from "./TimeTrackingState";
 import { sanitizeMaxWorkHours } from "./InputSanitizers";
 import useDebounceValue from "../hooks/useDebounceValue";
+import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -35,6 +36,9 @@ interface ProgressCardProps {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
+
+// modified walkthroughable for copilot tour
+const CopilotWalkthroughView = walkthroughable(View);
 
 const ProgressCard: React.FC<ProgressCardProps> = React.memo(
   ({ projectId, onSaveSuccess }) => {
@@ -174,231 +178,244 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
     }, [progressValue]);
 
     return (
-      <View
-        style={{
-          alignSelf: "center",
-          width: "100%",
-          maxWidth: 1400,
-          minWidth: 320,
-          alignItems: "center",
-          backgroundColor: "#191919",
-          borderRadius: 10,
-          padding: 20,
-          shadowColor: "#000",
-          shadowOpacity: 0.2,
-          shadowRadius: 10,
-          shadowOffset: { width: 0, height: 4 },
-          elevation: 4,
-          borderWidth: 1,
-          borderColor: "aqua",
-          marginBottom: 20,
-        }}
-      >
-        {/* Title */}
-        <Text
-          style={{
-            fontFamily: "MPLUSLatin_Bold",
-            fontSize: 25,
-            color: "white",
-            marginBottom: 40,
-            textAlign: "center",
-          }}
+      <View>
+        {/* DetailsScreen copilot tour step 4*/}
+        <CopilotStep
+          name="Deathline Tracker"
+          order={4}
+          text="The Deathline-Tracker shows you how close you are to your deadline. Add your maximum of workhours to your project."
         >
-          Deadline-Tracker
-        </Text>
-        {/* Instructions */}
-        <Text
-          style={{
-            fontSize: 18,
-            fontFamily: "MPLUSLatin_ExtraLight",
-            color: "white",
-            textAlign: "center",
-            marginBottom: 10,
-          }}
-        >
-          "Set your maximum allowed work time"
-        </Text>
-        {/* Input field to enter max work hours */}
-        <TextInput
-          placeholder="(e.g. 5)"
-          placeholderTextColor="grey"
-          value={inputMaxWorkHours}
-          keyboardType="numeric"
-          onChangeText={(text) => {
-            const sanitized = sanitizeMaxWorkHours(text);
-            setInputMaxWorkHours(sanitized); // use sanitized value
-            if (!hasUserEditedInput) setHasUserEditedInput(true);
-          }}
-          editable={!saving}
-          style={{
-            marginBottom: 25,
-            width: screenWidth * 0.7,
-            maxWidth: 400,
-            borderColor: "aqua",
-            borderWidth: 1.5,
-            borderRadius: 12,
-            paddingLeft: 15,
-            paddingRight: 40,
-            fontSize: 22,
-            height: 50,
-            color: "white",
-            backgroundColor: "black",
-          }}
-        />
-        {/* Save Button */}
-        <TouchableOpacity
-          onPress={handleSave}
-          disabled={saving}
-          style={{
-            width: screenWidth * 0.7,
-            maxWidth: 400,
-            borderRadius: 12,
-            overflow: "hidden",
-            borderWidth: 2,
-            borderColor: saving ? "lightgray" : "aqua",
-            marginBottom: 30,
-          }}
-        >
-          <LinearGradient
-            colors={["#00f7f7", "#005757"]}
+          <CopilotWalkthroughView
             style={{
-              paddingVertical: 6,
-              justifyContent: "center",
+              alignSelf: "center",
+              width: "100%",
+              maxWidth: 1400,
+              minWidth: 320,
               alignItems: "center",
+              backgroundColor: "#191919",
+              borderRadius: 10,
+              padding: 20,
+              shadowColor: "#000",
+              shadowOpacity: 0.2,
+              shadowRadius: 10,
+              shadowOffset: { width: 0, height: 4 },
+              elevation: 4,
+              borderWidth: 1,
+              borderColor: "aqua",
+              marginBottom: 20,
             }}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
           >
+            {/* Title */}
             <Text
               style={{
                 fontFamily: "MPLUSLatin_Bold",
-                fontSize: 22,
-                color: saving ? "lightgray" : "white",
-                marginBottom: 5,
-                paddingRight: 10,
+                fontSize: 25,
+                color: "white",
+                marginBottom: 40,
+                textAlign: "center",
               }}
             >
-              {saving ? "Saving..." : "Save"}
+              Deadline-Tracker
             </Text>
-          </LinearGradient>
-        </TouchableOpacity>
-
-        {/* ProgressChart */}
-        <View
-          style={{
-            position: "relative",
-            width: 200,
-            height: 200,
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          {/* BackgroundRing */}
-          <CircularProgress
-            value={100}
-            radius={100}
-            activeStrokeWidth={15}
-            inActiveStrokeWidth={15}
-            activeStrokeColor="#1e1e1e"
-            inActiveStrokeColor="#1e1e1e"
-            dashedStrokeConfig={{ count: 50, width: 4 }}
-            progressValueColor="transparent"
-            duration={0}
-          />
-          {/* ProgressRing */}
-          <View style={{ position: "absolute", top: 0, left: 0 }}>
-            <CircularProgress
-              value={progressValue}
-              radius={100}
-              activeStrokeWidth={15}
-              inActiveStrokeWidth={15}
-              // if progress reaches 100% change stroke color
-              activeStrokeColor={progressValue < 100 ? "#00f7f7" : "#ff0000"}
-              dashedStrokeConfig={{ count: 50, width: 4 }}
-              inActiveStrokeColor="transparent"
-              progressValueColor="#ffffff"
-              duration={1000}
-            />
-          </View>
-          {/* flickering stroke animated ProgressRing */}
-          {progressValue >= 100 && (
-            <Animated.View
+            {/* Instructions */}
+            <Text
               style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                opacity: blinkOpacity,
+                fontSize: 18,
+                fontFamily: "MPLUSLatin_ExtraLight",
+                color: "white",
+                textAlign: "center",
+                marginBottom: 10,
               }}
             >
+              "Add your maximum allowed work time"
+            </Text>
+            {/* Input field to enter max work hours */}
+            <TextInput
+              placeholder="(e.g. 5)"
+              placeholderTextColor="grey"
+              value={inputMaxWorkHours}
+              keyboardType="numeric"
+              onChangeText={(text) => {
+                const sanitized = sanitizeMaxWorkHours(text);
+                setInputMaxWorkHours(sanitized); // use sanitized value
+                if (!hasUserEditedInput) setHasUserEditedInput(true);
+              }}
+              editable={!saving}
+              style={{
+                marginBottom: 25,
+                width: screenWidth * 0.7,
+                maxWidth: 400,
+                borderColor: "aqua",
+                borderWidth: 1.5,
+                borderRadius: 12,
+                paddingLeft: 15,
+                paddingRight: 40,
+                fontSize: 22,
+                height: 50,
+                color: "white",
+                backgroundColor: "black",
+              }}
+            />
+            {/* Save Button */}
+            <TouchableOpacity
+              onPress={handleSave}
+              disabled={saving}
+              style={{
+                width: screenWidth * 0.7,
+                maxWidth: 400,
+                borderRadius: 12,
+                overflow: "hidden",
+                borderWidth: 2,
+                borderColor: saving ? "lightgray" : "aqua",
+                marginBottom: 30,
+              }}
+            >
+              <LinearGradient
+                colors={["#00f7f7", "#005757"]}
+                style={{
+                  paddingVertical: 6,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "MPLUSLatin_Bold",
+                    fontSize: 22,
+                    color: saving ? "lightgray" : "white",
+                    marginBottom: 5,
+                    paddingRight: 10,
+                  }}
+                >
+                  {saving ? "Saving..." : "Save"}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            {/* ProgressChart */}
+            <View
+              style={{
+                position: "relative",
+                width: 200,
+                height: 200,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              {/* BackgroundRing */}
               <CircularProgress
-                value={progressValue}
+                value={100}
                 radius={100}
                 activeStrokeWidth={15}
                 inActiveStrokeWidth={15}
-                activeStrokeColor="#ffffff"
-                inActiveStrokeColor="transparent"
+                activeStrokeColor="#1e1e1e"
+                inActiveStrokeColor="#1e1e1e"
                 dashedStrokeConfig={{ count: 50, width: 4 }}
                 progressValueColor="transparent"
                 duration={0}
               />
-            </Animated.View>
-          )}
-        </View>
+              {/* ProgressRing */}
+              <View style={{ position: "absolute", top: 0, left: 0 }}>
+                <CircularProgress
+                  value={progressValue}
+                  radius={100}
+                  activeStrokeWidth={15}
+                  inActiveStrokeWidth={15}
+                  // if progress reaches 100% change stroke color
+                  activeStrokeColor={
+                    progressValue < 100 ? "#00f7f7" : "#ff0000"
+                  }
+                  dashedStrokeConfig={{ count: 50, width: 4 }}
+                  inActiveStrokeColor="transparent"
+                  progressValueColor="#ffffff"
+                  duration={1000}
+                />
+              </View>
+              {/* flickering stroke animated ProgressRing */}
+              {progressValue >= 100 && (
+                <Animated.View
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    opacity: blinkOpacity,
+                  }}
+                >
+                  <CircularProgress
+                    value={progressValue}
+                    radius={100}
+                    activeStrokeWidth={15}
+                    inActiveStrokeWidth={15}
+                    activeStrokeColor="#ffffff"
+                    inActiveStrokeColor="transparent"
+                    dashedStrokeConfig={{ count: 50, width: 4 }}
+                    progressValueColor="transparent"
+                    duration={0}
+                  />
+                </Animated.View>
+              )}
+            </View>
 
-        {/* Result Text */}
-        {maxSeconds > 0 && timer > 0 && (
-          <Text
-            style={{
-              color: "white",
-              fontFamily: "MPLUSLatin_ExtraLight",
-              fontSize: 16,
-              marginTop: 20,
-            }}
-          >
-            {progress.toFixed(1)}% of your max work time used
-          </Text>
-        )}
-        <View
-          style={{
-            width: "100%",
-            height: 50,
-            marginTop: 20,
-            top: 10,
-            flexDirection: "row",
-            alignItems: "center",
-            paddingLeft: 10,
-            borderRadius: 10,
-            //shadow options for android
-            shadowColor: "#ffffff",
-            elevation: 2,
-            //shadow options for ios
-            shadowOffset: { width: 2, height: 2 },
-            shadowOpacity: 0.3,
-            shadowRadius: 3,
-            backgroundColor: "#191919",
-          }}
-        >
-          {/* Display your current Deadline in Hours */}
-          <Text
-            style={{
-              color: "grey",
-              fontSize: 16,
-              fontFamily: "MPLUSLatin_Bold",
-              marginRight: 5,
-            }}
-          >
-            Your Deadline:
-          </Text>
-          <Text
-            style={{
-              color: "white",
-              fontSize: 30,
-              fontWeight: "bold",
-            }}
-          >
-            {maxWorkHours.toString() || "0"}
-          </Text>
-        </View>
+            {/* Result Text */}
+            {maxSeconds > 0 && timer > 0 && (
+              <Text
+                style={{
+                  color: "white",
+                  fontFamily: "MPLUSLatin_ExtraLight",
+                  fontSize: 16,
+                  marginTop: 20,
+                }}
+              >
+                {progress.toFixed(1)}% of your max work time used
+              </Text>
+            )}
+            <View
+              style={{
+                width: "100%",
+                height: 50,
+                marginTop: 20,
+                top: 10,
+                flexDirection: "row",
+                alignItems: "center",
+                paddingLeft: 10,
+                borderRadius: 10,
+                //shadow options for android
+                shadowColor: "#ffffff",
+                elevation: 2,
+                //shadow options for ios
+                shadowOffset: { width: 2, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 3,
+                backgroundColor: "#191919",
+              }}
+            >
+              {/* Display your current Deadline in Hours */}
+              <Text
+                style={{
+                  color: "grey",
+                  fontSize: 16,
+                  fontFamily: "MPLUSLatin_Bold",
+                  marginRight: 5,
+                }}
+              >
+                Your Deadline:
+              </Text>
+              <Text
+                style={{
+                  color: "white",
+                  fontSize: 30,
+                  fontWeight: "bold",
+                }}
+              >
+                {maxWorkHours.toString() || "0"}
+              </Text>
+            </View>
+
+            {/* </View> */}
+          </CopilotWalkthroughView>
+        </CopilotStep>
       </View>
     );
   }
