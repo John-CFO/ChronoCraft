@@ -382,10 +382,10 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
   return (
     <View>
-      {/* DetailsScreen copilot tour step 4 */}
+      {/* DetailsScreen copilot tour step 5 */}
       <CopilotStep
         name="Time-Tracker"
-        order={4}
+        order={5}
         text="The Time Tracker Card lets you track your working time on this project and shows the session state."
       >
         {/* Time Tracker Card */}
