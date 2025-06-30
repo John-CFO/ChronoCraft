@@ -176,11 +176,13 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
     return (
       <View
         style={{
-          width: screenWidth * 0.9,
-          maxWidth: 600,
+          alignSelf: "center",
+          width: "100%",
+          maxWidth: 1400,
+          minWidth: 320,
           alignItems: "center",
           backgroundColor: "#191919",
-          borderRadius: 12,
+          borderRadius: 10,
           padding: 20,
           shadowColor: "#000",
           shadowOpacity: 0.2,
@@ -189,7 +191,7 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
           elevation: 4,
           borderWidth: 1,
           borderColor: "aqua",
-          marginVertical: 30,
+          marginBottom: 20,
         }}
       >
         {/* Title */}
@@ -360,6 +362,8 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
           style={{
             width: "100%",
             height: 50,
+            marginTop: 20,
+            top: 10,
             flexDirection: "row",
             alignItems: "center",
             paddingLeft: 10,
@@ -372,7 +376,6 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
             shadowOpacity: 0.3,
             shadowRadius: 3,
             backgroundColor: "#191919",
-            marginTop: 20,
           }}
         >
           {/* Display your current Deadline in Hours */}
