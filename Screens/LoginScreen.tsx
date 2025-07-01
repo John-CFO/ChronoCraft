@@ -299,6 +299,14 @@ const LoginScreen: React.FC = () => {
                   autoCapitalize="none"
                   onChangeText={(text) => setEmail(text)}
                   value={email}
+                  keyboardType="email-address"
+                  textContentType="emailAddress"
+                  accessible={true}
+                  importantForAccessibility="yes"
+                  returnKeyType="next"
+                  accessibilityLabel="Email input"
+                  accessibilityRole="text"
+                  accessibilityHint="Enter your email address"
                 />
                 <View
                   style={{
@@ -328,11 +336,21 @@ const LoginScreen: React.FC = () => {
                     secureTextEntry={secureTextEntry}
                     onChangeText={(text) => setPassword(text)}
                     value={password}
+                    textContentType="password"
+                    accessible={true}
+                    accessibilityLabel="Password input"
+                    accessibilityRole="text"
+                    accessibilityHint="Enter your password. Field is password protected will be hidden and contains special characters."
                   />
                   {/* Visibility eye button */}
                   <TouchableOpacity
                     onPress={toggleSecureTextEntry}
                     style={{ position: "absolute", right: 15, top: 15 }}
+                    accessible={true}
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      secureTextEntry ? "Show password" : "hide password"
+                    }
                   >
                     <FontAwesome5
                       name={secureTextEntry ? "eye" : "eye-slash"}
@@ -352,6 +370,9 @@ const LoginScreen: React.FC = () => {
                 {/* Login button */}
                 <TouchableOpacity
                   onPress={handleLogin}
+                  accessible={true}
+                  accessibilityRole="button"
+                  accessibilityLabel="Login button"
                   style={{
                     width: screenWidth * 0.7, // use 70% of the screen width
                     maxWidth: 400,
@@ -390,6 +411,9 @@ const LoginScreen: React.FC = () => {
                 {/* Register button */}
                 <TouchableOpacity
                   onPress={handleRegister}
+                  accessible={true}
+                  accessibilityRole="button"
+                  accessibilityLabel="Register button"
                   style={{
                     width: screenWidth * 0.7, // use 70% of the screen width
                     maxWidth: 400,
@@ -426,7 +450,14 @@ const LoginScreen: React.FC = () => {
               </View>
 
               {/* LostPasswordModal */}
-              <TouchableOpacity onPress={toggleModal} style={{ marginTop: 10 }}>
+              <TouchableOpacity
+                onPress={toggleModal}
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel="Lost Password button"
+                accessibilityHint="Opens password recovery dialog"
+                style={{ marginTop: 10 }}
+              >
                 <Text
                   style={{
                     color: "aqua",
