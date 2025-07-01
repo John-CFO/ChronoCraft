@@ -19,12 +19,13 @@ import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import CircularProgress from "react-native-circular-progress-indicator";
 import { doc, updateDoc } from "firebase/firestore";
+import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useStore } from "./TimeTrackingState";
 import { sanitizeMaxWorkHours } from "./InputSanitizers";
 import useDebounceValue from "../hooks/useDebounceValue";
-import { CopilotStep, walkthroughable } from "react-native-copilot";
+import { NotificationManager } from "./services/PushNotifications";
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -48,6 +49,9 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
     const { setProjectData } = useStore();
     // decare the useWindowDimensions hook
     const { width: screenWidth } = useWindowDimensions();
+
+    // ref for notification
+    const hasNotifiedRef = useRef(false);
 
     // global state with memoization
     const { projectState } = useStore((state) => ({
@@ -156,6 +160,21 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
     const blinkOpacity = useRef(new Animated.Value(0)).current;
     // hook to animate the progress indicator on deathline with flickering
     useEffect(() => {
+      // notification if 100% is reached
+      if (progressValue >= 100 && !hasNotifiedRef.current) {
+        hasNotifiedRef.current = true; // reject multiple notifications
+
+        NotificationManager.scheduleNotification(
+          "Target reached 🎯",
+          "You reached your Deathline target!",
+          { seconds: 5 } // 5 seconds to send local notification
+        );
+      }
+      // reset notification flag if progress is less than 100
+      if (progressValue < 100) {
+        hasNotifiedRef.current = false;
+      }
+      // animation for progress
       if (progressValue >= 100) {
         Animated.loop(
           Animated.sequence([

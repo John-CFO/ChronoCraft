@@ -272,15 +272,11 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
         animationRef.current = requestAnimationFrame(update);
         return;
       }
-
-
       if (lastTimestamp === null) {
         lastTimestamp = timestamp;
       }
-
       const elapsed = (timestamp - lastTimestamp) / 1000; // in seconds
       lastTimestamp = timestamp;
-
 
       accumulatedTimeRef.current += elapsed;
       setDisplayTime(accumulatedTimeRef.current);
@@ -370,7 +366,6 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
       );
   };
 
-
   // function to format and round the time in the TimeTrackerCard
   function formatTime(timeInSeconds: number): string {
     const roundedTime = Math.round(timeInSeconds);
@@ -385,10 +380,10 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
   return (
     <View>
-      {/* DetailsScreen copilot tour step 5 */}
+      {/* DetailsScreen copilot tour step 4 */}
       <CopilotStep
         name="Time-Tracker"
-        order={5}
+        order={4}
         text="The Time Tracker Card lets you track your working time on this project and shows the session state."
       >
         {/* Time Tracker Card */}
