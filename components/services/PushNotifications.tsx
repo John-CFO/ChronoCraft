@@ -1,6 +1,6 @@
 ///////////////////////////////////PushNotifications Component////////////////////////////
 
-// NOTE: before testing notifications do a build and run the app to become the request permissions
+// NOTE: Ensure that the NotificationManager is initialized in App.tsx before using this component
 
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
@@ -96,8 +96,8 @@ export class NotificationManager {
     };
 
     await this.scheduleNotification(
-      "Welcome!",
-      "Thank you for registering on ChronoCraft!. We are glad to see you!",
+      "Welcome to ChronoCraft! ⏱️",
+      "We're glad you’ve joined. Let’s track time like a pro.",
       trigger
     );
   }

@@ -41,6 +41,7 @@ import HelpMenu from "./components/HelpMenu";
 import { useStore } from "./components/TimeTrackingState";
 import CustomAlert from "./components/services/customAlert/CustomAlert";
 import { useAlertStore } from "./components/services/customAlert/alertStore";
+import { NotificationManager } from "./components/services/PushNotifications";
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -225,6 +226,12 @@ const App = () => {
       // console.log("user", user);
       setUser(user);
     });
+  }, []);
+
+  // hook to handle the notification initialization
+  useEffect(() => {
+    // console.log("NotificationManager initialized");
+    NotificationManager.configureNotificationHandler();
   }, []);
 
   return (
