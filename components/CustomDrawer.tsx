@@ -35,6 +35,7 @@ import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import FAQBottomSheet from "./FAQBottomSheet";
 import { CustomUser } from "./types/CustomUser"; // CustomUser type definition import to handle conflict with FirebaseUser
 import RestartTourButton from "./../components/services/copilotTour/RestartTourButton";
+import AccessibilityToggleButton from "./services/accessibility/AccessibilityToggleButton";
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -216,7 +217,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
           borderWidth: 0.5,
         }}
       >
-        {/* restart tour button */}
+        {/* restart tour and accessibility button */}
         <View
           style={{
             position: "absolute",
@@ -226,7 +227,10 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
           }}
         >
           <RestartTourButton userId={user?.uid || ""} />
+
+          <AccessibilityToggleButton />
         </View>
+
         {/* FAQ Modal */}
         <BottomSheetModal
           ref={bottomSheetModalRef}

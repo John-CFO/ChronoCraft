@@ -28,6 +28,7 @@ import "react-native-reanimated";
 import * as SplashScreen from "expo-splash-screen";
 import "text-encoding-polyfill"; //bugfix: for delete project with notes
 import { CopilotProvider } from "react-native-copilot";
+import { AccessibilityInfo } from "react-native";
 
 import LoginScreen from "./Screens/LoginScreen";
 import HomeScreen from "./Screens/HomeScreen";
@@ -42,6 +43,7 @@ import { useStore } from "./components/TimeTrackingState";
 import CustomAlert from "./components/services/customAlert/CustomAlert";
 import { useAlertStore } from "./components/services/customAlert/alertStore";
 import { NotificationManager } from "./components/services/PushNotifications";
+import { useAccessibilityStore } from "./components/services/accessibility/accessibilityStore";
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -208,6 +210,33 @@ const App = () => {
       await SplashScreen.hideAsync();
     };
     hide();
+  }, []);
+
+  // state to check if screen reader is enabled
+  const setAccessibility = useAccessibilityStore(
+    (state) => state.setAccessibility
+  );
+  // hook to check if screen reader is enabled
+  useEffect(() => {
+    // initial check
+    AccessibilityInfo.isScreenReaderEnabled().then((enabled) => {
+      console.log("Initial screen reader state:", enabled);
+      setAccessibility(enabled);
+    });
+
+    // subscribe to changes if user enables screen reader with the AccessiblityToggleButton
+    const subscription = AccessibilityInfo.addEventListener(
+      "screenReaderChanged",
+      (enabled) => {
+        console.log("Screen reader changed:", enabled);
+        setAccessibility(enabled);
+      }
+    );
+
+    // cleanup
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   // function for googe-fonts implemantation
