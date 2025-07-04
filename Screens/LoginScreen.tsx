@@ -3,18 +3,11 @@
 // This screen shows the login screen with firebase registry.
 // The authentication is handled by firebase auth.
 // The user can login with email and password or registry with email and password.
+// It includes also accessibility features to make the app more accessible for users with disabilities.
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-import {
-  View,
-  TextInput,
-  Text,
-  Dimensions,
-  StatusBar,
-  ImageBackground,
-  TouchableOpacity,
-} from "react-native";
+import { View, Dimensions, StatusBar, ImageBackground } from "react-native";
 import React, { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -32,16 +25,16 @@ import {
 } from "react-native-alert-notification";
 import { NotificationManager } from "../components/services/PushNotifications";
 import { LinearGradient } from "expo-linear-gradient";
-import { FontAwesome5 } from "@expo/vector-icons";
 import { validate } from "react-email-validator";
 
 import { FIREBASE_APP, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { RootStackParamList } from "../navigation/RootStackParams";
 import AppLogo from "../components/AppLogo";
 import AnimatedText from "../components/AnimatedText";
-import LostPasswordModal from "../components/LostPasswordModal";
 import DismissKeyboard from "../components/DismissKeyboard";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
+import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+import AuthForm from "../components/AuthForm";
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -59,18 +52,10 @@ const LoginScreen: React.FC = () => {
   // declaire the navigation to user get in after logein
   const navigation = useNavigation<RegisterScreenNavigationProp>();
 
-  // states for LostPasswordModal
-  const [isModalVisible, setModalVisible] = useState(false);
-
-  // function to toggle the LostPasswordModal to open or close
-  const toggleModal = () => {
-    setModalVisible((prev) => !prev);
-  };
-
   // states for registry and login
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [secureTextEntry, setSecureTextEntry] = useState(true);
+  // const [secureTextEntry, setSecureTextEntry] = useState(true);
 
   // state to handle the loading animation
   const [loading, setLoading] = useState<boolean>(false);
@@ -203,11 +188,6 @@ const LoginScreen: React.FC = () => {
     }
   };
 
-  // function to handle password visibility
-  const toggleSecureTextEntry = () => {
-    setSecureTextEntry(!secureTextEntry);
-  };
-
   // function to create user document in firestore
   const createUserDocument = async (userId: string, userData: any) => {
     try {
@@ -219,6 +199,12 @@ const LoginScreen: React.FC = () => {
     }
   };
 
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
+  console.log("accessMode in LoginScreen:", accessMode);
+
   return (
     <AlertNotificationRoot>
       <DismissKeyboard>
@@ -226,261 +212,134 @@ const LoginScreen: React.FC = () => {
           style={{
             flex: 1,
             justifyContent: "center",
-            backgroundColor: "black",
+            backgroundColor: "#191919",
           }}
         >
-          {/* Background image */}
-          <ImageBackground
-            source={require("../assets/Holo_GIF.gif")}
-            style={{
-              flex: 1,
-              width: "100%",
-              height: "100%",
-              overflow: "hidden",
-              alignItems: "center",
-            }}
-          >
-            <View
-              style={{
-                paddingTop: 170,
-                position: "absolute",
-                width: screenWidth * 0.9, // use 90% of the screen width
-                maxWidth: 320,
-              }}
-            >
-              {/* App logo */}
-              <AppLogo />
-              <View
+          {accessMode ? (
+            <View style={{ flex: 1 }}>
+              {/* Status bar */}
+              <StatusBar
+                barStyle="light-content"
+                translucent={false}
+                backgroundColor="#000000"
+              />
+              <LinearGradient
+                colors={["#1f1f26", "#121e29", "#1d7182"]}
+                locations={[0, 0.35, 1]}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
                 style={{
-                  bottom: 10,
-                  justifyContent: "flex-start",
+                  flex: 1,
+
                   alignItems: "center",
-                  zIndex: 3,
-                  width: "auto",
-                  height: 30,
+                  justifyContent: "center",
                 }}
               >
-                {/* Text animation */}
-                <AnimatedText />
-              </View>
+                <View
+                  style={{
+                    paddingBottom: 400,
+                    position: "absolute",
+                    width: screenWidth * 0.9, // use 90% of the screen width
+                    maxWidth: 320,
+                  }}
+                >
+                  {/* App logo */}
+                  <AppLogo />
+                  <View
+                    style={{
+                      bottom: 10,
+                      justifyContent: "flex-start",
+                      alignItems: "center",
+                      zIndex: 3,
+                      width: "auto",
+                      height: 30,
+                    }}
+                  >
+                    {/* Text animation */}
+                    <AnimatedText />
+                  </View>
+                </View>
+                <View
+                  style={{
+                    marginTop: 220,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  {/* AuthForm component */}
+                  <AuthForm
+                    email={email}
+                    password={password}
+                    setEmail={setEmail}
+                    setPassword={setPassword}
+                    handleLogin={handleLogin}
+                    handleRegister={handleRegister}
+                  />
+                </View>
+              </LinearGradient>
             </View>
-            <View
+          ) : (
+            // BackgroundImage
+            <ImageBackground
+              source={require("../assets/Holo_GIF.gif")}
               style={{
-                marginTop: 380,
-                justifyContent: "center",
+                flex: 1,
+                width: "100%",
+                height: "100%",
+                overflow: "hidden",
                 alignItems: "center",
               }}
             >
               <View
                 style={{
-                  height: 110,
-                  width: 350,
-                  justifyContent: "space-around",
-                  alignItems: "center",
+                  paddingTop: 170,
+                  position: "absolute",
+                  width: screenWidth * 0.9, // use 90% of the screen width
+                  maxWidth: 320,
                 }}
               >
-                {/* Email input */}
-                <TextInput
-                  style={{
-                    borderColor: "aqua",
-                    borderWidth: 1.5,
-                    borderRadius: 12,
-                    paddingLeft: 15,
-                    fontSize: 22,
-                    paddingBottom: 5,
-                    height: 50,
-                    width: screenWidth * 0.7, // use 70% of the screen width
-                    maxWidth: 400,
-                    color: "white",
-                    backgroundColor: "#191919",
-                  }}
-                  placeholder="Email"
-                  placeholderTextColor={"grey"}
-                  autoCapitalize="none"
-                  onChangeText={(text) => setEmail(text)}
-                  value={email}
-                  keyboardType="email-address"
-                  textContentType="emailAddress"
-                  accessible={true}
-                  importantForAccessibility="yes"
-                  returnKeyType="next"
-                  accessibilityLabel="Email input"
-                  accessibilityRole="text"
-                  accessibilityHint="Enter your email address"
-                />
+                {/* App logo */}
+                <AppLogo />
                 <View
                   style={{
-                    position: "relative",
-                    width: screenWidth * 0.7, // use 70% of the screen width
-                    maxWidth: 400,
-                    height: 40,
+                    bottom: 10,
+                    justifyContent: "flex-start",
+                    alignItems: "center",
+                    zIndex: 3,
+                    width: "auto",
+                    height: 30,
                   }}
                 >
-                  {/* Password input */}
-                  <TextInput
-                    style={{
-                      borderColor: "aqua",
-                      borderWidth: 1.5,
-                      borderRadius: 12,
-                      paddingLeft: 15,
-                      paddingRight: 40,
-                      paddingBottom: 5,
-                      fontSize: 22,
-                      height: 50,
-                      color: "white",
-                      backgroundColor: "#191919",
-                    }}
-                    placeholder="Password"
-                    placeholderTextColor={"grey"}
-                    autoCapitalize="none"
-                    secureTextEntry={secureTextEntry}
-                    onChangeText={(text) => setPassword(text)}
-                    value={password}
-                    textContentType="password"
-                    accessible={true}
-                    accessibilityLabel="Password input"
-                    accessibilityRole="text"
-                    accessibilityHint="Enter your password. Field is password protected will be hidden and contains special characters."
+                  {/* Text animation */}
+                  <AnimatedText />
+                </View>
+                <View
+                  style={{
+                    marginTop: 120,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  {/* AuthForm component */}
+                  <AuthForm
+                    email={email}
+                    password={password}
+                    setEmail={setEmail}
+                    setPassword={setPassword}
+                    handleLogin={handleLogin}
+                    handleRegister={handleRegister}
                   />
-                  {/* Visibility eye button */}
-                  <TouchableOpacity
-                    onPress={toggleSecureTextEntry}
-                    style={{ position: "absolute", right: 15, top: 15 }}
-                    accessible={true}
-                    accessibilityRole="button"
-                    accessibilityLabel={
-                      secureTextEntry ? "Show password" : "hide password"
-                    }
-                  >
-                    <FontAwesome5
-                      name={secureTextEntry ? "eye" : "eye-slash"}
-                      size={20}
-                      color="darkgrey"
-                    />
-                  </TouchableOpacity>
                 </View>
               </View>
 
-              <View
-                style={{
-                  flexDirection: "column",
-                  margin: 30,
-                }}
-              >
-                {/* Login button */}
-                <TouchableOpacity
-                  onPress={handleLogin}
-                  accessible={true}
-                  accessibilityRole="button"
-                  accessibilityLabel="Login button"
-                  style={{
-                    width: screenWidth * 0.7, // use 70% of the screen width
-                    maxWidth: 400,
-                    borderRadius: 12,
-                    overflow: "hidden",
-                    borderWidth: 1.5,
-                    borderColor: "aqua",
-                    marginBottom: 8,
-                  }}
-                >
-                  <LinearGradient
-                    colors={["#00f7f7", "#005757"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={{
-                      alignItems: "center",
-                      justifyContent: "center",
-                      height: 45,
-                      width: screenWidth * 0.7, // use 70% of the screen width
-                      maxWidth: 400,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: "MPLUSLatin_Bold",
-                        fontSize: 22,
-                        color: "white",
-                        marginBottom: 5,
-                      }}
-                    >
-                      Login
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-
-                {/* Register button */}
-                <TouchableOpacity
-                  onPress={handleRegister}
-                  accessible={true}
-                  accessibilityRole="button"
-                  accessibilityLabel="Register button"
-                  style={{
-                    width: screenWidth * 0.7, // use 70% of the screen width
-                    maxWidth: 400,
-                    borderRadius: 12,
-                    overflow: "hidden",
-                    borderWidth: 1.5,
-                    borderColor: "aqua",
-                  }}
-                >
-                  <LinearGradient
-                    colors={["#00f7f7", "#005757"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={{
-                      alignItems: "center",
-                      justifyContent: "center",
-                      height: 45,
-                      width: screenWidth * 0.7, // use 70% of the screen width
-                      maxWidth: 400,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: "MPLUSLatin_Bold",
-                        fontSize: 22,
-                        color: "white",
-                        marginBottom: 5,
-                      }}
-                    >
-                      Register
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-
-              {/* LostPasswordModal */}
-              <TouchableOpacity
-                onPress={toggleModal}
-                accessible={true}
-                accessibilityRole="button"
-                accessibilityLabel="Lost Password button"
-                accessibilityHint="Opens password recovery dialog"
-                style={{ marginTop: 10 }}
-              >
-                <Text
-                  style={{
-                    color: "aqua",
-                    textDecorationLine: "underline",
-                    fontSize: 16,
-                  }}
-                >
-                  Forgot Password?
-                </Text>
-              </TouchableOpacity>
-              <LostPasswordModal
-                visible={isModalVisible}
-                onClose={toggleModal}
+              {/* Status bar */}
+              <StatusBar
+                barStyle="light-content"
+                translucent={false}
+                backgroundColor={"transparent"}
               />
-            </View>
-
-            {/* Status bar */}
-            <StatusBar
-              barStyle="light-content"
-              translucent
-              backgroundColor={"transparent"}
-            />
-          </ImageBackground>
+            </ImageBackground>
+          )}
         </View>
       </DismissKeyboard>
     </AlertNotificationRoot>
