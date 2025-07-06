@@ -18,6 +18,7 @@ import Modal from "react-native-modal";
 import { FIREBASE_AUTH } from "../firebaseConfig";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useDotAnimation } from "../components/DotAnimation";
+import { useAccessibilityStore } from "./services/accessibility/accessibilityStore";
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -69,6 +70,12 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
   // define the dot animation with a delay
   const [loading, setLoading] = useState(true);
   const dots = useDotAnimation(loading, 700);
+
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
+  // console.log("accessMode in LoginScreen:", accessMode);
 
   return (
     <Modal
@@ -141,7 +148,13 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
-              placeholderTextColor="grey"
+              placeholderTextColor={accessMode ? "white" : "grey"}
+              accessible={true}
+              importantForAccessibility="yes"
+              returnKeyType="next"
+              accessibilityLabel="Email input"
+              accessibilityRole="text"
+              accessibilityHint="Enter your email address to reset your password."
               style={{
                 borderColor: "aqua",
                 borderWidth: 1.5,
@@ -161,6 +174,9 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
           {/* reset password button */}
           <TouchableOpacity
             onPress={handlePasswordReset}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Send E-Mail to get a reset link"
             style={{
               width: screenWidth * 0.7, // use 70% of the screen width
               maxWidth: 400,
@@ -201,9 +217,11 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
           <Text
             style={{
               marginTop: 20,
-              fontSize: 18,
-              color: "lightgrey",
-              fontFamily: "MPLUSLatin_ExtraLight",
+              fontSize: accessMode ? 20 : 18,
+              color: accessMode ? "white" : "lightgrey",
+              fontFamily: accessMode
+                ? "MPLUSLatin_Regular"
+                : "MPLUSLatin_ExtraLight",
             }}
           >
             swipe up or down to close
