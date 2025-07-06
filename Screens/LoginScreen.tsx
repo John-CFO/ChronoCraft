@@ -7,7 +7,14 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-import { View, Dimensions, StatusBar, ImageBackground } from "react-native";
+import {
+  View,
+  Dimensions,
+  StatusBar,
+  ImageBackground,
+  StyleSheet,
+  Image,
+} from "react-native";
 import React, { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -26,6 +33,7 @@ import {
 import { NotificationManager } from "../components/services/PushNotifications";
 import { LinearGradient } from "expo-linear-gradient";
 import { validate } from "react-email-validator";
+import { BlurView } from "expo-blur";
 
 import { FIREBASE_APP, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { RootStackParamList } from "../navigation/RootStackParams";
@@ -216,67 +224,80 @@ const LoginScreen: React.FC = () => {
           }}
         >
           {accessMode ? (
-            <View style={{ flex: 1 }}>
+            <View
+              style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
               {/* Status bar */}
               <StatusBar
                 barStyle="light-content"
                 translucent={false}
-                backgroundColor="#000000"
+                backgroundColor="black"
               />
-              <LinearGradient
-                colors={["#1f1f26", "#121e29", "#1d7182"]}
-                locations={[0, 0.35, 1]}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
+
+              <Image
+                source={require("../assets/time-bg.png")}
+                resizeMode="cover"
                 style={{
                   flex: 1,
+                  position: "absolute",
+                  width: "100%",
+                  height: "100%",
+                  overflow: "hidden",
+                }}
+              />
 
-                  alignItems: "center",
-                  justifyContent: "center",
+              {/* Blur-Overlay */}
+              <BlurView
+                intensity={20}
+                tint="dark"
+                style={StyleSheet.absoluteFill}
+              />
+
+              <View
+                style={{
+                  paddingBottom: 420,
+                  position: "absolute",
+                  width: screenWidth * 0.9, // use 90% of the screen width
+                  maxWidth: 320,
                 }}
               >
+                {/* App logo */}
+                <AppLogo />
                 <View
                   style={{
-                    paddingBottom: 400,
-                    position: "absolute",
-                    width: screenWidth * 0.9, // use 90% of the screen width
-                    maxWidth: 320,
-                  }}
-                >
-                  {/* App logo */}
-                  <AppLogo />
-                  <View
-                    style={{
-                      bottom: 10,
-                      justifyContent: "flex-start",
-                      alignItems: "center",
-                      zIndex: 3,
-                      width: "auto",
-                      height: 30,
-                    }}
-                  >
-                    {/* Text animation */}
-                    <AnimatedText />
-                  </View>
-                </View>
-                <View
-                  style={{
-                    marginTop: 220,
-                    justifyContent: "center",
+                    bottom: 10,
+                    justifyContent: "flex-start",
                     alignItems: "center",
+                    zIndex: 3,
+                    width: "auto",
+                    height: 30,
                   }}
                 >
-                  {/* AuthForm component */}
-                  <AuthForm
-                    email={email}
-                    password={password}
-                    setEmail={setEmail}
-                    setPassword={setPassword}
-                    handleLogin={handleLogin}
-                    handleRegister={handleRegister}
-                  />
+                  {/* Text animation */}
+                  <AnimatedText />
                 </View>
-              </LinearGradient>
+              </View>
+              <View
+                style={{
+                  marginTop: 220,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                {/* AuthForm component */}
+                <AuthForm
+                  email={email}
+                  password={password}
+                  setEmail={setEmail}
+                  setPassword={setPassword}
+                  handleLogin={handleLogin}
+                  handleRegister={handleRegister}
+                />
+              </View>
             </View>
           ) : (
             // BackgroundImage
@@ -336,7 +357,7 @@ const LoginScreen: React.FC = () => {
               <StatusBar
                 barStyle="light-content"
                 translucent={false}
-                backgroundColor={"transparent"}
+                backgroundColor={"black"}
               />
             </ImageBackground>
           )}
