@@ -14,6 +14,8 @@ import {
 import React from "react";
 import { LinearGradient } from "expo-linear-gradient";
 
+import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+
 /////////////////////////////////////////////////////////////////////////////
 
 type SortModalFABProps = {
@@ -45,6 +47,12 @@ const SortModalFAB = ({
     onSortChange(value);
     onClose();
   };
+
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
+  // console.log("accessMode in LoginScreen:", accessMode);
 
   return (
     <View
@@ -100,6 +108,9 @@ const SortModalFAB = ({
                 alignItems: "center",
               }}
               onPress={() => handleSelect(item.value)}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="Sort button. Choose a sorting option."
             >
               {isSelected ? (
                 <LinearGradient
@@ -115,7 +126,7 @@ const SortModalFAB = ({
                 >
                   <Text
                     style={{
-                      fontSize: 16,
+                      fontSize: accessMode ? 22 : 16,
                       color: "#191919",
                       fontWeight: "bold",
                     }}
@@ -135,7 +146,7 @@ const SortModalFAB = ({
                 >
                   <Text
                     style={{
-                      fontSize: 16,
+                      fontSize: accessMode ? 22 : 16,
                       color: "white",
                     }}
                   >
@@ -159,9 +170,11 @@ const SortModalFAB = ({
       >
         <Text
           style={{
-            fontSize: 18,
-            color: "lightgrey",
-            fontFamily: "MPLUSLatin_ExtraLight",
+            fontSize: accessMode ? 20 : 18,
+            color: accessMode ? "white" : "lightgrey",
+            fontFamily: accessMode
+              ? "MPLUSLatin_Regular"
+              : "MPLUSLatin_ExtraLight",
           }}
         >
           swipe up or down to close
