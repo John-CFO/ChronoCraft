@@ -31,7 +31,6 @@ import {
   AlertNotificationRoot,
 } from "react-native-alert-notification";
 import { NotificationManager } from "../components/services/PushNotifications";
-import { LinearGradient } from "expo-linear-gradient";
 import { validate } from "react-email-validator";
 import { BlurView } from "expo-blur";
 
