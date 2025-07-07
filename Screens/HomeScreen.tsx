@@ -68,6 +68,7 @@ import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { useDotAnimation } from "../components/DotAnimation";
 import { sanitizeTitle } from "../components/InputSanitizers";
 import SortModal from "../components/SortModal";
+import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 type HomeScreenRouteProp = RouteProp<
@@ -457,6 +458,9 @@ const HomeScreen: React.FC = () => {
           {/* Button to navigate to the details screen */}
           <TouchableOpacity
             onPress={() => handleProjectPress(item.id as string, item.name)}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Press the project card to see the details"
             style={{ alignItems: "center", justifyContent: "center", flex: 1 }}
           >
             <View
@@ -470,7 +474,8 @@ const HomeScreen: React.FC = () => {
                 typeof item.createdAt.toDate === "function" && (
                   <Text
                     style={{
-                      color: "grey",
+                      color: accessMode ? "white" : "grey",
+                      fontSize: accessMode ? 16 : 13,
                       paddingLeft: 10,
                       marginTop: 5,
                     }}
@@ -483,7 +488,7 @@ const HomeScreen: React.FC = () => {
                 style={{
                   marginTop: 5,
                   marginLeft: 30,
-                  fontSize: 24,
+                  fontSize: accessMode ? 28 : 24,
                   fontFamily: "MPLUSLatin_Bold",
                   color: "white",
                 }}
@@ -502,12 +507,30 @@ const HomeScreen: React.FC = () => {
             }}
           >
             {/* Button to delete a project */}
-            <TouchableOpacity onPress={() => handleDeleteProject(item.id)}>
-              <AntDesign name="delete" size={30} color="darkgrey" />
+            <TouchableOpacity
+              onPress={() => handleDeleteProject(item.id)}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="Delete the project"
+            >
+              <AntDesign
+                name="delete"
+                size={30}
+                color={accessMode ? "white" : "darkgrey"}
+              />
             </TouchableOpacity>
             {/* Button to add a note to a project */}
-            <TouchableOpacity onPress={() => openNoteModal(item.id)}>
-              <MaterialIcons name="edit-note" size={30} color="darkgrey" />
+            <TouchableOpacity
+              onPress={() => openNoteModal(item.id)}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="Add a note. You can watch it in the details screen"
+            >
+              <MaterialIcons
+                name="edit-note"
+                size={30}
+                color={accessMode ? "white" : "darkgrey"}
+              />
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -563,6 +586,12 @@ const HomeScreen: React.FC = () => {
   const EmptyStepNumber = () => {
     return null;
   };
+
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
+  // console.log("accessMode in LoginScreen:", accessMode);
 
   return (
     <DismissKeyboard>
@@ -678,6 +707,9 @@ const HomeScreen: React.FC = () => {
                     }}
                     onPress={openSortModal}
                     activeOpacity={0.7}
+                    accessible={true}
+                    accessibilityRole="button"
+                    accessibilityLabel="Sort your projects by priority"
                   >
                     <LinearGradient
                       colors={["#00f7f7", "#005757"]}
@@ -754,8 +786,10 @@ const HomeScreen: React.FC = () => {
                       style={{
                         textAlign: "center",
                         color: "white",
-                        fontSize: 18,
-                        fontFamily: "MPLUSLatin_ExtraLight",
+                        fontSize: accessMode ? 20 : 18,
+                        fontFamily: accessMode
+                          ? "MPLUSLatin_Regular"
+                          : "MPLUSLatin_ExtraLight",
                       }}
                     >
                       You haven't any projects yet.
@@ -802,7 +836,13 @@ const HomeScreen: React.FC = () => {
                         backgroundColor: "#191919",
                       }}
                       placeholder={`Add new Project${dots}`}
-                      placeholderTextColor="grey"
+                      placeholderTextColor={accessMode ? "white" : "grey"}
+                      accessible={true}
+                      importantForAccessibility="yes"
+                      returnKeyType="next"
+                      accessibilityLabel="Project input"
+                      accessibilityRole="text"
+                      accessibilityHint="Enter the name of your project here."
                       editable={true}
                       onChangeText={(text) =>
                         setNewProjectName(sanitizeTitle(text))
@@ -843,6 +883,9 @@ const HomeScreen: React.FC = () => {
                     <WalkthroughTouchableOpacity
                       onPress={handleAddProject}
                       activeOpacity={0.7}
+                      accessible={true}
+                      accessibilityRole="button"
+                      accessibilityLabel="Add Project Button"
                       style={{
                         width: 50,
                         height: 50,
