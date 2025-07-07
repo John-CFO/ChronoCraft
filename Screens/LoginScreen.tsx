@@ -211,7 +211,7 @@ const LoginScreen: React.FC = () => {
   const accessMode = useAccessibilityStore(
     (state) => state.accessibilityEnabled
   );
-  console.log("accessMode in LoginScreen:", accessMode);
+  // console.log("accessMode in LoginScreen:", accessMode);
 
   return (
     <AlertNotificationRoot>
