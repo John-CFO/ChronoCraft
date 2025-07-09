@@ -75,7 +75,14 @@ const HeaderHelpComponent = ({ navigation }: { navigation: any }) => {
 
   return (
     <View>
-      <TouchableOpacity onPress={openDropdown} style={{ marginRight: 10 }}>
+      <TouchableOpacity
+        onPress={openDropdown}
+        accessible={true}
+        accessibilityRole="button"
+        accessibilityLabel="Help Menu Button"
+        accessibilityHint="Opens the help menu to inform us about any issues or bugs"
+        style={{ marginRight: 10 }}
+      >
         <MaterialIcons name="live-help" size={36} color="white" />
       </TouchableOpacity>
       {isHelpMenuVisible && (
@@ -358,6 +365,10 @@ const App = () => {
                             navigation.goBack();
                           }
                         }}
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel="Back Button"
+                        accessibilityHint="Button to go back to the previous screen"
                         style={{ marginLeft: 20 }}
                       >
                         <AntDesign name="doubleleft" size={28} color="white" />

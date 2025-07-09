@@ -29,7 +29,13 @@ const CustomMenuBTN: React.FC<CustomMenuBTNProps> = () => {
   };
 
   return (
-    <TouchableOpacity onPress={openDrawer}>
+    <TouchableOpacity
+      onPress={openDrawer}
+      accessible={true}
+      accessibilityRole="button"
+      accessibilityLabel="Menu Button"
+      accessibilityHint="Open the menu of the app to navigate between screens"
+    >
       <MaterialIcons
         name="menu-open"
         size={42}

@@ -176,7 +176,8 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
             onPress={handlePasswordReset}
             accessible={true}
             accessibilityRole="button"
-            accessibilityLabel="Send E-Mail to get a reset link"
+            accessibilityLabel="Reset Password Button"
+            accessibilityHint="Send E-Mail to get a reset link"
             style={{
               width: screenWidth * 0.7, // use 70% of the screen width
               maxWidth: 400,

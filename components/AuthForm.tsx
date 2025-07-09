@@ -161,6 +161,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
             accessible={true}
             accessibilityRole="button"
             accessibilityLabel="Login button"
+            accessibilityHint="Press to log in to your account"
             style={{
               width: screenWidth * 0.7, // use 70% of the screen width
               maxWidth: 400,
@@ -202,6 +203,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
             accessible={true}
             accessibilityRole="button"
             accessibilityLabel="Register button"
+            accessibilityHint="Press to register a new account"
             style={{
               width: screenWidth * 0.7, // use 70% of the screen width
               maxWidth: 400,
