@@ -13,6 +13,8 @@ import React from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { Foundation } from "@expo/vector-icons";
 
+import { useAccessibilityStore } from "./services/accessibility/accessibilityStore";
+
 /////////////////////////////////////////////////////////////////////////////
 
 //typeinterface for close function
@@ -40,6 +42,11 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
   const openGithub = () => {
     Linking.openURL("https://github.com/");
   };
+
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
 
   return (
     <View
@@ -73,6 +80,10 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
           {/* Close Button */}
           <TouchableOpacity
             onPress={closeMenu}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Close Button"
+            accessibilityHint="Closes the help menu"
             activeOpacity={0.7}
             style={{
               position: "absolute",
@@ -145,9 +156,11 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
           <Text
             style={{
               textAlign: "center",
-              fontFamily: "MPLUSLatin_ExtraLight",
+              fontFamily: accessMode
+                ? "MPLUSLatin_Bold"
+                : "MPLUSLatin_ExtraLight",
               color: "white",
-              fontSize: 16,
+              fontSize: accessMode ? 18 : 16,
             }}
           >
             If you encounter issues or have suggestions for improvements, feel
@@ -163,13 +176,31 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
             paddingTop: 20,
           }}
         >
-          <TouchableOpacity onPress={openFacebook}>
+          <TouchableOpacity
+            onPress={openFacebook}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Open Facebook"
+            accessibilityHint="Opens our Facebook page in an external browser"
+          >
             <Foundation name="social-facebook" size={55} color="white" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={openLinkedIn}>
+          <TouchableOpacity
+            onPress={openLinkedIn}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Open LinkedIn"
+            accessibilityHint="Opens our LinkedIn profile in an external browser"
+          >
             <Foundation name="social-linkedin" size={55} color="white" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={openGithub}>
+          <TouchableOpacity
+            onPress={openGithub}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Open GitHub"
+            accessibilityHint="Opens our GitHub repository in an external browser"
+          >
             <Foundation name="social-github" size={55} color="white" />
           </TouchableOpacity>
         </View>
@@ -179,9 +210,11 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
           <Text
             style={{
               textAlign: "center",
-              fontFamily: "MPLUSLatin_ExtraLight",
+              fontFamily: accessMode
+                ? "MPLUSLatin_Bold"
+                : "MPLUSLatin_ExtraLight",
               color: "white",
-              fontSize: 14,
+              fontSize: accessMode ? 18 : 14,
             }}
           >
             Thanks for your feedback! 🚀
