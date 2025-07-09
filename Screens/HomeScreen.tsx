@@ -460,7 +460,8 @@ const HomeScreen: React.FC = () => {
             onPress={() => handleProjectPress(item.id as string, item.name)}
             accessible={true}
             accessibilityRole="button"
-            accessibilityLabel="Press the project card to see the details"
+            accessibilityLabel="Project Card"
+            accessibilityHint="Press the project card to see the details"
             style={{ alignItems: "center", justifyContent: "center", flex: 1 }}
           >
             <View
@@ -512,6 +513,7 @@ const HomeScreen: React.FC = () => {
               accessible={true}
               accessibilityRole="button"
               accessibilityLabel="Delete the project"
+              accessibilityHint="Delete the project"
             >
               <AntDesign
                 name="delete"
@@ -524,7 +526,8 @@ const HomeScreen: React.FC = () => {
               onPress={() => openNoteModal(item.id)}
               accessible={true}
               accessibilityRole="button"
-              accessibilityLabel="Add a note. You can watch it in the details screen"
+              accessibilityLabel="Add a note"
+              accessibilityHint="Add a note. You can watch it in the details screen"
             >
               <MaterialIcons
                 name="edit-note"
@@ -709,7 +712,8 @@ const HomeScreen: React.FC = () => {
                     activeOpacity={0.7}
                     accessible={true}
                     accessibilityRole="button"
-                    accessibilityLabel="Sort your projects by priority"
+                    accessibilityLabel="Sort Button"
+                    accessibilityHint="Sort your projects by priority"
                   >
                     <LinearGradient
                       colors={["#00f7f7", "#005757"]}
@@ -886,6 +890,7 @@ const HomeScreen: React.FC = () => {
                       accessible={true}
                       accessibilityRole="button"
                       accessibilityLabel="Add Project Button"
+                      accessibilityHint="Button to add a new project"
                       style={{
                         width: 50,
                         height: 50,
