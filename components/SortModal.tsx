@@ -69,6 +69,9 @@ const SortModalFAB = ({
     >
       {/* header */}
       <View
+        accessible
+        accessibilityRole="header"
+        accessibilityLabel="Sort your projects"
         style={{
           width: 330,
           height: 80,
@@ -169,6 +172,10 @@ const SortModalFAB = ({
         }}
       >
         <Text
+          accessible
+          accessibilityRole="text"
+          accessibilityLabel="Navigation tip"
+          accessibilityHint="Swipe up or down to close"
           style={{
             fontSize: accessMode ? 20 : 18,
             color: accessMode ? "white" : "lightgrey",
