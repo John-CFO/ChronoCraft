@@ -664,6 +664,9 @@ const HomeScreen: React.FC = () => {
               <>
                 {/* Header section */}
                 <View
+                  accessible
+                  accessibilityRole="header"
+                  accessibilityLabel="Your Projects"
                   style={{
                     width: "100%",
                     height: 50,
