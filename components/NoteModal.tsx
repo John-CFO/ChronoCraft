@@ -21,6 +21,7 @@ import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useDotAnimation } from "../components/DotAnimation";
 import { sanitizeComment } from "./InputSanitizers";
+import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -115,6 +116,12 @@ const NoteModal: React.FC<NoteModalProps> = ({
     setComment(text);
   };
 
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
+  // console.log("accessMode in LoginScreen:", accessMode);
+
   return (
     <View>
       {/*modal settings */}
@@ -134,6 +141,9 @@ const NoteModal: React.FC<NoteModalProps> = ({
       >
         {/* header*/}
         <View
+          accessible
+          accessibilityRole="header"
+          accessibilityLabel="Project Notes"
           style={{
             width: 330,
             height: 80,
@@ -176,11 +186,14 @@ const NoteModal: React.FC<NoteModalProps> = ({
               minHeight: 100,
               minWidth: 330,
               color: "white",
-              fontSize: 18,
+              fontSize: accessMode ? 20 : 18,
               backgroundColor: "#191919",
             }}
+            accessible
+            accessibilityLabel="Comment"
+            accessibilityHint="Write a comment to add a note to the project"
             placeholder={`Write a comment${dots}`}
-            placeholderTextColor="grey"
+            placeholderTextColor={accessMode ? "white" : "grey"}
             multiline={true}
             value={comment}
             onChangeText={(text) => handleCommentChange(sanitizeComment(text))}
@@ -189,6 +202,10 @@ const NoteModal: React.FC<NoteModalProps> = ({
           {/*submit button*/}
 
           <TouchableOpacity
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel={saving ? "Updating profile" : "Save note"}
+            accessibilityHint="Saves the note to the project"
             onPress={() =>
               handleSubmitComment(
                 projectId,
@@ -242,10 +259,16 @@ const NoteModal: React.FC<NoteModalProps> = ({
           }}
         >
           <Text
+            accessible
+            accessibilityRole="text"
+            accessibilityLabel="Navigation tip"
+            accessibilityHint="Swipe up or down to close"
             style={{
-              fontSize: 18,
-              color: "lightgrey",
-              fontFamily: "MPLUSLatin_ExtraLight",
+              fontSize: accessMode ? 20 : 18,
+              color: accessMode ? "white" : "lightgrey",
+              fontFamily: accessMode
+                ? "MPLUSLatin_Regular"
+                : "MPLUSLatin_ExtraLight",
             }}
           >
             swipe up or down to close
