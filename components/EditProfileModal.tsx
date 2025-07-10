@@ -30,6 +30,7 @@ import {
 import DismissKeyboard from "../components/DismissKeyboard";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { sanitizeName, sanitizePersonalID } from "./InputSanitizers";
+import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -164,6 +165,12 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     setSaving(false);
   };
 
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
+  // console.log("accessMode in LoginScreen:", accessMode);
+
   return (
     <DismissKeyboard>
       <View>
@@ -185,6 +192,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
           {/* header */}
 
           <View
+            accessible
+            accessibilityRole="header"
+            accessibilityLabel="Profile Settings"
             style={{
               width: 330,
               height: 80,
@@ -219,7 +229,13 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
             {/* user profile image upload */}
 
             <ImageBackground>
-              <TouchableOpacity onPress={pickImage}>
+              <TouchableOpacity
+                onPress={pickImage}
+                accessible
+                accessibilityRole="button"
+                accessibilityLabel="Upload profile image"
+                accessibilityHint="Button to upload a profile image"
+              >
                 <View
                   style={{
                     zIndex: 5,
@@ -280,8 +296,11 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
               }}
             >
               <TextInput
+                accessible
+                accessibilityLabel="Name Input"
+                accessibilityHint="Enter your name"
                 placeholder="Name"
-                placeholderTextColor="grey"
+                placeholderTextColor={accessMode ? "white" : "grey"}
                 value={newName}
                 onChangeText={(text) => setNewName(sanitizeName(text))}
                 style={{
@@ -313,8 +332,11 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
               {/* change user personal-ID */}
 
               <TextInput
+                accessible
+                accessibilityLabel="Personal ID Input"
+                accessibilityHint="Enter your personal ID"
                 placeholder="Personal-ID"
-                placeholderTextColor="grey"
+                placeholderTextColor={accessMode ? "white" : "grey"}
                 value={newPersonalID}
                 onChangeText={(text) =>
                   setNewPersonalID(sanitizePersonalID(text))
@@ -349,6 +371,12 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
             >
               {/* update button */}
               <TouchableOpacity
+                accessible
+                accessibilityRole="button"
+                accessibilityLabel={
+                  saving ? "Updating profile" : "Save changes"
+                }
+                accessibilityHint="Saves your updated name and personal ID"
                 onPress={handleSave}
                 style={{
                   width: screenWidth * 0.7, // use 70% of the screen width
@@ -395,11 +423,17 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
             >
               {/* navigation tip */}
               <Text
+                accessible
+                accessibilityRole="text"
+                accessibilityLabel="Navigation tip"
+                accessibilityHint="Swipe up or down to close"
                 style={{
-                  marginTop: 20,
-                  fontSize: 18,
-                  color: "lightgrey",
-                  fontFamily: "MPLUSLatin_ExtraLight",
+                  marginTop: accessMode ? 10 : 20,
+                  fontSize: accessMode ? 20 : 18,
+                  color: accessMode ? "white" : "lightgrey",
+                  fontFamily: accessMode
+                    ? "MPLUSLatin_Regular"
+                    : "MPLUSLatin_ExtraLight",
                 }}
               >
                 swipe up or down to close

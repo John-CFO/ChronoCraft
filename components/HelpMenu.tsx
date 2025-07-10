@@ -135,25 +135,35 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
           style={{
             width: 240,
             height: 160,
-
             justifyContent: "space-between",
             alignItems: "center",
             paddingHorizontal: 5,
           }}
         >
           {/* header text */}
-          <Text
-            style={{
-              paddingBottom: 5,
-              color: "white",
-              fontSize: 32,
-              fontFamily: "MPLUSLatin_Bold",
-            }}
+          <View
+            accessible
+            accessibilityRole="header"
+            accessibilityLabel="Help Menu"
+            style={{ alignItems: "center" }}
           >
-            Help
-          </Text>
+            <Text
+              style={{
+                paddingBottom: 5,
+                color: "white",
+                fontSize: 32,
+                fontFamily: "MPLUSLatin_Bold",
+              }}
+            >
+              Help
+            </Text>
+          </View>
           {/* info text */}
           <Text
+            accessible
+            accessibilityRole="text"
+            accessibilityLabel="Info Text"
+            accessibilityHint="If you encounter issues or have suggestions for improvements, feel free to hit a Logo and reach out to us:"
             style={{
               textAlign: "center",
               fontFamily: accessMode
@@ -208,6 +218,10 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
         <View style={{ width: 240, paddingTop: 50, alignItems: "center" }}>
           {/* thanks text */}
           <Text
+            accessible
+            accessibilityRole="text"
+            accessibilityLabel="Thanks Text"
+            accessibilityHint="Thanks for your feedback!"
             style={{
               textAlign: "center",
               fontFamily: accessMode
