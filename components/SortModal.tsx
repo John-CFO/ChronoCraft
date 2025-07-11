@@ -56,6 +56,8 @@ const SortModalFAB = ({
 
   return (
     <View
+      accessible={true}
+      accessibilityViewIsModal={true}
       style={{
         width: screenWidth * 0.9,
         maxWidth: 600,
@@ -69,7 +71,6 @@ const SortModalFAB = ({
     >
       {/* header */}
       <View
-        accessible
         accessibilityRole="header"
         accessibilityLabel="Sort your projects"
         style={{
@@ -111,9 +112,9 @@ const SortModalFAB = ({
                 alignItems: "center",
               }}
               onPress={() => handleSelect(item.value)}
-              accessible={true}
               accessibilityRole="button"
-              accessibilityLabel="Sort button. Choose a sorting option."
+              accessibilityLabel={`Sort option: ${item.label}${isSelected ? ", selected" : ""}`}
+              accessibilityState={{ selected: isSelected }}
             >
               {isSelected ? (
                 <LinearGradient
@@ -173,7 +174,6 @@ const SortModalFAB = ({
       >
         <Text
           accessible
-          accessibilityRole="text"
           accessibilityLabel="Navigation tip"
           accessibilityHint="Swipe up or down to close"
           style={{

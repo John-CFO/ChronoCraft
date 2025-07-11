@@ -126,6 +126,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
     <View>
       {/*modal settings */}
       <View
+        accessibilityViewIsModal={true}
         style={{
           width: screenWidth * 0.9, // use 90% of the screen width
           maxWidth: 600,
@@ -190,7 +191,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
               backgroundColor: "#191919",
             }}
             accessible
-            accessibilityLabel="Comment"
+            accessibilityLabel="Project comment input field"
             accessibilityHint="Write a comment to add a note to the project"
             placeholder={`Write a comment${dots}`}
             placeholderTextColor={accessMode ? "white" : "grey"}
@@ -202,10 +203,10 @@ const NoteModal: React.FC<NoteModalProps> = ({
           {/*submit button*/}
 
           <TouchableOpacity
-            accessible
             accessibilityRole="button"
             accessibilityLabel={saving ? "Updating profile" : "Save note"}
             accessibilityHint="Saves the note to the project"
+            accessibilityState={{ busy: saving }}
             onPress={() =>
               handleSubmitComment(
                 projectId,
@@ -260,7 +261,6 @@ const NoteModal: React.FC<NoteModalProps> = ({
         >
           <Text
             accessible
-            accessibilityRole="text"
             accessibilityLabel="Navigation tip"
             accessibilityHint="Swipe up or down to close"
             style={{

@@ -458,10 +458,9 @@ const HomeScreen: React.FC = () => {
           {/* Button to navigate to the details screen */}
           <TouchableOpacity
             onPress={() => handleProjectPress(item.id as string, item.name)}
-            accessible={true}
             accessibilityRole="button"
-            accessibilityLabel="Project Card"
-            accessibilityHint="Press the project card to see the details"
+            accessibilityLabel={`Project ${item.name}, created on ${dayjs(item.createdAt.toDate()).format("DD MMMM YYYY")}`}
+            accessibilityHint="Tap to view project details"
             style={{ alignItems: "center", justifyContent: "center", flex: 1 }}
           >
             <View
@@ -510,7 +509,6 @@ const HomeScreen: React.FC = () => {
             {/* Button to delete a project */}
             <TouchableOpacity
               onPress={() => handleDeleteProject(item.id)}
-              accessible={true}
               accessibilityRole="button"
               accessibilityLabel="Delete the project"
               accessibilityHint="Delete the project"
@@ -524,7 +522,6 @@ const HomeScreen: React.FC = () => {
             {/* Button to add a note to a project */}
             <TouchableOpacity
               onPress={() => openNoteModal(item.id)}
-              accessible={true}
               accessibilityRole="button"
               accessibilityLabel="Add a note"
               accessibilityHint="Add a note. You can watch it in the details screen"
@@ -713,10 +710,10 @@ const HomeScreen: React.FC = () => {
                     }}
                     onPress={openSortModal}
                     activeOpacity={0.7}
-                    accessible={true}
                     accessibilityRole="button"
-                    accessibilityLabel="Sort Button"
+                    accessibilityLabel="Sort"
                     accessibilityHint="Sort your projects by priority"
+                    accessibilityState={{ expanded: true }}
                   >
                     <LinearGradient
                       colors={["#00f7f7", "#005757"]}
@@ -790,6 +787,8 @@ const HomeScreen: React.FC = () => {
                     }}
                   >
                     <Text
+                      accessible
+                      accessibilityLabel="You haven't any projects yet."
                       style={{
                         textAlign: "center",
                         color: "white",
@@ -848,7 +847,6 @@ const HomeScreen: React.FC = () => {
                       importantForAccessibility="yes"
                       returnKeyType="next"
                       accessibilityLabel="Project input"
-                      accessibilityRole="text"
                       accessibilityHint="Enter the name of your project here."
                       editable={true}
                       onChangeText={(text) =>
@@ -890,9 +888,8 @@ const HomeScreen: React.FC = () => {
                     <WalkthroughTouchableOpacity
                       onPress={handleAddProject}
                       activeOpacity={0.7}
-                      accessible={true}
                       accessibilityRole="button"
-                      accessibilityLabel="Add Project Button"
+                      accessibilityLabel="Add Project"
                       accessibilityHint="Button to add a new project"
                       style={{
                         width: 50,

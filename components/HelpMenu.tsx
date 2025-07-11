@@ -50,6 +50,8 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
 
   return (
     <View
+      accessibilityViewIsModal={true}
+      accessible={false}
       style={{
         width: 250,
         height: 400,
@@ -80,10 +82,10 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
           {/* Close Button */}
           <TouchableOpacity
             onPress={closeMenu}
-            accessible={true}
             accessibilityRole="button"
-            accessibilityLabel="Close Button"
+            accessibilityLabel="Close"
             accessibilityHint="Closes the help menu"
+            accessibilityState={{ busy: false }}
             activeOpacity={0.7}
             style={{
               position: "absolute",
@@ -161,7 +163,6 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
           {/* info text */}
           <Text
             accessible
-            accessibilityRole="text"
             accessibilityLabel="Info Text"
             accessibilityHint="If you encounter issues or have suggestions for improvements, feel free to hit a Logo and reach out to us:"
             style={{
@@ -188,7 +189,6 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
         >
           <TouchableOpacity
             onPress={openFacebook}
-            accessible={true}
             accessibilityRole="button"
             accessibilityLabel="Open Facebook"
             accessibilityHint="Opens our Facebook page in an external browser"
@@ -197,7 +197,6 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
           </TouchableOpacity>
           <TouchableOpacity
             onPress={openLinkedIn}
-            accessible={true}
             accessibilityRole="button"
             accessibilityLabel="Open LinkedIn"
             accessibilityHint="Opens our LinkedIn profile in an external browser"
@@ -206,7 +205,6 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
           </TouchableOpacity>
           <TouchableOpacity
             onPress={openGithub}
-            accessible={true}
             accessibilityRole="button"
             accessibilityLabel="Open GitHub"
             accessibilityHint="Opens our GitHub repository in an external browser"
@@ -218,8 +216,6 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
         <View style={{ width: 240, paddingTop: 50, alignItems: "center" }}>
           {/* thanks text */}
           <Text
-            accessible
-            accessibilityRole="text"
             accessibilityLabel="Thanks Text"
             accessibilityHint="Thanks for your feedback!"
             style={{
