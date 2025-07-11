@@ -176,6 +176,8 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       <View>
         {/* modal settings */}
         <View
+          accessible
+          accessibilityViewIsModal={true}
           style={{
             width: screenWidth * 0.9, // use 90% of the screen width
             maxWidth: 600,
@@ -231,7 +233,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
             <ImageBackground>
               <TouchableOpacity
                 onPress={pickImage}
-                accessible
                 accessibilityRole="button"
                 accessibilityLabel="Upload profile image"
                 accessibilityHint="Button to upload a profile image"
@@ -371,12 +372,12 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
             >
               {/* update button */}
               <TouchableOpacity
-                accessible
                 accessibilityRole="button"
                 accessibilityLabel={
                   saving ? "Updating profile" : "Save changes"
                 }
                 accessibilityHint="Saves your updated name and personal ID"
+                accessibilityState={{ busy: saving }}
                 onPress={handleSave}
                 style={{
                   width: screenWidth * 0.7, // use 70% of the screen width
@@ -424,7 +425,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
               {/* navigation tip */}
               <Text
                 accessible
-                accessibilityRole="text"
                 accessibilityLabel="Navigation tip"
                 accessibilityHint="Swipe up or down to close"
                 style={{

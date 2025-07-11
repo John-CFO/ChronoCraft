@@ -84,7 +84,6 @@ const AuthForm: React.FC<AuthFormProps> = ({
           importantForAccessibility="yes"
           returnKeyType="next"
           accessibilityLabel="Email input"
-          accessibilityRole="text"
           accessibilityHint="Enter your email address"
           style={{
             borderColor: "aqua",
@@ -118,7 +117,6 @@ const AuthForm: React.FC<AuthFormProps> = ({
             textContentType="password"
             accessible={true}
             accessibilityLabel="Password input"
-            accessibilityRole="text"
             accessibilityHint="Enter your password. Field is password protected and will be hidden."
             style={{
               borderColor: "aqua",
@@ -141,11 +139,11 @@ const AuthForm: React.FC<AuthFormProps> = ({
               right: 15,
               top: 13,
             }}
-            accessible={true}
             accessibilityRole="button"
             accessibilityLabel={
               secureTextEntry ? "Show password" : "Hide password"
             }
+            accessibilityState={{ expanded: secureTextEntry ? false : true }}
           >
             <FontAwesome5
               name={secureTextEntry ? "eye" : "eye-slash"}
@@ -158,9 +156,8 @@ const AuthForm: React.FC<AuthFormProps> = ({
           {/* Login button */}
           <TouchableOpacity
             onPress={handleLogin}
-            accessible={true}
             accessibilityRole="button"
-            accessibilityLabel="Login button"
+            accessibilityLabel="Login"
             accessibilityHint="Press to log in to your account"
             style={{
               width: screenWidth * 0.7, // use 70% of the screen width
@@ -200,9 +197,8 @@ const AuthForm: React.FC<AuthFormProps> = ({
           {/* Register button */}
           <TouchableOpacity
             onPress={handleRegister}
-            accessible={true}
             accessibilityRole="button"
-            accessibilityLabel="Register button"
+            accessibilityLabel="Register"
             accessibilityHint="Press to register a new account"
             style={{
               width: screenWidth * 0.7, // use 70% of the screen width
@@ -240,10 +236,10 @@ const AuthForm: React.FC<AuthFormProps> = ({
           {/* LostPasswordModal */}
           <TouchableOpacity
             onPress={toggleModal}
-            accessible={true}
             accessibilityRole="button"
-            accessibilityLabel="Lost Password button"
+            accessibilityLabel="Lost Password"
             accessibilityHint="Opens password recovery dialog"
+            accessibilityState={{ expanded: isModalVisible }}
             style={{ marginTop: 50 }}
           >
             <Text

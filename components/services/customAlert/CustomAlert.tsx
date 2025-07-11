@@ -98,6 +98,9 @@ const CustomAlert = () => {
         }}
       >
         <Animated.View
+          accessible={true}
+          accessibilityRole="alert"
+          accessibilityViewIsModal={true}
           style={{
             width: screenWidth * 0.9,
             maxWidth: 600,
@@ -116,6 +119,7 @@ const CustomAlert = () => {
         >
           {/* Alert Title */}
           <Text
+            accessibilityRole="header"
             style={{
               color: "white",
               fontSize: 28,
@@ -128,6 +132,7 @@ const CustomAlert = () => {
           </Text>
           {/* Alert Message */}
           <Text
+            accessible={true}
             style={{
               fontSize: 14,
               color: "#FFF",
@@ -143,6 +148,8 @@ const CustomAlert = () => {
               (button, index) => (
                 <TouchableOpacity
                   key={index}
+                  accessibilityRole="button"
+                  accessibilityLabel={button.text}
                   onPress={() => {
                     if (button.onPress) {
                       handleCloseWithAnimation(button.onPress);

@@ -79,6 +79,10 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
 
   return (
     <Modal
+      accessible={true}
+      accessibilityViewIsModal={true}
+      accessibilityLabel="Reset password modal"
+      accessibilityHint="Modal dialog to reset your password."
       isVisible={visible}
       backdropColor="black"
       onBackdropPress={onClose}
@@ -153,8 +157,7 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
               importantForAccessibility="yes"
               returnKeyType="next"
               accessibilityLabel="Email input"
-              accessibilityRole="text"
-              accessibilityHint="Enter your email address to reset your password."
+              accessibilityHint="Please enter your email address to receive a password reset link."
               style={{
                 borderColor: "aqua",
                 borderWidth: 1.5,
@@ -174,10 +177,10 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
           {/* reset password button */}
           <TouchableOpacity
             onPress={handlePasswordReset}
-            accessible={true}
             accessibilityRole="button"
-            accessibilityLabel="Reset Password Button"
+            accessibilityLabel="Reset Password"
             accessibilityHint="Send E-Mail to get a reset link"
+            accessibilityState={{ disabled: sending ? true : false }}
             style={{
               width: screenWidth * 0.7, // use 70% of the screen width
               maxWidth: 400,
@@ -216,6 +219,9 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
 
           {/* navigation tip */}
           <Text
+            accessible
+            accessibilityLabel="Navigation tip"
+            accessibilityHint="Swipe up or down to close"
             style={{
               marginTop: 20,
               fontSize: accessMode ? 20 : 18,
