@@ -6,9 +6,10 @@ import {
   TextInput,
   TouchableOpacity,
   Dimensions,
+  findNodeHandle,
   AccessibilityInfo,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   doc,
@@ -45,6 +46,20 @@ const NoteModal: React.FC<NoteModalProps> = ({
     AccessibilityInfo.announceForAccessibility(
       "Note Modal opened. Please write your comment and press send."
     );
+  }, []);
+
+  // ref to navigate to notes header
+  const noteTitleRef = useRef(null);
+  // hook to focus the notes header by accessibility
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (noteTitleRef.current) {
+        const node = findNodeHandle(noteTitleRef.current);
+        if (node) AccessibilityInfo.setAccessibilityFocus(node);
+      }
+    }, 300); // delay in milliseconds
+
+    return () => clearTimeout(timeout);
   }, []);
 
   // screensize for dynamic size calculation
@@ -164,6 +179,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
           }}
         >
           <Text
+            ref={noteTitleRef}
             style={{
               color: "white",
               fontSize: 32,

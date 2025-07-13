@@ -5,12 +5,13 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   Dimensions,
+  findNodeHandle,
   AccessibilityInfo,
 } from "react-native";
 import Modal from "react-native-modal";
@@ -22,6 +23,7 @@ import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import CheckmarkAnimation from "./Checkmark";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useAccessibilityStore } from "./services/accessibility/accessibilityStore";
+import { ref } from "firebase/storage";
 
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -44,6 +46,20 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
     AccessibilityInfo.announceForAccessibility(
       "Vacation Remind Modal opened. Please select a reminder duration and press save."
     );
+  }, []);
+
+  // ref to navigate to remind title
+  const remindTitleRef = useRef(null);
+  // hook to navigate to the remind title by accessibility
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (remindTitleRef.current) {
+        const node = findNodeHandle(remindTitleRef.current);
+        if (node) AccessibilityInfo.setAccessibilityFocus(node);
+      }
+    }, 300); // delay in milliseconds
+
+    return () => clearTimeout(timeout);
   }, []);
 
   // screensize for dynamic size calculation
@@ -266,6 +282,9 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
             }}
           >
             <Text
+              ref={remindTitleRef}
+              accessibilityRole="header"
+              accessibilityLabel="Vacation Reminder"
               style={{
                 color: "white",
                 fontSize: 32,

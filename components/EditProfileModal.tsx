@@ -14,9 +14,10 @@ import {
   ImageBackground,
   Image,
   Dimensions,
+  findNodeHandle,
   AccessibilityInfo,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { doc, updateDoc } from "firebase/firestore";
 import { User } from "firebase/auth";
@@ -32,6 +33,7 @@ import DismissKeyboard from "../components/DismissKeyboard";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { sanitizeName, sanitizePersonalID } from "./InputSanitizers";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+import { profile } from "console";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -53,6 +55,21 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   // hook to announce accessibility
   useEffect(() => {
     AccessibilityInfo.announceForAccessibility("Edit profile modal opened");
+  }, []);
+
+  // ref to navigate to the profile title
+  const profileTitleRef = useRef(null);
+
+  // hook to navigate to the profile title by accessibility
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (profileTitleRef.current) {
+        const node = findNodeHandle(profileTitleRef.current);
+        if (node) AccessibilityInfo.setAccessibilityFocus(node);
+      }
+    }, 300); // delay in milliseconds
+
+    return () => clearTimeout(timeout);
   }, []);
 
   // state declaration for the edit properties
@@ -214,6 +231,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
             }}
           >
             <Text
+              ref={profileTitleRef}
               style={{
                 color: "white",
                 fontSize: 32,
