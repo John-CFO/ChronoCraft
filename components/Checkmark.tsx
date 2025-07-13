@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
+import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 type CheckmarkReminderProps = {
   selectedOption: number | null;
@@ -24,6 +26,12 @@ const CheckmarkReminder: React.FC<CheckmarkReminderProps> = ({
 }) => {
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
+
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
+  // console.log("accessMode in LoginScreen:", accessMode);
 
   //function to initialize the animation using useRef
   const animations = Array.from({ length: 3 }, () => ({
@@ -101,6 +109,10 @@ const CheckmarkReminder: React.FC<CheckmarkReminderProps> = ({
       >
         {animations.map((anim, index) => (
           <TouchableOpacity
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel={`Reminder ${["in 1 Day", "in 3 Days", "in 7 Days"][index]}`}
+            accessibilityState={{ selected: selectedOption === index }}
             key={index}
             onPress={() => handlePress(index)}
             style={{
@@ -148,12 +160,13 @@ const CheckmarkReminder: React.FC<CheckmarkReminderProps> = ({
       >
         {["1 Day", "3 Days", "7 Days"].map((label, index) => (
           <Text
+            accessible={false} // disable accessibility for the text because screen reader reads the checkmark points
             key={index}
             style={[
               {
-                fontSize: 16,
-                color: "lightgray",
-                fontWeight: "200",
+                fontSize: accessMode ? 20 : 16,
+                color: accessMode ? "white" : "lightgray",
+                fontWeight: accessMode ? "300" : "200",
               },
               selectedOption === index && {
                 fontWeight: "bold",

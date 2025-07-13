@@ -21,6 +21,7 @@ import { NotificationManager } from "./services/PushNotifications";
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import CheckmarkAnimation from "./Checkmark";
 import { useAlertStore } from "./services/customAlert/alertStore";
+import { useAccessibilityStore } from "./services/accessibility/accessibilityStore";
 
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -219,6 +220,12 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
     setSaving(false);
   };
 
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
+  // console.log("accessMode in LoginScreen:", accessMode);
+
   return (
     <Modal
       // modal options
@@ -227,7 +234,10 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
       onBackdropPress={handleCloseModal}
       swipeDirection={["up", "down"]}
     >
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View
+        accessibilityViewIsModal={true}
+        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+      >
         <View
           style={{
             width: "100%",
@@ -243,6 +253,8 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
         >
           {/* header*/}
           <View
+            accessibilityRole="header"
+            accessibilityLabel="Vacation Reminder"
             style={{
               width: 320,
               height: 80,
@@ -272,6 +284,10 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
           />
           {/* Save Button */}
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Save Reminder"
+            accessibilityHint="Saves the reminder and closes this view"
+            accessibilityState={{ disabled: saving }}
             style={{
               width: screenWidth * 0.7, // use 70% of the screen width
               maxWidth: 400,
@@ -308,7 +324,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
                 style={{
                   fontFamily: "MPLUSLatin_Bold",
                   fontSize: 22,
-                  color: saving ? "lightgray" : "white",
+                  color: saving ? "#aaaaaa" : "#ffffff",
                   marginBottom: 5,
                   paddingRight: 10,
                 }}
@@ -329,10 +345,15 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
             }}
           >
             <Text
+              accessible
+              accessibilityLabel="Navigation tip"
+              accessibilityHint="Swipe up or down to close"
               style={{
-                fontSize: 18,
-                color: "lightgrey",
-                fontFamily: "MPLUSLatin_ExtraLight",
+                fontSize: accessMode ? 20 : 18,
+                color: accessMode ? "white" : "lightgrey",
+                fontFamily: accessMode
+                  ? "MPLUSLatin_Regular"
+                  : "MPLUSLatin_ExtraLight",
               }}
             >
               Swipe up or down to close
