@@ -14,6 +14,7 @@ import {
   ImageBackground,
   Image,
   Dimensions,
+  AccessibilityInfo,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
@@ -49,6 +50,11 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   onClose,
   user,
 }) => {
+  // hook to announce accessibility
+  useEffect(() => {
+    AccessibilityInfo.announceForAccessibility("Edit profile modal opened");
+  }, []);
+
   // state declaration for the edit properties
   const [newName, setNewName] = useState("");
   const [newPersonalID, setNewPersonalID] = useState("");
