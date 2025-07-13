@@ -18,6 +18,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 
 import { useAlertStore } from "./alertStore";
+import { useAccessibilityStore } from "../accessibility/accessibilityStore";
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -27,6 +28,12 @@ const CustomAlert = () => {
 
   // define the width of the screen
   const screenWidth = Dimensions.get("window").width;
+
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
+  // console.log("accessMode in LoginScreen:", accessMode);
 
   // state to show the modal
   const [showModal, setShowModal] = React.useState(visible);
@@ -134,7 +141,7 @@ const CustomAlert = () => {
           <Text
             accessible={true}
             style={{
-              fontSize: 14,
+              fontSize: accessMode ? 20 : 14,
               color: "#FFF",
               textAlign: "center",
               marginBottom: 16,

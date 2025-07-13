@@ -9,6 +9,8 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { useCopilot } from "react-native-copilot";
 import { LinearGradient } from "expo-linear-gradient";
 
+import { useAccessibilityStore } from "../accessibility/accessibilityStore";
+
 //////////////////////////////////////////////////////////////////////////////////////
 
 export interface TooltipProps {
@@ -26,6 +28,12 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
   const { goToNext, goToPrev, stop, currentStep, isFirstStep, isLastStep } =
     useCopilot();
 
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
+  // console.log("accessMode in LoginScreen:", accessMode);
+
   // functions to navigate to the next or previous step
   const handleStop = () => {
     void stop();
@@ -41,6 +49,8 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
 
   return (
     <View
+      accessible={true}
+      accessibilityLabel={`${currentStep?.name}. ${currentStep?.text}`}
       style={{
         backgroundColor: "#191919",
         borderRadius: 12,
@@ -51,10 +61,11 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
     >
       {/* Tooltip Title */}
       <Text
+        accessibilityRole="header"
         style={{
           fontWeight: "bold",
           color: "#FFF",
-          fontSize: 18,
+          fontSize: accessMode ? 28 : 18,
           marginBottom: 8,
         }}
       >
@@ -64,7 +75,7 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
       {/* Tooltip Text */}
       <Text
         style={{
-          fontSize: 14,
+          fontSize: accessMode ? 18 : 14,
           color: "#FFF",
           textAlign: "center",
           marginBottom: 16,
@@ -74,14 +85,26 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
       </Text>
 
       {/* Buttons*/}
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+      <View
+        style={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+          gap: 8,
+          width: "100%",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
         {/* Skip-Button, if it is not the last step*/}
         {!isLastStep && (
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={labels.skip ?? "Skip"}
+            accessibilityHint="End the tour and close the tooltip"
             onPress={handleStop}
             style={{
               height: 40,
-              width: 65,
+              width: accessMode ? 90 : 65,
               borderRadius: 8,
               borderWidth: 1.5,
               borderColor: "white",
@@ -104,7 +127,14 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
                 borderRadius: 6,
               }}
             >
-              <Text style={{ color: "grey", fontSize: 14, fontWeight: "bold" }}>
+              <Text
+                numberOfLines={1}
+                style={{
+                  color: accessMode ? "black" : "grey",
+                  fontSize: accessMode ? 18 : 14,
+                  fontWeight: "bold",
+                }}
+              >
                 {labels.skip ?? "Skip"}
               </Text>
             </LinearGradient>
@@ -114,10 +144,13 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
         {/* Previous-Button */}
         {!isFirstStep && (
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={labels.previous ?? "Previous"}
+            accessibilityHint="Back to the previous step"
             onPress={handlePrev}
             style={{
               height: 40,
-              width: 65,
+              width: accessMode ? 90 : 65,
               borderRadius: 8,
               borderWidth: 1.5,
               borderColor: "aqua",
@@ -141,7 +174,11 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
               }}
             >
               <Text
-                style={{ color: "white", fontSize: 14, fontWeight: "bold" }}
+                style={{
+                  color: "white",
+                  fontSize: accessMode ? 18 : 14,
+                  fontWeight: "bold",
+                }}
               >
                 {labels.previous ?? "Previous"}
               </Text>
@@ -152,10 +189,13 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
         {/* Next oder Finish */}
         {!isLastStep ? (
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={labels.next ?? "Next"}
+            accessibilityHint="Go to the next step"
             onPress={handleNext}
             style={{
               height: 40,
-              width: 65,
+              width: accessMode ? 90 : 65,
               borderRadius: 8,
               borderWidth: 1.5,
               borderColor: "aqua",
@@ -179,7 +219,12 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
               }}
             >
               <Text
-                style={{ color: "white", fontSize: 14, fontWeight: "bold" }}
+                numberOfLines={1}
+                style={{
+                  color: "white",
+                  fontSize: accessMode ? 18 : 14,
+                  fontWeight: "bold",
+                }}
               >
                 {labels.next ?? "Next"}
               </Text>
@@ -187,6 +232,9 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={labels.finish ?? "Finish"}
+            accessibilityHint="End the tour and close the tooltip"
             onPress={handleStop}
             style={{
               height: 40,
@@ -214,7 +262,12 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
               }}
             >
               <Text
-                style={{ color: "white", fontSize: 14, fontWeight: "bold" }}
+                numberOfLines={1}
+                style={{
+                  color: "white",
+                  fontSize: accessMode ? 18 : 14,
+                  fontWeight: "bold",
+                }}
               >
                 {labels.finish ?? "Finish"}
               </Text>
