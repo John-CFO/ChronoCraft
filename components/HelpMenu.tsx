@@ -8,8 +8,9 @@ import {
   TouchableOpacity,
   Linking,
   ImageBackground,
+  AccessibilityInfo,
 } from "react-native";
-import React from "react";
+import React, { useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { Foundation } from "@expo/vector-icons";
 
@@ -29,6 +30,13 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
   const closeMenu = () => {
     onClose();
   };
+
+  // hook to announce accessibility
+  useEffect(() => {
+    AccessibilityInfo.announceForAccessibility(
+      "Help menu opened. You can close it by pressing the close button."
+    );
+  }, []);
 
   // functions to open as extern the social buttons
   const openFacebook = () => {

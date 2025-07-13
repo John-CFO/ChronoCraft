@@ -14,6 +14,7 @@ import {
   Dimensions,
   Animated,
   Easing,
+  AccessibilityInfo,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -46,6 +47,11 @@ const CustomAlert = () => {
   useEffect(() => {
     if (visible) {
       setShowModal(true);
+
+      // condition to announce the title for the screen reader
+      if (accessMode) {
+        AccessibilityInfo.announceForAccessibility(title || "Alert opened");
+      }
 
       Animated.parallel([
         Animated.timing(opacity, {

@@ -5,8 +5,14 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Dimensions } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Dimensions,
+  AccessibilityInfo,
+} from "react-native";
 import Modal from "react-native-modal";
 import { LinearGradient } from "expo-linear-gradient";
 import { doc, setDoc, getDoc } from "firebase/firestore";
@@ -32,6 +38,13 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
   onClose,
   vacationId,
 }) => {
+  // hook to announce accessibility
+  useEffect(() => {
+    AccessibilityInfo.announceForAccessibility(
+      "Vacation Remind Modal opened. Please select a reminder duration and press save."
+    );
+  }, []);
+
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
 

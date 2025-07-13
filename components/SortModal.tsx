@@ -10,8 +10,9 @@ import {
   TouchableOpacity,
   FlatList,
   Dimensions,
+  AccessibilityInfo,
 } from "react-native";
-import React from "react";
+import React, { useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
@@ -39,6 +40,13 @@ const SortModalFAB = ({
   onSortChange,
   onClose,
 }: SortModalFABProps) => {
+  // hook to announce accessibility
+  useEffect(() => {
+    AccessibilityInfo.announceForAccessibility(
+      "Sort Modal opened. Please select a sort option."
+    );
+  }, []);
+
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
 
