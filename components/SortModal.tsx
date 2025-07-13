@@ -10,9 +10,10 @@ import {
   TouchableOpacity,
   FlatList,
   Dimensions,
+  findNodeHandle,
   AccessibilityInfo,
 } from "react-native";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
@@ -45,6 +46,20 @@ const SortModalFAB = ({
     AccessibilityInfo.announceForAccessibility(
       "Sort Modal opened. Please select a sort option."
     );
+  }, []);
+
+  // ref to navigate to sort title
+  const sortTitleRef = useRef(null);
+  // hook to focus the sort title by accessibility
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (sortTitleRef.current) {
+        const node = findNodeHandle(sortTitleRef.current);
+        if (node) AccessibilityInfo.setAccessibilityFocus(node);
+      }
+    }, 300); // Delay in milliseconds
+
+    return () => clearTimeout(timeout);
   }, []);
 
   // screensize for dynamic size calculation
@@ -91,6 +106,7 @@ const SortModalFAB = ({
         }}
       >
         <Text
+          ref={sortTitleRef}
           style={{
             color: "white",
             fontSize: 32,
