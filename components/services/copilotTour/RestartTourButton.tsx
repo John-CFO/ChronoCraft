@@ -51,7 +51,11 @@ const RestartTourButton: React.FC<RestartTourProps> = ({ userId }) => {
   };
 
   return (
-    <TouchableOpacity onPress={handleRestartTour}>
+    <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel="Restart the tour. The tour will be shown again on all pages."
+      onPress={handleRestartTour}
+    >
       <View
         style={{
           flexDirection: "row",

@@ -16,6 +16,7 @@ import {
 import { useCopilot } from "react-native-copilot";
 import { doc, updateDoc } from "firebase/firestore";
 import { LinearGradient } from "expo-linear-gradient";
+import { AccessibilityInfo } from "react-native";
 
 import { FIREBASE_FIRESTORE } from "../../../firebaseConfig";
 import { useAlertStore } from "../customAlert/alertStore";
@@ -48,6 +49,13 @@ const TourButton: React.FC<TourButtonProps> = ({
 }) => {
   // initialize start the tour with the useCopilot hook
   const { start } = useCopilot();
+
+  // hook to inform the user that the tour is active
+  useEffect(() => {
+    if (showTourCard) {
+      AccessibilityInfo.announceForAccessibility("Tour introduction is active");
+    }
+  }, [showTourCard]);
 
   // define the width of the screen
   const screenWidth = Dimensions.get("window").width;
@@ -196,6 +204,9 @@ const TourButton: React.FC<TourButtonProps> = ({
 
   return (
     <Animated.View
+      accessible={true}
+      accessibilityViewIsModal={true}
+      accessibilityLabel="Tour introduction modal"
       style={{
         position: "absolute",
         top: 0,
@@ -224,6 +235,9 @@ const TourButton: React.FC<TourButtonProps> = ({
         }}
       >
         <Text
+          accessible={true}
+          accessibilityRole="header"
+          accessibilityLabel="Start Introducing Tour"
           style={{
             color: "white",
             fontSize: 28,
@@ -245,6 +259,9 @@ const TourButton: React.FC<TourButtonProps> = ({
         >
           {/* PLAY Button */}
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Start introduction tour"
+            accessibilityHint="Begins a walkthrough of the app"
             onPress={handleStartTour}
             style={{
               borderRadius: 12,
@@ -281,6 +298,9 @@ const TourButton: React.FC<TourButtonProps> = ({
 
           {/* SKIP Button */}
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Skip introduction tour"
+            accessibilityHint="Skips the tour and returns to the app"
             onPress={handleSkipTour}
             style={{
               borderRadius: 12,
