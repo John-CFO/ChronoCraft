@@ -324,7 +324,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
                 style={{
                   fontFamily: "MPLUSLatin_Bold",
                   fontSize: 22,
-                  color: saving ? "#aaaaaa" : "#ffffff",
+                  color: saving ? "lightgray" : "#ffffff",
                   marginBottom: 5,
                   paddingRight: 10,
                 }}
