@@ -8,9 +8,10 @@ import {
   TouchableOpacity,
   Linking,
   ImageBackground,
+  findNodeHandle,
   AccessibilityInfo,
 } from "react-native";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { Foundation } from "@expo/vector-icons";
 
@@ -36,6 +37,20 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
     AccessibilityInfo.announceForAccessibility(
       "Help menu opened. You can close it by pressing the close button."
     );
+  }, []);
+
+  // ref to navigate to help header
+  const helpTitleRef = useRef(null);
+  //hook to focus the help header by accessibility
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (helpTitleRef.current) {
+        const node = findNodeHandle(helpTitleRef.current);
+        if (node) AccessibilityInfo.setAccessibilityFocus(node);
+      }
+    }, 300); // leichter delay, bis View wirklich da ist
+
+    return () => clearTimeout(timeout);
   }, []);
 
   // functions to open as extern the social buttons
@@ -152,6 +167,7 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
         >
           {/* header text */}
           <View
+            ref={helpTitleRef}
             accessible
             accessibilityRole="header"
             accessibilityLabel="Help Menu"
