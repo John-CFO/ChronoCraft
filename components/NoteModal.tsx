@@ -6,8 +6,9 @@ import {
   TextInput,
   TouchableOpacity,
   Dimensions,
+  AccessibilityInfo,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   doc,
@@ -38,6 +39,13 @@ const NoteModal: React.FC<NoteModalProps> = ({
   onClose,
 }: NoteModalProps) => {
   const [comment, setComment] = useState("");
+
+  // hook to announce accessibility
+  useEffect(() => {
+    AccessibilityInfo.announceForAccessibility(
+      "Note Modal opened. Please write your comment and press send."
+    );
+  }, []);
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
