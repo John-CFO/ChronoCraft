@@ -433,12 +433,14 @@ const WorkHoursChart = () => {
               </View>
 
               {/* Listed Worktime Overview */}
-              <View style={{ paddingHorizontal: cardPadding }}>
+              <View
+                style={{ paddingHorizontal: cardPadding, alignItems: "center" }}
+              >
                 <View
                   style={{
                     minWidth: 320,
                     width: screenWidth * 0.8,
-                    maxWidth: 400,
+                    maxWidth: 500,
                     borderRadius: 10,
                     backgroundColor: "#191919",
                     marginVertical: 10,
