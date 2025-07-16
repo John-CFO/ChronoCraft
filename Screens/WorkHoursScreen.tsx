@@ -170,6 +170,9 @@ const WorkHoursScreen: React.FC<WorkHoursScreenRouteProps> = () => {
               }}
             >
               <Text
+                accessibilityRole="header"
+                accessible
+                accessibilityLabel="Workhours Management"
                 style={{
                   fontSize: 25,
                   fontFamily: "MPLUSLatin_Bold",
