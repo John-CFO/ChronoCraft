@@ -7,6 +7,8 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import React from "react";
 
+import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 interface ChartRadioButtonsProps {
@@ -20,6 +22,11 @@ const ChartRadioButtons: React.FC<ChartRadioButtonsProps> = ({
   chartType,
   setChartType,
 }) => {
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
+
   return (
     <View
       style={{
@@ -55,7 +62,9 @@ const ChartRadioButtons: React.FC<ChartRadioButtonsProps> = ({
             />
           )}
         </View>
-        <Text style={{ fontSize: 16, color: "white" }}>Week</Text>
+        <Text style={{ fontSize: accessMode ? 18 : 16, color: "white" }}>
+          Week
+        </Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -85,7 +94,9 @@ const ChartRadioButtons: React.FC<ChartRadioButtonsProps> = ({
             />
           )}
         </View>
-        <Text style={{ fontSize: 16, color: "white" }}>Month</Text>
+        <Text style={{ fontSize: accessMode ? 18 : 16, color: "white" }}>
+          Month
+        </Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -115,7 +126,9 @@ const ChartRadioButtons: React.FC<ChartRadioButtonsProps> = ({
             />
           )}
         </View>
-        <Text style={{ fontSize: 16, color: "white" }}>Year</Text>
+        <Text style={{ fontSize: accessMode ? 18 : 16, color: "white" }}>
+          Year
+        </Text>
       </TouchableOpacity>
     </View>
   );

@@ -35,6 +35,7 @@ import WorkHoursState from "../components/WorkHoursState";
 import { formatTime } from "../components/WorkTimeCalc";
 import WorkTimeAnimation from "../components/WorkTimeAnimation";
 import { useAlertStore } from "./services/customAlert/alertStore";
+import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -69,6 +70,12 @@ const WorkTimeTracker = () => {
 
   // state to get the work day from firestore to update the state wich is needed to enable the timer start button
   const [workDay, setWorkDay] = useState("");
+
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
+  // console.log("accessMode in LoginScreen:", accessMode);
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
@@ -440,6 +447,9 @@ const WorkTimeTracker = () => {
         text="In this area you can track your daily work hours."
       >
         <CopilotTouchableView
+          accessible={true}
+          accessibilityLabel="Work Time Tracker"
+          accessibilityHint="Start or stop tracking your work time"
           style={{
             width: screenWidth * 0.9, // use 90% of the screen width
             maxWidth: 600,
@@ -458,6 +468,9 @@ const WorkTimeTracker = () => {
           }}
         >
           <Text
+            accessible={true}
+            accessibilityRole="header"
+            accessibilityLabel="Work Time Tracker"
             style={{
               fontFamily: "MPLUSLatin_Bold",
               fontSize: 25,
@@ -471,6 +484,15 @@ const WorkTimeTracker = () => {
           {/* Start/Stop Button with  enable condition when user adds a expected hours */}
           {!isWorking ? (
             <TouchableOpacity
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !docExists }}
+              accessibilityLabel="Start working"
+              accessibilityHint={
+                docExists
+                  ? "Starts tracking your work time"
+                  : "You must first enter expected hours"
+              }
               onPress={docExists ? handleStartWork : undefined}
               disabled={!docExists}
               activeOpacity={0.7}
@@ -479,19 +501,24 @@ const WorkTimeTracker = () => {
                 maxWidth: 400,
                 borderRadius: 14,
                 borderWidth: 1.5,
-                borderColor: "aqua",
+                borderColor: accessMode
+                  ? docExists
+                    ? "aqua"
+                    : "#999"
+                  : "aqua",
                 backgroundColor: "transparent",
-                shadowColor: "black",
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.3,
-                shadowRadius: 3,
-                elevation: 5,
                 marginBottom: 25,
-                opacity: docExists ? 1 : 0.5,
+                opacity: accessMode ? 1 : docExists ? 1 : 0.5,
               }}
             >
               <LinearGradient
-                colors={["#00f7f7", "#005757"]}
+                colors={
+                  docExists
+                    ? ["#00f7f7", "#005757"]
+                    : accessMode
+                      ? ["#888", "#3b626bff"]
+                      : ["#53b2c7ff", "#aaa"]
+                }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={{
@@ -505,7 +532,7 @@ const WorkTimeTracker = () => {
                   style={{
                     fontFamily: "MPLUSLatin_Bold",
                     fontSize: 22,
-                    color: docExists ? "white" : "#AAA",
+                    color: docExists ? "white" : accessMode ? "#222" : "#AAA",
                   }}
                 >
                   Start
@@ -514,6 +541,15 @@ const WorkTimeTracker = () => {
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !docExists }}
+              accessibilityLabel="Stop working"
+              accessibilityHint={
+                docExists
+                  ? "Stops tracking your work time"
+                  : "Please enter your expected working hours first"
+              }
               onPress={handleStopWork}
               activeOpacity={0.7}
               style={{
@@ -529,6 +565,7 @@ const WorkTimeTracker = () => {
                 shadowRadius: 3,
                 elevation: 5,
                 marginBottom: 25,
+                opacity: 1,
               }}
             >
               <LinearGradient
@@ -555,15 +592,17 @@ const WorkTimeTracker = () => {
             </TouchableOpacity>
           )}
           {/* Tracking Animation */}
-          <View style={{ position: "relative", height: 20 }}>
+          <View accessible={false} style={{ position: "relative", height: 20 }}>
             {isWorking && <WorkTimeAnimation />}
           </View>
           {/* Tracking Time */}
           <Text
+            accessible={true}
+            accessibilityLabel={`Elapsed work time: ${formatTime(elapsedTime)}`}
             style={{
               fontWeight: "bold",
               fontSize: 55,
-              color: isWorking ? "white" : "gray",
+              color: isWorking ? "white" : "#AAA",
               marginBottom: 5,
               textAlign: "center",
             }}

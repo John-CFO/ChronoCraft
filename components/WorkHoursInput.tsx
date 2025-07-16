@@ -22,6 +22,7 @@ import dayjs from "../dayjsConfig";
 import WorkHoursState from "../components/WorkHoursState";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { sanitizeHours } from "./InputSanitizers";
+import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -39,6 +40,12 @@ const WorkHoursInput = () => {
   const [tempExpectedHours, setTempExpectedHours] = useState("");
   // gets the current document ID from the WorkHoursState
   const { setDocExists, setCurrentDocId: setGlobalDocId } = WorkHoursState();
+
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
+  // console.log("accessMode in LoginScreen:", accessMode);
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
@@ -168,6 +175,9 @@ const WorkHoursInput = () => {
         >
           {/* title and subtitle */}
           <Text
+            accessibilityRole="header"
+            accessible={true}
+            accessibilityLabel="Daily Work Hours"
             style={{
               fontFamily: "MPLUSLatin_Bold",
               fontSize: 25,
@@ -180,9 +190,17 @@ const WorkHoursInput = () => {
           </Text>
 
           <Text
+            accessible={true}
+            accessibilityLabel={
+              accessMode ? "Enter your hours" : "Add your minimum working hours"
+            }
+            numberOfLines={1}
+            adjustsFontSizeToFit
             style={{
-              fontSize: 18,
-              fontFamily: "MPLUSLatin_ExtraLight",
+              fontSize: accessMode ? 20 : 18,
+              fontFamily: accessMode
+                ? "MPLUSLatin_Bold"
+                : "MPLUSLatin_ExtraLight",
               color: "white",
               textAlign: "center",
               marginBottom: 10,
@@ -200,8 +218,11 @@ const WorkHoursInput = () => {
           >
             {/* Text Input to enter the expected hours */}
             <TextInput
+              accessible={true}
+              accessibilityLabel="Input expected working hours. Example: 8"
+              accessibilityHint="Enter the number of hours you plan to work today"
               placeholder="(e.g. 8)"
-              placeholderTextColor="grey"
+              placeholderTextColor={accessMode ? "white" : "grey"}
               value={tempExpectedHours}
               keyboardType="numeric"
               onChangeText={(text) => setTempExpectedHours(sanitizeHours(text))}
@@ -224,6 +245,10 @@ const WorkHoursInput = () => {
           </View>
           {/* Save button */}
           <TouchableOpacity
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel={saving ? "Saving" : "Save expected work hours"}
+            accessibilityHint="Saves the entered daily work hours"
             onPress={handleSaveMinHours}
             style={{
               width: screenWidth * 0.7, // use 70% of the screen width
@@ -260,6 +285,8 @@ const WorkHoursInput = () => {
           </TouchableOpacity>
           {/* Hourly Rate info container */}
           <View
+            accessible={true}
+            accessibilityLabel={`Your expected work hours are ${expectedHours || "not set"}`}
             style={{
               width: "100%",
               height: 50,
@@ -287,7 +314,7 @@ const WorkHoursInput = () => {
             >
               <Text
                 style={{
-                  color: "grey",
+                  color: accessMode ? "white" : "grey",
                   fontSize: 16,
                   fontFamily: "MPLUSLatin_Bold",
                 }}

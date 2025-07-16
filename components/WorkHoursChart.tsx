@@ -13,6 +13,7 @@ import {
   TouchableWithoutFeedback,
   LayoutChangeEvent,
   Dimensions,
+  FlatList,
 } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
@@ -21,6 +22,7 @@ import WorkHoursState from "../components/WorkHoursState";
 import ChartRadioButtons from "./ChartRadioButtons";
 import { formatTooltipDate } from "../components/FormatToolTip";
 import { formatTime } from "../components/WorkTimeCalc";
+import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -30,6 +32,11 @@ const CopilotWalkthroughView = walkthroughable(View);
 const WorkHoursChart = () => {
   // get the data from the WorkHoursState
   const { data } = WorkHoursState();
+
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
 
   // initialstate for the chart type
   const [chartType, setChartType] = useState("week");
@@ -74,7 +81,7 @@ const WorkHoursChart = () => {
       // the values from the stack as above calculated
       const baseValue = item.stacks[0]?.value || 0;
       const overHours = item.stacks[1]?.value || 0;
-      const plannedHours = item.plannedHours || 0; // new value
+      const plannedHours = item.plannedHours || 0;
 
       const barWidth = 22;
       const spacing = 24;
@@ -177,8 +184,9 @@ const WorkHoursChart = () => {
 
   if (chartType === "year") {
     // define the monthly sums for each year as an object
-    const monthlySums: { [key: string]: { expected: number; over: number } } =
-      {};
+    const monthlySums: {
+      [key: string]: { expected: number; over: number; planned: number };
+    } = {};
     // filter the data with the definitions above and calculate the monthly sums
     filteredData.forEach((item: any) => {
       const month = new Date(item.workDay).getMonth();
@@ -186,10 +194,11 @@ const WorkHoursChart = () => {
       const key = `${year}-${month}`;
 
       if (!monthlySums[key]) {
-        monthlySums[key] = { expected: 0, over: 0 };
+        monthlySums[key] = { expected: 0, over: 0, planned: 0 };
       }
       monthlySums[key].expected += Number(item.expectedHours) || 0;
       monthlySums[key].over += Number(item.overHours) || 0;
+      monthlySums[key].planned += Number(item.expectedHours) || 0;
     });
     // map the monthly sums to the bar chart and format the x-axis labels
     stackData = Object.keys(monthlySums).map((key) => {
@@ -204,6 +213,7 @@ const WorkHoursChart = () => {
       return {
         label: monthName,
         originalDate: dateForMonth.toISOString(),
+        plannedHours: monthlySums[key].planned,
         stacks: [
           { value: monthlySums[key].expected, color: "gray" },
           { value: monthlySums[key].over, color: "aqua", marginBottom: 2 },
@@ -297,11 +307,13 @@ const WorkHoursChart = () => {
               style={{
                 width: screenWidth * 0.9, // dynamic 90% of the screen width
                 maxWidth: 600,
-                height: 480,
+                height: "auto",
                 borderWidth: 1,
                 borderColor: "aqua",
                 borderRadius: 12,
+                paddingBottom: 20,
                 backgroundColor: "#191919",
+                overflow: "hidden",
               }}
             >
               {/* Titel */}
@@ -317,6 +329,7 @@ const WorkHoursChart = () => {
               >
                 Work-Hours Chart
               </Text>
+
               <ChartRadioButtons
                 chartType={chartType as "week" | "month" | "year"}
                 setChartType={(type) => {
@@ -382,7 +395,13 @@ const WorkHoursChart = () => {
                       backgroundColor: "gray",
                     }}
                   />
-                  <Text style={{ marginLeft: 5, fontSize: 14, color: "white" }}>
+                  <Text
+                    style={{
+                      marginLeft: 5,
+                      fontSize: accessMode ? 18 : 14,
+                      color: "white",
+                    }}
+                  >
                     Expected Hours
                   </Text>
                 </View>
@@ -401,9 +420,177 @@ const WorkHoursChart = () => {
                       backgroundColor: "aqua",
                     }}
                   />
-                  <Text style={{ marginLeft: 5, fontSize: 14, color: "white" }}>
+                  <Text
+                    style={{
+                      marginLeft: 5,
+                      fontSize: accessMode ? 18 : 14,
+                      color: "white",
+                    }}
+                  >
                     Over Hours
                   </Text>
+                </View>
+              </View>
+
+              {/* Listed Worktime Overview */}
+              <View style={{ paddingHorizontal: cardPadding }}>
+                <View
+                  style={{
+                    minWidth: 320,
+                    width: screenWidth * 0.8,
+                    maxWidth: 400,
+                    borderRadius: 10,
+                    backgroundColor: "#191919",
+                    marginVertical: 10,
+                    shadowColor: "#ffffff",
+                    elevation: 2,
+                    shadowOffset: { width: 2, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 3,
+                    paddingHorizontal: 8,
+                  }}
+                  accessible={true}
+                  accessibilityLabel="Arbeitszeiten Übersicht"
+                >
+                  {/* Header */}
+                  <View style={{ width: "100%", alignItems: "center" }}>
+                    <Text
+                      style={{
+                        color: "white",
+                        fontWeight: "bold",
+                        fontSize: accessMode ? 18 : 16,
+                        padding: 12,
+                        paddingBottom: 10,
+                      }}
+                      accessibilityRole="header"
+                    >
+                      Worktime Overview
+                    </Text>
+                  </View>
+
+                  {/* Listed-Values */}
+                  {stackData.map((item, index) => {
+                    const baseValue = item.stacks?.[0]?.value || 0;
+                    const overHours = item.stacks?.[1]?.value || 0;
+                    const planned = item.plannedHours || 0;
+
+                    return (
+                      <View
+                        key={index}
+                        style={{
+                          padding: 16,
+                          borderBottomWidth:
+                            index < stackData.length - 1 ? 1 : 0,
+                          borderBottomColor: "#333",
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                        accessible={true}
+                        accessibilityLabel={`${formatTooltipDate(item.originalDate, chartType)}, 
+            planed: ${formatTime(planned)} Hours,
+            worked: ${formatTime(baseValue)} Hours
+            ${overHours > 0 ? `, over: ${formatTime(overHours)} Hours` : ""}`}
+                      >
+                        {/* Date*/}
+                        <Text
+                          style={{
+                            color: "white",
+                            fontWeight: "bold",
+                            fontSize: 16,
+                          }}
+                          accessibilityRole="header"
+                        >
+                          📅 {formatTooltipDate(item.originalDate, chartType)}
+                        </Text>
+
+                        {/* Hour-Data */}
+                        <View style={{ marginLeft: 8 }}>
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              marginBottom: 4,
+                              justifyContent: "flex-end",
+                            }}
+                          >
+                            <Text
+                              style={{
+                                color: "white",
+                                fontWeight: "600",
+                                width: 100,
+                                fontSize: accessMode ? 16 : 14,
+                              }}
+                            >
+                              🎯 Expected:
+                            </Text>
+                            <Text
+                              style={{
+                                color: "white",
+                                fontSize: accessMode ? 16 : 14,
+                              }}
+                            >
+                              {formatTime(planned)}h
+                            </Text>
+                          </View>
+
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              marginBottom: 4,
+                              justifyContent: "flex-end",
+                            }}
+                          >
+                            <Text
+                              style={{
+                                color: "white",
+                                fontWeight: "600",
+                                width: 100,
+                                fontSize: accessMode ? 16 : 14,
+                              }}
+                            >
+                              ⏳ Worked:
+                            </Text>
+                            <Text
+                              style={{
+                                color: "white",
+                                fontSize: accessMode ? 16 : 14,
+                              }}
+                            >
+                              {formatTime(baseValue)}h
+                            </Text>
+                          </View>
+
+                          {overHours > 0 && (
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                justifyContent: "flex-end",
+                              }}
+                            >
+                              <Text
+                                style={{
+                                  color: "aqua",
+                                  fontWeight: "600",
+                                  width: 100,
+                                  fontSize: accessMode ? 16 : 14,
+                                }}
+                              >
+                                🚀 Over:
+                              </Text>
+                              <Text
+                                style={{
+                                  color: "aqua",
+                                  fontSize: accessMode ? 16 : 14,
+                                }}
+                              >
+                                {formatTime(overHours)}h
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                      </View>
+                    );
+                  })}
                 </View>
               </View>
               {/* Tooltip */}
@@ -433,7 +620,7 @@ const WorkHoursChart = () => {
                   </Text>
                   <Text style={{ fontSize: 11, color: "white" }}>
                     {tooltipData.baseValue < tooltipData.plannedHours
-                      ? `⏳ Duration: ${formatTime(tooltipData.baseValue)}h`
+                      ? `⏳ Worked: ${formatTime(tooltipData.baseValue)}h`
                       : `⏳ Expected: ${formatTime(tooltipData.baseValue)}h`}
                   </Text>
                   <Text style={{ fontSize: 11, color: "aqua" }}>
