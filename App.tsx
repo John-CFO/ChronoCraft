@@ -20,7 +20,7 @@ import {
   AntDesign,
 } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
-import { User, onAuthStateChanged } from "firebase/auth";
+import { User, onAuthStateChanged, getAuth } from "firebase/auth";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-gesture-handler";
@@ -29,6 +29,7 @@ import * as SplashScreen from "expo-splash-screen";
 import "text-encoding-polyfill"; //bugfix: for delete project with notes
 import { CopilotProvider } from "react-native-copilot";
 import { AccessibilityInfo } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import LoginScreen from "./Screens/LoginScreen";
 import HomeScreen from "./Screens/HomeScreen";
@@ -262,6 +263,20 @@ const App = () => {
       // console.log("user", user);
       setUser(user);
     });
+  }, []);
+
+  useEffect(() => {
+    const checkAsyncStorage = async () => {
+      const allKeys = await AsyncStorage.getAllKeys();
+      // console.log("every key in AsyncStorage:", allKeys);
+
+      for (const key of allKeys) {
+        const item = await AsyncStorage.getItem(key);
+        // console.log(`${key}:`, item);
+      }
+    };
+
+    checkAsyncStorage();
   }, []);
 
   // hook to handle the notification initialization

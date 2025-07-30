@@ -16,11 +16,17 @@ import {
   AppStateStatus,
   Dimensions,
 } from "react-native";
-import React, { useState, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import * as Animatable from "react-native-animatable";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -29,7 +35,6 @@ import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useStore, ProjectState } from "./TimeTrackingState";
-import { updateProjectData } from "../components/FirestoreService";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -47,6 +52,31 @@ interface TimeTrackingCardsProps {
 // modified walkthroughable for copilot tour
 const CopilotWalkthroughView = walkthroughable(View);
 
+// function to format the time in hours, minutes and seconds
+function formatTime(seconds: number, showMs = false): string {
+  const totalSeconds = seconds;
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const secs = totalSeconds % 60;
+
+  if (showMs) {
+    const ms = Math.floor((secs % 1) * 100);
+    return (
+      [
+        String(hours).padStart(2, "0"),
+        String(minutes).padStart(2, "0"),
+        String(Math.floor(secs)).padStart(2, "0"),
+      ].join(":") + `.${String(ms).padStart(2, "0")}`
+    );
+  }
+
+  return [
+    String(hours).padStart(2, "0"),
+    String(minutes).padStart(2, "0"),
+    String(Math.round(secs)).padStart(2, "0"),
+  ].join(":");
+}
+
 const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   // initialize the routing
   const route = useRoute<TimeTrackerRouteProp>();
@@ -54,6 +84,25 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
+
+  // Debugging functions
+  // log function to log messages
+  // const log = (message: string, data?: any) => {
+  //   console.log(`[TimeTrackerCard:${projectId}] ${message}`, data || "");
+  // };
+
+  //warn function to log warnings
+  // const warn = (message: string, data?: any) => {
+  //   console.warn(`[TimeTrackerCard:${projectId}] WARN: ${message}`, data || "");
+  // };
+
+  // error function to log errors
+  const error = (message: string, data?: any) => {
+    console.error(
+      `[TimeTrackerCard:${projectId}] ERROR: ${message}`,
+      data || ""
+    );
+  };
 
   // use the global state to fetch data from firestore
   const { lastStartTime, endTime, originalStartTime } = useStore((state) => ({
@@ -79,12 +128,13 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
   // state from useStore to update the UI(Earnings and Progress)
   const isTracking = useStore((state) => state.projects[projectId]?.isTracking);
-  const hourlyRate = useStore((state) => state.projects[projectId]?.hourlyRate);
   const appState = useStore((state) => state.appState);
+  const hourlyRate = useStore(
+    (state) => state.projects[projectId]?.hourlyRate || 0
+  );
 
   // global state
   const {
-    currentProjectId,
     startTimer,
     stopTimer,
     updateTimer,
@@ -97,198 +147,231 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
   // refs for timer logic
   const animationRef = useRef<number | null>(null);
-  const startTimeRef = useRef<number | null>(null);
   const accumulatedTimeRef = useRef<number>(projectState?.timer || 0);
-  const globalUpdateIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Ref for restoring the timer if app is started after a hardkill
+  const isRestoringRef = useRef(true);
 
   // state only for the UI
   const [displayTime, setDisplayTime] = useState<number>(
     projectState?.timer || 0
   );
 
-  // hook to fetch project data from firestore when navigate from home screen to details screen
+  // formattedTime function using useMemo to get a bether performance with preventing unnecessary re-renders
+  const formattedTime = useMemo(() => formatTime(displayTime), [displayTime]);
+
+  // hook for isTracking Ref
+  const isTrackingRef = useRef(isTracking);
   useEffect(() => {
-    const fetchProjectData = async () => {
-      const user = getAuth().currentUser;
-      if (!user) {
-        console.error("User is not authenticated.");
-        return false;
+    isTrackingRef.current = isTracking;
+  }, [isTracking]);
+
+  // state to check if timer is restored
+  const [isTimerRestored, setIsTimerRestored] = useState(false);
+
+  // hook to fetch project data from firestore when navigate from home screen to details screen
+  const fetchProjectData = useCallback(async () => {
+    // log("Fetching project data started");
+    const user = getAuth().currentUser;
+    if (!user) {
+      console.error("User is not authenticated.");
+      return;
+    }
+    try {
+      const docRef = doc(
+        FIREBASE_FIRESTORE,
+        "Users",
+        user.uid,
+        "Services",
+        "AczkjyWoOxdPAIRVxjy3",
+        "Projects",
+        projectId
+      );
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const projectData = docSnap.data();
+        const formattedData = {
+          ...projectData,
+          originalStartTime: projectData.originalStartTime
+            ? projectData.originalStartTime.toDate()
+            : null,
+          endTime: projectData.endTime ? projectData.endTime.toDate() : null,
+          lastStartTime: projectData.lastStartTime
+            ? projectData.lastStartTime.toDate()
+            : null,
+        };
+        // log("Project data fetched successfully", formattedData);
+        setProjectData(projectId, formattedData as ProjectState);
+      } else {
+        // console.error("No such document!");
+        // warn("Project document does not exist");
       }
-      if (currentProjectId) {
-        try {
-          const docRef = doc(
-            FIREBASE_FIRESTORE,
-            "Users",
-            user.uid,
-            "Services",
-            "AczkjyWoOxdPAIRVxjy3",
-            "Projects",
-            currentProjectId
-          );
-          const docSnap = await getDoc(docRef);
+    } catch (error) {
+      console.error("Error fetching Firestore data:", error);
+    }
+  }, [projectId, setProjectData]);
 
-          if (docSnap.exists()) {
-            const projectData = docSnap.data();
-            const formattedData = {
-              ...projectData,
-              originalStartTime: projectData.originalStartTime
-                ? projectData.originalStartTime.toDate()
-                : null,
-              endTime: projectData.endTime
-                ? projectData.endTime.toDate()
-                : null,
-              lastStartTime: projectData.lastStartTime
-                ? projectData.lastStartTime.toDate()
-                : null,
-            };
+  // hook to update the hourly rate using the ref
+  const hourlyRateRef = useRef(hourlyRate);
+  useEffect(() => {
+    hourlyRateRef.current = hourlyRate;
+  }, [hourlyRate]);
 
-            // Update refs and state with Firestore data
-            const timerValue = projectData.timer || 0;
-            accumulatedTimeRef.current = timerValue;
-            setDisplayTime(timerValue);
+  // ref to compare the last whole second when updating the timer
+  const lastWholeSecondRef = useRef(Math.floor(accumulatedTimeRef.current));
 
-            setProjectData(currentProjectId, formattedData as ProjectState);
-          } else {
-            console.error("No such document!");
-          }
-        } catch (error) {
-          console.error("Error fetching Firestore data:", error);
+  // function to start the animation
+  const startAnimation = useCallback(() => {
+    if (animationRef.current) return;
+
+    // log("Starting timer animation");
+
+    let lastTimestamp: number | null = null;
+    // let lastEarningsUpdate = 0; // timestamp of the last earnings update
+
+    const update = (timestamp: number) => {
+      if (!isTrackingRef.current) {
+        // log("Stopping animation - tracking stopped");
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+          animationRef.current = null;
         }
+        return;
       }
+
+      if (!lastTimestamp) lastTimestamp = timestamp;
+      const elapsed = (timestamp - lastTimestamp) / 1000;
+      lastTimestamp = timestamp;
+
+      const newTime = accumulatedTimeRef.current + elapsed;
+      accumulatedTimeRef.current = newTime;
+
+      const currentWholeSecond = Math.floor(newTime);
+      if (currentWholeSecond !== lastWholeSecondRef.current) {
+        setDisplayTime(newTime);
+        updateTimer(projectId, currentWholeSecond);
+        lastWholeSecondRef.current = currentWholeSecond;
+      }
+      animationRef.current = requestAnimationFrame(update);
     };
 
-    fetchProjectData();
-  }, [currentProjectId, setProjectData]);
+    animationRef.current = requestAnimationFrame(update);
+  }, [projectId, updateTimer]);
 
-  // state function to update the timer in the TimeTrackerCard if app is in foreground
-  const [delayedElapsedTime, setDelayedElapsedTime] = useState<number | null>(
-    null
-  );
+  // hook to update the total earnings
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isTracking) {
+      const earnings =
+        (Math.floor(accumulatedTimeRef.current) / 3600) * hourlyRate;
+      setTotalEarnings(projectId, earnings);
+
+      // start the earnings update interval
+      interval = setInterval(() => {
+        const earnings =
+          (Math.floor(accumulatedTimeRef.current) / 3600) * hourlyRate;
+        setTotalEarnings(projectId, earnings);
+      }, 3000);
+    }
+    return () => clearInterval(interval);
+  }, [isTracking, hourlyRate, projectId, setTotalEarnings]);
 
   // function to handle app state changes if app is in background or foreground
   useEffect(() => {
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+      // log("App state changed", { current: appState, next: nextAppState });
+
+      // app comes to foreground
       if (
         appState.match(/(inactive|background)/) &&
-        nextAppState === "active" &&
-        projectState.isTracking
+        nextAppState === "active"
       ) {
-        const lastTime = await AsyncStorage.getItem(
-          `lastActiveTime_${projectId}`
-        );
+        // log("App coming to foreground");
+
+        const key = `lastActiveTime_${projectId}`;
+        const lastTime = await AsyncStorage.getItem(key);
+
         if (lastTime) {
           const lastTimeMs = new Date(lastTime).getTime();
           const now = Date.now();
+
           if (!isNaN(lastTimeMs) && lastTimeMs < now) {
             const elapsedTime = (now - lastTimeMs) / 1000;
-            setDelayedElapsedTime(elapsedTime);
+            const newTime = accumulatedTimeRef.current + elapsedTime;
+
+            // update timer
+            accumulatedTimeRef.current = newTime;
+            setDisplayTime(newTime);
+            updateTimer(projectId, Math.floor(newTime));
+
+            // update earnings
+            const earnings = (Math.floor(newTime) / 3600) * hourlyRate;
+            setTotalEarnings(projectId, earnings);
           }
-          await AsyncStorage.removeItem(`lastActiveTime_${projectId}`);
+
+          await AsyncStorage.removeItem(key);
         }
+        if (isTrackingRef.current) {
+          startAnimation();
+        }
+
         setIsInitialized(true);
       }
-      if (
-        nextAppState.match(/inactive|background/) &&
-        projectState.isTracking
-      ) {
+
+      // app is going to background
+      if (nextAppState.match(/inactive|background/)) {
+        // log("App going to background");
+
         if (animationRef.current) {
           cancelAnimationFrame(animationRef.current);
           animationRef.current = null;
         }
 
-        // clear global update interval
-        if (globalUpdateIntervalRef.current) {
-          clearInterval(globalUpdateIntervalRef.current);
-          globalUpdateIntervalRef.current = null;
-        }
-
         const timestamp = new Date().toISOString();
-        await AsyncStorage.setItem(`lastActiveTime_${projectId}`, timestamp);
+        const lastKey = `lastActiveTime_${projectId}`;
+        const persistKey = `persistedTimer_${projectId}`;
+        const isTrackingKey = `isTracking_${projectId}`;
+
+        await AsyncStorage.setItem(lastKey, timestamp);
+        await AsyncStorage.setItem(
+          persistKey,
+          accumulatedTimeRef.current.toString()
+        );
+        await AsyncStorage.setItem(
+          isTrackingKey,
+          isTrackingRef.current.toString()
+        );
+
         setIsInitialized(false);
       }
+
       setAppState(nextAppState);
     };
+
     const subscription = AppState.addEventListener(
       "change",
       handleAppStateChange
     );
-
     return () => subscription.remove();
-  }, [
-    appState,
-    projectId,
-    projectState.isTracking,
-    setIsInitialized,
-    setAppState,
-  ]);
+  }, [appState, projectId, setIsInitialized, setAppState, startAnimation]);
 
-  // hook to delay the update of the timer until the elapsed time is calculated
+  // hook for the persitence interval
   useEffect(() => {
-    if (delayedElapsedTime !== null) {
-      const newTimer = accumulatedTimeRef.current + delayedElapsedTime;
-      accumulatedTimeRef.current = newTimer;
-      setDisplayTime(newTimer);
-      updateTimer(projectId, Math.floor(newTimer));
-      setTotalEarnings(
-        projectId,
-        (Math.floor(newTimer) / 3600) * projectState.hourlyRate
-      );
-      setDelayedElapsedTime(null);
-    }
-  }, [delayedElapsedTime]);
+    // log("Timer update effect", {
+    //   isTimerRestored,
+    //   isTracking: projectState.isTracking,
+    //   appState,
+    // });
 
-  // setup global state update interval
-  useEffect(() => {
-    // if App is foreground and tracking is active → start interval
-    if (isTracking && appState === "active") {
-      globalUpdateIntervalRef.current = setInterval(() => {
-        const seconds = Math.floor(accumulatedTimeRef.current);
-        updateTimer(projectId, seconds);
-        setTotalEarnings(projectId, (seconds / 3600) * (hourlyRate ?? 0));
-      }, 10000);
+    if (!isTimerRestored) return;
+    if (appState !== "active") return;
+
+    // start animation when tracking is started
+    if (projectState.isTracking) {
+      startAnimation();
     } else {
-      // otherwise clear interval
-      if (globalUpdateIntervalRef.current) {
-        clearInterval(globalUpdateIntervalRef.current);
-        globalUpdateIntervalRef.current = null;
-      }
-    }
-
-    return () => {
-      if (globalUpdateIntervalRef.current) {
-        clearInterval(globalUpdateIntervalRef.current);
-        globalUpdateIntervalRef.current = null;
-      }
-    };
-  }, [isTracking, hourlyRate, appState]);
-
-  // UI Timer with requestAnimationFrame
-  useEffect(() => {
-    let lastTimestamp: number | null = null;
-
-    const update = (timestamp: number) => {
-      if (!startTimeRef.current) {
-        lastTimestamp = timestamp;
-        animationRef.current = requestAnimationFrame(update);
-        return;
-      }
-      if (lastTimestamp === null) {
-        lastTimestamp = timestamp;
-      }
-      const elapsed = (timestamp - lastTimestamp) / 1000; // in seconds
-      lastTimestamp = timestamp;
-
-      accumulatedTimeRef.current += elapsed;
-      setDisplayTime(accumulatedTimeRef.current);
-
-      animationRef.current = requestAnimationFrame(update);
-    };
-
-    if (projectState.isTracking && appState === "active") {
-      startTimeRef.current = Date.now();
-      lastTimestamp = null;
-      animationRef.current = requestAnimationFrame(update);
-    } else {
+      // stop animation when tracking is stopped
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
         animationRef.current = null;
@@ -298,43 +381,205 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
       }
     };
-  }, [projectState.isTracking, appState]);
+  }, [projectState.isTracking, appState, isTimerRestored, startAnimation]);
+
+  // hook to restore the timer from AsyncStorage
+  const restorePersistedTimer = useCallback(async () => {
+    // log("Restoring persisted timer started");
+    try {
+      const key = `persistedTimer_${projectId}`;
+      const isTrackingKey = `isTracking_${projectId}`;
+
+      const persisted = await AsyncStorage.getItem(key);
+      const wasTracking = await AsyncStorage.getItem(isTrackingKey);
+
+      // log("Restore values", { persisted, wasTracking });
+
+      if (persisted !== null) {
+        const persistedTime = parseInt(persisted, 10);
+        // log("Restoring timer value", persistedTime);
+
+        // update timer state
+        accumulatedTimeRef.current = persistedTime;
+        setDisplayTime(persistedTime);
+        updateTimer(projectId, Math.floor(persistedTime));
+
+        // calculate earnings
+        const earnings = (Math.floor(persistedTime) / 3600) * hourlyRate;
+        setTotalEarnings(projectId, earnings);
+
+        if (wasTracking === "true") {
+          if (appState === "active") {
+            // log("Restoring tracking state - starting timer");
+            if (!isTrackingRef.current) {
+              // log("Restoring tracking state - starting timer");
+              startTimer(projectId);
+              isTrackingRef.current = true;
+              startAnimation();
+            } else {
+              // log("Tracking already active - no need to restart");
+            }
+          } else {
+            // log(
+            //   "Tracking was active but app is not foreground - not starting timer"
+            // );
+          }
+        }
+      } else {
+        // log("No persisted timer found");
+      }
+    } catch (error) {
+      console.error("[RESTORE] error in restorePersistedTimer:", error);
+    } finally {
+      isRestoringRef.current = false;
+      setIsTimerRestored(true);
+      // log("Restore completed");
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      await AsyncStorage.removeItem(`persistedTimer_${projectId}`);
+      await AsyncStorage.removeItem(`isTracking_${projectId}`);
+    }
+  }, [projectId, hourlyRate, appState, startAnimation]);
+
+  // hook to initialize the component
+  useEffect(() => {
+    // log("Initialization effect started");
+    const initialize = async () => {
+      // log("Initializing component...");
+      await fetchProjectData();
+      await restorePersistedTimer();
+      // log("Initialization completed");
+    };
+
+    initialize();
+  }, [fetchProjectData, restorePersistedTimer]);
+
+  // Screen-change persistence
+  useEffect(() => {
+    // log("Screen persistence effect setup");
+
+    return () => {
+      // log("Screen unmounting - saving state");
+
+      const saveState = async () => {
+        try {
+          // log("Saving state before unmount", {
+          //   time: accumulatedTimeRef.current,
+          //   isTracking: isTrackingRef.current,
+          // });
+
+          await AsyncStorage.setItem(
+            `persistedTimer_${projectId}`,
+            accumulatedTimeRef.current.toString()
+          );
+
+          await AsyncStorage.setItem(
+            `isTracking_${projectId}`,
+            isTrackingRef.current.toString()
+          );
+
+          // log("State saved successfully");
+
+          if (isTrackingRef.current) {
+            // log("Updating Firestore for active timer");
+            await updateProjectData({
+              isTracking: false,
+              pauseTime: new Date(),
+            });
+          }
+        } catch (err) {
+          error("Error saving state", err);
+        }
+      };
+
+      saveState();
+
+      if (animationRef.current) {
+        // log("Canceling animation frame");
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
+    };
+  }, [projectId]);
+
+  // hook to update the project data
+  const updateProjectData = useCallback(
+    async (data: Partial<ProjectState>) => {
+      const user = getAuth().currentUser;
+      if (!user) {
+        console.error("User is not authenticated.");
+        return;
+      }
+
+      try {
+        const projectRef = doc(
+          FIREBASE_FIRESTORE,
+          "Users",
+          user.uid,
+          "Services",
+          "AczkjyWoOxdPAIRVxjy3",
+          "Projects",
+          projectId
+        );
+
+        // convert Date-Objects to Firestore Timestamp
+        const convertedData: Record<string, any> = {};
+        Object.entries(data).forEach(([key, value]) => {
+          if (value instanceof Date) {
+            convertedData[key] = Timestamp.fromDate(value);
+          } else {
+            convertedData[key] = value;
+          }
+        });
+
+        await updateDoc(projectRef, convertedData);
+        // log("Project data updated in Firestore", convertedData);
+      } catch (error) {
+        console.error("Error updating project data:", error);
+      }
+    },
+    [projectId]
+  );
 
   // function to start the timer
   const handleStart = async () => {
-    if (!projectState.isTracking) {
-      accumulatedTimeRef.current = displayTime;
+    if (!isTrackingRef.current) {
       startTimer(projectId);
-      await updateProjectData(projectId, {
+      isTrackingRef.current = true;
+      startAnimation();
+
+      await updateProjectData({
         startTime: new Date(),
         isTracking: true,
-      });
+      } as Partial<ProjectState>);
     }
   };
 
   // function to pause the timer
   const handlePause = async () => {
-    if (projectState.isTracking) {
-      stopTimer(projectId);
-      const currentSeconds = Math.floor(accumulatedTimeRef.current);
-      updateTimer(projectId, currentSeconds);
-      setTotalEarnings(
-        projectId,
-        (currentSeconds / 3600) * projectState.hourlyRate
-      );
+    if (isTrackingRef.current) {
+      // Animation stoppen
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
 
-      await updateProjectData(projectId, {
+      stopTimer(projectId);
+      isTrackingRef.current = false;
+
+      await updateProjectData({
         isTracking: false,
         pauseTime: new Date(),
-      });
+      } as Partial<ProjectState>);
     }
   };
 
   // function to stop the timer
   const handleStop = async () => {
-    if (projectState.isTracking) {
+    if (isTrackingRef.current) {
       handlePause();
     }
   };
@@ -360,23 +605,23 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
               await resetAll(projectId);
               accumulatedTimeRef.current = 0;
               setDisplayTime(0);
+              await AsyncStorage.removeItem(`persistedTimer_${projectId}`);
+              await AsyncStorage.removeItem(`isTracking_${projectId}`);
+              await AsyncStorage.removeItem(`timerState_${projectId}`);
             },
           },
         ]
       );
   };
 
-  // function to format and round the time in the TimeTrackerCard
-  function formatTime(timeInSeconds: number): string {
-    const roundedTime = Math.round(timeInSeconds);
-    const hours = Math.floor(roundedTime / 3600);
-    const minutes = Math.floor((roundedTime % 3600) / 60);
-    const seconds = roundedTime % 60;
-    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
-      2,
-      "0"
-    )}:${String(seconds).padStart(2, "0")}`;
-  }
+  // Cleanup when component unmounts
+  useEffect(() => {
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
 
   return (
     <View>
@@ -429,7 +674,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
                 textAlign: "center",
               }}
             >
-              {formatTime(displayTime)}
+              {formattedTime}
             </Text>
           </View>
 
@@ -441,7 +686,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
               alignItems: "center",
               marginBottom: 10,
               marginTop: 30,
-              width: screenWidth * 0.7, // use 70% of the screen width
+              width: screenWidth * 0.7,
               maxWidth: 320,
               backgroundColor: "#191919",
             }}
@@ -449,7 +694,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
             <TouchableOpacity onPress={handlePause}>
               <FontAwesome6 name="pause" size={65} color="lightgrey" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleStart}>
+            <TouchableOpacity onPress={handleStart} disabled={isTracking}>
               <Animatable.View animation="pulse" iterationCount="infinite">
                 <FontAwesome5 name="play" size={85} color="lightgrey" />
               </Animatable.View>
@@ -472,7 +717,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
             <TouchableOpacity
               onPress={handleReset}
               style={{
-                width: screenWidth * 0.7, // use 70% of the screen width
+                width: screenWidth * 0.7,
                 maxWidth: 400,
                 borderRadius: 12,
                 overflow: "hidden",
@@ -517,10 +762,8 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
               backgroundColor: "#191919",
               alignItems: "flex-start",
               justifyContent: "flex-start",
-              //shadow options for android
               shadowColor: "#ffffff",
               elevation: 2,
-              //shadow options for ios
               shadowOffset: { width: 2, height: 2 },
               shadowOpacity: 0.3,
               shadowRadius: 3,
@@ -537,8 +780,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
             >
               <Text style={{ color: "grey" }}>Last Session:</Text>
               {"\n"}
-              {/*to prevent konflicts with Date types and timestamps it´s important to use not both*/}
-              {endTime instanceof Date ? endTime.toLocaleString() : "N/A"}
+              {endTime instanceof Date ? endTime.toLocaleString() : "- - - "}
             </Text>
             {/*last tracking info*/}
             <Text
@@ -553,7 +795,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
               {"\n"}
               {lastStartTime instanceof Date
                 ? lastStartTime.toLocaleString()
-                : "N/A"}
+                : "- - - "}
             </Text>
             {/*original tracking info*/}
             <Text
@@ -569,8 +811,8 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
               {originalStartTime
                 ? originalStartTime instanceof Date
                   ? originalStartTime.toLocaleString()
-                  : "N/A"
-                : "N/A"}
+                  : "- - - "
+                : "- - - "}
             </Text>
           </View>
         </CopilotWalkthroughView>
@@ -578,5 +820,4 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
     </View>
   );
 };
-
 export default TimeTrackerCard;
