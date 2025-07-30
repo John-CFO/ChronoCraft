@@ -7,7 +7,7 @@
 /////////////////////////////////////////////////////////////////////////////
 
 import { Text, TouchableOpacity, View } from "react-native";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
@@ -278,53 +278,6 @@ const App = () => {
 
     checkAsyncStorage();
   }, []);
-
-  // useEffect(() => {
-  //   if (!user) return;
-
-  //   const recoverTracking = async () => {
-  //     const keys = await AsyncStorage.getAllKeys();
-  //     const trackingKeys = keys.filter((k) =>
-  //       k.startsWith("trackingSnapshot_")
-  //     );
-
-  //     for (const key of trackingKeys) {
-  //       const json = await AsyncStorage.getItem(key);
-  //       if (!json) continue;
-
-  //       const snapshot = JSON.parse(json);
-  //       const projectId = key.replace("trackingSnapshot_", "");
-
-  //       if (snapshot.isTracking && snapshot.lastStartTime) {
-  //         const referenceStart = new Date(snapshot.lastStartTime).getTime();
-  //         const now = Date.now();
-  //         const elapsed = Math.max(0, (now - referenceStart) / 1000);
-  //         const newTime = snapshot.timer + elapsed;
-
-  //         console.log("✅ Wiederherstellung:", {
-  //           projectId,
-  //           elapsed,
-  //           newTime,
-  //         });
-
-  //         useStore.getState().setProjectData(projectId, {
-  //           timer: newTime,
-  //           isTracking: true,
-  //           hourlyRate: snapshot.hourlyRate,
-  //           lastStartTime: new Date(snapshot.lastStartTime),
-  //           originalStartTime: new Date(snapshot.originalStartTime),
-  //           totalEarnings: (newTime / 3600) * snapshot.hourlyRate,
-  //         });
-
-  //         await AsyncStorage.removeItem(key);
-  //       } else {
-  //         console.log(`❌ Ungültiger Snapshot für ${projectId}`);
-  //       }
-  //     }
-  //   };
-
-  //   recoverTracking();
-  // }, [user]);
 
   // hook to handle the notification initialization
   useEffect(() => {
