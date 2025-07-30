@@ -96,8 +96,8 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
     const progressRaw = useMemo(() => {
       return maxSeconds > 0 ? timer / maxSeconds : 0;
     }, [timer, maxSeconds]);
-    const progress = Math.min(progressRaw, 1); // 0 bis 1 → for Animated
-    const progressValue = Math.min(progressRaw * 100, 100); // 0 bis 100 → forCircularProgress
+    const progress = Math.min(progressRaw, 1); // 0 to 1 → for Animated
+    const progressValue = Math.min(progressRaw * 100, 100); // 0 to 100 → forCircularProgress
 
     // input state
     const [inputMaxWorkHours, setInputMaxWorkHours] = useState("");

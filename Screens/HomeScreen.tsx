@@ -397,6 +397,7 @@ const HomeScreen: React.FC = () => {
 
   // scroll animation with parameters to handle the scroll animation
   const renderItem = ({ item, index }: { item: any; index: number }) => {
+    // Animation-Berechnungen
     const inputRange = [
       -1,
       0,
@@ -416,6 +417,22 @@ const HomeScreen: React.FC = () => {
       outputRange: [1, 1, 1, 0.5, 0],
       extrapolate: "clamp",
     });
+
+    // converte date to enable both unix timestamps and firebase timestamps
+    let dateObj: Date | null = null;
+    if (item.createdAt) {
+      if (item.createdAt instanceof Date) {
+        dateObj = item.createdAt;
+      } else if (
+        item.createdAt.toDate &&
+        typeof item.createdAt.toDate === "function"
+      ) {
+        dateObj = item.createdAt.toDate();
+      } else if (typeof item.createdAt === "number") {
+        // Fallback for Unix-Timestamps
+        dateObj = new Date(item.createdAt);
+      }
+    }
 
     // calculate the average item height to handle functionality of the scroll animation
     const mesureItemHeight = (event: LayoutChangeEvent) => {
@@ -459,7 +476,7 @@ const HomeScreen: React.FC = () => {
           <TouchableOpacity
             onPress={() => handleProjectPress(item.id as string, item.name)}
             accessibilityRole="button"
-            accessibilityLabel={`Project ${item.name}, created on ${dayjs(item.createdAt.toDate()).format("DD MMMM YYYY")}`}
+            accessibilityLabel={`Project ${item.name}, created on ${dateObj ? dayjs(dateObj).format("DD MMMM YYYY") : "unknown date"}`}
             accessibilityHint="Tap to view project details"
             style={{ alignItems: "center", justifyContent: "center", flex: 1 }}
           >
@@ -470,19 +487,31 @@ const HomeScreen: React.FC = () => {
               }}
             >
               {/* Section with date in the project container */}
-              {item.createdAt &&
-                typeof item.createdAt.toDate === "function" && (
-                  <Text
-                    style={{
-                      color: accessMode ? "white" : "grey",
-                      fontSize: accessMode ? 16 : 13,
-                      paddingLeft: 10,
-                      marginTop: 5,
-                    }}
-                  >
-                    {dayjs(item.createdAt.toDate()).format("DD.MM.YYYY")}
-                  </Text>
-                )}
+              {dateObj ? (
+                <Text
+                  style={{
+                    color: accessMode ? "white" : "grey",
+                    fontSize: accessMode ? 16 : 13,
+                    paddingLeft: 10,
+                    marginTop: 5,
+                  }}
+                >
+                  {dayjs(dateObj).format("DD.MM.YYYY")}
+                </Text>
+              ) : (
+                <Text
+                  style={{
+                    color: "gray",
+                    fontSize: 13,
+                    paddingLeft: 10,
+                    marginTop: 5,
+                    fontStyle: "italic",
+                  }}
+                >
+                  No date available
+                </Text>
+              )}
+
               {/* Project name in the project container */}
               <Text
                 style={{
