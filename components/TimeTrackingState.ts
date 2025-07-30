@@ -103,12 +103,19 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
 
   // function to fetch data from Firestore if user navigate to details screen
   setProjectData: (projectId, projectData) => {
-    set((state) => ({
-      projects: {
-        ...state.projects,
-        [projectId]: { ...state.projects[projectId], ...projectData },
-      },
-    }));
+    set((state) => {
+      const updatedProject = {
+        ...(state.projects[projectId] || {}),
+        ...projectData,
+      };
+
+      return {
+        projects: {
+          ...state.projects,
+          [projectId]: updatedProject,
+        },
+      };
+    });
   },
 
   // function to set the current project id
@@ -184,6 +191,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
   startTimer: async (projectId: string) => {
     const state = get();
     const project = state.projects[projectId];
+
     // check if project is already being tracked
     if (project.isTracking) {
       console.warn("Project is already being tracked");
