@@ -54,27 +54,33 @@ const CopilotWalkthroughView = walkthroughable(View);
 
 // function to format the time in hours, minutes and seconds
 function formatTime(seconds: number, showMs = false): string {
-  const totalSeconds = seconds;
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const secs = totalSeconds % 60;
+  try {
+    if (!isFinite(seconds)) return "00:00:00";
+    const totalSeconds = Math.floor(seconds);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const secs = Math.floor(totalSeconds % 60);
 
-  if (showMs) {
-    const ms = Math.floor((secs % 1) * 100);
-    return (
-      [
-        String(hours).padStart(2, "0"),
-        String(minutes).padStart(2, "0"),
-        String(Math.floor(secs)).padStart(2, "0"),
-      ].join(":") + `.${String(ms).padStart(2, "0")}`
-    );
+    if (showMs) {
+      const ms = Math.floor((seconds % 1) * 100);
+      return (
+        [
+          String(hours).padStart(2, "0"),
+          String(minutes).padStart(2, "0"),
+          String(secs).padStart(2, "0"),
+        ].join(":") + `.${String(ms).padStart(2, "0")}`
+      );
+    }
+
+    return [
+      String(hours).padStart(2, "0"),
+      String(minutes).padStart(2, "0"),
+      String(secs).padStart(2, "0"),
+    ].join(":");
+  } catch (err) {
+    console.error("formatTime failed:", err);
+    return "00:00:00";
   }
-
-  return [
-    String(hours).padStart(2, "0"),
-    String(minutes).padStart(2, "0"),
-    String(Math.round(secs)).padStart(2, "0"),
-  ].join(":");
 }
 
 const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
@@ -399,7 +405,11 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
       // log("Restore values", { persisted, wasTracking });
 
       if (persisted !== null) {
-        const persistedTime = parseInt(persisted, 10);
+        let persistedTime = parseInt(persisted || "0", 10);
+        if (!isFinite(persistedTime)) {
+          console.warn("Persisted time invalid, resetting to 0");
+          persistedTime = 0;
+        }
         // log("Restoring timer value", persistedTime);
 
         // update timer state
@@ -674,7 +684,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
                 textAlign: "center",
               }}
             >
-              {formattedTime}
+              {formattedTime || "00:00:00"}
             </Text>
           </View>
 
