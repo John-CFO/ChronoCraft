@@ -5,7 +5,13 @@
 
 //////////////////////////////////////////////////////////////////////////////////////
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import {
   View,
   Text,
@@ -64,7 +70,7 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
     const timer = projectState?.timer || 0;
 
     // debounced save function
-    const debouncedSave = useRef(
+    const debouncedSave = useCallback(
       useDebounceValue(async (hours: number) => {
         const user = FIREBASE_AUTH.currentUser;
         if (!user) return;
@@ -89,8 +95,9 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
           console.error("Error saving max work hours:", error);
           Alert.alert("Failed to save. Try again.");
         }
-      }, 500)
-    ).current;
+      }, 500),
+      [projectId, setProjectData]
+    );
 
     // calculate progress with memoization
     const progressRaw = useMemo(() => {
@@ -387,7 +394,17 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
                   marginTop: 20,
                 }}
               >
-                {progress.toFixed(1)}% of your max work time used
+                <Text
+                  style={{
+                    color: "white",
+                    fontSize: 18,
+                    fontWeight: "bold",
+                    fontFamily: "MPLUSLatin_Bold",
+                  }}
+                >
+                  {(progress * 100).toFixed(1)}%{" "}
+                </Text>{" "}
+                of your max work time used
               </Text>
             )}
             <View
