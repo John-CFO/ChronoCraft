@@ -11,6 +11,7 @@ import { View, StyleSheet } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
+  useDerivedValue,
   withDelay,
   withRepeat,
   withTiming,
@@ -21,64 +22,68 @@ import Animated, {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // define the basics of the animation
-const JumpingDot = ({
-  delay = 0,
-  variant = "circle",
-  customStyle,
-}: {
-  delay?: number;
-  variant?: "circle" | "shadow";
-  customStyle?: any;
-}) => {
-  const progress = useSharedValue(0);
+const JumpingDot = React.memo(
+  ({
+    delay = 0,
+    variant = "circle",
+    customStyle,
+  }: {
+    delay?: number;
+    variant?: "circle" | "shadow";
+    customStyle?: any;
+  }) => {
+    const progress = useSharedValue(0);
 
-  // hook to start the animation
-  useEffect(() => {
-    progress.value = withRepeat(
-      withSequence(
-        // 1) in every iteration, delay for `delay` ms
-        withDelay(delay, withTiming(1, { duration: 500 })),
-        // 2) back to 0 (here withTiming for smooth transition)
-        withTiming(0, { duration: 500 })
-      ),
-      -1
+    // hook to start the animation
+    useEffect(() => {
+      progress.value = withRepeat(
+        withSequence(
+          // 1) in every iteration, delay for `delay` ms
+          withDelay(delay, withTiming(1, { duration: 500 })),
+          // 2) back to 0 (here withTiming for smooth transition)
+          withTiming(0, { duration: 500 })
+        ),
+        -1
+      );
+      return () => {
+        progress.value = 0; // stop the animation on unmount
+      };
+    }, [delay]);
+
+    // use useDerivedValue to calculate the animation progress
+    const animatedProgress = useDerivedValue(() => progress.value);
+
+    // define the animation with useAnimatedStyle
+    const animatedStyle = useAnimatedStyle(() => {
+      const value = animatedProgress.value;
+      if (variant === "circle") {
+        return {
+          top: interpolate(value, [0, 1], [60, 0]),
+          height: interpolate(value, [0, 0.4, 1], [5, 20, 20]),
+          transform: [{ scaleX: interpolate(value, [0, 0.4, 1], [1.7, 1, 1]) }],
+        };
+      } else if (variant === "shadow") {
+        return {
+          transform: [
+            { scaleX: interpolate(value, [0, 0.4, 1], [1.5, 1, 0.2]) },
+          ],
+          opacity: interpolate(value, [0, 0.4, 1], [1, 0.7, 0.4]),
+        };
+      }
+      return {};
+    });
+
+    return (
+      <Animated.View
+        style={[
+          customStyle,
+          animatedStyle,
+          variant === "circle" ? styles.circleBase : styles.shadowBase,
+        ]}
+      />
     );
-    return () => {
-      progress.value = 0; // stop the animation on unmount
-    };
-  }, [delay, progress]);
-
-  // define the animation with useAnimatedStyle
-  const animatedStyle = useAnimatedStyle(() => {
-    if (variant === "circle") {
-      return {
-        top: interpolate(progress.value, [0, 1], [60, 0]),
-        height: interpolate(progress.value, [0, 0.4, 1], [5, 20, 20]),
-        transform: [
-          { scaleX: interpolate(progress.value, [0, 0.4, 1], [1.7, 1, 1]) },
-        ],
-      };
-    } else if (variant === "shadow") {
-      return {
-        transform: [
-          { scaleX: interpolate(progress.value, [0, 0.4, 1], [1.5, 1, 0.2]) },
-        ],
-        opacity: interpolate(progress.value, [0, 0.4, 1], [1, 0.7, 0.4]),
-      };
-    }
-    return {};
-  });
-
-  return (
-    <Animated.View
-      style={[
-        customStyle,
-        animatedStyle,
-        variant === "circle" ? styles.circleBase : styles.shadowBase,
-      ]}
-    />
-  );
-};
+  }
+);
 
 const RoutingLoader = () => {
   return (
