@@ -13,7 +13,6 @@ import {
   TouchableWithoutFeedback,
   LayoutChangeEvent,
   Dimensions,
-  FlatList,
 } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 import { CopilotStep, walkthroughable } from "react-native-copilot";

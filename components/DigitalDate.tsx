@@ -1,5 +1,10 @@
 ///////////////////////////////////DigitalDate Component//////////////////////////////////
 
+// This component shows the current date in digital format using dayjs.
+// It is used in the ProjectCard wich is displayed in the HomeScreen.
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
 import { View, Text } from "react-native";
 import React, { useState, useEffect } from "react";
 import dayjs from "dayjs";

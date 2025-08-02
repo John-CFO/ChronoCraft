@@ -1,5 +1,10 @@
 ////////////////////////////ErrorBoundary Component////////////////////////////
 
+// This component is used to catch errors in the app and show a message to the user.
+// The user can also refresh the page to try again.
+
+///////////////////////////////////////////////////////////////////////////////
+
 import React from "react";
 import { Text, View, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";

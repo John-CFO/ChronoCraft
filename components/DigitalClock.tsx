@@ -1,5 +1,10 @@
 /////////////////////////////////////DigitalClock Component////////////////////////////////////////
 
+// This component shows the current time in digital format using dayjs.
+// It is used in the DetailsProjectCard component to show the local time of the project.
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 import { View, Text } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
 import dayjs from "dayjs";

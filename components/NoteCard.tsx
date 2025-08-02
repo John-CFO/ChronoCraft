@@ -1,6 +1,9 @@
 //////////////////////////////// Notes Card Component //////////////////////////////
 
 // NOTE: the NodeCard is nested in the NoteList Component
+// This component is used to show the notes in a list
+
+////////////////////////////////////////////////////////////////////////////////////
 
 import { View, Text, Dimensions } from "react-native";
 import React from "react";

@@ -2,6 +2,8 @@
 
 // this is the help menu component and contains a little text with the social media buttons
 
+////////////////////////////////////////////////////////////////////////////////
+
 import {
   View,
   Text,
