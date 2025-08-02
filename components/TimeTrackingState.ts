@@ -55,6 +55,7 @@ interface TimeTrackingState {
   setRateInput: (rate: string) => void;
   setAppState: (state: string) => void;
   setIsInitialized: (value: boolean) => void;
+  setIsTracking: (value: boolean) => void;
   getProjectTrackingState(projectId: string | null): unknown;
   getProjectId: () => string | null;
   setProjectData: (
@@ -89,6 +90,12 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
 
   // function to set data from Firestore if app starts up
   isTracking: false,
+
+  setIsTracking: (value: boolean) =>
+    set(() => ({
+      isTracking: value,
+    })),
+
   setProjectTime: (field: keyof ProjectState, value: unknown) => {
     set((state) => ({
       projects: {
@@ -181,9 +188,9 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
         },
       }));
     } else {
-      console.warn(
-        "Cannot calculate earnings: either project not found or hourly rate is 0"
-      );
+      // console.warn(
+      //   "Cannot calculate earnings: either project not found or hourly rate is 0"
+      // );
     }
   },
 
@@ -222,6 +229,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
       lastStartTime: updatedLastStartTime,
       isTracking: true,
     });
+    set(() => ({ isTracking: true }));
   },
 
   // function to stop the timer and calculate the elapsed time

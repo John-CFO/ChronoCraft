@@ -1,5 +1,9 @@
 /////////////////////////////CustomMenuBTN Component////////////////////////////////////
 
+// THis component creates a custom menu button to open the drawer
+
+////////////////////////////////////////////////////////////////////////////////////////
+
 import React from "react";
 import { useNavigation } from "@react-navigation/native";
 import { DrawerActions } from "@react-navigation/native";

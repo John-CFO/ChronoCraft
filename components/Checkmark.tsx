@@ -1,5 +1,10 @@
 /////////////////////////////////////////CheckmarkReminder Component////////////////////////////////
 
+// This component is used to show a checkmark reminder cycles to the user
+// The checkmarks will animate to show the selected option with Animated from react-native
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 import React, { useRef } from "react";
 import {
   View,

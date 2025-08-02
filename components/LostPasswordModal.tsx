@@ -3,6 +3,8 @@
 // this component is used to reset the password of the user
 // it will send an email to the user with instructions on how to reset the password
 
+////////////////////////////////////////////////////////////////////////////////////////
+
 import React, { useState } from "react";
 import {
   View,
