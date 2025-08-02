@@ -3,6 +3,7 @@
 // This component is used to show the notes in a list
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+
 import React, { useState, useEffect } from "react";
 import { ScrollView, View, Text, ActivityIndicator } from "react-native";
 import { collection, query, getDocs, DocumentData } from "firebase/firestore";

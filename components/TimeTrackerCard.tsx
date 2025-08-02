@@ -199,6 +199,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
         const projectData = docSnap.data();
         const formattedData = {
           ...projectData,
+          isTracking: projectData.isTracking ?? false,
           originalStartTime: projectData.originalStartTime
             ? projectData.originalStartTime.toDate()
             : null,

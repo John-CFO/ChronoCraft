@@ -5,6 +5,7 @@
 // Converted in jsx and to use react-native-reanimated for smooth, long-running animations
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
 import React, { useEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import Animated, {

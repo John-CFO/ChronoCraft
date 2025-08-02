@@ -25,6 +25,7 @@ import TourCard from "../components/services/copilotTour/TourCard";
 import { useCopilotOffset } from "../components/services/copilotTour/CopilotOffset";
 import CustomTooltip from "../components/services/copilotTour/CustomToolTip";
 import ProgressCard from "../components/ProgressCard";
+import { usePreventBackWhileTracking } from "../components/PreventBackBTN";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -56,7 +57,7 @@ const DetailsScreen: React.FC = () => {
   const { projectId } = route.params || {};
 
   // get the current project id from the store
-  const { setProjectId } = useStore();
+  const { setProjectId, isTracking } = useStore();
 
   // state for max work hours
   const [maxHoursFromDB, setMaxHoursFromDB] = useState<number | null>(null);
@@ -77,6 +78,9 @@ const DetailsScreen: React.FC = () => {
   // states to control the scrollview
   const [scrollReady, setScrollReady] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+
+  // use the preventBackWhileTracking hook from PreventBackBTN.tsx
+  usePreventBackWhileTracking(projectId, isTracking);
 
   // ensure state initialization consistency
   useEffect(() => {

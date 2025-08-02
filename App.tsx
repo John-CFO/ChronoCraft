@@ -201,7 +201,7 @@ const CustomDrawerLabel: React.FC<CustomDrawerLabelProps> = ({
 // disable splashscreen
 SplashScreen.preventAutoHideAsync();
 
-// drawer navigation for the app
+// App navigation Root with stack navigator
 const App = () => {
   // statusbar content color
   useEffect(() => {

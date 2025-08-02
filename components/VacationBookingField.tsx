@@ -1,5 +1,9 @@
 //////////////////////////////////////VacationBookingField Component////////////////////////////////
 
+// This component is used to show the reserve and cancel buttons in the VacationBookingCard
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
 import { View, Text, TouchableOpacity } from "react-native";
 import React from "react";
 import { LinearGradient } from "expo-linear-gradient";
