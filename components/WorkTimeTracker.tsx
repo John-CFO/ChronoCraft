@@ -15,7 +15,7 @@ import {
   TouchableOpacity,
   Dimensions,
 } from "react-native";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import {
   collection,
@@ -146,30 +146,28 @@ const WorkTimeTracker = () => {
     getExpectedHoursForToday();
   }, []); // run only once when the component mounts
 
-  // function to calculate elapsed time
-  const calculateElapsedTime = (startTime: Date): number => {
-    const elapsedMilliseconds = Date.now() - startTime.getTime();
-    return elapsedMilliseconds / (1000 * 60 * 60);
-  };
-
   // hook to update elapsed time
   useEffect(() => {
-    let timer: ReturnType<typeof setInterval> | null = null;
+    let timer: NodeJS.Timeout | null = null;
+
+    // condition to check if isWorking is true and startWorkTime is not null
     if (isWorking && startWorkTime) {
       const updateElapsedTime = () => {
-        const currentSession = calculateElapsedTime(startWorkTime);
+        const now = new Date();
+        const currentSession =
+          (now.getTime() - startWorkTime.getTime()) / (1000 * 60 * 60);
         setElapsedTime(accumulatedDuration + currentSession);
       };
+
+      // instantly update the elapsed time
       updateElapsedTime();
-      timer = setInterval(updateElapsedTime, 60000);
-    } else if (timer) {
-      clearInterval(timer);
-      timer = null;
+
+      // update the elapsed time every second
+      timer = setInterval(updateElapsedTime, 1000);
     }
+
     return () => {
-      if (timer) {
-        clearInterval(timer);
-      }
+      if (timer) clearInterval(timer);
     };
   }, [isWorking, startWorkTime, accumulatedDuration]);
 
@@ -218,7 +216,7 @@ const WorkTimeTracker = () => {
       ) {
         // prevent multiple state changes when app goes from inactive to active
         if (handledActive) {
-          console.log(" Second active state change ignored.");
+          // console.log(" Second active state change ignored.");
           return;
         }
         handledActive = true;
@@ -318,7 +316,7 @@ const WorkTimeTracker = () => {
         // );
         setStartWorkTime(newStartTime);
       } else {
-        console.log("No Document found.");
+        // console.log("No Document found.");
         useAlertStore
           .getState()
           .showAlert("Attention", "First add your expected hours.");
@@ -331,65 +329,100 @@ const WorkTimeTracker = () => {
 
   // function to stop work
   const handleStopWork = async () => {
-    // console.log("Stopping work...");
+    // stop the timer
     setIsWorking(false);
-    if (!startWorkTime || !currentDocId) {
-      console.warn("Missing startWorkTime or currentDocId.");
+
+    const currentStartTime = startWorkTime;
+    const currentAccumulated = accumulatedDuration;
+    const currentDoc = currentDocId;
+
+    if (!currentStartTime || !currentDoc) {
+      // console.warn("Missing required data for stop operation");
       return;
     }
-    const userId = getAuth().currentUser?.uid;
-    if (!userId) {
-      console.error("No user ID found.");
-      return;
-    }
+
+    // catch the end time
     const endTime = new Date();
-    // calculate the duration of the current session (in hours)
-    const sessionDurationHours = calculateElapsedTime(startWorkTime);
-    const totalDuration = accumulatedDuration + sessionDurationHours;
-    const roundedDuration = parseFloat(totalDuration.toFixed(2));
-    const overHours = roundedDuration - parseFloat(expectedHours);
-    const roundedOverHours = parseFloat(overHours.toFixed(2));
-    const workRef = doc(
-      FIREBASE_FIRESTORE,
-      "Users",
-      userId,
-      "Services",
-      "AczkjyWoOxdPAIRVxjy3",
-      "WorkHours",
-      currentDocId
-    );
-    // check if the document exists
-    const workSnap = await getDoc(workRef);
-    if (!workSnap.exists()) {
-      console.error("Error: Document does not exist!");
-      return;
+
+    // calculate the duration of the current session
+    const sessionHours =
+      (endTime.getTime() - currentStartTime.getTime()) / (1000 * 60 * 60);
+    const totalHours = currentAccumulated + sessionHours;
+    const roundedDuration = parseFloat(totalHours.toFixed(2));
+
+    // update firestore with new data
+    const userId = getAuth().currentUser?.uid;
+    if (userId) {
+      const workRef = doc(
+        FIREBASE_FIRESTORE,
+        "Users",
+        userId,
+        "Services",
+        "AczkjyWoOxdPAIRVxjy3",
+        "WorkHours",
+        currentDoc
+      );
+
+      try {
+        await updateDoc(workRef, {
+          endTime: endTime.toISOString(),
+          duration: roundedDuration,
+          overHours: Math.max(roundedDuration - parseFloat(expectedHours), 0),
+          elapsedTime: roundedDuration,
+        });
+      } catch (error) {
+        console.error("Firestore update error:", error);
+      }
     }
-    try {
-      await updateDoc(workRef, {
-        endTime: endTime.toISOString(),
-        duration: roundedDuration,
-        overHours: Math.max(roundedOverHours, 0),
-        elapsedTime: roundedDuration,
-      });
-      // console.log(
-      //   "Data successfully updated with total duration:",
-      //   roundedDuration
-      // );
-      // load global state new to update the chart
-      await loadState();
-      setRefreshTrigger((prev) => prev + 1);
-    } catch (error) {
-      console.error("Error updating data:", error);
-    }
-    // update the local accumulated duration and reset the start time
+
+    // update local state after firestore update
     setAccumulatedDuration(roundedDuration);
+    setElapsedTime(roundedDuration);
     setStartWorkTime(null);
-    setElapsedTime(roundedDuration); // to hold the total duration only if it´s the current day
+
+    // update UI
+    setRefreshTrigger((prev) => prev + 1);
+    loadState();
   };
 
-  // function to get the data from firestore
+  // function to get the chart data from firestore
+  const fetchChartData = async () => {
+    if (!user) return [];
+
+    const snapshot = await getDocs(
+      collection(
+        FIREBASE_FIRESTORE,
+        "Users",
+        user.uid,
+        "Services",
+        "AczkjyWoOxdPAIRVxjy3",
+        "WorkHours"
+      )
+    );
+
+    return snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        day: data.workDay,
+        expectedHours: Number(data.expectedHours) || 0,
+        overHours: Number(data.overHours) || 0,
+        elapsedTime: Number(data.duration) || 0,
+      };
+    });
+  };
+
+  // hook to update the chart data in the UI
   useEffect(() => {
     const fetchData = async () => {
+      const newData = await fetchChartData();
+      setData(newData);
+    };
+    fetchData();
+  }, [user, currentDocId, refreshTrigger]);
+
+  // function to get the list data from firestore
+  useEffect(() => {
+    const fetchListData = async () => {
       if (!user) return;
       // snapshot of firestore data
       const snapshot = await getDocs(
@@ -404,12 +437,12 @@ const WorkTimeTracker = () => {
       );
       // condition to check if the snapshot is empty
       if (snapshot.empty) {
-        console.log("No data found.");
+        // console.log("No data found.");
         return;
       }
       // initialize the data with the fetched data from firestore
-      const fetchedData = snapshot.docs.map((doc) => doc.data());
-      const formattedData = fetchedData
+      const fetchedListData = snapshot.docs.map((doc) => doc.data());
+      const formattedData = fetchedListData
         // map the data to the expected format
         .map((item) => {
           if (!item.workDay || isNaN(new Date(item.workDay).getTime())) {
@@ -430,13 +463,126 @@ const WorkTimeTracker = () => {
       // console.log("Formatted data:", formattedData);
       setData(formattedData as DataPoint[]);
     };
-    fetchData();
+    fetchListData();
   }, [user, currentDocId, refreshTrigger]);
 
   // hook to update the local accumulated duration
   useEffect(() => {
+    // console.log("updating accumulated duration");
     setAccumulatedDuration(elapsedTime);
   }, []); // once when the component mounts
+
+  // Refs for realtime updates
+  const accumulatedDurationRef = useRef(accumulatedDuration);
+  const isWorkingRef = useRef(isWorking);
+  const startWorkTimeRef = useRef(startWorkTime);
+
+  // hook to updates refs if state changes
+  useEffect(() => {
+    // console.log("updating refs");
+    accumulatedDurationRef.current = accumulatedDuration;
+  }, [accumulatedDuration]);
+
+  // hook to update isWorkingRef
+  useEffect(() => {
+    // console.log("updating isWorkingRef");
+    isWorkingRef.current = isWorking;
+  }, [isWorking]);
+
+  // hook to update startWorkTimeRef
+  useEffect(() => {
+    // console.log("updating startWorkTimeRef");
+    startWorkTimeRef.current = startWorkTime;
+  }, [startWorkTime]);
+
+  // initialize saveIntervalRef
+  const saveIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // function to save the state in AsyncStorage
+  const saveState = useCallback(async () => {
+    const state = {
+      isWorking: isWorkingRef.current,
+      startWorkTime: startWorkTimeRef.current?.toISOString(),
+      elapsedTime,
+      accumulatedDuration: accumulatedDurationRef.current,
+    };
+    // console.log("[SAVE] Saving state to AsyncStorage", {
+    //   isWorking: isWorkingRef.current,
+    //   startWorkTime: startWorkTimeRef.current,
+    //   elapsedTime,
+    //   accumulatedDuration: accumulatedDurationRef.current,
+    // });
+    await AsyncStorage.setItem("workTimeTrackerState", JSON.stringify(state));
+  }, [elapsedTime]);
+
+  // hook to set the save interval every 30 seconds
+  useEffect(() => {
+    if (isWorking) {
+      saveIntervalRef.current = setInterval(() => {
+        // console.log("[INTERVAL] Auto-save triggered");
+        saveState();
+      }, 15000);
+    }
+
+    return () => {
+      if (saveIntervalRef.current) {
+        clearInterval(saveIntervalRef.current);
+      }
+    };
+  }, [isWorking, saveState]);
+
+  // hook to restore the state from AsyncStorage by mounting
+  useEffect(() => {
+    const restoreState = async () => {
+      try {
+        const savedState = await AsyncStorage.getItem("workTimeTrackerState");
+        // console.log("[RESTORE] Restoring state from AsyncStorage", savedState);
+        if (savedState) {
+          const parsedState = JSON.parse(savedState);
+          // console.log("parsed state", parsedState);
+          if (parsedState.isWorking && parsedState.startWorkTime) {
+            const startTime = new Date(parsedState.startWorkTime);
+            const now = new Date();
+            console.log(startTime, now);
+            const elapsedHours =
+              (now.getTime() - startTime.getTime()) / (1000 * 60 * 60);
+            // console.log("calculated hours", elapsedHours);
+            // calculate based on reference
+            const newAccumulated =
+              parsedState.accumulatedDuration + elapsedHours;
+
+            // updates states
+            setAccumulatedDuration(newAccumulated);
+            setElapsedTime(newAccumulated);
+            setStartWorkTime(now);
+            console.log(
+              setAccumulatedDuration,
+              setElapsedTime,
+              setStartWorkTime
+            );
+            setIsWorking(true);
+          } else {
+            setAccumulatedDuration(parsedState.accumulatedDuration);
+            setElapsedTime(parsedState.elapsedTime);
+            // after mounting, fetch the chart data
+            setData(await fetchChartData());
+          }
+        }
+      } catch (error) {
+        console.error("Fehler beim Wiederherstellen", error);
+      }
+    };
+
+    restoreState();
+  }, []);
+
+  // hook to save the state when the component unmounts
+  useEffect(() => {
+    // console.log("[UNMOUNT] Saving state to AsyncStorage");
+    return () => {
+      saveState();
+    };
+  }, [saveState]);
 
   return (
     <>

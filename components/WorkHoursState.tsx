@@ -65,6 +65,7 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
     if (!user) return;
 
     try {
+      const today = new Date().toISOString().split("T")[0];
       const docRef = doc(
         FIREBASE_FIRESTORE,
         "Users",
@@ -72,19 +73,24 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
         "Services",
         "AczkjyWoOxdPAIRVxjy3",
         "WorkHours",
-        get().currentDocId || "defaultDocId"
+        today
       );
+
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         const state = docSnap.data();
-        set({
-          elapsedTime: state.elapsedTime || 0,
-          isWorking: state.isWorking || false,
-          startWorkTime: state.startWorkTime || null,
-        });
+        const savedDate = state.lastUpdatedDate || "";
+
+        // set the state if the saved date is today
+        if (savedDate === today) {
+          set({
+            currentDocId: today,
+            lastUpdatedDate: today,
+          });
+        }
       }
     } catch (error) {
-      console.log("Error loading state from Firestore:", error);
+      console.error("Error loading state:", error);
     }
   },
 

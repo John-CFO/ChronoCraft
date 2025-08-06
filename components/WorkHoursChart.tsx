@@ -162,6 +162,8 @@ const WorkHoursChart = () => {
       return false;
     });
   };
+
+  // filter the data by chart type
   const filteredData = filterDataByChartType(data, chartType);
 
   // help function to formate the x-axis label in the different chart modes
