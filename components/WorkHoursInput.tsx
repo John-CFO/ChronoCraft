@@ -321,7 +321,7 @@ const WorkHoursInput = () => {
               >
                 Your expected WorkHours:{" "}
               </Text>
-              {expectedHours || "Not set"}
+              {expectedHours || "- - -"}
             </Text>
           </View>
         </CopilotWalktroughView>
