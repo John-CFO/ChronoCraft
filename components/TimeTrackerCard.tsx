@@ -34,6 +34,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
+import { computeEarnings } from "./utils/earnings";
 import { useStore, ProjectState } from "./TimeTrackingState";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 
@@ -235,7 +236,6 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
     // log("Starting timer animation");
 
     let lastTimestamp: number | null = null;
-    // let lastEarningsUpdate = 0; // timestamp of the last earnings update
 
     const update = (timestamp: number) => {
       if (!isTrackingRef.current) {
@@ -268,21 +268,21 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
   // hook to update the total earnings
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isTracking) {
-      const earnings =
-        (Math.floor(accumulatedTimeRef.current) / 3600) * hourlyRate;
-      setTotalEarnings(projectId, earnings);
+    if (!isTracking) return;
 
-      // start the earnings update interval
-      interval = setInterval(() => {
-        const earnings =
-          (Math.floor(accumulatedTimeRef.current) / 3600) * hourlyRate;
-        setTotalEarnings(projectId, earnings);
-      }, 3000);
-    }
+    const updateEarnings = () => {
+      const earnings = computeEarnings(
+        Math.floor(accumulatedTimeRef.current),
+        hourlyRateRef.current
+      );
+      setTotalEarnings(projectId, earnings);
+    };
+
+    updateEarnings(); // initial
+
+    const interval = setInterval(updateEarnings, 3000);
     return () => clearInterval(interval);
-  }, [isTracking, hourlyRate, projectId, setTotalEarnings]);
+  }, [isTracking, projectId, setTotalEarnings]);
 
   // function to handle app state changes if app is in background or foreground
   useEffect(() => {
@@ -572,7 +572,6 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   // function to pause the timer
   const handlePause = async () => {
     if (isTrackingRef.current) {
-      // Animation stoppen
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
         animationRef.current = null;
