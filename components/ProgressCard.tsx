@@ -5,13 +5,7 @@
 
 //////////////////////////////////////////////////////////////////////////////////////
 
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useMemo,
-  useCallback,
-} from "react";
+import React, { memo, useRef, useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -47,29 +41,58 @@ interface ProgressCardProps {
 // modified walkthroughable for copilot tour
 const CopilotWalkthroughView = walkthroughable(View);
 
-const ProgressCard: React.FC<ProgressCardProps> = React.memo(
+const ProgressCard: React.FC<ProgressCardProps> = memo(
   ({ projectId, onSaveSuccess }) => {
-    // decare the useNavigation hook
     const navigation = useNavigation();
-    // decare the useStore hook
-    const { setProjectData } = useStore();
-    // decare the useWindowDimensions hook
     const { width: screenWidth } = useWindowDimensions();
+    const { setProjectData } = useStore();
 
-    // ref for notification
+    // Ref for Notifications
     const hasNotifiedRef = useRef(false);
 
-    // global state with memoization
-    const { projectState } = useStore((state) => ({
-      projectState: state.projects[projectId],
-    }));
+    // initialize the progress state
+    const [displayProgress, setDisplayProgress] = useState(0);
+    // initialize the progress refs
+    const progressRef = useRef(0);
 
-    // memoized derived values
-    const maxWorkHours = projectState?.maxWorkHours || 0;
-    const maxSeconds = useMemo(() => maxWorkHours * 3600, [maxWorkHours]);
-    const timer = projectState?.timer || 0;
+    // function to fetch the timer and maxWorkHours from the store
+    const { timer, maxWorkHours } = useStore((state) => {
+      const project = state.projects[projectId] || {};
+      return {
+        timer: project.timer || 0,
+        maxWorkHours: project.maxWorkHours || 0,
+      };
+    });
 
-    // debounced save function
+    // hook to update the progress state every 5 seconds
+    useEffect(() => {
+      const interval = setInterval(() => {
+        const { projects } = useStore.getState();
+        const project = projects[projectId];
+        if (!project) return;
+
+        const currentTimer = project.timer || 0;
+        const maxWorkHours = project.maxWorkHours || 0;
+        const maxSeconds = maxWorkHours * 3600;
+
+        const newProgress =
+          maxSeconds > 0 ? Math.min(currentTimer / maxSeconds, 1) : 0;
+
+        if (Math.abs(newProgress - progressRef.current) > 0.001) {
+          progressRef.current = newProgress;
+          setDisplayProgress(newProgress);
+        }
+      }, 5000); // change this to 5 seconds
+
+      return () => clearInterval(interval);
+    }, [projectId]);
+
+    // functions to debounce the value of the ProgressCard component
+    const [inputMaxWorkHours, setInputMaxWorkHours] = useState("");
+    const [saving, setSaving] = useState(false);
+    const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    // function to save the maxWorkHours in firestore
     const debouncedSave = useCallback(
       useDebounceValue(async (hours: number) => {
         const user = FIREBASE_AUTH.currentUser;
@@ -87,7 +110,6 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
           );
 
           await updateDoc(docRef, { maxWorkHours: hours });
-
           setProjectData(projectId, { maxWorkHours: hours });
 
           if (onSaveSuccess) onSaveSuccess();
@@ -99,38 +121,7 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
       [projectId, setProjectData]
     );
 
-    // calculate progress with memoization
-    const progressRaw = useMemo(() => {
-      return maxSeconds > 0 ? timer / maxSeconds : 0;
-    }, [timer, maxSeconds]);
-    const progress = Math.min(progressRaw, 1); // 0 to 1 → for Animated
-    const progressValue = Math.min(progressRaw * 100, 100); // 0 to 100 → forCircularProgress
-
-    // input state
-    const [inputMaxWorkHours, setInputMaxWorkHours] = useState("");
-    const [hasUserEditedInput, setHasUserEditedInput] = useState(false);
-    const [saving, setSaving] = useState(false);
-
-    // reset input on screen focus
-    useEffect(() => {
-      const unsubscribe = navigation.addListener("focus", () => {
-        setInputMaxWorkHours("");
-      });
-      return unsubscribe;
-    }, [navigation]);
-
-    // ref for save timeout
-    const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    // hook to clean up the timeout
-    useEffect(() => {
-      return () => {
-        if (saveTimeoutRef.current) {
-          clearTimeout(saveTimeoutRef.current);
-        }
-      };
-    }, []);
-
-    // save handler with debouncing
+    // function to save the maxWorkHours
     const handleSave = () => {
       const hours = parseFloat(inputMaxWorkHours);
       if (isNaN(hours) || hours <= 0) {
@@ -140,50 +131,61 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
 
       setSaving(true);
       debouncedSave(hours);
-
-      // optimistic UI update
       setInputMaxWorkHours("");
 
-      // safe timeout-ref and clear previous if active
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
       saveTimeoutRef.current = setTimeout(() => setSaving(false), 500);
     };
 
-    // native-driven animation for progress
+    useEffect(() => {
+      const unsubscribe = navigation.addListener("focus", () => {
+        setInputMaxWorkHours("");
+      });
+      return unsubscribe;
+    }, [navigation]);
+
+    useEffect(() => {
+      return () => {
+        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      };
+    }, []);
+
+    // functions to animate the progress bar
     const animatedProgress = useRef(new Animated.Value(0)).current;
+    const blinkOpacity = useRef(new Animated.Value(0)).current;
+    const animationRef = useRef<Animated.CompositeAnimation | null>(null);
 
     useEffect(() => {
       Animated.timing(animatedProgress, {
-        toValue: progress,
+        toValue: displayProgress,
         duration: 1000,
-        useNativeDriver: false,
+        useNativeDriver: true,
       }).start();
-    }, [progress]);
+    }, [displayProgress]);
 
-    // deathline reached animation
-    const blinkOpacity = useRef(new Animated.Value(0)).current;
-    // hook to animate the progress indicator on deathline with flickering
     useEffect(() => {
-      // notification if 100% is reached
-      if (progressValue >= 100 && !hasNotifiedRef.current) {
-        hasNotifiedRef.current = true; // reject multiple notifications
+      const progressPercent = displayProgress * 100;
 
+      if (progressPercent >= 100 && !hasNotifiedRef.current) {
+        hasNotifiedRef.current = true;
         NotificationManager.scheduleNotification(
           "Target reached 🎯",
           "You reached your Deathline target!",
-          { seconds: 5 } // 5 seconds to send local notification
+          { seconds: 5 }
         );
       }
-      // reset notification flag if progress is less than 100
-      if (progressValue < 100) {
+
+      if (progressPercent < 100) {
         hasNotifiedRef.current = false;
       }
-      // animation for progress
-      if (progressValue >= 100) {
-        Animated.loop(
+
+      if (progressPercent >= 100) {
+        if (animationRef.current) {
+          animationRef.current.stop();
+          animationRef.current = null;
+        }
+
+        animationRef.current = Animated.loop(
           Animated.sequence([
             Animated.timing(blinkOpacity, {
               toValue: 1,
@@ -196,12 +198,35 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
               useNativeDriver: true,
             }),
           ])
-        ).start();
+          // { iterations: 10 } // repeat the animation 10 times if it is active
+        );
+
+        animationRef.current.start();
       } else {
-        blinkOpacity.stopAnimation();
         blinkOpacity.setValue(0);
+        if (animationRef.current) {
+          animationRef.current.stop();
+          animationRef.current = null;
+        }
       }
-    }, [progressValue]);
+
+      return () => {
+        if (animationRef.current) {
+          animationRef.current.stop();
+        }
+      };
+    }, [displayProgress]);
+
+    useEffect(() => {
+      return () => {
+        if (animationRef.current) animationRef.current.stop();
+      };
+    }, []);
+
+    // functions to calculate the progress percentage
+    const progressValue = Math.min(displayProgress * 100, 100);
+    const displayPercentage = Math.min(displayProgress * 100, 100); // for text-indicator
+    const progressValueInteger = Math.floor(displayPercentage); // for cycle-ndicator
 
     return (
       <View>
@@ -263,8 +288,7 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
               keyboardType="numeric"
               onChangeText={(text) => {
                 const sanitized = sanitizeMaxWorkHours(text);
-                setInputMaxWorkHours(sanitized); // use sanitized value
-                if (!hasUserEditedInput) setHasUserEditedInput(true);
+                setInputMaxWorkHours(sanitized);
               }}
               editable={!saving}
               style={{
@@ -342,21 +366,22 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
                 progressValueColor="transparent"
                 duration={0}
               />
-              {/* ProgressRing */}
+
               <View style={{ position: "absolute", top: 0, left: 0 }}>
                 <CircularProgress
-                  value={progressValue}
+                  value={progressValueInteger}
                   radius={100}
                   activeStrokeWidth={15}
                   inActiveStrokeWidth={15}
-                  // if progress reaches 100% change stroke color
                   activeStrokeColor={
                     progressValue < 100 ? "#00f7f7" : "#ff0000"
                   }
-                  dashedStrokeConfig={{ count: 50, width: 4 }}
                   inActiveStrokeColor="transparent"
+                  dashedStrokeConfig={{ count: 50, width: 4 }}
                   progressValueColor="#ffffff"
                   duration={1000}
+                  maxValue={100}
+                  valueSuffix="%"
                 />
               </View>
               {/* flickering stroke animated ProgressRing */}
@@ -370,7 +395,7 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
                   }}
                 >
                   <CircularProgress
-                    value={progressValue}
+                    value={100}
                     radius={100}
                     activeStrokeWidth={15}
                     inActiveStrokeWidth={15}
@@ -385,7 +410,7 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
             </View>
 
             {/* Result Text */}
-            {maxSeconds > 0 && timer > 0 && (
+            {maxWorkHours > 0 && timer > 0 && (
               <Text
                 style={{
                   color: "white",
@@ -402,7 +427,7 @@ const ProgressCard: React.FC<ProgressCardProps> = React.memo(
                     fontFamily: "MPLUSLatin_Bold",
                   }}
                 >
-                  {(progress * 100).toFixed(1)}%{" "}
+                  {(displayProgress * 100).toFixed(1)}%{" "}
                 </Text>{" "}
                 of your max work time used
               </Text>

@@ -57,13 +57,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
   // console.log("EarningsCalculatorCard - projectId:", projectId);
 
   // global state
-  const {
-    setHourlyRate,
-    getProjectState,
-    calculateEarnings,
-    isTracking,
-    currentProjectId,
-  } = useStore();
+  const { setHourlyRate, getProjectState, currentProjectId } = useStore();
 
   // local state
   const projectState = getProjectState(projectId) || {
@@ -71,30 +65,16 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
     totalEarnings: 0,
   };
 
+  const setTotalEarnings = useStore((state) => state.setTotalEarnings);
   // initialize local hourly rate to save the state when user navigates away from the screen
   const [rateInput, setRateInput] = useState<string>("");
-  const [totalEarnings, setTotalEarnings] = useState<number>(
-    projectState.totalEarnings
-  );
-
-  // hook to calculate lively earnings
-  // Sync totalEarnings with global state
-  useEffect(() => {
-    if (isTracking) {
-      const intervalId = setInterval(() => {
-        calculateEarnings(currentProjectId as string);
-      }, 1000);
-
-      return () => clearInterval(intervalId); // Cleanup when effect ends
-    }
-  }, [isTracking, currentProjectId]);
 
   // hook to synchronize the local totalEarnings with the global one
   useEffect(() => {
     if (currentProjectId) {
       const projectState = getProjectState(currentProjectId);
       if (projectState) {
-        setTotalEarnings(projectState.totalEarnings);
+        setTotalEarnings(currentProjectId, projectState.totalEarnings);
       }
     }
   }, [currentProjectId, getProjectState]);
@@ -167,7 +147,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
 
           // update Zustand global state
           setHourlyRate(projectId, fetchedRate);
-          setTotalEarnings(fetchedEarnings); // Update local state
+          setTotalEarnings(projectId, fetchedEarnings); // Update local state
 
           /*console.log("Earnings data fetched successfully:", {
             hourlyRate: fetchedRate,
