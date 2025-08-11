@@ -610,7 +610,7 @@ const WorkTimeTracker = () => {
             elevation: 4,
             borderWidth: 1,
             borderColor: "aqua",
-            marginBottom: 50,
+            marginBottom: 20,
           }}
         >
           <Text
