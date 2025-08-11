@@ -185,7 +185,7 @@ const WorkHoursScreen: React.FC<WorkHoursScreenRouteProps> = () => {
               {/* WorkHours Input */}
               <WorkHoursInput />
               <View
-                style={{ marginTop: 50, width: "100%", alignItems: "center" }}
+                style={{ marginTop: 20, width: "100%", alignItems: "center" }}
               >
                 {/* Worktime Tracker */}
                 <ErrorBoundary>
