@@ -92,33 +92,28 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
 
-  // Debugging functions
-  // log function to log messages
-  // const log = (message: string, data?: any) => {
-  //   console.log(`[TimeTrackerCard:${projectId}] ${message}`, data || "");
-  // };
-
-  //warn function to log warnings
-  // const warn = (message: string, data?: any) => {
-  //   console.warn(`[TimeTrackerCard:${projectId}] WARN: ${message}`, data || "");
-  // };
-
-  // error function to log errors
-  const error = (message: string, data?: any) => {
-    console.error(
-      `[TimeTrackerCard:${projectId}] ERROR: ${message}`,
-      data || ""
-    );
-  };
+  useEffect(() => {
+    let prev = useStore.getState().projects[projectId];
+    const unsub = useStore.subscribe((state) => {
+      const p = state.projects[projectId];
+      if (p !== prev) {
+        // console.log(`[DBG_PROJ:${projectId}] project object changed`, {
+        //   prev,
+        //   next: p,
+        //   stack: new Error().stack?.split("\n").slice(2, 6),
+        // });
+        prev = p;
+      }
+    });
+    return unsub;
+  }, [projectId]);
 
   // use the global state to fetch data from firestore
-  const { lastStartTime, endTime, originalStartTime } = useStore((state) => ({
-    lastStartTime: state.projects[projectId]?.lastStartTime,
-    endTime: state.projects[projectId]?.endTime,
-    timer: state.projects[projectId]?.timer,
-    totalEarnings: state.projects[projectId]?.totalEarnings,
-    originalStartTime: state.projects[projectId]?.originalStartTime,
-  }));
+  const lastStartTime = useStore((s) => s.projects[projectId]?.lastStartTime);
+  const endTime = useStore((s) => s.projects[projectId]?.endTime);
+  const originalStartTime = useStore(
+    (s) => s.projects[projectId]?.originalStartTime
+  );
 
   // project state(getProjectState is used to get the project UI state if app is started)
   const projectState = useStore.getState().getProjectState(projectId) || {
@@ -141,23 +136,12 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   );
 
   // global state
-  const {
-    startTimer,
-    stopTimer,
-    updateTimer,
-    setTotalEarnings,
-    resetAll,
-    setAppState,
-    setIsInitialized,
-    setProjectData,
-  } = useStore();
+  const { stopTimer, updateTimer, resetAll, setAppState, setProjectData } =
+    useStore();
 
   // refs for timer logic
   const animationRef = useRef<number | null>(null);
   const accumulatedTimeRef = useRef<number>(projectState?.timer || 0);
-
-  // Ref for restoring the timer if app is started after a hardkill
-  const isRestoringRef = useRef(true);
 
   // state only for the UI
   const [displayTime, setDisplayTime] = useState<number>(
@@ -171,14 +155,12 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   const isTrackingRef = useRef(isTracking);
   useEffect(() => {
     isTrackingRef.current = isTracking;
-  }, [isTracking]);
-
-  // state to check if timer is restored
-  const [isTimerRestored, setIsTimerRestored] = useState(false);
+    hourlyRateRef.current = hourlyRate;
+  }, [isTracking, hourlyRate]);
 
   // hook to fetch project data from firestore when navigate from home screen to details screen
   const fetchProjectData = useCallback(async () => {
-    // log("Fetching project data started");
+    // console.log("Fetching project data started");
     const user = getAuth().currentUser;
     if (!user) {
       console.error("User is not authenticated.");
@@ -209,11 +191,11 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
             ? projectData.lastStartTime.toDate()
             : null,
         };
-        // log("Project data fetched successfully", formattedData);
+        // console.log("Project data fetched successfully", formattedData);
         setProjectData(projectId, formattedData as ProjectState);
       } else {
         // console.error("No such document!");
-        // warn("Project document does not exist");
+        // console.warn("Project document does not exist");
       }
     } catch (error) {
       console.error("Error fetching Firestore data:", error);
@@ -228,18 +210,23 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
   // ref to compare the last whole second when updating the timer
   const lastWholeSecondRef = useRef(Math.floor(accumulatedTimeRef.current));
+  const timerFromStore = useStore((s) => s.projects[projectId]?.timer ?? 0);
+
+  // hook to update the timer
+  useEffect(() => {
+    accumulatedTimeRef.current = timerFromStore;
+    lastWholeSecondRef.current = Math.floor(timerFromStore);
+    setDisplayTime(timerFromStore);
+  }, [timerFromStore]);
 
   // function to start the animation
   const startAnimation = useCallback(() => {
     if (animationRef.current) return;
 
-    // log("Starting timer animation");
-
     let lastTimestamp: number | null = null;
 
     const update = (timestamp: number) => {
       if (!isTrackingRef.current) {
-        // log("Stopping animation - tracking stopped");
         if (animationRef.current) {
           cancelAnimationFrame(animationRef.current);
           animationRef.current = null;
@@ -254,267 +241,161 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
       const newTime = accumulatedTimeRef.current + elapsed;
       accumulatedTimeRef.current = newTime;
 
-      const currentWholeSecond = Math.floor(newTime);
-      if (currentWholeSecond !== lastWholeSecondRef.current) {
-        setDisplayTime(newTime);
-        updateTimer(projectId, currentWholeSecond);
-        lastWholeSecondRef.current = currentWholeSecond;
-      }
+      // constantly update the timer and earnings - use atomic store-action
+      updateTimeAndEarnings(newTime);
+
       animationRef.current = requestAnimationFrame(update);
     };
 
     animationRef.current = requestAnimationFrame(update);
-  }, [projectId, updateTimer]);
+  }, [projectId]);
 
-  // hook to update the total earnings
-  useEffect(() => {
-    if (!isTracking) return;
+  // function to constantly caclulate the timer and earnings
+  const updateTimeAndEarnings = (newTime: number) => {
+    const wholeSecond = Math.floor(newTime);
 
-    const updateEarnings = () => {
-      const earnings = computeEarnings(
-        Math.floor(accumulatedTimeRef.current),
-        hourlyRateRef.current
-      );
-      setTotalEarnings(projectId, earnings);
-    };
+    if (wholeSecond !== lastWholeSecondRef.current) {
+      const earnings = computeEarnings(wholeSecond, hourlyRateRef.current);
+      useStore.getState().setTimerAndEarnings(projectId, wholeSecond, earnings);
+      lastWholeSecondRef.current = wholeSecond;
+    }
 
-    updateEarnings(); // initial
-
-    const interval = setInterval(updateEarnings, 3000);
-    return () => clearInterval(interval);
-  }, [isTracking, projectId, setTotalEarnings]);
+    setDisplayTime(newTime);
+  };
 
   // function to handle app state changes if app is in background or foreground
   useEffect(() => {
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
-      // log("App state changed", { current: appState, next: nextAppState });
+      try {
+        // app comes to foreground
+        if (
+          appState.match(/(inactive|background)/) &&
+          nextAppState === "active"
+        ) {
+          const bgKey = `bgTime_${projectId}`;
+          const storedBgTime = await AsyncStorage.getItem(bgKey);
 
-      // app comes to foreground
-      if (
-        appState.match(/(inactive|background)/) &&
-        nextAppState === "active"
-      ) {
-        // log("App coming to foreground");
+          if (storedBgTime && isTrackingRef.current) {
+            const bgEnterTime = new Date(storedBgTime).getTime();
+            const elapsedSeconds = (Date.now() - bgEnterTime) / 1000;
+            const newAccum = accumulatedTimeRef.current + elapsedSeconds;
+            const wholeNew = Math.floor(newAccum);
+            const earnings = computeEarnings(wholeNew, hourlyRateRef.current);
 
-        const key = `lastActiveTime_${projectId}`;
-        const lastTime = await AsyncStorage.getItem(key);
+            useStore
+              .getState()
+              .setTimerAndEarnings(projectId, wholeNew, earnings);
 
-        if (lastTime) {
-          const lastTimeMs = new Date(lastTime).getTime();
-          const now = Date.now();
+            accumulatedTimeRef.current = newAccum;
+            lastWholeSecondRef.current = wholeNew;
+            setDisplayTime(newAccum);
 
-          if (!isNaN(lastTimeMs) && lastTimeMs < now) {
-            const elapsedTime = (now - lastTimeMs) / 1000;
-            const newTime = accumulatedTimeRef.current + elapsedTime;
+            await AsyncStorage.removeItem(bgKey);
 
-            // update timer
-            accumulatedTimeRef.current = newTime;
-            setDisplayTime(newTime);
-            updateTimer(projectId, Math.floor(newTime));
+            if (isTrackingRef.current && !animationRef.current) {
+              startAnimation();
+            }
+          }
+        }
 
-            // update earnings
-            const earnings = (Math.floor(newTime) / 3600) * hourlyRate;
-            setTotalEarnings(projectId, earnings);
+        // app goes to background
+        if (nextAppState.match(/inactive|background/)) {
+          if (animationRef.current) {
+            cancelAnimationFrame(animationRef.current);
+            animationRef.current = null;
           }
 
-          await AsyncStorage.removeItem(key);
+          if (isTrackingRef.current) {
+            await AsyncStorage.setItem(
+              `bgTime_${projectId}`,
+              new Date().toISOString()
+            );
+          }
         }
-        if (isTrackingRef.current) {
-          startAnimation();
-        }
-
-        setIsInitialized(true);
-      }
-
-      // app is going to background
-      if (nextAppState.match(/inactive|background/)) {
-        // log("App going to background");
-
-        if (animationRef.current) {
-          cancelAnimationFrame(animationRef.current);
-          animationRef.current = null;
-        }
-
-        const timestamp = new Date().toISOString();
-        const lastKey = `lastActiveTime_${projectId}`;
-        const persistKey = `persistedTimer_${projectId}`;
-        const isTrackingKey = `isTracking_${projectId}`;
-
-        await AsyncStorage.setItem(lastKey, timestamp);
-        await AsyncStorage.setItem(
-          persistKey,
-          accumulatedTimeRef.current.toString()
+      } catch (err) {
+        console.error(
+          `[TimeTrackerCard:${projectId}] handleAppStateChange failed:`,
+          err
         );
-        await AsyncStorage.setItem(
-          isTrackingKey,
-          isTrackingRef.current.toString()
-        );
-
-        setIsInitialized(false);
+      } finally {
+        setAppState(nextAppState);
       }
-
-      setAppState(nextAppState);
     };
 
-    const subscription = AppState.addEventListener(
+    const subscription: any = AppState.addEventListener(
       "change",
       handleAppStateChange
     );
-    return () => subscription.remove();
-  }, [appState, projectId, setIsInitialized, setAppState, startAnimation]);
-
-  // hook for the persitence interval
-  useEffect(() => {
-    // log("Timer update effect", {
-    //   isTimerRestored,
-    //   isTracking: projectState.isTracking,
-    //   appState,
-    // });
-
-    if (!isTimerRestored) return;
-    if (appState !== "active") return;
-
-    // start animation when tracking is started
-    if (projectState.isTracking) {
-      startAnimation();
-    } else {
-      // stop animation when tracking is stopped
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = null;
-      }
-    }
 
     return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = null;
+      if (!subscription) return;
+      if (typeof subscription === "function") {
+        subscription();
+        return;
       }
+      if (typeof subscription.remove === "function") {
+        subscription.remove();
+        return;
+      }
+      try {
+        (subscription as any)();
+      } catch (_) {}
     };
-  }, [projectState.isTracking, appState, isTimerRestored, startAnimation]);
+  }, [appState, projectId, setAppState, startAnimation]);
 
   // hook to restore the timer from AsyncStorage
-  const restorePersistedTimer = useCallback(async () => {
-    // log("Restoring persisted timer started");
-    try {
-      const key = `persistedTimer_${projectId}`;
-      const isTrackingKey = `isTracking_${projectId}`;
-
-      const persisted = await AsyncStorage.getItem(key);
-      const wasTracking = await AsyncStorage.getItem(isTrackingKey);
-
-      // log("Restore values", { persisted, wasTracking });
-
-      if (persisted !== null) {
-        let persistedTime = parseInt(persisted || "0", 10);
-        if (!isFinite(persistedTime)) {
-          console.warn("Persisted time invalid, resetting to 0");
-          persistedTime = 0;
-        }
-        // log("Restoring timer value", persistedTime);
-
-        // update timer state
-        accumulatedTimeRef.current = persistedTime;
-        setDisplayTime(persistedTime);
-        updateTimer(projectId, Math.floor(persistedTime));
-
-        // calculate earnings
-        const earnings = (Math.floor(persistedTime) / 3600) * hourlyRate;
-        setTotalEarnings(projectId, earnings);
-
-        if (wasTracking === "true") {
-          if (appState === "active") {
-            // log("Restoring tracking state - starting timer");
-            if (!isTrackingRef.current) {
-              // log("Restoring tracking state - starting timer");
-              startTimer(projectId);
-              isTrackingRef.current = true;
-              startAnimation();
-            } else {
-              // log("Tracking already active - no need to restart");
-            }
-          } else {
-            // log(
-            //   "Tracking was active but app is not foreground - not starting timer"
-            // );
-          }
-        }
-      } else {
-        // log("No persisted timer found");
-      }
-    } catch (error) {
-      console.error("[RESTORE] error in restorePersistedTimer:", error);
-    } finally {
-      isRestoringRef.current = false;
-      setIsTimerRestored(true);
-      // log("Restore completed");
-
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      await AsyncStorage.removeItem(`persistedTimer_${projectId}`);
-      await AsyncStorage.removeItem(`isTracking_${projectId}`);
-    }
-  }, [projectId, hourlyRate, appState, startAnimation]);
-
-  // hook to initialize the component
   useEffect(() => {
-    // log("Initialization effect started");
-    const initialize = async () => {
-      // log("Initializing component...");
-      await fetchProjectData();
-      await restorePersistedTimer();
-      // log("Initialization completed");
+    const initializeComponent = async () => {
+      try {
+        // load data from firestore
+        await fetchProjectData();
+
+        // persist data to AsyncStorage
+        const [savedTime, isTrackingSaved] = await Promise.all([
+          AsyncStorage.getItem(`persistedTimer_${projectId}`),
+          AsyncStorage.getItem(`isTracking_${projectId}`),
+        ]);
+
+        if (savedTime) {
+          const parsedTime = parseFloat(savedTime);
+          accumulatedTimeRef.current = parsedTime;
+          setDisplayTime(parsedTime);
+          updateTimer(projectId, Math.floor(parsedTime));
+        }
+
+        if (isTrackingSaved === "true" && appState === "active") {
+          startAnimation();
+        }
+      } catch (error) {
+        console.error("Initialization error:", error);
+      }
     };
 
-    initialize();
-  }, [fetchProjectData, restorePersistedTimer]);
+    initializeComponent();
 
-  // Screen-change persistence
-  useEffect(() => {
-    // log("Screen persistence effect setup");
-
+    // Cleanup: save state and cancel animation
     return () => {
-      // log("Screen unmounting - saving state");
-
       const saveState = async () => {
-        try {
-          // log("Saving state before unmount", {
-          //   time: accumulatedTimeRef.current,
-          //   isTracking: isTrackingRef.current,
-          // });
-
-          await AsyncStorage.setItem(
+        await Promise.all([
+          AsyncStorage.setItem(
             `persistedTimer_${projectId}`,
             accumulatedTimeRef.current.toString()
-          );
-
-          await AsyncStorage.setItem(
+          ),
+          AsyncStorage.setItem(
             `isTracking_${projectId}`,
             isTrackingRef.current.toString()
-          );
-
-          // log("State saved successfully");
-
-          if (isTrackingRef.current) {
-            // log("Updating Firestore for active timer");
-            await updateProjectData({
-              isTracking: false,
-              pauseTime: new Date(),
-            });
-          }
-        } catch (err) {
-          error("Error saving state", err);
-        }
+          ),
+        ]);
       };
 
       saveState();
 
       if (animationRef.current) {
-        // log("Canceling animation frame");
         cancelAnimationFrame(animationRef.current);
         animationRef.current = null;
       }
     };
-  }, [projectId]);
+  }, [projectId, appState]);
 
   // hook to update the project data
   const updateProjectData = useCallback(
@@ -547,7 +428,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
         });
 
         await updateDoc(projectRef, convertedData);
-        // log("Project data updated in Firestore", convertedData);
+        // console.log("Project data updated in Firestore", convertedData);
       } catch (error) {
         console.error("Error updating project data:", error);
       }
@@ -557,15 +438,29 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
   // function to start the timer
   const handleStart = async () => {
-    if (!isTrackingRef.current) {
-      startTimer(projectId);
-      isTrackingRef.current = true;
-      startAnimation();
+    const currentlyTracking =
+      useStore.getState().projects[projectId]?.isTracking;
+    // check if currently tracking
+    if (currentlyTracking || isTrackingRef.current) {
+      console.log(`[TT:${projectId}] start skipped - already tracking`);
+      return;
+    }
 
+    await useStore.getState().startTimer(projectId);
+    isTrackingRef.current = true;
+    startAnimation();
+
+    // persist the start time
+    try {
       await updateProjectData({
         startTime: new Date(),
         isTracking: true,
       } as Partial<ProjectState>);
+    } catch (err) {
+      console.error(
+        `[TT:${projectId}] updateProjectData failed on start:`,
+        err
+      );
     }
   };
 

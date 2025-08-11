@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
   Dimensions,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { RouteProp, useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -57,162 +57,84 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
   // console.log("EarningsCalculatorCard - projectId:", projectId);
 
   // global state
-  const { setHourlyRate, getProjectState, currentProjectId } = useStore();
+  const { setHourlyRate } = useStore();
+  const hourlyRate = useStore(
+    (state) => state.projects[projectId]?.hourlyRate || 0
+  );
+  const totalEarnings = useStore(
+    (state) => state.projects[projectId]?.totalEarnings || 0
+  );
 
-  // local state
-  const projectState = getProjectState(projectId) || {
-    hourlyRate: 0,
-    totalEarnings: 0,
-  };
-
-  const setTotalEarnings = useStore((state) => state.setTotalEarnings);
   // initialize local hourly rate to save the state when user navigates away from the screen
   const [rateInput, setRateInput] = useState<string>("");
-
-  // hook to synchronize the local totalEarnings with the global one
-  useEffect(() => {
-    if (currentProjectId) {
-      const projectState = getProjectState(currentProjectId);
-      if (projectState) {
-        setTotalEarnings(currentProjectId, projectState.totalEarnings);
-      }
-    }
-  }, [currentProjectId, getProjectState]);
-
-  // hook to show hourly rate with snapshot in the UI
-  useEffect(() => {
-    const fetchHourlyRate = async () => {
-      const user = FIREBASE_AUTH.currentUser;
-      if (!user) {
-        console.error("User is not authenticated.");
-        return false;
-      }
-      if (projectId && rateInput === "") {
-        try {
-          const docRef = doc(
-            FIREBASE_FIRESTORE,
-            "Users",
-            user.uid,
-            "Services",
-            "AczkjyWoOxdPAIRVxjy3",
-            "Projects",
-            projectId
-          );
-
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            const fetchedRate = data.hourlyRate || 0;
-
-            // console.log("fetchHourlyRate - fetchedRate:", fetchedRate);
-          }
-        } catch (error) {
-          console.error("Error fetching hourly rate:", error);
-        }
-      }
-    };
-    fetchHourlyRate();
-  }, [projectId]);
+  const [saving, setSaving] = useState(false);
 
   // function to fetch data from firestore if user navigate to details screen
-  const fetchEarningsData = async (projectId: string) => {
+  const fetchEarningsData = useCallback(async () => {
     const user = FIREBASE_AUTH.currentUser;
-    if (!user) {
-      console.error("User is not authenticated.");
-      return false;
-    }
-    if (projectId && rateInput === "") {
-      try {
-        // reference to the document in Firestore
-        const docRef = doc(
-          FIREBASE_FIRESTORE,
-          "Users",
-          user.uid,
-          "Services",
-          "AczkjyWoOxdPAIRVxjy3",
-          "Projects",
-          projectId
-        );
+    if (!user || !projectId) return;
 
-        // get document snapshot
-        const docSnap = await getDoc(docRef);
+    try {
+      const docRef = doc(
+        FIREBASE_FIRESTORE,
+        "Users",
+        user.uid,
+        "Services",
+        "AczkjyWoOxdPAIRVxjy3",
+        "Projects",
+        projectId
+      );
 
-        // if document exists, retrieve the data
-        if (docSnap.exists()) {
-          const data = docSnap.data();
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const fetchedRate = data?.hourlyRate || 0;
+        const fetchedEarnings = data?.totalEarnings || 0;
 
-          // extract hourly rate and total earnings
-          const fetchedRate = data?.hourlyRate || 0;
-          const fetchedEarnings = data?.totalEarnings || 0;
-
-          // update Zustand global state
-          setHourlyRate(projectId, fetchedRate);
-          setTotalEarnings(projectId, fetchedEarnings); // Update local state
-
-          /*console.log("Earnings data fetched successfully:", {
-            hourlyRate: fetchedRate,
-            totalEarnings: fetchedEarnings,
-          });*/
-        } else {
-          console.log("No document found for the provided projectId.");
-        }
-      } catch (error) {
-        console.error("Error fetching earnings data from Firestore:", error);
+        setHourlyRate(projectId, fetchedRate);
+        useStore.getState().setTotalEarnings(projectId, fetchedEarnings);
       }
+    } catch (error) {
+      console.error("Error fetching earnings data:", error);
     }
-  };
+  }, [projectId, setHourlyRate]);
 
-  // fetch earnings data when the component is mounted
+  // hook to load by mount
   useEffect(() => {
-    if (projectId) {
-      fetchEarningsData(projectId);
-    }
-  }, [projectId]);
+    fetchEarningsData();
+  }, [fetchEarningsData]);
 
-  // function to set the hourlyRate value in the textInput to empty if user navigates away from the screen
+  // hook to load by mount
   useEffect(() => {
-    const resetRateInput = () => {
-      setRateInput(""); // clear input field when screen is re-entered
-    };
-    const unsubscribe = navigation.addListener("focus", resetRateInput);
-    return () => {
-      unsubscribe();
-    };
+    const unsubscribe = navigation.addListener("focus", () => {
+      setRateInput("");
+    });
+    return unsubscribe;
   }, [navigation]);
 
-  // function to set RateInput value as text
+  // function to handle rate change
   const handleRateChange = (text: string) => {
     setRateInput(text);
   };
 
-  // function to save the hourly rate in firestore
-  const [saving, setSaving] = useState(false);
+  // function to handle save
   const handleSave = async () => {
     const rate = parseFloat(rateInput);
     if (!isNaN(rate)) {
       setSaving(true);
       try {
-        /* console.log(
-          "Saving hourly rate in Firestore with projectId:",
-          projectId
-        );*/
-        await updateProjectData(projectId, {
-          hourlyRate: rate,
-        });
+        await updateProjectData(projectId, { hourlyRate: rate });
         setHourlyRate(projectId, rate);
-
-        setRateInput(""); // clean input field
+        setRateInput("");
       } catch (error) {
-        console.error("Error saving hourly rate: ", error);
+        console.error("Error saving hourly rate:", error);
       }
       setSaving(false);
-      // alert to inform user what he has to do first before pressed the save button
     } else {
       useAlertStore
         .getState()
-        .showAlert("Sorry", "Please enter a hourly rate first.");
+        .showAlert("Invalid Input", "Please enter a valid hourly rate.");
     }
-    setSaving(false);
   };
 
   return (
@@ -268,7 +190,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
             >
               {/*the Number wrapper converts the totalEarnings into a Number to format it into a string with toFixed(2). 
             this is important to display the totalEarnings in the correct format to lively tracking the earnings*/}
-              ${Number(projectState.totalEarnings || 0).toFixed(2)}
+              ${Number(totalEarnings || 0).toFixed(2)}
             </Text>
           </View>
           {/* Hourly Rate TextInput field*/}
@@ -375,7 +297,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
                 >
                   Your Hourly Rate:{" "}
                 </Text>
-                {projectState?.hourlyRate}
+                {hourlyRate}
               </Text>
             </View>
           </View>
