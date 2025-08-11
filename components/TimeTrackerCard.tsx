@@ -492,6 +492,20 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   // function to reset the timer
   const [resetting, setResetting] = useState(false);
   const handleReset = async () => {
+    const project = useStore.getState().projects[projectId];
+    // confirm reset
+    if (project.isTracking) {
+      // alert to inform the user what he has to do before pressing the reset button
+      useAlertStore
+        .getState()
+        .showAlert(
+          "Attention!",
+          "Please stop the project first before resetting it.",
+          [{ text: "OK", style: "default" }]
+        );
+      return;
+    }
+    // alert to ask the user if he really wants to reset the project
     useAlertStore
       .getState()
       .showAlert(
