@@ -9,7 +9,7 @@
 
 import { create } from "zustand";
 import { AppState } from "react-native";
-import { getDoc, doc } from "firebase/firestore";
+import { getDoc, doc, Timestamp } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 import { updateProjectData } from "../components/FirestoreService";
@@ -32,9 +32,12 @@ export interface ProjectState {
   lastStartTime: Date | null;
   endTime: Date | null;
   maxWorkHours: number;
+  startTimeTimestamp: Timestamp | null;
+  isRestoring: boolean;
 }
 
 interface TimeTrackingState {
+  setTimerAndEarnings: any;
   set: any;
   projects: { [key: string]: ProjectState };
   currentProjectId: string | null;
@@ -63,7 +66,7 @@ interface TimeTrackingState {
     projectData: Partial<ProjectState>
   ) => void;
   setProjectTime: (field: keyof ProjectState, value: any) => void;
-  setLastStartTime: (projectId: string, time: Date | null) => void; // Anpassung hier
+  setLastStartTime: (projectId: string, time: Date | null) => void;
   setOriginalStartTime: (projectId: string, time: Date | null) => void;
 }
 
@@ -108,18 +111,104 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
     }));
   },
 
-  // function to fetch data from Firestore if user navigate to details screen
-  setProjectData: (projectId, projectData) => {
+  // function to set data from Firestore
+  setProjectData: (projectId: string, incoming: Partial<ProjectState>) => {
     set((state) => {
-      const updatedProject = {
-        ...(state.projects[projectId] || {}),
-        ...projectData,
-      };
+      const prev = state.projects[projectId] || {};
+
+      // DEBUG: incoming + caller stack (temporary)
+      // console.log(`[STORE][setProjectData:${projectId}] incoming:`, incoming, {
+      //   stack: new Error().stack?.split("\n").slice(2, 6),
+      // });
+
+      // copy prev to start merge
+      const merged: any = { ...prev };
+
+      // always merge safe fields
+      const safeKeys = [
+        "name",
+        "hourlyRate",
+        "createdAt",
+        "startTime",
+        "endTime",
+        "originalStartTime",
+        "lastStartTime",
+        "pauseTime",
+        "maxWorkHours",
+        "uid",
+        "isTracking",
+        // add other safe fields you want to accept blindly
+      ];
+      for (const k of safeKeys) {
+        if (k in incoming) merged[k] = (incoming as any)[k];
+      }
+
+      // RULE A: if currently restoring, KEEP local timer/earnings — don't accept incoming timers
+      if (prev.isRestoring) {
+        // keep prev.timer and prev.totalEarnings
+        merged.timer = prev.timer ?? 0;
+        merged.totalEarnings = prev.totalEarnings ?? 0;
+      } else {
+        // RULE B: if incoming timer is obviously stale (0) but prev has a higher running timer, prefer prev
+        const incomingTimer =
+          typeof (incoming as any).timer === "number"
+            ? (incoming as any).timer
+            : undefined;
+        const incomingEarnings =
+          typeof (incoming as any).totalEarnings === "number"
+            ? (incoming as any).totalEarnings
+            : undefined;
+
+        if (typeof incomingTimer === "number") {
+          if (
+            prev.isTracking &&
+            prev.timer != null &&
+            incomingTimer < prev.timer
+          ) {
+            // incoming is older/stale — keep prev
+            merged.timer = prev.timer;
+          } else {
+            merged.timer = incomingTimer;
+          }
+        } else {
+          merged.timer = prev.timer ?? 0;
+        }
+
+        if (typeof incomingEarnings === "number") {
+          if (
+            prev.isTracking &&
+            prev.totalEarnings != null &&
+            incomingEarnings < prev.totalEarnings
+          ) {
+            merged.totalEarnings = prev.totalEarnings;
+          } else {
+            merged.totalEarnings = incomingEarnings;
+          }
+        } else {
+          merged.totalEarnings = prev.totalEarnings ?? 0;
+        }
+      }
+
+      // RULE C: merge any other incoming fields that are not risky
+      for (const [k, v] of Object.entries(incoming)) {
+        if (["timer", "totalEarnings"].includes(k)) continue; // already handled
+        if (safeKeys.includes(k)) continue; // already handled
+        merged[k] = v;
+      }
+
+      // ensure we clear isRestoring if incoming explicitly sets it false
+      if ("isRestoring" in incoming)
+        merged.isRestoring = (incoming as any).isRestoring;
+
+      // avoid unnecessary setState
+      const prevJson = JSON.stringify(prev);
+      const mergedJson = JSON.stringify(merged);
+      if (prevJson === mergedJson) return state;
 
       return {
         projects: {
           ...state.projects,
-          [projectId]: updatedProject,
+          [projectId]: merged,
         },
       };
     });
@@ -170,12 +259,10 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
   calculateEarnings: (projectId: string | number) => {
     const project = get().projects[projectId];
     if (project && project.startTime && project.hourlyRate > 0) {
-      const currentTime = new Date().getTime();
-      const startTime = project.startTime.getTime();
-      const elapsedTime = (currentTime - startTime) / 1000; // in seconds
-      const totalTime = project.timer + elapsedTime; // total time includes previous timer value
-
-      // calculate earnings based on total time and hourly rate
+      const currentTime = Date.now();
+      const startTime = project.startTime?.getTime() ?? 0;
+      const elapsedTime = (currentTime - startTime) / 1000;
+      const totalTime = (project.timer ?? 0) + elapsedTime;
       const earnings = (totalTime / 3600) * project.hourlyRate;
 
       set((state) => ({
@@ -187,34 +274,33 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
           },
         },
       }));
-    } else {
-      // console.warn(
-      //   "Cannot calculate earnings: either project not found or hourly rate is 0"
-      // );
     }
   },
 
   // function to start the timer and inform the user when a project is already being tracked
-  startTimer: async (projectId: string) => {
+  startTimer: async (projectId: string, { silent = false } = {}) => {
     const state = get();
     const project = state.projects[projectId];
 
-    // check if project is already being tracked
-    if (project.isTracking) {
-      console.warn("Project is already being tracked");
+    const effectiveSilent = silent || !!project?.isRestoring;
+
+    if (project?.isTracking) {
+      if (!effectiveSilent) {
+        console.warn(`[STORE] Project ${projectId} is already tracked`);
+      }
       return;
     }
-    // set originalStartTime only if it´s the first time the timer starts
-    const updatedOriginalStartTime = project.originalStartTime || new Date();
-    // else set lastStartTime when timer is > 0
-    const updatedLastStartTime = project.timer > 0 ? new Date() : null;
-    // update UI
+
+    const now = new Date();
+    const updatedOriginalStartTime = project.originalStartTime || now;
+    const updatedLastStartTime =
+      project.timer > 0 && !silent ? now : project.lastStartTime;
     set((state) => ({
       projects: {
         ...state.projects,
         [projectId]: {
           ...project,
-          startTime: new Date(),
+          startTime: now,
           originalStartTime: updatedOriginalStartTime,
           lastStartTime: updatedLastStartTime,
           isTracking: true,
@@ -222,14 +308,18 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
         },
       },
     }));
-    // update firestore
-    await updateProjectData(projectId, {
-      startTime: new Date(),
-      originalStartTime: updatedOriginalStartTime,
-      lastStartTime: updatedLastStartTime,
-      isTracking: true,
-    });
-    set(() => ({ isTracking: true }));
+
+    try {
+      await updateProjectData(projectId, {
+        originalStartTime: updatedOriginalStartTime,
+        startTime: now,
+        lastStartTime: updatedLastStartTime,
+        isTracking: true,
+        pauseTime: null,
+      });
+    } catch (error) {
+      console.error("Error updating Firestore on startTimer:", error);
+    }
   },
 
   // function to stop the timer and calculate the elapsed time
@@ -297,6 +387,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
         pauseTime: null,
         lastSession: new Date(),
         originalStartTime: project.originalStartTime || project.startTime,
+        lastStartTime: project.startTime || project.lastStartTime,
       });
 
       // console.log("StopTimer: Firestore update successful");
@@ -362,6 +453,11 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
 
   // statefunction to set the total earnings in the EarningsCalculatorCard
   setTotalEarnings: (projectId, earnings) => {
+    // console.log(
+    //   `[STORE:${projectId}] setTotalEarnings ->`,
+    //   earnings,
+    //   new Error().stack?.split("\n").slice(2, 6)
+    // );
     set((state) => ({
       projects: {
         ...state.projects,
@@ -372,6 +468,37 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
       },
     }));
   },
+
+  // function to set the timer and earnings in the TimeTrackerCard (AppState and Hardkill)
+  // to get a source of truth
+  setTimerAndEarnings: (
+    projectId: string,
+    timer: number,
+    totalEarnings: number
+  ) =>
+    set((state) => {
+      // console.log(
+      //   `[STORE][setTimerAndEarnings:${projectId}] timer=${timer}, earnings=${totalEarnings}`,
+      //   {
+      //     stack: new Error().stack?.split("\n").slice(2, 6),
+      //   }
+      // );
+
+      const prev = state.projects[projectId] || {};
+      if (prev.timer === timer && prev.totalEarnings === totalEarnings)
+        return state;
+
+      return {
+        projects: {
+          ...state.projects,
+          [projectId]: {
+            ...prev,
+            timer,
+            totalEarnings,
+          },
+        },
+      };
+    }),
 
   // function to get the project tracking state in the TimeTrackerCard using snapshot from firebase
   getProjectTrackingState: async (projectId: string) => {
