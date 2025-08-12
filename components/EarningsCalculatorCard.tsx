@@ -24,6 +24,7 @@ import { updateProjectData } from "../components/FirestoreService";
 import { useStore } from "./TimeTrackingState";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { sanitizeRateInput } from "./InputSanitizers";
+import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -53,6 +54,11 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
+
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
 
   // console.log("EarningsCalculatorCard - projectId:", projectId);
 
@@ -147,6 +153,8 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
       >
         {/* Earnings Calculator Card */}
         <CopilotWalkthroughView
+          accessible={true}
+          accessibilityLabel={`Earnings calculator. Total earnings ${Number(totalEarnings || 0).toFixed(2)} dollars. Your hourly rate is ${hourlyRate || "not set yet"}.`}
           style={{
             height: 420,
             marginBottom: 20,
@@ -160,9 +168,11 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
         >
           {/* title */}
           <Text
+            accessible={false}
+            accessibilityRole="header"
             style={{
               fontFamily: "MPLUSLatin_Bold",
-              fontSize: 25,
+              fontSize: accessMode ? 28 : 25,
               color: "white",
               marginBottom: 20,
               textAlign: "center",
@@ -172,6 +182,8 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
           </Text>
           {/* Total Earnings viewport */}
           <View
+            accessible={true}
+            accessibilityLabel={`Total earnings ${Number(totalEarnings || 0).toFixed(2)} dollars`}
             style={{
               width: "80%",
               height: 100,
@@ -196,15 +208,17 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
           {/* Hourly Rate TextInput field*/}
           <View
             style={{
-              marginTop: 30,
+              marginTop: accessMode ? 25 : 30,
               width: "100%",
               backgroundColor: "#191919",
               alignItems: "center",
             }}
           >
             <TextInput
+              accessible={true}
+              accessibilityLabel="Enter your hourly rate"
               placeholder="Enter your hourly rate"
-              placeholderTextColor="grey"
+              placeholderTextColor={accessMode ? "white" : "grey"}
               keyboardType="numeric"
               value={rateInput}
               onChangeText={(text) => handleRateChange(sanitizeRateInput(text))}
@@ -227,6 +241,10 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
 
             {/* Save button */}
             <TouchableOpacity
+              accessible={true}
+              accessibilityLabel={
+                saving ? "Saving your hourly rate" : "Save hourly rate"
+              }
               onPress={handleSave}
               style={{
                 width: screenWidth * 0.7, // use 70% of the screen width
@@ -263,6 +281,12 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
             </TouchableOpacity>
             {/* Hourly Rate info container */}
             <View
+              accessible={true}
+              accessibilityLabel={
+                hourlyRate
+                  ? `Your hourly rate is ${hourlyRate} dollars`
+                  : `No hourly rate set`
+              }
               style={{
                 width: "100%",
                 height: 50,
@@ -290,7 +314,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
               >
                 <Text
                   style={{
-                    color: "grey",
+                    color: accessMode ? "white" : "grey",
                     fontSize: 16,
                     fontFamily: "MPLUSLatin_Bold",
                   }}
