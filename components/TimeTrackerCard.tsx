@@ -37,6 +37,7 @@ import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { computeEarnings } from "./utils/earnings";
 import { useStore, ProjectState } from "./TimeTrackingState";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
+import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 type RootStackParamList = {
@@ -91,6 +92,11 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
+
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
 
   useEffect(() => {
     let prev = useStore.getState().projects[projectId];
@@ -564,9 +570,12 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
           }}
         >
           <Text
+            accessible={true}
+            accessibilityRole="header"
+            accessibilityLabel="Time-Tracker"
             style={{
               fontFamily: "MPLUSLatin_Bold",
-              fontSize: 25,
+              fontSize: accessMode ? 28 : 25,
               color: "white",
               marginBottom: 20,
               textAlign: "center",
@@ -585,6 +594,8 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
           >
             {/* Timer */}
             <Text
+              accessible={true}
+              accessibilityLabel={`Tracking Time: ${formattedTime}`}
               style={{
                 fontWeight: "bold",
                 fontSize: 55,
@@ -604,21 +615,40 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
               justifyContent: "space-evenly",
               alignItems: "center",
               marginBottom: 10,
-              marginTop: 30,
+              marginTop: accessMode ? 25 : 30,
               width: screenWidth * 0.7,
               maxWidth: 320,
               backgroundColor: "#191919",
             }}
           >
-            <TouchableOpacity onPress={handlePause}>
+            <TouchableOpacity
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel={"Pause the project"}
+              accessibilityHint="Press to pause the project"
+              onPress={handlePause}
+            >
               <FontAwesome6 name="pause" size={65} color="lightgrey" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleStart} disabled={isTracking}>
+            <TouchableOpacity
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel={"Start the project"}
+              accessibilityHint="Press to start the project"
+              onPress={handleStart}
+              disabled={isTracking}
+            >
               <Animatable.View animation="pulse" iterationCount="infinite">
                 <FontAwesome5 name="play" size={85} color="lightgrey" />
               </Animatable.View>
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleStop}>
+            <TouchableOpacity
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel={"Stop the project"}
+              accessibilityHint="Press to stop the project"
+              onPress={handleStop}
+            >
               <FontAwesome5 name="stop" size={52} color="lightgrey" />
             </TouchableOpacity>
           </View>
@@ -634,6 +664,10 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
           >
             {/* Reset Button */}
             <TouchableOpacity
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel={resetting ? "Resetting" : "Reset the project"}
+              accessibilityHint="Press to reset the project"
               onPress={handleReset}
               style={{
                 width: screenWidth * 0.7,
@@ -674,7 +708,6 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
             style={{
               width: "100%",
               height: 165,
-              marginBottom: 20,
               padding: 5,
               paddingLeft: 15,
               borderRadius: 10,
@@ -689,50 +722,83 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
             }}
           >
             {/*last session info*/}
-            <Text
-              style={{
-                fontFamily: "MPLUSLatin_Bold",
-                fontSize: 16,
-                color: "white",
-                marginBottom: 5,
-              }}
+            <View
+              accessible={true}
+              accessibilityLabel={
+                endTime instanceof Date
+                  ? `Last session ended on ${endTime.toLocaleString()}`
+                  : `No last session available`
+              }
             >
-              <Text style={{ color: "grey" }}>Last Session:</Text>
-              {"\n"}
-              {endTime instanceof Date ? endTime.toLocaleString() : "- - - "}
-            </Text>
-            {/*last tracking info*/}
-            <Text
-              style={{
-                fontFamily: "MPLUSLatin_Bold",
-                fontSize: 16,
-                color: "white",
-                marginBottom: 5,
-              }}
+              <Text
+                style={{
+                  fontFamily: "MPLUSLatin_Bold",
+                  fontSize: 16,
+                  color: "white",
+                  marginBottom: 5,
+                }}
+              >
+                <Text style={{ color: accessMode ? "white" : "grey" }}>
+                  Last Session:
+                </Text>
+                {"\n"}
+                {endTime instanceof Date ? endTime.toLocaleString() : "- - - "}
+              </Text>
+            </View>
+
+            {/* last tracking info */}
+            <View
+              accessible={true}
+              accessibilityLabel={
+                lastStartTime instanceof Date
+                  ? `Last tracking started on ${lastStartTime.toLocaleString()}`
+                  : `No tracking start time available`
+              }
             >
-              <Text style={{ color: "grey" }}>Last Tracking Started:</Text>
-              {"\n"}
-              {lastStartTime instanceof Date
-                ? lastStartTime.toLocaleString()
-                : "- - - "}
-            </Text>
-            {/*original tracking info*/}
-            <Text
-              style={{
-                fontFamily: "MPLUSLatin_Bold",
-                fontSize: 16,
-                color: "white",
-                marginBottom: 5,
-              }}
+              <Text
+                style={{
+                  fontFamily: "MPLUSLatin_Bold",
+                  fontSize: 16,
+                  color: "white",
+                  marginBottom: 5,
+                }}
+              >
+                <Text style={{ color: accessMode ? "white" : "grey" }}>
+                  Last Tracking Started:
+                </Text>
+                {"\n"}
+                {lastStartTime instanceof Date
+                  ? lastStartTime.toLocaleString()
+                  : "- - - "}
+              </Text>
+            </View>
+
+            {/* original tracking info */}
+            <View
+              accessible={true}
+              accessibilityLabel={
+                originalStartTime instanceof Date
+                  ? `Original tracking started on ${originalStartTime.toLocaleString()}`
+                  : `No original tracking start time available`
+              }
             >
-              <Text style={{ color: "grey" }}>Original Tracking Started:</Text>
-              {"\n"}
-              {originalStartTime
-                ? originalStartTime instanceof Date
+              <Text
+                style={{
+                  fontFamily: "MPLUSLatin_Bold",
+                  fontSize: 16,
+                  color: "white",
+                  marginBottom: 5,
+                }}
+              >
+                <Text style={{ color: accessMode ? "white" : "grey" }}>
+                  Original Tracking Started:
+                </Text>
+                {"\n"}
+                {originalStartTime instanceof Date
                   ? originalStartTime.toLocaleString()
-                  : "- - - "
-                : "- - - "}
-            </Text>
+                  : "- - - "}
+              </Text>
+            </View>
           </View>
         </CopilotWalkthroughView>
       </CopilotStep>

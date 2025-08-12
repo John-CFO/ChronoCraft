@@ -13,6 +13,8 @@ import { doc, deleteDoc } from "firebase/firestore";
 
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { useAlertStore } from "./services/customAlert/alertStore";
+import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+import { access } from "fs";
 
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -37,6 +39,11 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
+
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
 
   // function to handle note deletion in firestore
   const handleDeletComment = async () => {
@@ -89,6 +96,8 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
   return (
     // card container
     <View
+      accessible={true}
+      accessibilityLabel={`Note added at ${note.createdAt.toLocaleString()}. ${note.comment}`}
       style={{
         backgroundColor: "#191919",
         minWidth: 320,
@@ -111,24 +120,37 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
       <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
         {/*date information*/}
         <Text
+          accessibilityLabel={`Added at ${note.createdAt.toLocaleString()}`}
           style={{
-            fontFamily: "MPLUSLatin_ExtraLight",
+            fontFamily: accessMode
+              ? "MPLUSLatin_Bold"
+              : "MPLUSLatin_ExtraLight",
             fontSize: 14,
-            color: "white",
+            color: accessMode ? "white" : "darkgrey",
           }}
         >
           added at: {note.createdAt.toLocaleString()}
         </Text>
         {/*delete button*/}
-        <TouchableOpacity onPress={handleDeletComment}>
-          <AntDesign name="delete" size={30} color="darkgrey" />
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Delete this note"
+          accessibilityHint="Deletes the current note from the list"
+          onPress={handleDeletComment}
+        >
+          <AntDesign
+            name="delete"
+            size={30}
+            color={accessMode ? "white" : "darkgrey"}
+          />
         </TouchableOpacity>
       </View>
       {/*note content*/}
       <Text
+        accessibilityLabel={`Note text: ${note.comment}`}
         style={{
           fontFamily: "MPLUSLatin_Bold",
-          fontSize: 18,
+          fontSize: accessMode ? 20 : 18,
           color: "white",
           marginBottom: 10,
         }}

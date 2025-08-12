@@ -10,6 +10,7 @@ import { useRoute, RouteProp } from "@react-navigation/native";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import DigitalClock from "../components/DigitalClock";
+import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -33,6 +34,11 @@ const DetailsProjectCard: React.FC<DetailsProjectCardProps> = () => {
   const route = useRoute<DetailsProjectRouteProps>();
   const { projectName } = route.params;
 
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
+
   return (
     <View>
       <View
@@ -46,6 +52,9 @@ const DetailsProjectCard: React.FC<DetailsProjectCardProps> = () => {
       >
         {/* title */}
         <Text
+          accessible={true}
+          accessibilityRole="header"
+          accessibilityLabel="- Project Details -"
           style={{
             fontFamily: "MPLUSLatin_Bold",
             fontSize: 25,
@@ -77,6 +86,8 @@ const DetailsProjectCard: React.FC<DetailsProjectCardProps> = () => {
           }}
         >
           <Text
+            accessible={true}
+            accessibilityLabel={`Project Name: ${projectName}`}
             style={{
               fontFamily: "MPLUSLatin_Bold",
               fontSize: 32,
@@ -90,13 +101,15 @@ const DetailsProjectCard: React.FC<DetailsProjectCardProps> = () => {
           {/* digital clock */}
           <Text
             style={{
-              fontFamily: "MPLUSLatin_ExtraLight",
-              fontSize: 18,
+              fontSize: accessMode ? 20 : 18,
+              fontFamily: accessMode
+                ? "MPLUSLatin_Bold"
+                : "MPLUSLatin_ExtraLight",
               color: "lightgrey",
               marginTop: 30,
             }}
           >
-            Current Time
+            "Current Time"
           </Text>
 
           <DigitalClock />
