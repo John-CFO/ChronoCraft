@@ -9,9 +9,16 @@ import { View, Text } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
 import dayjs from "dayjs";
 
+import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 const DigitalClock = () => {
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
+
   // set current time state with dayjs
   const [currentTime, setCurrentTime] = useState(dayjs());
 
@@ -36,6 +43,8 @@ const DigitalClock = () => {
 
   return (
     <View
+      accessible={true}
+      accessibilityLabel={`Current Time ${currentTime.format("HH:mm:ss")}`}
       style={{
         justifyContent: "center",
         alignItems: "center",
@@ -45,7 +54,13 @@ const DigitalClock = () => {
         borderColor: "aqua",
       }}
     >
-      <Text style={{ fontSize: 46, fontWeight: "bold", color: "grey" }}>
+      <Text
+        style={{
+          fontSize: 46,
+          fontWeight: "bold",
+          color: accessMode ? "white" : "grey",
+        }}
+      >
         {currentTime.format("HH:mm:ss")}
       </Text>
     </View>

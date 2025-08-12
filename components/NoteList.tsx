@@ -11,6 +11,7 @@ import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import NoteCard from "./NoteCard";
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
+import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -34,6 +35,11 @@ const NoteList: React.FC<{ projectId: string }> = ({ projectId }) => {
 
   // loading state if backend isn´t ready
   const [loading, setLoading] = useState<boolean>(true);
+
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
 
   // hook to fetch the notes from Firestore with snapshot
   useEffect(() => {
@@ -119,9 +125,12 @@ const NoteList: React.FC<{ projectId: string }> = ({ projectId }) => {
           >
             {/* Card Title */}
             <Text
+              accessible={true}
+              accessibilityRole="header"
+              accessibilityLabel="Your Notes"
               style={{
                 fontFamily: "MPLUSLatin_Bold",
-                fontSize: 25,
+                fontSize: accessMode ? 28 : 25,
                 color: "white",
                 marginBottom: 40,
               }}
@@ -145,14 +154,20 @@ const NoteList: React.FC<{ projectId: string }> = ({ projectId }) => {
             ) : (
               // alternative text if no notes exists
               <Text
+                accessible={true}
+                accessibilityRole="text"
+                accessibilityLabel="No notes available"
                 style={{
                   textAlign: "center",
                   color: "white",
                   fontSize: 18,
-                  fontFamily: "MPLUSLatin_ExtraLight",
+
+                  fontFamily: accessMode
+                    ? "MPLUSLatin_Bold"
+                    : "MPLUSLatin_ExtraLight",
                 }}
               >
-                You haven't any notes for this project yet.
+                "You haven't any notes for this project yet."
               </Text>
             )}
           </CopilotTouchableView>

@@ -26,6 +26,7 @@ import { useStore } from "./TimeTrackingState";
 import { sanitizeMaxWorkHours } from "./InputSanitizers";
 import useDebounceValue from "../hooks/useDebounceValue";
 import { NotificationManager } from "./services/PushNotifications";
+import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -43,8 +44,18 @@ const CopilotWalkthroughView = walkthroughable(View);
 
 const ProgressCard: React.FC<ProgressCardProps> = memo(
   ({ projectId, onSaveSuccess }) => {
+    // initialize the navigation
     const navigation = useNavigation();
+
+    // initialize the screensize
     const { width: screenWidth } = useWindowDimensions();
+
+    // initialize the accessibility store
+    const accessMode = useAccessibilityStore(
+      (state) => state.accessibilityEnabled
+    );
+
+    // get the project data from the store
     const { setProjectData } = useStore();
 
     // Ref for Notifications
@@ -237,6 +248,12 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
           text="The Deathline-Tracker shows you how close you are to your deadline. Add your maximum of workhours to your project."
         >
           <CopilotWalkthroughView
+            accessible={true}
+            accessibilityLabel={
+              maxWorkHours > 0 && timer > 0
+                ? `Deadline tracker. ${(displayProgress * 100).toFixed(1)} percent of your maximum work time used. Your deadline is ${maxWorkHours} hours.`
+                : `Deadline tracker. No deadline set.`
+            }
             style={{
               alignSelf: "center",
               width: "100%",
@@ -258,9 +275,11 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
           >
             {/* Title */}
             <Text
+              accessible={false}
+              accessibilityRole="header"
               style={{
                 fontFamily: "MPLUSLatin_Bold",
-                fontSize: 25,
+                fontSize: accessMode ? 28 : 25,
                 color: "white",
                 marginBottom: 40,
                 textAlign: "center",
@@ -270,9 +289,12 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
             </Text>
             {/* Instructions */}
             <Text
+              accessible={false}
               style={{
                 fontSize: 18,
-                fontFamily: "MPLUSLatin_ExtraLight",
+                fontFamily: accessMode
+                  ? "MPLUSLatin_Bold"
+                  : "MPLUSLatin_ExtraLight",
                 color: "white",
                 textAlign: "center",
                 marginBottom: 10,
@@ -282,8 +304,10 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
             </Text>
             {/* Input field to enter max work hours */}
             <TextInput
+              accessible={true}
+              accessibilityLabel="Enter your maximum allowed work hours"
               placeholder="(e.g. 5)"
-              placeholderTextColor="grey"
+              placeholderTextColor={accessMode ? "white" : "grey"}
               value={inputMaxWorkHours}
               keyboardType="numeric"
               onChangeText={(text) => {
@@ -308,6 +332,12 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
             />
             {/* Save Button */}
             <TouchableOpacity
+              accessible={true}
+              accessibilityLabel={
+                saving
+                  ? "Saving your maximum work hours"
+                  : "Save maximum work hours"
+              }
               onPress={handleSave}
               disabled={saving}
               style={{
@@ -331,6 +361,7 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
                 end={{ x: 1, y: 1 }}
               >
                 <Text
+                  accessible={false}
                   style={{
                     fontFamily: "MPLUSLatin_Bold",
                     fontSize: 22,
@@ -346,6 +377,12 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
 
             {/* ProgressChart */}
             <View
+              accessible={true}
+              accessibilityLabel={
+                progressValueInteger != null
+                  ? `Progress ${progressValueInteger} percent`
+                  : `No progress yet`
+              }
               style={{
                 position: "relative",
                 width: 200,
@@ -360,7 +397,7 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
                 radius={100}
                 activeStrokeWidth={15}
                 inActiveStrokeWidth={15}
-                activeStrokeColor="#1e1e1e"
+                activeStrokeColor={accessMode ? "#4d4d4d" : "#242424ff"}
                 inActiveStrokeColor="#1e1e1e"
                 dashedStrokeConfig={{ count: 50, width: 4 }}
                 progressValueColor="transparent"
@@ -412,17 +449,21 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
             {/* Result Text */}
             {maxWorkHours > 0 && timer > 0 && (
               <Text
+                accessible={true}
+                accessibilityLabel={`${(displayProgress * 100).toFixed(1)} percent of your maximum work time used`}
                 style={{
                   color: "white",
-                  fontFamily: "MPLUSLatin_ExtraLight",
-                  fontSize: 16,
+                  fontFamily: accessMode
+                    ? "MPLUSLatin_Bold"
+                    : "MPLUSLatin_ExtraLight",
+                  fontSize: accessMode ? 18 : 16,
                   marginTop: 20,
                 }}
               >
                 <Text
                   style={{
-                    color: "white",
-                    fontSize: 18,
+                    color: accessMode ? "#00f7f7" : "white",
+                    fontSize: accessMode ? 22 : 18,
                     fontWeight: "bold",
                     fontFamily: "MPLUSLatin_Bold",
                   }}
@@ -432,7 +473,10 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
                 of your max work time used
               </Text>
             )}
+            {/* Deadline Info */}
             <View
+              accessible={true}
+              accessibilityLabel={`Your deadline is ${maxWorkHours} hours`}
               style={{
                 width: "100%",
                 height: 50,
@@ -455,7 +499,7 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
               {/* Display your current Deadline in Hours */}
               <Text
                 style={{
-                  color: "grey",
+                  color: accessMode ? "white" : "grey",
                   fontSize: 16,
                   fontFamily: "MPLUSLatin_Bold",
                   marginRight: 5,
