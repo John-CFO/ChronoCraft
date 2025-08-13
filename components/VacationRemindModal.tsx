@@ -252,6 +252,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
     >
       <View
         accessibilityViewIsModal={true}
+        accessibilityLiveRegion="polite"
         style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
       >
         <View
@@ -304,8 +305,10 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
           {/* Save Button */}
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel="Save Reminder"
-            accessibilityHint="Saves the reminder and closes this view"
+            accessibilityLabel={saving ? "Saving reminder" : "Save reminder"}
+            accessibilityHint={
+              saving ? "Please wait" : "Saves the reminder and closes this view"
+            }
             accessibilityState={{ disabled: saving }}
             style={{
               width: screenWidth * 0.7, // use 70% of the screen width
@@ -365,8 +368,8 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
           >
             <Text
               accessible
-              accessibilityLabel="Navigation tip"
-              accessibilityHint="Swipe up or down to close"
+              accessibilityRole="text"
+              accessibilityLabel="Navigation tip. Swipe up or down to close."
               style={{
                 fontSize: accessMode ? 20 : 18,
                 color: accessMode ? "white" : "lightgrey",

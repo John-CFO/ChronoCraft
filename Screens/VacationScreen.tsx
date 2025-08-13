@@ -13,6 +13,7 @@ import LottieView from "lottie-react-native";
 import { useIsFocused, useFocusEffect } from "@react-navigation/native";
 import { CopilotProvider } from "react-native-copilot";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { doc, getDoc } from "firebase/firestore";
 
 import CustomCalendar from "../components/CustomCalendar";
 import VacationForm from "../components/VacationForm";
@@ -21,7 +22,7 @@ import { FIREBASE_APP, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import TourCard from "../components/services/copilotTour/TourCard";
 import { useCopilotOffset } from "../components/services/copilotTour/CopilotOffset";
 import CustomTooltip from "../components/services/copilotTour/CustomToolTip";
-import { doc, getDoc } from "firebase/firestore";
+import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -38,6 +39,11 @@ type VacationScreenRouteProps = {
 const VacationScreen: React.FC<VacationScreenRouteProps> = () => {
   // initialize the copilot offset
   const offset = useCopilotOffset();
+
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
 
   // initialize Firebase Auth
   const auth: Auth = getAuth(FIREBASE_APP);
@@ -187,8 +193,11 @@ const VacationScreen: React.FC<VacationScreenRouteProps> = () => {
               }}
             >
               <Text
+                accessible={true}
+                accessibilityRole="header"
+                accessibilityLabel="Vacation Management"
                 style={{
-                  fontSize: 25,
+                  fontSize: accessMode ? 30 : 25,
                   fontFamily: "MPLUSLatin_Bold",
                   color: "white",
                 }}
@@ -213,10 +222,14 @@ const VacationScreen: React.FC<VacationScreenRouteProps> = () => {
                 }}
               >
                 <Text
+                  accessible={true}
+                  accessibilityLabel="Unplug from work, recharge your soul"
                   style={{
                     zIndex: 2,
-                    fontSize: 18,
-                    fontFamily: "MPLUSLatin_ExtraLight",
+                    fontSize: accessMode ? 20 : 18,
+                    fontFamily: accessMode
+                      ? "MPLUSLatin_Bold"
+                      : "MPLUSLatin_ExtraLight",
                     color: "white",
                   }}
                 >
@@ -239,11 +252,17 @@ const VacationScreen: React.FC<VacationScreenRouteProps> = () => {
               />
             </View>
             {/* VacationForm */}
-            <View style={{ alignItems: "center", backgroundColor: "black" }}>
+            <View
+              accessible={true}
+              accessibilityLabel="Vacation request form"
+              style={{ alignItems: "center", backgroundColor: "black" }}
+            >
               <VacationForm />
             </View>
             {/* VacationList */}
             <View
+              accessible={true}
+              accessibilityLabel="List of your planned vacations"
               style={{
                 flex: 1,
                 height: "10%",

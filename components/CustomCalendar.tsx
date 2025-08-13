@@ -15,6 +15,7 @@ import { Calendar } from "react-native-calendars";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import { useCalendarStore } from "../components/CalendarState";
+import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -39,6 +40,11 @@ const CustomCalendar = forwardRef<CustomCalendarRef, CustomCalendarProps>(
   (_, ref) => {
     // initialize the useCalendarStore and setCurrentMonth
     const { markedDates } = useCalendarStore();
+
+    // initialize the accessibility store
+    const accessMode = useAccessibilityStore(
+      (state) => state.accessibilityEnabled
+    );
 
     // initialize currentMonth state
     const [currentMonth, setCurrentMonth] = useState<string>("");
@@ -76,10 +82,13 @@ const CustomCalendar = forwardRef<CustomCalendarRef, CustomCalendarProps>(
           order={1}
           text="In this area you can view your vacation-calendar."
         >
-          <CopilotTouchableView>
+          <CopilotTouchableView
+            accessible={true}
+            accessibilityLabel="Vacation calendar showing marked vacation days. Swipe left or right to change month."
+          >
             {/* Calendar - style and handle options*/}
             <Calendar
-              key={currentMonth}
+              key={`${currentMonth}-${accessMode}`}
               current={currentMonth}
               markedDates={useCalendarStore((state) => state.markedDates)}
               onPress={(day: { dateString: any }) => {
@@ -94,7 +103,7 @@ const CustomCalendar = forwardRef<CustomCalendarRef, CustomCalendarProps>(
               style={{
                 height: 350,
                 width: 430,
-                marginBottom: 50,
+                marginBottom: accessMode ? 95 : 50,
               }}
               theme={{
                 backgroundColor: "#ffffff",
@@ -104,7 +113,7 @@ const CustomCalendar = forwardRef<CustomCalendarRef, CustomCalendarProps>(
                 selectedDayTextColor: "#ffffff",
                 todayTextColor: "aqua",
                 dayTextColor: "white",
-                textDisabledColor: "#595959",
+                textDisabledColor: accessMode ? "#797979ff" : "#595959",
                 dotColor: "#00adf5",
                 selectedDotColor: "#ffffff",
                 arrowColor: "aqua",
@@ -113,12 +122,21 @@ const CustomCalendar = forwardRef<CustomCalendarRef, CustomCalendarProps>(
                 textDayFontFamily: "monospace",
                 textMonthFontFamily: "monospace",
                 textDayHeaderFontFamily: "monospace",
-                textDayFontWeight: "300",
+                textDayFontWeight: accessMode ? "bold" : "300",
                 textMonthFontWeight: "bold",
-                textDayHeaderFontWeight: "100",
+                textDayHeaderFontWeight: accessMode ? "bold" : "100",
                 textDayFontSize: 16,
-                textMonthFontSize: 18,
+                textMonthFontSize: accessMode ? 22 : 18,
                 textDayHeaderFontSize: 16,
+
+                "stylesheet.calendar.main": {
+                  dayContainer: {
+                    width: accessMode ? 46 : 40,
+                    height: accessMode ? 46 : 40,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  },
+                },
               }}
             />
           </CopilotTouchableView>

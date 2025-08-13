@@ -6,7 +6,13 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 import React, { useState, useEffect } from "react";
-import { Text, View, ScrollView, TouchableOpacity } from "react-native";
+import {
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -17,6 +23,7 @@ import { CopilotStep, walkthroughable } from "react-native-copilot";
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useCalendarStore } from "../components/CalendarState";
 import { useAlertStore } from "./services/customAlert/alertStore";
+import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -24,6 +31,11 @@ import { useAlertStore } from "./services/customAlert/alertStore";
 const CopilotTouchableView = walkthroughable(View);
 
 const VacationForm = () => {
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
+
   // initial start and end dates states
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
@@ -140,6 +152,12 @@ const VacationForm = () => {
             >
               {/* Start Date and End Date Buttons */}
               <TouchableOpacity
+                accessibilityLabel={
+                  startDate
+                    ? `Start date: ${startDate}`
+                    : "Start Date not selected"
+                }
+                accessible={false}
                 // validate start date
                 onPress={() => {
                   if (!tempStartDate) {
@@ -194,6 +212,11 @@ const VacationForm = () => {
               </TouchableOpacity>
               {/* End Date Button */}
               <TouchableOpacity
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  endDate ? `End date selected: ${endDate}` : "Select end date"
+                }
                 onPress={() => {
                   // condition to prevent selecting an end date before a start date with an alert
                   if (!startDate) {
@@ -319,6 +342,9 @@ const VacationForm = () => {
           >
             {/* Save Button */}
             <TouchableOpacity
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="Save vacation dates"
               onPress={handleSave}
               activeOpacity={0.7}
               style={{
@@ -360,6 +386,9 @@ const VacationForm = () => {
 
             {/* Cancel Button */}
             <TouchableOpacity
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="Cancel vacation date selection"
               onPress={handleCancel}
               activeOpacity={0.7}
               style={{
