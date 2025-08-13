@@ -14,6 +14,7 @@ import {
   TouchableOpacity,
   TextInput,
   Dimensions,
+  AccessibilityInfo,
 } from "react-native";
 import Collapsible from "react-native-collapsible";
 import { LinearGradient } from "expo-linear-gradient";
@@ -27,6 +28,7 @@ import { ScrollView } from "react-native-gesture-handler";
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useDotAnimation } from "../components/DotAnimation";
+import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -49,6 +51,11 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
+
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
 
   // state for the password visibility
   const [passwordVisibility, setPasswordVisibility] = useState(true);
@@ -265,6 +272,10 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
 
   return (
     <View
+      accessibilityViewIsModal
+      accessible={true}
+      accessibilityLabel="Frequently Asked Questions sheet"
+      accessibilityHint="Contains frequently asked questions. Swipe up or down to close the sheet."
       style={{
         flex: 1,
         width: "100%",
@@ -272,6 +283,7 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
     >
       {/* FAQ Header */}
       <View
+        accessible={false}
         style={{
           position: "relative",
           height: 50,
@@ -281,9 +293,11 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
         }}
       >
         <Text
+          accessibilityRole="header"
+          accessibilityLabel="Frequently Asked Questions"
           style={{
-            color: "gray",
-            fontSize: 20,
+            color: accessMode ? "white" : "gray",
+            fontSize: accessMode ? 22 : 20,
             fontFamily: "MPLUSLatin_Bold",
             textAlign: "center",
           }}
@@ -292,6 +306,10 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
         </Text>
         {/* Close Button */}
         <TouchableOpacity
+          accessible={true}
+          accessibilityRole="button"
+          accessibilityLabel="Close FAQ"
+          accessibilityHint="Closes the frequently asked questions"
           onPress={closeFAQSheet}
           style={{
             position: "absolute",
@@ -321,6 +339,7 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
             }}
           >
             <Text
+              accessible={false}
               style={{
                 color: "lightgrey",
                 fontSize: 30,
@@ -348,7 +367,22 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
           <View style={{ marginTop: 24 }}>
             {/* FAQ 1: How to close workhourschart tooltip */}
             <TouchableOpacity
-              onPress={() => toggleSection("faq1")}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel={`How to close the tooltip on the Workhours Chart? ${expandedSections.faq1 ? "Expanded" : "Collapsed"}`}
+              accessibilityHint="Toggles the answer for how to close the tooltip"
+              accessibilityState={{ expanded: !!expandedSections.faq1 }}
+              onPress={() => {
+                // announce planned new state (compute new state before toggle to have correct announcement)
+                const willBeExpanded = !expandedSections.faq1;
+                toggleSection("faq1");
+                AccessibilityInfo.isScreenReaderEnabled().then((enabled) => {
+                  if (enabled)
+                    AccessibilityInfo.announceForAccessibility(
+                      willBeExpanded ? "Answer opened" : "Answer closed"
+                    );
+                });
+              }}
               style={{
                 flexDirection: "row",
                 justifyContent: "space-between",
@@ -359,8 +393,9 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
               }}
             >
               <Text
+                accessible={false}
                 style={{
-                  fontSize: 16,
+                  fontSize: accessMode ? 18 : 16,
                   fontWeight: "600",
                   color: expandedSections.faq1 ? "aqua" : "white",
                   flex: 1,
@@ -369,15 +404,18 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
               >
                 How to close the tooltip on the Workhours Chart?
               </Text>
-              <Text style={{ color: "aqua", fontSize: 20 }}>
+              <Text style={{ color: "aqua", fontSize: accessMode ? 28 : 20 }}>
                 {expandedSections.faq1 ? "−" : "+"}
               </Text>
             </TouchableOpacity>
             <Collapsible collapsed={!expandedSections.faq1}>
               <Text
+                accessible={true}
+                accessibilityLiveRegion="polite"
+                accessibilityLabel="To close the tooltip, simply tap anywhere outside the chart area but inside the card. The entire card is set up to listen for taps outside of the chart."
                 style={{
                   paddingTop: 12,
-                  fontSize: 14,
+                  fontSize: accessMode ? 18 : 14,
                   color: "#CCCCCC",
                   lineHeight: 20,
                 }}
@@ -389,7 +427,21 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
             </Collapsible>
             {/* FAQ 1: How to change your password */}
             <TouchableOpacity
-              onPress={() => toggleSection("faq2")}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel={`How to change my password? ${expandedSections.faq2 ? "Expanded" : "Collapsed"}`}
+              accessibilityHint="Toggles instructions to change your password"
+              accessibilityState={{ expanded: !!expandedSections.faq2 }}
+              onPress={() => {
+                const willBeExpanded = !expandedSections.faq2;
+                toggleSection("faq2");
+                AccessibilityInfo.isScreenReaderEnabled().then((enabled) => {
+                  if (enabled)
+                    AccessibilityInfo.announceForAccessibility(
+                      willBeExpanded ? "Answer opened" : "Answer closed"
+                    );
+                });
+              }}
               style={{
                 flexDirection: "row",
                 justifyContent: "space-between",
@@ -400,8 +452,9 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
               }}
             >
               <Text
+                accessible={false}
                 style={{
-                  fontSize: 16,
+                  fontSize: accessMode ? 18 : 16,
                   fontWeight: "600",
                   color: expandedSections.faq2 ? "aqua" : "white",
                   flex: 1,
@@ -410,15 +463,21 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
               >
                 How to change my password?
               </Text>
-              <Text style={{ color: "aqua", fontSize: 20 }}>
+              <Text
+                accessible={false}
+                style={{ color: "aqua", fontSize: accessMode ? 28 : 20 }}
+              >
                 {expandedSections.faq2 ? "−" : "+"}
               </Text>
             </TouchableOpacity>
             <Collapsible collapsed={!expandedSections.faq2}>
               <Text
+                accessible={true}
+                accessibilityLiveRegion="polite"
+                accessibilityLabel="Leave the app with Logout and you will navigate to the login screen. There you can change your password by pressing forgot password. We will send you an email with instructions on how to reset your password."
                 style={{
                   paddingTop: 12,
-                  fontSize: 14,
+                  fontSize: accessMode ? 18 : 14,
                   color: "#CCCCCC",
                   lineHeight: 20,
                 }}
@@ -432,7 +491,21 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
 
             {/* FAQ 3: How to delete your account */}
             <TouchableOpacity
-              onPress={() => toggleSection("faq3")}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel={`How to delete my account? ${expandedSections.faq3 ? "Expanded" : "Collapsed"}`}
+              accessibilityHint="Toggles instructions to delete your account"
+              accessibilityState={{ expanded: !!expandedSections.faq3 }}
+              onPress={() => {
+                const willBeExpanded = !expandedSections.faq3;
+                toggleSection("faq3");
+                AccessibilityInfo.isScreenReaderEnabled().then((enabled) => {
+                  if (enabled)
+                    AccessibilityInfo.announceForAccessibility(
+                      willBeExpanded ? "Answer opened" : "Answer closed"
+                    );
+                });
+              }}
               style={{
                 flexDirection: "row",
                 justifyContent: "space-between",
@@ -443,8 +516,9 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
               }}
             >
               <Text
+                accessible={false}
                 style={{
-                  fontSize: 16,
+                  fontSize: accessMode ? 18 : 16,
                   fontWeight: "600",
                   color: expandedSections.faq3 ? "aqua" : "white",
                   flex: 1,
@@ -453,15 +527,21 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
               >
                 How to delete my account?
               </Text>
-              <Text style={{ color: "aqua", fontSize: 20 }}>
+              <Text
+                accessible={false}
+                style={{ color: "aqua", fontSize: accessMode ? 28 : 20 }}
+              >
                 {expandedSections.faq3 ? "−" : "+"}
               </Text>
             </TouchableOpacity>
             <Collapsible collapsed={!expandedSections.faq3}>
               <Text
+                accessible={true}
+                accessibilityLiveRegion="polite"
+                accessibilityLabel="To delete your account, you must confirm your password. All data will be permanently removed."
                 style={{
                   paddingTop: 12,
-                  fontSize: 14,
+                  fontSize: accessMode ? 18 : 14,
                   color: "#CCCCCC",
                   lineHeight: 20,
                 }}
@@ -477,8 +557,10 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                   }}
                 >
                   <TextInput
+                    accessible={true}
+                    accessibilityLabel="Enter your password to confirm account deletion"
                     placeholder="Enter your password"
-                    placeholderTextColor="#888"
+                    placeholderTextColor={accessMode ? "white" : "#888"}
                     secureTextEntry={passwordVisibility}
                     value={password}
                     onChangeText={setPassword}
@@ -500,17 +582,28 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                   />
                   {/* Visibility eye button */}
                   <TouchableOpacity
+                    accessible={true}
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      passwordVisibility ? "Show password" : "Hide password"
+                    }
+                    accessibilityHint="Toggles password visibility"
                     onPress={deleteAccountVisibility}
                     style={{ position: "absolute", right: 15, top: 25 }}
                   >
                     <FontAwesome5
                       name={passwordVisibility ? "eye" : "eye-slash"}
                       size={20}
-                      color="darkgrey"
+                      color={accessMode ? "white" : "darkgrey"}
                     />
                   </TouchableOpacity>
                 </View>
                 <TouchableOpacity
+                  accessible={true}
+                  accessibilityRole="button"
+                  accessibilityLabel="Delete Account"
+                  accessibilityHint="Deletes your account permanently after confirmation"
+                  accessibilityState={{ busy: loading }}
                   onPress={() =>
                     useAlertStore
                       .getState()
