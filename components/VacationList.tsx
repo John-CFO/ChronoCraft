@@ -26,6 +26,7 @@ import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { FIREBASE_AUTH } from "../firebaseConfig";
 import VacationRemindModal from "../components/VacationRemindModal";
 import { useAlertStore } from "./services/customAlert/alertStore";
+import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -42,6 +43,11 @@ const VacationList = () => {
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
+
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
 
   // handle reminder modal state
   const [reminderModalVisible, setReminderModalVisible] = useState(false);
@@ -206,6 +212,9 @@ const VacationList = () => {
           >
             {/* title */}
             <Text
+              accessible={true}
+              accessibilityRole="header"
+              accessibilityLabel="Booked Vacations"
               style={{
                 fontSize: 25,
                 fontFamily: "MPLUSLatin_Bold",
@@ -264,6 +273,13 @@ const VacationList = () => {
 
                   return (
                     <View
+                      accessible={true}
+                      accessibilityRole="text"
+                      accessibilityLabel={
+                        sortedDates.length > 1
+                          ? `Vacation from ${displayRange}${item.reminderActive ? ", reminder active" : ""}`
+                          : `Vacation on ${displayRange}${item.reminderActive ? ", reminder active" : ""}`
+                      }
                       style={{
                         height: 60,
                         minWidth: 350,
@@ -297,9 +313,9 @@ const VacationList = () => {
                         >
                           <Text
                             style={{
-                              color: "grey",
+                              color: accessMode ? "white" : "grey",
                               fontFamily: "MPLUSLatin_Bold",
-                              fontSize: 16,
+                              fontSize: accessMode ? 18 : 16,
                             }}
                           >
                             Date:
@@ -308,6 +324,13 @@ const VacationList = () => {
                         </Text>
                       </View>
                       <TouchableOpacity
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel={
+                          item.reminderActive
+                            ? "Reminder is active. Tap to deactivate reminder"
+                            : "Reminder is inactive. Tap to activate reminder"
+                        }
                         style={{
                           paddingHorizontal: 10,
                           paddingRight: 20,
@@ -318,14 +341,27 @@ const VacationList = () => {
                         <Entypo
                           name="bell"
                           size={24}
-                          color={item.reminderActive ? "aqua" : "grey"}
+                          color={
+                            item.reminderActive
+                              ? "aqua"
+                              : accessMode
+                                ? "white"
+                                : "grey"
+                          }
                         />
                         {/* vacation delete button */}
                       </TouchableOpacity>
                       <TouchableOpacity
+                        accessible={true}
+                        accessibilityRole="button"
+                        accessibilityLabel="Delete vacation"
                         onPress={() => handleDeleteDate(item.id)}
                       >
-                        <AntDesign name="delete" size={30} color="darkgrey" />
+                        <AntDesign
+                          name="delete"
+                          size={30}
+                          color={accessMode ? "white" : "darkgrey"}
+                        />
                       </TouchableOpacity>
                     </View>
                   );
@@ -341,14 +377,18 @@ const VacationList = () => {
                 }}
               >
                 <Text
+                  accessible={true}
+                  accessibilityLabel="You haven't booked any vacation days yet. Book some."
                   style={{
                     textAlign: "center",
                     color: "white",
-                    fontSize: 18,
-                    fontFamily: "MPLUSLatin_ExtraLight",
+                    fontSize: accessMode ? 20 : 18,
+                    fontFamily: accessMode
+                      ? "MPLUSLatin_Bold"
+                      : "MPLUSLatin_ExtraLight",
                   }}
                 >
-                  You haven't booked any vacation days yet. Book some.
+                  "You haven't booked any vacation days yet. Book some."
                 </Text>
               </View>
             )}
