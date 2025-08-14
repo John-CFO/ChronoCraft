@@ -41,6 +41,7 @@ const CustomMenuBTN: React.FC<CustomMenuBTNProps> = () => {
       accessibilityHint="Open the menu of the app to navigate between screens"
     >
       <MaterialIcons
+        accessibilityElementsHidden
         name="menu-open"
         size={42}
         color="white"
