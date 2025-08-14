@@ -36,6 +36,7 @@ import FAQBottomSheet from "./FAQBottomSheet";
 import { CustomUser } from "./types/CustomUser"; // CustomUser type definition import to handle conflict with FirebaseUser
 import RestartTourButton from "./../components/services/copilotTour/RestartTourButton";
 import AccessibilityToggleButton from "./services/accessibility/AccessibilityToggleButton";
+import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -45,6 +46,11 @@ interface CustomDrawerProps extends DrawerContentComponentProps {}
 ////////////////////////////////////////////////////////////////////////////////////////
 
 const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled
+  );
+
   // declare state for edit profile modal visibility
   const [profileModalVisible, setProfileModalVisible] = useState(false);
 
@@ -106,6 +112,8 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
     <View style={{ flex: 1 }}>
       {/*edit profile button*/}
       <TouchableOpacity
+        accessibilityRole="button"
+        accessibilityLabel="Edit Profile"
         onPress={() => {
           setProfileModalVisible(true);
           // console.log("EditProfileModal opened");
@@ -119,12 +127,19 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
             alignItems: "flex-end",
           }}
         >
-          <Feather name="edit" size={28} color="grey" />
+          <Feather
+            name="edit"
+            size={28}
+            color="grey"
+            accessibilityElementsHidden
+          />
         </View>
       </TouchableOpacity>
       {/* EditProfileModal */}
 
       <Modal
+        accessibilityViewIsModal
+        accessibilityLabel="Edit Profile Modal"
         isVisible={profileModalVisible}
         backdropColor="black"
         onBackdropPress={closeProfileModal}
@@ -150,6 +165,12 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
       <ImageBackground>
         {/* user profile image */}
         <Image
+          accessibilityRole="image"
+          accessibilityLabel={
+            user?.displayName
+              ? `Profile picture of ${user.displayName}`
+              : "Default profile picture"
+          }
           source={
             user?.photoURL // render user image or default image
               ? { uri: user.photoURL }
@@ -170,24 +191,31 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
       <View style={{ margin: 20 }}>
         {/* render user name or unknown */}
         <Text
+          accessibilityLabel={`Employee ${user?.displayName || "Unknown"}`}
           style={{
-            color: "white",
-            fontFamily: "MPLUSLatin_Regular",
-            fontSize: 18,
+            color: "#a9a9a9",
+            fontFamily: accessMode ? "MPLUSLatin_Bold" : "MPLUSLatin_Regular",
+            fontSize: accessMode ? 22 : 18,
           }}
         >
-          Employee: {user?.displayName || "Unknown"}
+          Employee:{" "}
+          <Text style={{ color: "white" }}>
+            {user?.displayName || "Unknown"}
+          </Text>
         </Text>
 
         {/* render user personal-ID or unknown */}
         <Text
           style={{
-            color: "white",
-            fontFamily: "MPLUSLatin_Regular",
-            fontSize: 14,
+            color: "#a9a9a9",
+            fontFamily: accessMode ? "MPLUSLatin_Bold" : "MPLUSLatin_Regular",
+            fontSize: accessMode ? 18 : 14,
           }}
         >
-          Personal-ID: {user?.personalID || "Unknown"}
+          Personal-ID:{" "}
+          <Text style={{ color: "white" }}>
+            {user?.personalID || "Unknown"}
+          </Text>
         </Text>
       </View>
       {/* custom drawer section */}
@@ -249,7 +277,11 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         </BottomSheetModal>
         {/* FAQ button */}
 
-        <TouchableOpacity onPress={handlePresentModalPress}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Frequently Asked Questions"
+          onPress={handlePresentModalPress}
+        >
           <View
             style={{
               flexDirection: "row",
@@ -258,7 +290,12 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
               alignItems: "center",
             }}
           >
-            <AntDesign name="profile" size={26} color="white" />
+            <AntDesign
+              name="profile"
+              size={26}
+              color="white"
+              accessibilityElementsHidden
+            />
 
             <Text
               style={{
@@ -273,6 +310,8 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
           {/* Logout button */}
         </TouchableOpacity>
         <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Logout"
           onPress={() => {
             FIREBASE_AUTH.signOut();
             // console.log("User logged out");
@@ -286,7 +325,12 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
               alignItems: "center",
             }}
           >
-            <AntDesign name="logout" size={26} color="white" />
+            <AntDesign
+              name="logout"
+              size={26}
+              color="white"
+              accessibilityElementsHidden
+            />
             <Text
               style={{
                 color: "white",
