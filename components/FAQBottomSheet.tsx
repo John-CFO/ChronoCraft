@@ -275,7 +275,7 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
       accessibilityViewIsModal
       accessible={true}
       accessibilityLabel="Frequently Asked Questions sheet"
-      accessibilityHint="Contains frequently asked questions. Swipe up or down to close the sheet."
+      accessibilityHint="Contains frequently asked questions."
       style={{
         flex: 1,
         width: "100%",

@@ -20,7 +20,7 @@ import {
   AntDesign,
 } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
-import { User, onAuthStateChanged, getAuth } from "firebase/auth";
+import { User, onAuthStateChanged } from "firebase/auth";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-gesture-handler";
@@ -108,7 +108,6 @@ const AppDrawerNavigator = () => {
 
           // help button
           headerRight: () => <HeaderHelpComponent navigation={undefined} />,
-          // custom hamburger menu
           headerLeft: () => <CustomMenuBTN />,
           headerStyle: {
             backgroundColor: "black",
@@ -132,8 +131,15 @@ const AppDrawerNavigator = () => {
             ),
             drawerActiveTintColor: "white",
             drawerInactiveTintColor: "darkgrey",
-            drawerIcon: ({ color }) => (
-              <AntDesign name="home" size={26} color={color} />
+            drawerIcon: ({ focused }) => (
+              <AntDesign
+                name="home"
+                size={26}
+                color={focused ? "white" : "darkgrey"}
+                accessibilityLabel="Home"
+                accessibilityRole="image"
+                accessibilityState={{ selected: focused }}
+              />
             ),
           }}
         />
@@ -149,11 +155,14 @@ const AppDrawerNavigator = () => {
             drawerLabel: ({ focused }) => (
               <CustomDrawerLabel focused={focused} title="Work-Hours" />
             ),
-            drawerIcon: ({ focused, color }) => (
+            drawerIcon: ({ focused }) => (
               <MaterialCommunityIcons
                 name="clock-edit-outline"
                 size={24}
                 color={focused ? "white" : "darkgrey"}
+                accessibilityLabel="Work Hours"
+                accessibilityRole="image"
+                accessibilityState={{ selected: focused }}
               />
             ),
           }}
@@ -173,6 +182,9 @@ const AppDrawerNavigator = () => {
                 name="island"
                 size={24}
                 color={focused ? "white" : "darkgrey"}
+                accessibilityLabel="Vacation"
+                accessibilityRole="image"
+                accessibilityState={{ selected: focused }}
               />
             ),
           }}
