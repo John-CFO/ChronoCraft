@@ -6,7 +6,7 @@
 
 /////////////////////////////////////////////////////////////////////////////
 
-import { Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity } from "react-native";
 import React, { useEffect, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "react-native";
@@ -15,7 +15,6 @@ import { createDrawerNavigator } from "@react-navigation/drawer";
 import { createStackNavigator } from "@react-navigation/stack";
 import {
   Fontisto,
-  MaterialIcons,
   MaterialCommunityIcons,
   AntDesign,
 } from "@expo/vector-icons";
@@ -39,7 +38,7 @@ import VacationScreen from "./Screens/VacationScreen";
 import { FIREBASE_AUTH } from "./firebaseConfig";
 import CustomDrawer from "./components/CustomDrawer";
 import CustomMenuBTN from "./components/CustomMenuBTN";
-import HelpMenu from "./components/HelpMenu";
+import HeaderHelpComponent from "./components/HeaderHelpComp";
 import { useStore } from "./components/TimeTrackingState";
 import CustomAlert from "./components/services/customAlert/CustomAlert";
 import { useAlertStore } from "./components/services/customAlert/alertStore";
@@ -60,41 +59,7 @@ interface CustomDrawerLabelProps {
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
 
-const HeaderHelpComponent = ({ navigation }: { navigation: any }) => {
-  const [isHelpMenuVisible, setHelpMenuVisible] = useState(false);
-
-  // function to open help menu
-  const openDropdown = () => {
-    // console.log("open dropdown help menu");
-    setHelpMenuVisible(true);
-  };
-  // function to close help menu
-  const closeDropdown = () => {
-    // console.log("close dropdown help menu");
-    setHelpMenuVisible(false);
-  };
-
-  return (
-    <View>
-      <TouchableOpacity
-        onPress={openDropdown}
-        accessibilityRole="button"
-        accessibilityLabel="Help Menu"
-        accessibilityHint="Opens the help menu to inform us about any issues or bugs"
-        accessibilityState={{ expanded: isHelpMenuVisible }}
-        style={{ marginRight: 10 }}
-      >
-        <MaterialIcons name="live-help" size={36} color="white" />
-      </TouchableOpacity>
-      {isHelpMenuVisible && (
-        <View style={{ position: "absolute", right: 0 }}>
-          <HelpMenu onClose={closeDropdown} />
-        </View>
-      )}
-    </View>
-  );
-};
-
+// function to create the app drawer navigator
 const AppDrawerNavigator = () => {
   return (
     <CopilotProvider>
@@ -105,9 +70,9 @@ const AppDrawerNavigator = () => {
             backgroundColor: "black",
             width: 280,
           },
-
           // help button
           headerRight: () => <HeaderHelpComponent navigation={undefined} />,
+          // hamburger menu button (to open the drawer)
           headerLeft: () => <CustomMenuBTN />,
           headerStyle: {
             backgroundColor: "black",
