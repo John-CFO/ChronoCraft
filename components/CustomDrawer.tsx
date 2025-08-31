@@ -37,6 +37,8 @@ import { CustomUser } from "./types/CustomUser"; // CustomUser type definition i
 import RestartTourButton from "./../components/services/copilotTour/RestartTourButton";
 import AccessibilityToggleButton from "./services/accessibility/AccessibilityToggleButton";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+import TFAButton from "./services/TFAButton";
+import TwoFactorModal from "./TwoFactorModal";
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -56,6 +58,17 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
 
   // declare state for user data
   const [user, setUser] = useState<CustomUser | null>(null);
+
+  // declare state for 2FA modal
+  const [tfaModalVisible, setTfaModalVisible] = useState(false);
+
+  // state for the 2FA Button
+  const [isEnrolled, setIsEnrolled] = useState(false);
+
+  // function to close 2FA modal
+  const closeTfaModal = () => {
+    setTfaModalVisible(false);
+  };
 
   // BottomSheetModal settings
   // reference to the bottom sheet modal
@@ -80,19 +93,16 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         const userRef = doc(FIREBASE_FIRESTORE, "Users", currentUser.uid);
         const userDoc = await getDoc(userRef);
         if (userDoc.exists()) {
-          setUser({ uid: currentUser.uid, ...userDoc.data() } as CustomUser);
-          /* console.log("User data retrieved:", {
+          const data = {
             uid: currentUser.uid,
             ...userDoc.data(),
-          }); */
-        } else {
-          // console.log("User document not found");
+          } as CustomUser;
+          setUser(data);
+          setIsEnrolled(!!data.totpEnabled);
         }
-      } else {
-        // console.log("User not logged in");
       }
     } catch (error) {
-      // console.error("Error fetching user profile:", error);
+      console.error(error);
     }
   };
 
@@ -158,6 +168,28 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
           />
         ) : (
           // if user is not logged in, render null (empty fragment)
+          <></>
+        )}
+      </Modal>
+
+      {/* TwoFactorModal */}
+      <Modal
+        accessibilityViewIsModal
+        accessibilityLabel="Two Factor Authentication Modal"
+        isVisible={tfaModalVisible}
+        backdropColor="black"
+        onBackdropPress={closeTfaModal}
+        swipeDirection={["up", "down"]}
+        onSwipeComplete={closeTfaModal}
+        style={{ justifyContent: "center", alignItems: "center" }}
+      >
+        {user ? (
+          <TwoFactorModal
+            onClose={closeTfaModal}
+            isEnrolled={isEnrolled}
+            setIsEnrolled={setIsEnrolled}
+          />
+        ) : (
           <></>
         )}
       </Modal>
@@ -245,7 +277,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
           borderWidth: 0.5,
         }}
       >
-        {/* restart tour and accessibility button */}
+        {/* restart tour, accessibility and TFA button */}
         <View
           style={{
             position: "absolute",
@@ -255,8 +287,11 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
           }}
         >
           <RestartTourButton userId={user?.uid || ""} />
-
           <AccessibilityToggleButton />
+          <TFAButton
+            onPress={() => setTfaModalVisible(true)}
+            isEnrolled={isEnrolled}
+          />
         </View>
 
         {/* FAQ Modal */}
@@ -348,12 +383,3 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
 };
 
 export default CustomDrawer;
-
-/* function userAuthState(FIREBASE_AUTH: Auth): [any] {
-  throw new Error("Function not implemented.");
-}
-// wrap the menue in this, if you need the menuelist is scrollable
-/* <DrawerContentScrollView
-        {...props}
-        contentContainerStyle={{ backgroundColor: "black" }}
-      ></DrawerContentScrollView> */
