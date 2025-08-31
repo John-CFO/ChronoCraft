@@ -88,7 +88,7 @@ const NoteList: React.FC<{ projectId: string }> = ({ projectId }) => {
   if (loading) {
     return (
       <View>
-        <ActivityIndicator size="large" color="blue" />
+        <ActivityIndicator size="large" color="white" />
       </View>
     );
   }
