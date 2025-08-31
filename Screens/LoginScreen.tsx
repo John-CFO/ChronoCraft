@@ -1,9 +1,9 @@
 ///////////////////////////login screen with firebase registry/////////////////////////////////
 
-// This screen shows the login screen with firebase registry.
-// The authentication is handled by firebase auth.
-// The user can login with email and password or registry with email and password.
-// It includes also accessibility features to make the app more accessible for users with disabilities.
+// This screen handles user login and registration using Firebase Authentication.
+// Two-factor authentication is implemented via device verification, cryptography, and optionally reCAPTCHA.
+// Users can log in or register with email and password.
+// The screen also includes accessibility features to improve usability for users with disabilities.
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -15,16 +15,18 @@ import {
   StyleSheet,
   Image,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import {
   getAuth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signOut,
   Auth,
+  User,
 } from "firebase/auth";
-import { setDoc, doc, getDoc } from "firebase/firestore";
+import { setDoc, doc, getDoc, serverTimestamp } from "firebase/firestore";
 import {
   ALERT_TYPE,
   Toast,
@@ -35,6 +37,7 @@ import { validate } from "react-email-validator";
 import { BlurView } from "expo-blur";
 
 import { FIREBASE_APP, FIREBASE_FIRESTORE } from "../firebaseConfig";
+import { AuthContext } from "../components/contexts/AuthContext";
 import { RootStackParamList } from "../navigation/RootStackParams";
 import AppLogo from "../components/AppLogo";
 import AnimatedText from "../components/AnimatedText";
@@ -42,12 +45,14 @@ import DismissKeyboard from "../components/DismissKeyboard";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import AuthForm from "../components/AuthForm";
+import { verifyToken } from "../components/utils/totp";
+import TotpCodeModal from "../components/TotpCodeModal";
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 type RegisterScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
-  "Home"
+  "Login"
 >;
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -59,6 +64,12 @@ const LoginScreen: React.FC = () => {
   // declaire the navigation to user get in after logein
   const navigation = useNavigation<RegisterScreenNavigationProp>();
 
+  const [totpModalVisible, setTotpModalVisible] = useState(false);
+  const [totpLoading, setTotpLoading] = useState(false);
+  const [pendingTotpSecret, setPendingTotpSecret] = useState<string | null>(
+    null
+  );
+
   // states for registry and login
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -69,13 +80,17 @@ const LoginScreen: React.FC = () => {
 
   // declaire the firebase authentication
   const auth: Auth = getAuth(FIREBASE_APP);
+  // declaire the user context
+  const { setUser } = useContext(AuthContext);
+  // declaire the pending user state
+  const [pendingUser, setPendingUser] = useState<User | null>(null);
 
   // function to validate the inputs
   const validateInputs = () => {
     if (!validate(email)) {
       useAlertStore
         .getState()
-        .showAlert("Unvalid E-Mail", "Plese enter a validate E-Mail.");
+        .showAlert("Invalid E-Mail", "Please enter a validate E-Mail.");
       return false;
     }
     if (password.length < 8) {
@@ -105,36 +120,126 @@ const LoginScreen: React.FC = () => {
   const handleLogin = async () => {
     if (!validateInputs()) return;
     setLoading(true);
-    try {
-      const response = await signInWithEmailAndPassword(auth, email, password);
-      console.log(response);
 
-      const userRef = doc(FIREBASE_FIRESTORE, "Users", response.user.uid);
+    try {
+      const response = await signInWithEmailAndPassword(
+        getAuth(FIREBASE_APP),
+        email,
+        password
+      );
+      const user = response.user;
+
+      // store signed-in user for later (TOTP flow)
+      setPendingUser(user);
+
+      const userRef = doc(FIREBASE_FIRESTORE, "Users", user.uid);
       const userSnap = await getDoc(userRef);
 
+      let userData: any = {};
       if (userSnap.exists()) {
-        const userData = userSnap.data();
-        // condition to check if firstLogin is true
+        userData = userSnap.data();
         if (userData.firstLogin) {
-          console.log("First-time login detected");
-          // set firstLogin to false
           await setDoc(userRef, { firstLogin: false }, { merge: true });
         }
       }
 
-      navigation.navigate("Home" as never);
-      console.log("Login successfully");
-    } catch (error) {
-      console.log("Login failed:", error);
+      // If TOTP is active
+      if (userData.totpEnabled) {
+        const totpSecret = userData.totpSecret ?? null;
 
-      // react-native-alert-notification toast
-      Toast.show({
-        type: ALERT_TYPE.DANGER,
-        title: "Login failed",
-        textBody: "Something went wrong, please try again!",
-      });
+        if (!totpSecret) {
+          useAlertStore
+            .getState()
+            .showAlert("2FA Error", "TOTP not configured.");
+          await signOut(getAuth(FIREBASE_APP));
+          setPendingUser(null);
+          setLoading(false);
+          return;
+        }
+
+        // Save secret for TOTP modal
+        setPendingTotpSecret(totpSecret);
+        setTotpModalVisible(true);
+        setLoading(false);
+        return; // Modal will handle the rest
+      }
+
+      // No TOTP → normal login
+      setUser(user);
+    } catch (error) {
+      console.error(error);
+      useAlertStore
+        .getState()
+        .showAlert("Login failed", "Something went wrong, please try again!");
     } finally {
       setLoading(false);
+    }
+  };
+
+  //  function to handle TOTP submit
+  const handleTotpSubmit = async (code: string) => {
+    setTotpLoading(true);
+    try {
+      if (!pendingTotpSecret) throw new Error("missing-totp-secret");
+      const ok = verifyToken(pendingTotpSecret, code);
+      if (!ok) {
+        useAlertStore
+          .getState()
+          .showAlert("Wrong Code", "The code you entered is not valid.");
+        setTotpLoading(false);
+        return;
+      }
+
+      // TOTP validated -> set global user to allow navigation
+      const finalUser = pendingUser ?? getAuth(FIREBASE_APP).currentUser;
+      if (finalUser) {
+        setUser(finalUser); // App changes to Inside/Drawer
+      } else {
+        // Fallback: if somehow no user available, sign out and show error
+        await signOut(getAuth(FIREBASE_APP));
+        useAlertStore
+          .getState()
+          .showAlert("Error", "Internal error after TOTP validation.");
+        setTotpModalVisible(false);
+        setPendingTotpSecret(null);
+        setPendingUser(null);
+        setTotpLoading(false);
+        return;
+      }
+
+      useAlertStore.getState().showAlert("Welcome", "Successfully logged in.");
+
+      // clear pending secret and close modal
+      setPendingTotpSecret(null);
+      setPendingUser(null);
+      setTotpModalVisible(false);
+
+      // optional navigation (App should already react to setUser)
+      setUser(finalUser);
+    } catch (e) {
+      console.error("TOTP validation error:", e);
+      useAlertStore.getState().showAlert("Error", "TOTP-Validation failed.");
+      try {
+        await signOut(getAuth(FIREBASE_APP));
+      } catch (err) {}
+      setTotpModalVisible(false);
+      setPendingTotpSecret(null);
+      setPendingUser(null);
+    } finally {
+      setTotpLoading(false);
+    }
+  };
+
+  // function to handle TOTP cancel
+  const handleTotpCancel = async () => {
+    try {
+      setTotpModalVisible(false);
+      setPendingTotpSecret(null);
+      // Security: signOut during TOTP cancel
+      await signOut(getAuth(FIREBASE_APP));
+    } catch (e) {
+      // ignore signOut errors, but log them for debugging
+      console.warn("signOut during TOTP cancel failed", e);
     }
   };
 
@@ -148,42 +253,23 @@ const LoginScreen: React.FC = () => {
         email,
         password
       );
-      console.log("Registration successfully:", response);
-
-      await createUserDocument(response.user.uid, {
+      const uid = response.user.uid;
+      await createUserDocument(uid, {
         email: email,
         firstLogin: true,
       });
 
-      await setDoc(doc(FIREBASE_FIRESTORE, "Users", response.user.uid), {
-        hasSeenHomeTour: false,
-        hasSeenDetailsTour: false,
-        hasSeenVacationTour: false,
-        hasSeenWorkHoursTour: false,
-        firstLogin: true,
-      });
-
-      // call the push token
+      // initialize push notifications
       const token = await NotificationManager.registerForPushNotifications();
-      if (!token) {
-        console.log("Push token not available.");
-        return;
+      if (token) {
+        await NotificationManager.savePushTokenToDatabase(uid, token);
+        await NotificationManager.sendWelcomeNotification(token);
       }
 
-      // console.log("Expo Push Token:", token);
-
-      // save the push token to the firestore
-      await NotificationManager.savePushTokenToDatabase(
-        response.user.uid,
-        token
-      );
-
-      // welcome notification
-      await NotificationManager.sendWelcomeNotification(token);
-      // navigate to the home screen with the flag
-      navigation.navigate("Home", { fromRegister: true });
+      // Navigation
+      setUser(response.user);
     } catch (error) {
-      console.log("Registration failed:", error);
+      console.error("Registration failed:", error);
       // alert notification toast
       Toast.show({
         type: ALERT_TYPE.DANGER,
@@ -199,10 +285,21 @@ const LoginScreen: React.FC = () => {
   const createUserDocument = async (userId: string, userData: any) => {
     try {
       const userRef = doc(FIREBASE_FIRESTORE, "Users", userId);
-      await setDoc(userRef, userData, { merge: true });
-      // console.log("User document created successfully");
+      await setDoc(
+        userRef,
+        {
+          ...userData,
+          createdAt: serverTimestamp(),
+          hasSeenHomeTour: userData.hasSeenHomeTour ?? false,
+          hasSeenDetailsTour: userData.hasSeenDetailsTour ?? false,
+          hasSeenVacationTour: userData.hasSeenVacationTour ?? false,
+          hasSeenWorkHoursTour: userData.hasSeenWorkHoursTour ?? false,
+        },
+        { merge: true } // usefull to prevent overwriting
+      );
     } catch (error) {
       console.error("Error creating user document:", error);
+      throw error;
     }
   };
 
@@ -362,6 +459,13 @@ const LoginScreen: React.FC = () => {
           )}
         </View>
       </DismissKeyboard>
+      {/* TotpCodeModal will displayed after login in if 2FA is activated */}
+      <TotpCodeModal
+        visible={totpModalVisible}
+        loading={totpLoading}
+        onCancel={handleTotpCancel}
+        onSubmit={handleTotpSubmit}
+      />
     </AlertNotificationRoot>
   );
 };

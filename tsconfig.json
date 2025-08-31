@@ -2,13 +2,14 @@
   "extends": "./node_modules/expo/tsconfig.base.json",
   "compilerOptions": {
     "target": "esnext",
-    // "module": "commonjs",
-      "module": "es2015",
+    "module": "es2015",
     "jsx": "react-native",
     "lib": ["esnext"],
     "outDir": "lib",
     "strict": true,
     "esModuleInterop": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
     "types": ["@react-native-async-storage/async-storage", "node"],
     "paths": {
       "@firebase/auth": ["./node_modules/@firebase/auth/dist/index.rn.d.ts"]
@@ -18,5 +19,3 @@
   "exclude": ["node_modules"],
   "rootDir": "./"
 }
-
-

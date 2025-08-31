@@ -33,7 +33,6 @@ import DismissKeyboard from "../components/DismissKeyboard";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { sanitizeName, sanitizePersonalID } from "./InputSanitizers";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
-import { profile } from "console";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
