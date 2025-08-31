@@ -979,7 +979,6 @@ const HomeScreen: React.FC = () => {
                 </Modal>
               </>
             )}
-            {/* <PendingApprovalsBottomSheet /> */}
           </View>
         </CopilotProvider>
       </SafeAreaView>
