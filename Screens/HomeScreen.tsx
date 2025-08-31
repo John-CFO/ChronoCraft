@@ -76,7 +76,7 @@ type HomeScreenRouteProp = RouteProp<
   "Home"
 >;
 
-type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, "Home">;
+type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -195,43 +195,44 @@ const HomeScreen: React.FC = () => {
 
   // function to load data from firestore
   useEffect(() => {
-    // constant to handle the loading animation
-    const timer = setTimeout(() => {
-      // fetch the data from firestore with snapshots
-      const fetchData = async ({ user }: { user: any }) => {
-        try {
-          const db = FIREBASE_FIRESTORE;
-          const projectsCollection = collection(
-            db,
-            "Users",
-            user.uid,
-            "Services",
-            "AczkjyWoOxdPAIRVxjy3",
-            "Projects"
-          );
+    const timer = setTimeout(async () => {
+      const user = FIREBASE_AUTH.currentUser;
+      if (!user) {
+        console.warn("User not authenticated");
+        setIsLoading(false);
+        return;
+      }
 
-          const projectsSnapshot = await getDocs(projectsCollection);
-          const projectsData = projectsSnapshot.docs
-            .filter((doc) => doc.exists())
-            .map((doc) => ({
-              id: doc.id,
-              ...doc.data(),
-            }));
-          setProjects(
-            projectsData as {
-              createdAt: any;
-              id: string;
-              name: string;
-              notes: { content: string; timestamp: any }[];
-            }[]
-          );
-          setIsLoading(false);
-        } catch (error) {
-          console.error("Error fetching projects", error);
-          setIsLoading(false);
-        }
-      };
-      fetchData({ user: FIREBASE_AUTH.currentUser });
+      try {
+        const db = FIREBASE_FIRESTORE;
+        const projectsCollection = collection(
+          db,
+          "Users",
+          user.uid,
+          "Services",
+          "AczkjyWoOxdPAIRVxjy3",
+          "Projects"
+        );
+
+        const projectsSnapshot = await getDocs(projectsCollection);
+        const projectsData = projectsSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setProjects(
+          projectsData as {
+            createdAt: any;
+            id: string;
+            name: string;
+            notes: { content: string; timestamp: any }[];
+          }[]
+        );
+      } catch (error) {
+        console.error("Error fetching projects", error);
+      } finally {
+        setIsLoading(false);
+      }
     }, 3000);
 
     return () => clearTimeout(timer);
@@ -978,6 +979,7 @@ const HomeScreen: React.FC = () => {
                 </Modal>
               </>
             )}
+            {/* <PendingApprovalsBottomSheet /> */}
           </View>
         </CopilotProvider>
       </SafeAreaView>

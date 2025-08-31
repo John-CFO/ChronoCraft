@@ -18,9 +18,19 @@ import {
 } from "react-native";
 import Collapsible from "react-native-collapsible";
 import { LinearGradient } from "expo-linear-gradient";
-import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
-import { deleteObject, ref, getStorage } from "firebase/storage";
-import { EmailAuthProvider } from "firebase/auth";
+import {
+  collection,
+  getDocs,
+  doc,
+  deleteDoc,
+  writeBatch,
+  query,
+  limit,
+  CollectionReference,
+  DocumentData,
+} from "firebase/firestore";
+import { deleteObject, getStorage, ref as storageRef } from "firebase/storage";
+import { EmailAuthProvider, deleteUser } from "firebase/auth";
 import { reauthenticateWithCredential } from "firebase/auth";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { ScrollView } from "react-native-gesture-handler";
@@ -87,68 +97,64 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
     }
   };
 
-  // reauthenticate the user in Firebase Auth
-  const reauthenticateUser = async (password: string) => {
-    if (!user) {
-      throw new Error("No user is signed in.");
-    }
-    // create a credential with the user's email and password
-    const credential = EmailAuthProvider.credential(user.email!, password);
-
+  // function to batch delete a collection
+  const deleteCollectionBatched = async (
+    colRef: CollectionReference<DocumentData>,
+    batchSize = 100
+  ): Promise<number> => {
+    let totalDeleted = 0;
     try {
-      // reauthenticate the user
-      await reauthenticateWithCredential(user, credential);
-      // console.log("Reauthentication successful");
-    } catch (error) {
-      console.error("Error during reauthentication:", error);
-      throw error;
-    }
-  };
+      while (true) {
+        const q = query(colRef, limit(batchSize));
+        const snapshot = await getDocs(q);
 
-  // function to delete an image from Firebase Storage
-  const deleteImageFromStorage = async (imagePath: string) => {
-    // check if Firebase Storage is enabled
-    if (process.env.FIREBASE_STORAGE_ENABLED === "false") {
-      //  console.log("Skipping image deletion: Firebase Storage is disabled.");
-      return;
-    }
+        if (snapshot.empty) break;
 
-    const storage = getStorage();
-    const imageRef = ref(storage, imagePath);
+        const batch = writeBatch(colRef.firestore);
+        snapshot.docs.forEach((doc) => batch.delete(doc.ref));
+        await batch.commit();
 
-    try {
-      await deleteObject(imageRef);
-      // console.log("Image deleted successfully.");
-    } catch (error: any) {
-      if (error.code === "storage/object-not-found") {
-        console.log("Image not found. Skipping delete.");
-      } else {
-        console.error("Error deleting image:", error);
+        totalDeleted += snapshot.size;
+
+        if (snapshot.size < batchSize) break;
       }
+      return totalDeleted;
+    } catch (e) {
+      console.error(
+        "deleteCollectionBatched error for",
+        colRef.path ?? colRef,
+        e
+      );
+      throw e;
     }
   };
 
   // recursive function to delete subcollections
   const deleteSubcollections = async (
-    parentPath: string,
-    subcollections: string[]
+    parentPathSegments: string[],
+    subs: string[]
   ) => {
-    for (const sub of subcollections) {
-      const subCollectionRef = collection(
-        FIREBASE_FIRESTORE,
-        `${parentPath}/${sub}`
-      );
-      const subDocsSnapshot = await getDocs(subCollectionRef);
+    // parentPathSegments example: ["Users", user.uid, "Services", serviceId"]
+    for (const sub of subs) {
+      const path = [...parentPathSegments, sub].join("/");
+      const colRef = collection(FIREBASE_FIRESTORE, path);
 
-      for (const subDoc of subDocsSnapshot.docs) {
-        const subDocPath = `${parentPath}/${sub}/${subDoc.id}`;
+      let deleted;
+      do {
+        deleted = await deleteCollectionBatched(colRef);
+      } while (deleted > 0);
 
-        // for deeper nested subcollections
-        if (sub === "Projects") {
-          await deleteSubcollections(subDocPath, ["Notes"]);
+      if (sub === "Projects") {
+        // iterate projects to delete nested Notes
+        const projSnap = await getDocs(collection(FIREBASE_FIRESTORE, path));
+        for (const p of projSnap.docs) {
+          const notesPath = `${path}/${p.id}/Notes`;
+          const notesRef = collection(FIREBASE_FIRESTORE, notesPath);
+          let nd;
+          do {
+            nd = await deleteCollectionBatched(notesRef);
+          } while (nd > 0);
         }
-
-        await deleteDoc(subDoc.ref);
       }
     }
   };
@@ -175,86 +181,110 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
     };
   }, []);
 
-  // function to sleep with cancel to make the dot animation visible
-  const sleepWithCancel = (ms: number): Promise<void> => {
-    return new Promise((resolve) => {
-      const timeoutId = setTimeout(resolve, ms);
-      animationTimeoutRef.current = timeoutId;
-    });
-  };
-
-  // function to delete the account
+  // function to delete account
   const handleDeleteAccount = async () => {
     if (!password?.trim()) {
-      // delete previous timeout
-      if (alertTimeoutRef.current) {
-        clearTimeout(alertTimeoutRef.current);
-      }
-      // show an alert if no password is entered
-      alertTimeoutRef.current = setTimeout(() => {
-        useAlertStore
-          .getState()
-          .showAlert(
-            "No Password",
-            "Please enter your password before deleting your account."
-          );
-      }, 300);
-      return;
-    }
-
-    setLoading(true);
-    // use sleep to make the dot animation visible
-    await sleepWithCancel(5000);
-
-    try {
-      if (!userUid) throw new Error("No user is signed in.");
-
-      await reauthenticateUser(password);
-      await deleteImageFromStorage(`profilePictures/${userUid}`);
-
-      // get all services
-      const servicesColRef = collection(
-        FIREBASE_FIRESTORE,
-        `Users/${userUid}/Services`
-      );
-      const servicesSnapshot = await getDocs(servicesColRef);
-
-      for (const serviceDoc of servicesSnapshot.docs) {
-        const servicePath = `Users/${userUid}/Services/${serviceDoc.id}`;
-
-        // delete all subcollections inside a service document
-        await deleteSubcollections(servicePath, [
-          "Projects",
-          "Vacations",
-          "WorkHours",
-        ]);
-
-        // delete the service document
-        await deleteDoc(serviceDoc.ref);
-      }
-
-      // delete the user document
-      await deleteDoc(doc(FIREBASE_FIRESTORE, "Users", userUid));
-
-      closeFAQSheet();
-
       useAlertStore
         .getState()
         .showAlert(
-          "Success",
-          "Your account has been deleted. All your data has been removed.",
-          [{ text: "OK", onPress: () => useAlertStore.getState().hideAlert() }]
+          "No Password",
+          "Please enter your password before deleting your account."
         );
+      return;
+    }
+    setLoading(true);
+    try {
+      const user = FIREBASE_AUTH.currentUser;
+      if (!user) throw new Error("No user signed in");
+      const credential = EmailAuthProvider.credential(user.email!, password);
+      await reauthenticateWithCredential(user, credential);
+      // delete profile image (if storage enabled)
+      if (process.env.FIREBASE_STORAGE_ENABLED !== "false") {
+        try {
+          const st = getStorage();
+          const imgRef = storageRef(st, `profilePictures/${user.uid}`);
+          await deleteObject(imgRef).catch((e) => {
+            // non-fatal: ignore "not-found", but log others
+            if (e?.code === "storage/object-not-found") {
+            } else {
+              console.warn(
+                "[handleDeleteAccount] error deleting profile image:",
+                e
+              );
+            }
+          });
+        } catch (e) {
+          console.warn(
+            "[handleDeleteAccount] storage delete error (ignored):",
+            e
+          );
+        }
+      }
 
-      // delete the current user
-      await FIREBASE_AUTH.currentUser?.delete();
+      // fetch services
+      const servicesColRef = collection(
+        FIREBASE_FIRESTORE,
+        `Users/${user.uid}/Services`
+      );
+      const servicesSnap = await getDocs(servicesColRef);
+
+      // iterate services and delete nested data
+      for (const serviceDoc of servicesSnap.docs) {
+        const servicePath = `Users/${user.uid}/Services/${serviceDoc.id}`;
+        try {
+          await deleteSubcollections(
+            ["Users", user.uid, "Services", serviceDoc.id],
+            ["Projects", "Vacations", "WorkHours"]
+          );
+        } catch (e) {
+          console.error(
+            "[handleDeleteAccount] error deleting subcollections for",
+            servicePath,
+            e
+          );
+          throw e; // break and surface to outer catch so we get permission error info
+        }
+        // delete service doc itself
+        try {
+          await deleteDoc(serviceDoc.ref);
+        } catch (e) {
+          console.error(
+            "[handleDeleteAccount] failed to delete service doc:",
+            serviceDoc.ref.path,
+            e
+          );
+          throw e;
+        }
+      }
+      // delete user doc
+      try {
+        await deleteDoc(doc(FIREBASE_FIRESTORE, "Users", user.uid));
+      } catch (e) {
+        console.error("[handleDeleteAccount] failed to delete user doc:", e);
+        throw e;
+      }
+
+      // finally delete auth user
+      try {
+        await deleteUser(user);
+      } catch (e) {
+        console.error("[handleDeleteAccount] failed to delete auth user:", e);
+        throw e;
+      }
+
+      useAlertStore
+        .getState()
+        .showAlert("Success", "Your account has been deleted.");
+      closeFAQSheet();
     } catch (error: any) {
-      // console.error("Error deleting account:", error);
+      console.error("Error deleting account:", error);
+      console.error("Error code:", error?.code);
+      console.error("Error message:", error?.message);
       useAlertStore
         .getState()
         .showAlert(
           "Error",
-          "There was an issue deleting your account. Please try again.",
+          `There was an issue deleting your account. ${error?.code ?? ""} ${error?.message ?? ""}`,
           [{ text: "OK", onPress: () => useAlertStore.getState().hideAlert() }]
         );
     } finally {
@@ -625,7 +655,7 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
                     maxWidth: 400,
                     borderRadius: 12,
                     overflow: "hidden",
-                    borderWidth: 1.5,
+                    borderWidth: 2,
                     borderColor: "aqua",
                     marginBottom: 25,
                   }}
