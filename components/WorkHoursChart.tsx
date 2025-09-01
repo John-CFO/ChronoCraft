@@ -197,9 +197,19 @@ const WorkHoursChart = () => {
       if (!monthlySums[key]) {
         monthlySums[key] = { expected: 0, over: 0, planned: 0 };
       }
-      monthlySums[key].expected += Number(item.expectedHours) || 0;
-      monthlySums[key].over += Number(item.overHours) || 0;
-      monthlySums[key].planned += Number(item.expectedHours) || 0;
+
+      const worked = Number(item.elapsedTime) || 0;
+      const planned = Number(item.expectedHours) || 0;
+
+      // worked-part, max. planed hours
+      const base = worked < planned ? worked : planned;
+
+      // Overhours only if more worked than planned
+      const extra = worked > planned ? worked - planned : 0;
+
+      monthlySums[key].expected += base; // really worked hours
+      monthlySums[key].over += extra; // really over hours
+      monthlySums[key].planned += planned; // planned hours
     });
     // map the monthly sums to the bar chart and format the x-axis labels
     stackData = Object.keys(monthlySums).map((key) => {
