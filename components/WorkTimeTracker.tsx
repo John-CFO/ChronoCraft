@@ -106,6 +106,12 @@ const WorkTimeTracker = () => {
     loadState();
   }, []);
 
+  // track currentDocId for the persistent mechanism by tracking the current day
+  const currentDocIdRef = useRef(currentDocId);
+  useEffect(() => {
+    currentDocIdRef.current = currentDocId;
+  }, [currentDocId]);
+
   // useEffect to get the expected hours for today
   useEffect(() => {
     const getExpectedHoursForToday = async () => {
@@ -342,17 +348,24 @@ const WorkTimeTracker = () => {
     }
 
     // catch the end time
-    const endTime = new Date();
-
     // calculate the duration of the current session
-    const sessionHours =
+    const endTime = new Date();
+    let sessionHours =
       (endTime.getTime() - currentStartTime.getTime()) / (1000 * 60 * 60);
+
+    // basic sanity clamp
+    if (sessionHours < 0 || sessionHours > 24) {
+      console.warn("[DEBUG] suspicious sessionHours:", sessionHours);
+      sessionHours = 0; // or handle as you see fit
+    }
+
     const totalHours = currentAccumulated + sessionHours;
     const roundedDuration = parseFloat(totalHours.toFixed(2));
 
-    // update firestore with new data
+    // update firestore with new data (use setDoc merge so it works when doc missing)
     const userId = getAuth().currentUser?.uid;
     if (userId) {
+      const docIdToUse = currentDocId || dayjs().format("YYYY-MM-DD");
       const workRef = doc(
         FIREBASE_FIRESTORE,
         "Users",
@@ -360,21 +373,31 @@ const WorkTimeTracker = () => {
         "Services",
         "AczkjyWoOxdPAIRVxjy3",
         "WorkHours",
-        currentDoc
+        docIdToUse
       );
 
       try {
-        await updateDoc(workRef, {
-          endTime: endTime.toISOString(),
-          duration: roundedDuration,
-          overHours: Math.max(roundedDuration - parseFloat(expectedHours), 0),
-          elapsedTime: roundedDuration,
-        });
+        await setDoc(
+          workRef,
+          {
+            endTime: endTime.toISOString(),
+            duration: roundedDuration,
+            elapsedTime: roundedDuration,
+            overHours: Math.max(
+              roundedDuration - parseFloat(expectedHours || "0"),
+              0
+            ),
+            userId,
+            workDay: docIdToUse,
+          },
+          { merge: true }
+        );
+        // ensure local state reflects docId used
+        setCurrentDocId(docIdToUse);
       } catch (error) {
-        console.error("Firestore update error:", error);
+        console.error("Firestore setDoc error on stop:", error);
       }
     }
-
     // update local state after firestore update
     setAccumulatedDuration(roundedDuration);
     setElapsedTime(roundedDuration);
@@ -502,16 +525,11 @@ const WorkTimeTracker = () => {
   const saveState = useCallback(async () => {
     const state = {
       isWorking: isWorkingRef.current,
-      startWorkTime: startWorkTimeRef.current?.toISOString(),
+      startWorkTime: startWorkTimeRef.current?.toISOString() ?? null,
       elapsedTime,
       accumulatedDuration: accumulatedDurationRef.current,
+      currentDocId: currentDocIdRef.current ?? null,
     };
-    // console.log("[SAVE] Saving state to AsyncStorage", {
-    //   isWorking: isWorkingRef.current,
-    //   startWorkTime: startWorkTimeRef.current,
-    //   elapsedTime,
-    //   accumulatedDuration: accumulatedDurationRef.current,
-    // });
     await AsyncStorage.setItem("workTimeTrackerState", JSON.stringify(state));
   }, [elapsedTime]);
 
@@ -535,46 +553,62 @@ const WorkTimeTracker = () => {
   useEffect(() => {
     const restoreState = async () => {
       try {
-        const savedState = await AsyncStorage.getItem("workTimeTrackerState");
-        // console.log("[RESTORE] Restoring state from AsyncStorage", savedState);
-        if (savedState) {
-          const parsedState = JSON.parse(savedState);
-          // console.log("parsed state", parsedState);
-          if (parsedState.isWorking && parsedState.startWorkTime) {
-            const startTime = new Date(parsedState.startWorkTime);
-            const now = new Date();
-            console.log(startTime, now);
-            const elapsedHours =
-              (now.getTime() - startTime.getTime()) / (1000 * 60 * 60);
-            // console.log("calculated hours", elapsedHours);
-            // calculate based on reference
-            const newAccumulated =
-              parsedState.accumulatedDuration + elapsedHours;
+        const saved = await AsyncStorage.getItem("workTimeTrackerState");
+        if (!saved) return;
+        const parsed = JSON.parse(saved);
 
-            // updates states
-            setAccumulatedDuration(newAccumulated);
-            setElapsedTime(newAccumulated);
-            setStartWorkTime(now);
-            console.log(
-              setAccumulatedDuration,
-              setElapsedTime,
-              setStartWorkTime
+        // restore basic data
+        setAccumulatedDuration(parsed.accumulatedDuration || 0);
+        setElapsedTime(parsed.elapsedTime || 0);
+
+        // only resume if previously marked as running AND startTime available
+        if (parsed.isWorking && parsed.startWorkTime) {
+          const userId = getAuth().currentUser?.uid;
+          if (!userId) return; // no logged user -> no resume
+
+          const docIdToCheck =
+            parsed.currentDocId || dayjs().format("YYYY-MM-DD");
+          const workRef = doc(
+            FIREBASE_FIRESTORE,
+            "Users",
+            userId,
+            "Services",
+            "AczkjyWoOxdPAIRVxjy3",
+            "WorkHours",
+            docIdToCheck
+          );
+          const snap = await getDoc(workRef);
+
+          if (!snap.exists()) {
+            // inconsistent saved session -> not auto-resume
+            console.warn(
+              "Saved running session exists but no firestore doc -> not auto-resuming."
             );
-            setIsWorking(true);
-          } else {
-            setAccumulatedDuration(parsedState.accumulatedDuration);
-            setElapsedTime(parsedState.elapsedTime);
-            // after mounting, fetch the chart data
-            setData(await fetchChartData());
+            await AsyncStorage.removeItem("workTimeTrackerState");
+            return;
           }
+
+          // safe resume
+          const startTime = new Date(parsed.startWorkTime);
+          const now = new Date();
+          const elapsedSince =
+            (now.getTime() - startTime.getTime()) / (1000 * 60 * 60);
+          const newAccumulated =
+            (parsed.accumulatedDuration || 0) + elapsedSince;
+
+          setAccumulatedDuration(newAccumulated);
+          setElapsedTime(newAccumulated);
+          setStartWorkTime(new Date()); // set new startpoint to resume
+          setIsWorking(true);
+          setCurrentDocId(docIdToCheck);
         }
-      } catch (error) {
-        console.error("Fehler beim Wiederherstellen", error);
+      } catch (err) {
+        console.error("Error restoring state:", err);
       }
     };
 
     restoreState();
-  }, []);
+  }, []); // run once on mount
 
   // hook to save the state when the component unmounts
   useEffect(() => {

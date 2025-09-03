@@ -39,7 +39,11 @@ const WorkHoursInput = () => {
   // state to store the temporary expected hours
   const [tempExpectedHours, setTempExpectedHours] = useState("");
   // gets the current document ID from the WorkHoursState
-  const { setDocExists, setCurrentDocId: setGlobalDocId } = WorkHoursState();
+  const {
+    setDocExists,
+    setCurrentDocId: setGlobalDocId,
+    isWorking,
+  } = WorkHoursState();
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
@@ -81,10 +85,88 @@ const WorkHoursInput = () => {
     fetchExpectedHours();
   }, []); // empty array enshures that this runs only once by mount
 
+  // Healper function to recalculate and save the expected hours
+  const recalcAndSaveForDay = async (
+    docRef: any,
+    duration: number,
+    newExpected: number,
+    existingData?: any
+  ) => {
+    // console.log("[DEBUG recalc] called with", {
+    //   duration,
+    //   newExpected,
+    //   existingData,
+    // });
+    try {
+      const previousExpected =
+        existingData?.expectedHours !== undefined
+          ? Number(existingData.expectedHours)
+          : undefined;
+
+      const newOver = Math.max(duration - newExpected, 0);
+      const roundedOver = parseFloat(newOver.toFixed(2));
+      const roundedDuration = parseFloat(duration.toFixed(2));
+
+      // console.log("[DEBUG recalc] previousExpected:", previousExpected);
+      // console.log(
+      //   "[DEBUG recalc] newOver (raw):",
+      //   newOver,
+      //   "roundedOver:",
+      //   roundedOver
+      // );
+      // console.log("[DEBUG recalc] roundedDuration:", roundedDuration);
+
+      // build history entry (optional)- only if previousExpected is known
+      const historyEntry =
+        previousExpected !== undefined
+          ? [
+              {
+                previousExpected,
+                newExpected,
+                changedAt: new Date().toISOString(),
+              },
+            ]
+          : [];
+      // console.log("[DEBUG recalc] historyEntry:", historyEntry);
+      // Merge-Update, to prevent overwriting
+      await setDoc(
+        docRef,
+        {
+          expectedHours: newExpected,
+          overHours: roundedOver,
+          duration: roundedDuration,
+          // Append history only if we have a previous value
+          ...(historyEntry.length > 0 && {
+            plannedHoursHistory: [
+              ...(existingData?.plannedHoursHistory || []),
+              ...historyEntry,
+            ],
+          }),
+        },
+        { merge: true }
+      );
+      const verifySnap = await getDoc(docRef);
+      // console.log("[DEBUG recalc] verify doc:", {
+      //   workDay: existingData?.workDay,
+      //   id: docRef.id,
+      //   data: verifySnap.data(),
+      // });
+    } catch (err) {
+      console.error("recalcAndSaveForDay error:", err);
+      throw err;
+    }
+  };
+
   // function to save the expected hours
   const [saving, setSaving] = useState(false);
   const handleSaveMinHours = async () => {
-    const hours = parseFloat(tempExpectedHours); // parse the expected hours
+    const hours = parseFloat(tempExpectedHours);
+    // console.log(
+    //   "[DEBUG save] tempExpectedHours:",
+    //   tempExpectedHours,
+    //   "parsed:",
+    //   hours
+    // );
     if (!tempExpectedHours || isNaN(hours) || hours <= 0) {
       useAlertStore
         .getState()
@@ -95,17 +177,18 @@ const WorkHoursInput = () => {
         );
       return;
     }
-    // condition to check if the user is logged in
+
     setSaving(true);
     try {
       const userId = getAuth().currentUser?.uid;
       if (!userId) {
         console.error("User ID not available.");
+        setSaving(false);
         return;
       }
-      // use the user's time zone
+
       const workDay = dayjs().tz(userTimeZone).format("YYYY-MM-DD");
-      // reference for the document based on the workDay
+      // console.log("[DEBUG save] userId:", userId, "workDay:", workDay);
       const docRef = doc(
         FIREBASE_FIRESTORE,
         "Users",
@@ -113,30 +196,128 @@ const WorkHoursInput = () => {
         "Services",
         "AczkjyWoOxdPAIRVxjy3",
         "WorkHours",
-        workDay // date as document ID
+        workDay
       );
-      // condition to check if the currentDocId is null and set it
-      if (!currentDocId) {
-        setCurrentDocId(docRef.id);
+
+      // get existing data
+      const existingSnap = await getDoc(docRef);
+
+      if (existingSnap.exists()) {
+        const data = existingSnap.data();
+        // console.log("[DEBUG save] existingSnap:", data);
+        const prevExpected = Number(data.expectedHours) || 0;
+        const duration = Number(data.duration) || 0;
+        // console.log(
+        //   "[DEBUG save] prevExpected:",
+        //   prevExpected,
+        //   "duration:",
+        //   duration,
+        //   "newHours:",
+        //   hours
+        // );
+
+        // check if expected hours has changed
+        if (prevExpected !== hours && duration > 0) {
+          // console.log(
+          //   "[DEBUG save] change requested on tracked day. isWorking =",
+          //   isWorking
+          // );
+          // check if tracker is running
+          const trackerRunning = isWorking;
+
+          if (trackerRunning) {
+            // Custom Alert: block change
+            useAlertStore
+              .getState()
+              .showAlert(
+                "Tracker is running",
+                `You have already ${duration.toFixed(2)}h tracked. While tracker is running, the expected hours can't be changed.`,
+                [{ text: "OK", style: "default" }]
+              );
+
+            setSaving(false);
+            return; // change is blocked
+          } else {
+            // Tracker is not runnig: Warning + Confirmation
+            useAlertStore
+              .getState()
+              .showAlert(
+                "Change Expected Hours",
+                `You have already ${duration.toFixed(2)}h tracked. If you change your expected hours from ${prevExpected}h to ${hours}h the Over -/Worked time will new calculated. Tracked time will not be changed. Continue?`,
+                [
+                  {
+                    text: "Delete",
+                    style: "cancel",
+                    onPress: () => {
+                      setSaving(false);
+                    },
+                  },
+                  {
+                    text: "Continue",
+                    style: "destructive",
+                    onPress: async () => {
+                      setSaving(true);
+                      try {
+                        await recalcAndSaveForDay(
+                          docRef,
+                          duration,
+                          hours,
+                          data
+                        );
+                        setCurrentDocId(docRef.id);
+                        setExpectedHours?.(hours.toString());
+                        setTempExpectedHours("");
+                        setDocExists(true);
+                        setGlobalDocId(docRef.id);
+                      } catch (err) {
+                        useAlertStore
+                          .getState()
+                          .showAlert(
+                            "Error",
+                            "Error by update the data. Please try again.",
+                            [{ text: "OK", style: "default" }]
+                          );
+                        console.error(err);
+                      } finally {
+                        setSaving(false);
+                      }
+                    },
+                  },
+                ]
+              );
+
+            return; // Important: return setSaving(false) here, because onPress is async
+          }
+        }
       }
-      // save the data to Firestore
-      await setDoc(docRef, {
-        userId,
-        expectedHours: hours,
-        workDay,
-      });
+
+      // No conflict: write (merge) expected hours
+      await setDoc(
+        docRef,
+        {
+          userId,
+          expectedHours: hours,
+          workDay,
+        },
+        { merge: true }
+      );
+
+      // If duration already exists (e. g. resume), recalculate once (no race)
+      const finalSnap = await getDoc(docRef);
+      const finalData = finalSnap.exists() ? finalSnap.data() : {};
+      const durationFinal = Number(finalData.duration) || 0;
+      if (durationFinal > 0) {
+        await recalcAndSaveForDay(docRef, durationFinal, hours, finalData);
+      }
+
+      // Simple unique update - UI-local states
       setCurrentDocId(docRef.id);
-      // console.log("Expected hours saved:", hours);
-      setExpectedHours(tempExpectedHours);
-      setTempExpectedHours(""); // clear temp value
+      setExpectedHours?.(hours.toString());
+      setTempExpectedHours("");
       setDocExists(true);
       setGlobalDocId(docRef.id);
     } catch (error) {
       console.error("Error saving expected hours:", error);
-      if (error instanceof Error) {
-        console.error("Error message:", error.message);
-      }
-      // alert to inform the user about the error
       useAlertStore
         .getState()
         .showAlert(
@@ -144,8 +325,9 @@ const WorkHoursInput = () => {
           "During the saving process an error occurred. Please try again.",
           [{ text: "OK", style: "default" }]
         );
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   return (
