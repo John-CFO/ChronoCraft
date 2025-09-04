@@ -277,28 +277,44 @@ const WorkHoursChart = () => {
       : initialSpacing + stackData.length * (barWidth + spacing) + spacing;
 
   // function to calculate the dynamic maxValue for Week- and Month-views
-  // to reduce the size of the chart (Y-Axis scaling)
   const getDynamicMaxValue = () => {
-    // only for Week- and Month-views dynamically scale
-    if (chartType === "week" || chartType === "month") {
-      let maxSum = 0;
-      stackData.forEach((item) => {
-        const sum = item.stacks.reduce(
-          (acc: number, curr: { value: number }) => acc + curr.value,
+    // Compute max stacked value across stackData (works for week, month and year)
+    let maxSum = 0;
+    stackData.forEach((item) => {
+      const sum =
+        (item.stacks || []).reduce(
+          (acc: number, curr: { value: number }) => acc + (curr?.value || 0),
           0
-        );
-        if (sum > maxSum) maxSum = sum;
-      });
+        ) || 0;
+      if (sum > maxSum) maxSum = sum;
+    });
 
-      // add a buffer (e.g. 10% more)
-      return maxSum * 1.1;
-    }
+    if (maxSum === 0) return undefined; // let chart auto-scale for empty data
 
-    // use the standard value for Year-View
-    return undefined;
+    // Add a small buffer
+    const raw = maxSum * 1.1;
+
+    // Decide tick step:
+    // - if raw is small, use 1h steps so 1h is visible
+    // - if raw is large, pick a step to get ~4-6 sections
+    let step;
+    if (raw <= 2) step = 1;
+    else if (raw <= 6) step = 1;
+    else step = Math.ceil(raw / 5); // ~5 sections for large values
+
+    // Round up to nearest step
+    const rounded = Math.ceil(raw / step) * step;
+
+    // also ensure minimum of 1 (so a 1h line exists for small values)
+    return Math.max(1, rounded);
   };
 
+  // use the getDynamicMaxValue function
   const dynamicMaxValue = getDynamicMaxValue();
+  // calculate the number of sections for the Y-Axis
+  const computedNoOfSections = dynamicMaxValue
+    ? Math.max(2, Math.round(dynamicMaxValue)) // one section per hour
+    : 4;
 
   return (
     <>
@@ -365,6 +381,7 @@ const WorkHoursChart = () => {
                     yAxisLabelSuffix="h"
                     stackData={stackData}
                     maxValue={dynamicMaxValue} // regulate the size of the Y-Axis
+                    noOfSections={computedNoOfSections}
                     barWidth={barWidth}
                     initialSpacing={initialSpacing}
                     spacing={spacing}
