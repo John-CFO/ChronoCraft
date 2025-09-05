@@ -702,7 +702,7 @@ const WorkTimeTracker = () => {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={{
-                  paddingVertical: 10,
+                  height: 45,
                   justifyContent: "center",
                   alignItems: "center",
                   borderRadius: 12,
@@ -735,8 +735,8 @@ const WorkTimeTracker = () => {
               style={{
                 width: screenWidth * 0.7,
                 maxWidth: 400,
-                borderRadius: 14,
-                borderWidth: 1.5,
+                borderRadius: 12,
+                borderWidth: 2,
                 borderColor: "aqua",
                 backgroundColor: "transparent",
                 shadowColor: "black",
@@ -753,7 +753,7 @@ const WorkTimeTracker = () => {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={{
-                  paddingVertical: 10,
+                  height: 45,
                   justifyContent: "center",
                   alignItems: "center",
                   borderRadius: 12,
