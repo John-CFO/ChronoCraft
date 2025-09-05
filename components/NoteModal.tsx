@@ -258,6 +258,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={{
+                height: 45,
                 paddingVertical: 6,
                 justifyContent: "center",
                 alignItems: "center",

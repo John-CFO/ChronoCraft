@@ -353,6 +353,7 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
               <LinearGradient
                 colors={["#00f7f7", "#005757"]}
                 style={{
+                  height: 45,
                   paddingVertical: 6,
                   justifyContent: "center",
                   alignItems: "center",
