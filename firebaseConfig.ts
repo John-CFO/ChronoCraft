@@ -1,4 +1,4 @@
-import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
+import { initializeApp, getApps, FirebaseApp, deleteApp } from "firebase/app";
 import {
   initializeAuth,
   getAuth,
@@ -7,14 +7,8 @@ import {
 } from "firebase/auth";
 import { getFirestore, Firestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getAnalytics, isSupported } from "firebase/analytics";
-
 import "firebase/messaging";
-//import { getToken, getMessaging } from "expo-firebase-messaging";
-
-//console.log("Firebase API Key:", process.env.REACT_APP_FIREBASE_API_KEY);
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -26,55 +20,38 @@ const firebaseConfig = {
   measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// initialize Firebase-App only if it hasn't been initialized yet
-let app: FirebaseApp;
-if (getApps().length === 0) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApp(); // use existing app
-}
+// delete existing Firebase-Apps
+getApps().forEach((app) => deleteApp(app));
 
-// initialize Auth only if it hasn't been initialized yet
-let auth: Auth;
-try {
-  auth = initializeAuth(app, {
-    persistence: getReactNativePersistence(AsyncStorage),
-  });
-} catch (e: any) {
-  if (e.code === "auth/already-initialized") {
-    auth = getAuth(app);
-  } else {
-    throw e; // delete other errors
+// initialize new Firebase-App
+const firebaseApp: FirebaseApp = initializeApp(firebaseConfig);
+
+// initialize Auth
+const auth: Auth = (() => {
+  try {
+    return initializeAuth(firebaseApp, {
+      persistence: getReactNativePersistence(AsyncStorage),
+    });
+  } catch (e: any) {
+    if (e.code === "auth/already-initialized") return getAuth(firebaseApp);
+    throw e;
   }
-}
+})();
 
-// initialize Firestore
-const firestore: Firestore = getFirestore(app);
+// initialize Firestore and Storage
+const firestore: Firestore = getFirestore(firebaseApp);
+const storage = getStorage(firebaseApp);
 
-// initialize Storage
-const storage = getStorage(app);
-
-// initialize Analytics when supported
-isSupported().then((supported) => {
-  if (supported) {
-    getAnalytics(app);
-  }
-});
-
-// use Auth instance to check if user is logged in
-const authInstance: Auth = getAuth(app);
-
-// monitoring Auth status
-authInstance.onAuthStateChanged((user) => {
+// Auth Monitoring
+auth.onAuthStateChanged((user) => {
   if (!user) {
-    // Handle the case when the user is not authenticated
+    /* handle unauthenticated */
   }
 });
 
-// export instance
 export {
-  app as FIREBASE_APP,
-  authInstance as FIREBASE_AUTH,
+  firebaseApp as FIREBASE_APP,
+  auth as FIREBASE_AUTH,
   firestore as FIREBASE_FIRESTORE,
   storage as FIREBASE_STORAGE,
 };
