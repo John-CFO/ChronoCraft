@@ -154,27 +154,17 @@ const WorkTimeTracker = () => {
 
   // hook to update elapsed time
   useEffect(() => {
-    let timer: NodeJS.Timeout | null = null;
+    if (!isWorking || !startWorkTime) return;
 
-    // condition to check if isWorking is true and startWorkTime is not null
-    if (isWorking && startWorkTime) {
-      const updateElapsedTime = () => {
-        const now = new Date();
-        const currentSession =
-          (now.getTime() - startWorkTime.getTime()) / (1000 * 60 * 60);
-        setElapsedTime(accumulatedDuration + currentSession);
-      };
-
-      // instantly update the elapsed time
-      updateElapsedTime();
-
-      // update the elapsed time every second
-      timer = setInterval(updateElapsedTime, 1000);
-    }
-
-    return () => {
-      if (timer) clearInterval(timer);
+    const updateElapsedTime = () => {
+      const now = Date.now();
+      const currentSession = (now - startWorkTime.getTime()) / (1000 * 60 * 60);
+      setElapsedTime(accumulatedDuration + currentSession); // Single source
     };
+
+    updateElapsedTime(); // immediately Update by mount
+    const interval = setInterval(updateElapsedTime, 1000); // floaty Update every second
+    return () => clearInterval(interval);
   }, [isWorking, startWorkTime, accumulatedDuration]);
 
   // hook to update the app state if the app is in the foreground or background
@@ -677,16 +667,17 @@ const WorkTimeTracker = () => {
               disabled={!docExists}
               activeOpacity={0.7}
               style={{
-                width: screenWidth * 0.7,
+                width: screenWidth * 0.7, // use 70% of the screen width
                 maxWidth: 400,
-                borderRadius: 14,
-                borderWidth: 1.5,
+                borderRadius: 12,
+                overflow: "hidden",
+                borderWidth: 2,
                 borderColor: accessMode
                   ? docExists
                     ? "aqua"
                     : "#999"
                   : "aqua",
-                backgroundColor: "transparent",
+
                 marginBottom: 25,
                 opacity: accessMode ? 1 : docExists ? 1 : 0.5,
               }}
@@ -703,9 +694,9 @@ const WorkTimeTracker = () => {
                 end={{ x: 1, y: 1 }}
                 style={{
                   height: 45,
+                  paddingVertical: 6,
                   justifyContent: "center",
                   alignItems: "center",
-                  borderRadius: 12,
                 }}
               >
                 <Text
@@ -746,6 +737,7 @@ const WorkTimeTracker = () => {
                 elevation: 5,
                 marginBottom: 25,
                 opacity: 1,
+                overflow: "hidden",
               }}
             >
               <LinearGradient
@@ -754,9 +746,9 @@ const WorkTimeTracker = () => {
                 end={{ x: 1, y: 1 }}
                 style={{
                   height: 45,
+                  paddingVertical: 6,
                   justifyContent: "center",
                   alignItems: "center",
-                  borderRadius: 12,
                 }}
               >
                 <Text
