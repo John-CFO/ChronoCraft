@@ -49,7 +49,6 @@ const AuthForm: React.FC<AuthFormProps> = ({
   const accessMode = useAccessibilityStore(
     (state) => state.accessibilityEnabled
   );
-  console.log("accessMode in LoginScreen:", accessMode);
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
