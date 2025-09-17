@@ -33,7 +33,6 @@ import {
   AlertNotificationRoot,
 } from "react-native-alert-notification";
 import { NotificationManager } from "../components/services/PushNotifications";
-import { validate } from "react-email-validator";
 import { BlurView } from "expo-blur";
 
 import { FIREBASE_APP, FIREBASE_FIRESTORE } from "../firebaseConfig";
@@ -47,6 +46,15 @@ import { useAccessibilityStore } from "../components/services/accessibility/acce
 import AuthForm from "../components/AuthForm";
 import { verifyToken } from "../components/utils/totp";
 import TotpCodeModal from "../components/TotpCodeModal";
+import {
+  LoginInputSchema,
+  RegisterInputSchema,
+  TotpCodeSchema,
+} from "../validation/authSchemas";
+import {
+  FirestoreUserSchema,
+  FirestoreUser,
+} from "../validation/firestoreSchemas";
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -73,7 +81,6 @@ const LoginScreen: React.FC = () => {
   // states for registry and login
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  // const [secureTextEntry, setSecureTextEntry] = useState(true);
 
   // state to handle the loading animation
   const [loading, setLoading] = useState<boolean>(false);
@@ -86,31 +93,22 @@ const LoginScreen: React.FC = () => {
   const [pendingUser, setPendingUser] = useState<User | null>(null);
 
   // function to validate the inputs
-  const validateInputs = () => {
-    if (!validate(email)) {
-      useAlertStore
-        .getState()
-        .showAlert("Invalid E-Mail", "Please enter a validate E-Mail.");
+  const validateLoginInputs = () => {
+    const parsed = LoginInputSchema.safeParse({ email, password });
+    if (!parsed.success) {
+      const msg = parsed.error.issues[0]?.message ?? "Invalid input";
+      useAlertStore.getState().showAlert("Validation Error", msg);
       return false;
     }
-    if (password.length < 8) {
-      useAlertStore
-        .getState()
-        .showAlert(
-          "Weak Password",
-          "The password must be at least 8 characters long."
-        );
-      return false;
-    }
+    return true;
+  };
 
-    const specialChars = password.match(/[-_!@#$%^&*(),.?":{}|<>]/g);
-    if (!specialChars || specialChars.length < 2) {
-      useAlertStore
-        .getState()
-        .showAlert(
-          "Special characters missing",
-          "The password must contain at least 2 special characters."
-        );
+  // Registration
+  const validateRegisterInputs = () => {
+    const parsed = RegisterInputSchema.safeParse({ email, password });
+    if (!parsed.success) {
+      const msg = parsed.error.issues[0]?.message ?? "Invalid input";
+      useAlertStore.getState().showAlert("Validation Error", msg);
       return false;
     }
     return true;
@@ -118,7 +116,7 @@ const LoginScreen: React.FC = () => {
 
   // function to handle the login process
   const handleLogin = async () => {
-    if (!validateInputs()) return;
+    if (!validateLoginInputs()) return;
     setLoading(true);
 
     try {
@@ -135,16 +133,24 @@ const LoginScreen: React.FC = () => {
       const userRef = doc(FIREBASE_FIRESTORE, "Users", user.uid);
       const userSnap = await getDoc(userRef);
 
-      let userData: any = {};
+      let userData: FirestoreUser | null = null;
+
       if (userSnap.exists()) {
-        userData = userSnap.data();
-        if (userData.firstLogin) {
-          await setDoc(userRef, { firstLogin: false }, { merge: true });
+        const raw = userSnap.data();
+        const parsed = FirestoreUserSchema.safeParse(raw);
+
+        if (parsed.success) {
+          userData = parsed.data;
+          if (userData.firstLogin) {
+            await setDoc(userRef, { firstLogin: false }, { merge: true });
+          }
+        } else {
+          console.warn("Invalid Users doc for", user.uid, parsed.error);
         }
       }
 
       // If TOTP is active
-      if (userData.totpEnabled) {
+      if (userData?.totpEnabled) {
         const totpSecret = userData.totpSecret ?? null;
 
         if (!totpSecret) {
@@ -178,10 +184,18 @@ const LoginScreen: React.FC = () => {
 
   //  function to handle TOTP submit
   const handleTotpSubmit = async (code: string) => {
+    // validate code
+    const codeParsed = TotpCodeSchema.safeParse(code);
+    if (!codeParsed.success) {
+      const msg = codeParsed.error.issues[0]?.message ?? "Invalid code";
+      useAlertStore.getState().showAlert("Wrong Code", msg);
+      return;
+    }
     setTotpLoading(true);
     try {
       if (!pendingTotpSecret) throw new Error("missing-totp-secret");
-      const ok = verifyToken(pendingTotpSecret, code);
+      // get the validation result
+      const ok = verifyToken(pendingTotpSecret, codeParsed.data);
       if (!ok) {
         useAlertStore
           .getState()
@@ -245,7 +259,7 @@ const LoginScreen: React.FC = () => {
 
   // funcion to handle the registry process
   const handleRegister = async () => {
-    if (!validateInputs()) return;
+    if (!validateRegisterInputs()) return;
     setLoading(true);
     try {
       const response = await createUserWithEmailAndPassword(
@@ -307,7 +321,6 @@ const LoginScreen: React.FC = () => {
   const accessMode = useAccessibilityStore(
     (state) => state.accessibilityEnabled
   );
-  // console.log("accessMode in LoginScreen:", accessMode);
 
   return (
     <AlertNotificationRoot>
