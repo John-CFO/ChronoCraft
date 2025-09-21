@@ -1,4 +1,4 @@
-//////////////////////////TwoFactorModal.tsx////////////////////////////////////////
+//////////////////////////TwoFactorModal.tsx/////////////////////////////////////////
 
 // This component is used to display the two-factor authentication modal
 // The user can enable or disable two-factor authentication, validate the token
@@ -37,6 +37,8 @@ import { useAccessibilityStore } from "../components/services/accessibility/acce
 import OTPInput from "./OTPInput";
 import DismissKeyboard from "../components/DismissKeyboard";
 import { useDotAnimation } from "../components/DotAnimation";
+import { TOTPUserSchema } from "../validation/firestoreSchemas";
+import { TotpCodeSchema } from "../validation/authSchemas";
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -48,14 +50,17 @@ interface Props {
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
-const TwoFactorModal: React.FC<Props> = ({ onClose }) => {
+const TwoFactorModal: React.FC<Props> = ({
+  onClose,
+  isEnrolled,
+  setIsEnrolled,
+}) => {
   // decare authentication variables
   const auth = getAuth(FIREBASE_APP);
   const user = auth.currentUser;
   // state to handle the loading animation
   const [loading, setLoading] = useState(false);
   // states for TOTP
-  const [isEnrolled, setIsEnrolled] = useState(false);
   const [secret, setSecret] = useState<string | null>(null);
   const [otpUrl, setOtpUrl] = useState<string | null>(null);
   const [tokenInput, setTokenInput] = useState("");
@@ -91,11 +96,19 @@ const TwoFactorModal: React.FC<Props> = ({ onClose }) => {
         return;
       }
       try {
-        const uref = doc(FIREBASE_FIRESTORE, "Users", user.uid);
-        const snap = await getDoc(uref);
+        const userRef = doc(FIREBASE_FIRESTORE, "Users", user.uid);
+        const snap = await getDoc(userRef);
         if (snap.exists()) {
-          const d = snap.data();
-          setIsEnrolled(!!d?.totpEnabled);
+          const raw = snap.data();
+          // validate the data from firestore
+          const parsed = TOTPUserSchema.safeParse(raw);
+          if (!parsed.success) {
+            console.warn("Invalid TOTP user data", parsed.error);
+            setIsEnrolled(false);
+          } else {
+            setIsEnrolled(parsed.data.totpEnabled);
+            setSecret(parsed.data.totpSecret ?? null);
+          }
         }
       } catch (e) {
         console.error("Error loading TOTP enrollment", e);
@@ -152,9 +165,22 @@ const TwoFactorModal: React.FC<Props> = ({ onClose }) => {
     let success = false;
 
     try {
-      const ok = verifyToken(secret, tokenInput.trim());
+      // validate token
+      const parsed = TotpCodeSchema.safeParse(tokenInput.trim());
+      if (!parsed.success) {
+        setLoading(false);
+        useAlertStore
+          .getState()
+          .showAlert(
+            "Invalid Code",
+            parsed.error.issues[0]?.message ?? "Code must be 6 digits"
+          );
+        return;
+      }
+      // verify token against secret
+      const ok = verifyToken(secret!, parsed.data);
       if (!ok) throw new Error("INVALID_CODE");
-
+      // update firestore user
       await setDoc(
         doc(FIREBASE_FIRESTORE, "Users", user.uid),
         {
@@ -210,15 +236,24 @@ const TwoFactorModal: React.FC<Props> = ({ onClose }) => {
         totpEnabled: false,
       });
 
-      // verify
+      // verify the update was successful by reading the doc
       const snap = await getDoc(ref);
-      const d = snap.exists() ? snap.data() : null;
-      if (d?.totpEncrypted || d?.totpSecret) {
-        warningMessage =
-          "TOTP secret could not be removed. Check Firestore rules/permissions.";
+      const rawAfter = snap.exists() ? snap.data() : {};
+      const parsedAfter = TOTPUserSchema.safeParse(rawAfter);
+      if (!parsedAfter.success) {
+        console.warn("Unexpected Users doc after delete:", parsedAfter.error);
+        warningMessage = "Unexpected user doc shape after delete.";
         success = false;
       } else {
-        success = true;
+        const after = parsedAfter.data;
+        if (after.totpSecret || (rawAfter as any).totpEncrypted) {
+          // totpEncrypted might be stored differently; check raw field presence too
+          warningMessage =
+            "TOTP secret could not be removed. Check Firestore rules/permissions.";
+          success = false;
+        } else {
+          success = true;
+        }
       }
     } catch (err) {
       console.error("disableTotp error", err);

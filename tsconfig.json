@@ -10,7 +10,7 @@
     "esModuleInterop": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
-    "types": ["@react-native-async-storage/async-storage", "node"],
+    "types": ["@react-native-async-storage/async-storage", "node", "jest"],
     "paths": {
       "@firebase/auth": ["./node_modules/@firebase/auth/dist/index.rn.d.ts"]
     }
