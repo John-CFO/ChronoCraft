@@ -2,11 +2,11 @@
 
 // This file is used to validate user data from firestore
 
-//////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
 
 import { z } from "zod";
 
-//////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
 
 // validate the user data from firestore
 export const FirestoreUserSchema = z.object({
@@ -19,3 +19,11 @@ export const FirestoreUserSchema = z.object({
   createdAt: z.any().optional(),
 });
 export type FirestoreUser = z.infer<typeof FirestoreUserSchema>;
+
+// validate is TOTP exists and is enabled
+export const TOTPUserSchema = z.object({
+  totpEnabled: z.boolean().optional().default(false),
+  totpSecret: z.string().nullable().optional(),
+});
+
+export type TOTPUser = z.infer<typeof TOTPUserSchema>;

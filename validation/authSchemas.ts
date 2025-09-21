@@ -32,4 +32,4 @@ export const RegisterInputSchema = z.object({
 // validate totp schema
 export const TotpCodeSchema = z
   .string()
-  .regex(/^\d{6}$/, "TOTP must be 6 digits");
+  .regex(/^\d{6}$/, { message: "TOTP must be 6 digits" });
