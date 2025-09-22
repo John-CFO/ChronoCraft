@@ -69,6 +69,12 @@ import { useDotAnimation } from "../components/DotAnimation";
 import { sanitizeTitle } from "../components/InputSanitizers";
 import SortModal from "../components/SortModal";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+import getValidatedDocs from "../validation/getDocsWrapper";
+import {
+  FirestoreProjectSchema,
+  FirestoreUserSchema,
+  FirestoreProject,
+} from "../validation/firestoreSchemas";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 type HomeScreenRouteProp = RouteProp<
@@ -116,17 +122,7 @@ const HomeScreen: React.FC = () => {
   const { setProjectId } = useStore();
 
   // handle project state with props title, id and name
-  const [projects, setProjects] = useState<
-    {
-      createdAt: any;
-      id: string;
-      name: any;
-      notes: {
-        content: string;
-        timestamp: any;
-      }[];
-    }[]
-  >([]);
+  const [projects, setProjects] = useState<FirestoreProject[]>([]);
 
   // new project name state
   const [newProjectName, setNewProjectName] = useState("");
@@ -150,9 +146,9 @@ const HomeScreen: React.FC = () => {
     return [...projects].sort((a, b) => {
       switch (sortOrder) {
         case "DATE_DESC":
-          return b.createdAt - a.createdAt;
+          return b.createdAt.getTime() - a.createdAt.getTime();
         case "DATE_ASC":
-          return a.createdAt - b.createdAt;
+          return a.createdAt.getTime() - b.createdAt.getTime();
         case "NAME_ASC":
           return a.name.localeCompare(b.name);
         case "NAME_DESC":
@@ -214,20 +210,23 @@ const HomeScreen: React.FC = () => {
           "Projects"
         );
 
-        const projectsSnapshot = await getDocs(projectsCollection);
-        const projectsData = projectsSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
+        // validated projects from Firestore
+        const validatedProjects = await getValidatedDocs(
+          projectsCollection,
+          FirestoreProjectSchema
+        );
+
+        // ensure createdAt is always set
+        const projectsWithFallback = validatedProjects.map((p) => ({
+          ...p,
+          createdAt: p.createdAt ?? new Date(),
+          notes: p.notes.map((n) => ({
+            ...n,
+            timestamp: n.timestamp ?? new Date(),
+          })),
         }));
 
-        setProjects(
-          projectsData as {
-            createdAt: any;
-            id: string;
-            name: string;
-            notes: { content: string; timestamp: any }[];
-          }[]
-        );
+        setProjects(projectsWithFallback);
       } catch (error) {
         console.error("Error fetching projects", error);
       } finally {
@@ -247,43 +246,66 @@ const HomeScreen: React.FC = () => {
         .showAlert("Sorry", "Add a project title first to continue.");
       return;
     }
+
     try {
       const user = FIREBASE_AUTH.currentUser;
-      if (user) {
-        const db = FIREBASE_FIRESTORE;
-        const projectsCollection = collection(
-          db,
-          "Users",
-          user.uid,
-          "Services",
-          "AczkjyWoOxdPAIRVxjy3",
-          "Projects"
-        );
-        const newProjectRef = await addDoc(projectsCollection, {
-          uid: user.uid,
-          name: newProjectName,
-          createdAt: serverTimestamp(),
-          startTime: null,
-          endTime: null,
-          pauseTime: null,
-          elapsedTime: 0,
-          hourlyRate: 0.0,
-          totalEarnings: 0,
-          originalStartTime: null,
-          lastStartTime: null,
-          timer: 0,
-        });
-        const newProject = {
-          id: newProjectRef.id,
-          name: newProjectName,
-          createdAt: new Date(), // or dayjs().format('YYYY-MM-DD HH:mm:ss')
-          notes: [], // create a empty array for notes
-        };
-        setProjects((prevProjects) => [...prevProjects, newProject]);
-        setNewProjectName("");
-        setRefresh(!refresh);
-        Keyboard.dismiss();
-      }
+      if (!user) return;
+
+      const db = FIREBASE_FIRESTORE;
+      const projectsCollection = collection(
+        db,
+        "Users",
+        user.uid,
+        "Services",
+        "AczkjyWoOxdPAIRVxjy3",
+        "Projects"
+      );
+
+      const newProjectRef = await addDoc(projectsCollection, {
+        uid: user.uid,
+        name: newProjectName,
+        createdAt: serverTimestamp(),
+        startTime: null,
+        endTime: null,
+        pauseTime: null,
+        elapsedTime: 0,
+        hourlyRate: 0.0,
+        totalEarnings: 0,
+        originalStartTime: null,
+        lastStartTime: null,
+        timer: 0,
+      });
+
+      // add project with fallback
+      const projectWithFallback = {
+        id: newProjectRef.id,
+        name: newProjectName,
+        createdAt: new Date(),
+        notes: [] as { content: string; timestamp: Date }[],
+      };
+
+      // validate project with zod schema
+      const validatedProject =
+        FirestoreProjectSchema.parse(projectWithFallback);
+
+      // State update with guaranteed values
+      setProjects((prev) => [
+        ...prev,
+        {
+          ...validatedProject,
+          createdAt: validatedProject.createdAt ?? new Date(),
+          notes: validatedProject.notes.map(
+            (n: { content: string; timestamp?: Date }) => ({
+              content: n.content,
+              timestamp: n.timestamp ?? new Date(),
+            })
+          ),
+        },
+      ]);
+
+      setNewProjectName("");
+      setRefresh((r) => !r);
+      Keyboard.dismiss();
     } catch (error) {
       console.error("Error adding project", error);
     }
@@ -477,7 +499,9 @@ const HomeScreen: React.FC = () => {
           <TouchableOpacity
             onPress={() => handleProjectPress(item.id as string, item.name)}
             accessibilityRole="button"
-            accessibilityLabel={`Project ${item.name}, created on ${dateObj ? dayjs(dateObj).format("DD MMMM YYYY") : "unknown date"}`}
+            accessibilityLabel={`Project ${item.name}, created on ${
+              dateObj ? dayjs(dateObj).format("DD MMMM YYYY") : "unknown date"
+            }`}
             accessibilityHint="Tap to view project details"
             style={{ alignItems: "center", justifyContent: "center", flex: 1 }}
           >
@@ -577,11 +601,14 @@ const HomeScreen: React.FC = () => {
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
-      const data = docSnap.data();
-      const shouldShow = data.hasSeenHomeTour === false;
-
-      // console.log("show tourcard (Home)?", shouldShow);
-      setShowTourCard(shouldShow);
+      const raw = docSnap.data();
+      const parsed = FirestoreUserSchema.safeParse(raw);
+      if (!parsed.success) {
+        console.error("Invalid user data in fetchTourStatus:", parsed.error);
+        setShowTourCard(false);
+        return;
+      }
+      setShowTourCard(parsed.data.hasSeenHomeTour === false);
     } else {
       setShowTourCard(false);
     }
