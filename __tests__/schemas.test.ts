@@ -12,6 +12,7 @@ import {
 
 import {
   FirestoreUserSchema,
+  FirestoreProjectSchema,
   TOTPUserSchema,
 } from "../validation/firestoreSchemas";
 
@@ -72,5 +73,48 @@ describe("Firestore Schemas", () => {
     expect(TOTPUserSchema.safeParse({ totpEnabled: "yes" }).success).toBe(
       false
     );
+  });
+});
+
+describe("Firestore Project Schema validation", () => {
+  it("rejects object missing id or name", () => {
+    expect(
+      FirestoreProjectSchema.safeParse({ createdAt: new Date(), notes: [] })
+        .success
+    ).toBe(false);
+  });
+
+  it("rejects notes with missing fields", () => {
+    const badNotes = [
+      { text: "no content" }, // missing content
+      { content: "ok", timestamp: "not a date" },
+    ];
+    const data = {
+      id: "proj_1",
+      name: "Test Project",
+      createdAt: new Date(),
+      notes: badNotes,
+    };
+    expect(FirestoreProjectSchema.safeParse(data).success).toBe(false);
+  });
+
+  it("rejects createdAt with wrong type", () => {
+    const data = {
+      id: "proj_2",
+      name: "Test Project",
+      createdAt: "2025-09-21",
+      notes: [],
+    };
+    expect(FirestoreProjectSchema.safeParse(data).success).toBe(false);
+  });
+
+  it("accepts valid project", () => {
+    const data = {
+      id: "proj_3",
+      name: "Valid Project",
+      createdAt: new Date(),
+      notes: [{ content: "note", timestamp: new Date() }],
+    };
+    expect(FirestoreProjectSchema.safeParse(data).success).toBe(true);
   });
 });
