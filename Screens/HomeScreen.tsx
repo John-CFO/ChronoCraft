@@ -239,6 +239,7 @@ const HomeScreen: React.FC = () => {
 
   // function to add projects
   const handleAddProject = async () => {
+    // check if project name is empty
     if (!newProjectName.trim()) {
       useAlertStore
         .getState()
@@ -275,7 +276,7 @@ const HomeScreen: React.FC = () => {
         timer: 0,
       });
 
-      // Project mit Fallbacks erstellen
+      // add project with fallback
       const projectWithFallback = {
         id: newProjectRef.id,
         name: newProjectName,
@@ -283,11 +284,11 @@ const HomeScreen: React.FC = () => {
         notes: [] as { content: string; timestamp: Date }[],
       };
 
-      // validieren mit Zod
+      // validate project with zod schema
       const validatedProject =
         FirestoreProjectSchema.parse(projectWithFallback);
 
-      // State update mit garantierten Werten
+      // State update with guaranteed values
       setProjects((prev) => [
         ...prev,
         {
