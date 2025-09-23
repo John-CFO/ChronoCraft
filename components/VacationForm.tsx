@@ -6,13 +6,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 import React, { useState, useEffect } from "react";
-import {
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
+import { Text, View, ScrollView, TouchableOpacity } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -23,7 +17,7 @@ import { CopilotStep, walkthroughable } from "react-native-copilot";
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useCalendarStore } from "../components/CalendarState";
 import { useAlertStore } from "./services/customAlert/alertStore";
-import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+import { VacationInputSchema } from "../validation/vacationSchemas";
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -31,11 +25,6 @@ import { useAccessibilityStore } from "../components/services/accessibility/acce
 const CopilotTouchableView = walkthroughable(View);
 
 const VacationForm = () => {
-  // initialize the accessibility store
-  const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
-  );
-
   // initial start and end dates states
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
@@ -58,15 +47,41 @@ const VacationForm = () => {
         console.error("No user logged in");
         return;
       }
-      // reduce markedDates to remove `customStyles` property
+      // reduce markedDates to remove `customStyles` property (unchanged)
       const filteredMarkedDates = Object.keys(markedDates).reduce(
         (acc, date) => {
-          const { customStyles, ...rest } = markedDates[date];
+          const { customStyles, ...rest } = (markedDates as any)[date];
           acc[date] = rest; // delete `customStyles` property
           return acc;
         },
-        {} as { [key: string]: any }
+        {} as Record<string, any>
       );
+
+      // derive startDate defensively (first sorted key)
+      const startDate = Object.keys(filteredMarkedDates).sort()[0];
+
+      const input = {
+        startDate,
+        markedDates: filteredMarkedDates,
+      };
+      // validate input with zod
+      const parsed = VacationInputSchema.safeParse(input);
+      if (!parsed.success) {
+        console.error(
+          "Vacation input validation failed:",
+          parsed.error.format()
+        );
+        useAlertStore
+          .getState()
+          .showAlert(
+            "Invalid Input",
+            "Vacation data is invalid. Please retry.",
+            [{ text: "OK" }]
+          );
+        return;
+      }
+
+      // All good => write to Firestore (createdAt serverTimestamp)
       const vacationsCollection = collection(
         FIREBASE_FIRESTORE,
         "Users",
@@ -75,18 +90,20 @@ const VacationForm = () => {
         "AczkjyWoOxdPAIRVxjy3",
         "Vacations"
       );
-      // conducted by sorting the keys of `markedDates`
-      const startDate = Object.keys(filteredMarkedDates).sort()[0];
-      // create new document in `Vacations` collection
+
       await addDoc(vacationsCollection, {
         uid: user.uid,
-        startDate: startDate,
-        markedDates: filteredMarkedDates,
+        startDate: parsed.data.startDate,
+        markedDates: parsed.data.markedDates,
         createdAt: serverTimestamp(),
       });
+
       resetMarkedDates(); // reset marked dates after saving
     } catch (error) {
       console.error("Error saving vacation:", error);
+      useAlertStore
+        .getState()
+        .showAlert("Error", "Saving vacation failed.", [{ text: "OK" }]);
     }
   };
 
