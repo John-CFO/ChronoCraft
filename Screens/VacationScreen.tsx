@@ -23,6 +23,7 @@ import TourCard from "../components/services/copilotTour/TourCard";
 import { useCopilotOffset } from "../components/services/copilotTour/CopilotOffset";
 import CustomTooltip from "../components/services/copilotTour/CustomToolTip";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+import { FirestoreUserSchema } from "../validation/firestoreSchemas";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -76,13 +77,22 @@ const VacationScreen: React.FC<VacationScreenRouteProps> = () => {
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-          const data = docSnap.data();
-          setShowTourCard(data.hasSeenVacationTour === false);
+          const raw = docSnap.data();
+          // validate the user data
+          const parsed = FirestoreUserSchema.safeParse(raw);
+          if (!parsed.success) {
+            console.error(
+              "Invalid user data in fetchTourStatus:",
+              parsed.error
+            );
+            setShowTourCard(false);
+            return;
+          }
+          setShowTourCard(parsed.data.hasSeenVacationTour === false);
         } else {
           setShowTourCard(false);
         }
       };
-
       fetchTourStatus();
     }, [])
   );

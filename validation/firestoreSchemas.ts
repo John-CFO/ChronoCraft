@@ -48,6 +48,7 @@ export const FirestoreUserSchema = z.object({
   totpEnabled: z.boolean().optional().default(false),
   totpSecret: z.string().nullable().optional(),
   hasSeenHomeTour: z.boolean().optional().default(false),
+  hasSeenVacationTour: z.boolean().optional().default(false),
   createdAt: timestampToDateOptional, // optional, converted to Date when present
 });
 export type FirestoreUser = z.infer<typeof FirestoreUserSchema>;

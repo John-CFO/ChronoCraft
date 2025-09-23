@@ -4,17 +4,22 @@
 
 ///////////////////////////////////////////////////////////////////////////
 
-import { CollectionReference, getDocs } from "firebase/firestore";
+import {
+  CollectionReference,
+  getDocs,
+  DocumentReference,
+  getDoc,
+} from "firebase/firestore";
 import { z } from "zod";
 
 ///////////////////////////////////////////////////////////////////////////
 
-async function getValidatedDocs<T>(
+// validate all documents in a collection
+export async function getValidatedDocs<T>(
   collectionRef: CollectionReference,
   schema: z.ZodSchema<T>
 ): Promise<T[]> {
   const snapshot = await getDocs(collectionRef);
-
   const validated: T[] = [];
 
   snapshot.docs.forEach((doc) => {
@@ -29,4 +34,19 @@ async function getValidatedDocs<T>(
   return validated;
 }
 
-export default getValidatedDocs;
+// validate a single document
+export async function getValidatedDoc<T>(
+  docRef: DocumentReference,
+  schema: z.ZodSchema<T>
+): Promise<T | null> {
+  const docSnap = await getDoc(docRef);
+  if (!docSnap.exists()) return null;
+
+  const result = schema.safeParse({ id: docSnap.id, ...docSnap.data() });
+  if (!result.success) {
+    console.error("Invalid Firestore document:", docSnap.id, result.error);
+    return null;
+  }
+
+  return result.data;
+}

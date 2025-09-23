@@ -69,7 +69,7 @@ import { useDotAnimation } from "../components/DotAnimation";
 import { sanitizeTitle } from "../components/InputSanitizers";
 import SortModal from "../components/SortModal";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
-import getValidatedDocs from "../validation/getDocsWrapper";
+import { getValidatedDocs } from "../validation/getDocsWrapper";
 import {
   FirestoreProjectSchema,
   FirestoreUserSchema,
@@ -83,6 +83,11 @@ type HomeScreenRouteProp = RouteProp<
 >;
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
+
+interface Note {
+  content: string;
+  timestamp: Date;
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -217,15 +222,16 @@ const HomeScreen: React.FC = () => {
         );
 
         // ensure createdAt is always set
-        const projectsWithFallback = validatedProjects.map((p) => ({
-          ...p,
-          createdAt: p.createdAt ?? new Date(),
-          notes: p.notes.map((n) => ({
-            ...n,
-            timestamp: n.timestamp ?? new Date(),
-          })),
-        }));
-
+        const projectsWithFallback = validatedProjects.map(
+          (p: FirestoreProject) => ({
+            ...p,
+            createdAt: p.createdAt ?? new Date(),
+            notes: p.notes.map((n: Note) => ({
+              ...n,
+              timestamp: n.timestamp ?? new Date(),
+            })),
+          })
+        );
         setProjects(projectsWithFallback);
       } catch (error) {
         console.error("Error fetching projects", error);
