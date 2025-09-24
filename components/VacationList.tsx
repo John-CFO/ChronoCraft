@@ -27,6 +27,8 @@ import { FIREBASE_AUTH } from "../firebaseConfig";
 import VacationRemindModal from "../components/VacationRemindModal";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+import { FirestoreVacationSchema } from "../validation/vacationSchemas";
+import { getValidatedDocsFromSnapshot } from "../validation/getDocsWrapper";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -83,31 +85,26 @@ const VacationList = () => {
 
     // unsubscribe from the snapshot to avoid memory leaks
     const unsubscribe = onSnapshot(vacationsCollection, (snapshot) => {
-      // console.log("Snapshot data:", snapshot.docs);
-      const vacationsData = snapshot.docs.map((doc) => {
-        const data = doc.data();
-        // console.log("Vacation data:", data);
-        // extract the key from the markedDates object to get the array of dates
-        const markedDatesArray = data.markedDates
-          ? Object.keys(data.markedDates)
-          : [];
-        // console.log("Converted markedDates:", markedDatesArray);
-        return {
-          id: doc.id,
-          markedDates: markedDatesArray,
-          reminderActive: !!data.reminderDuration,
-        };
-      });
-      // sort the vacations by the first marked date
-      vacationsData.sort((a, b) => {
+      const vacationsData = getValidatedDocsFromSnapshot(
+        snapshot,
+        FirestoreVacationSchema
+      );
+      // extract the key from the markedDates object to get the array of dates
+      const mapped = vacationsData.map((v) => ({
+        id: v.id!,
+        markedDates: Object.keys(v.markedDates),
+        reminderActive: !!v.reminderDuration,
+      }));
+
+      mapped.sort((a, b) => {
         if (a.markedDates.length === 0 || b.markedDates.length === 0) return 0;
         return (
           new Date(a.markedDates[0]).getTime() -
           new Date(b.markedDates[0]).getTime()
         );
       });
-      // console.log("Vacations Data:", vacationsData);
-      setVacations(vacationsData);
+
+      setVacations(mapped);
     });
     return () => unsubscribe();
   }, [user]);
@@ -254,7 +251,10 @@ const VacationList = () => {
                       const [year, month, day] = date.split("-");
                       // parseInt is used to convert the string to a number to sort the dates list
                       return {
-                        formatted: `${parseInt(day, 10)}.${parseInt(month, 10)}.${year}`,
+                        formatted: `${parseInt(day, 10)}.${parseInt(
+                          month,
+                          10
+                        )}.${year}`,
                         timestamp: new Date(
                           parseInt(year, 10),
                           parseInt(month, 10) - 1, // -1 because months are zero-based
@@ -268,7 +268,9 @@ const VacationList = () => {
                   // extract the first and last date to show a range in the UI
                   const displayRange =
                     sortedDates.length > 1
-                      ? `${sortedDates[0].formatted} - ${sortedDates[sortedDates.length - 1].formatted}`
+                      ? `${sortedDates[0].formatted} - ${
+                          sortedDates[sortedDates.length - 1].formatted
+                        }`
                       : sortedDates[0]?.formatted;
 
                   return (
@@ -277,8 +279,12 @@ const VacationList = () => {
                       accessibilityRole="text"
                       accessibilityLabel={
                         sortedDates.length > 1
-                          ? `Vacation from ${displayRange}${item.reminderActive ? ", reminder active" : ""}`
-                          : `Vacation on ${displayRange}${item.reminderActive ? ", reminder active" : ""}`
+                          ? `Vacation from ${displayRange}${
+                              item.reminderActive ? ", reminder active" : ""
+                            }`
+                          : `Vacation on ${displayRange}${
+                              item.reminderActive ? ", reminder active" : ""
+                            }`
                       }
                       style={{
                         height: 60,
@@ -345,8 +351,8 @@ const VacationList = () => {
                             item.reminderActive
                               ? "aqua"
                               : accessMode
-                                ? "white"
-                                : "grey"
+                              ? "white"
+                              : "grey"
                           }
                         />
                         {/* vacation delete button */}
