@@ -62,5 +62,6 @@ export const FirestoreVacationSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, "startDate must be YYYY-MM-DD"),
   markedDates: MarkedDatesSchema,
   createdAt: timestampToDateOptional,
+  reminderDuration: z.number().optional(),
 });
 export type FirestoreVacation = z.infer<typeof FirestoreVacationSchema>;
