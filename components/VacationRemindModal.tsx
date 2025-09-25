@@ -16,14 +16,16 @@ import {
 } from "react-native";
 import Modal from "react-native-modal";
 import { LinearGradient } from "expo-linear-gradient";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
+import { z } from "zod";
 
 import { NotificationManager } from "./services/PushNotifications";
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import CheckmarkAnimation from "./Checkmark";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useAccessibilityStore } from "./services/accessibility/accessibilityStore";
-import { ref } from "firebase/storage";
+import { getValidatedDoc } from "../validation/getDocsWrapper";
+import { FirestoreVacationSchema } from "../validation/vacationSchemas";
 
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -87,160 +89,143 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
   // save function with error handling for the button
   const [saving, setSaving] = useState(false);
   const handleSaveReminder = async (
-    id: string, // vacation ID
-    uid: string, // user ID
-    onClose: () => void // callback to close the modal
-  ) => {
-    // console.log("Reminder save process started.");
+    id: string,
+    uid?: string,
+    onClose?: () => void
+  ): Promise<void> => {
     setSaving(true);
     try {
-      // if no vacation is selected send alert
       if (!id) {
-        // console.error("No vacation selected.");
         useAlertStore.getState().showAlert("Error", "No vacation selected.");
         return;
       }
 
-      // check if user is logged in
-      const user = FIREBASE_AUTH.currentUser;
-      //  console.log("Current user:", user);
-
-      // if no user is logged in send alert
-      if (!user) {
+      // prefer passed uid, otherwise fallback to auth
+      const currentUid = uid || FIREBASE_AUTH.currentUser?.uid;
+      if (!currentUid) {
         useAlertStore
           .getState()
           .showAlert("Error", "You must be logged in to save a reminder.");
         return;
       }
 
-      const reminderDuration = reminderDurations[selectedOption!]; // map index to duration
-      //  console.log("Converted reminder duration:", reminderDuration);
-      // call user document from firestore
-      const userDocRef = doc(FIREBASE_FIRESTORE, "Users", user.uid);
-      // console.log("Fetching push token for user:", user.uid);
-
-      // make a snapshot of the user document
-      const userSnapshot = await getDoc(userDocRef);
-      // if the user document does not exist send alert
-      if (!userSnapshot.exists()) {
-        // console.error("User document not found in Firestore.");
-        useAlertStore
-          .getState()
-          .showAlert("Error", "User document not found in Firestore.");
-        return;
-      }
-      // exract the push token from the user document
-      const userData = userSnapshot.data();
-      const pushToken = userData?.pushToken; // call the push token
-      //  console.log("Fetched Push Token:", pushToken);
-      // if no push token is found send alert
-      if (!pushToken) {
-        //  console.error("Push Token not found.");
-        useAlertStore.getState().showAlert("Error", "Push Token not found.");
-        return;
-      }
-
-      // get a reference to the vacation document
-      const vacationRef = doc(
-        FIREBASE_FIRESTORE,
-        "Users",
-        user.uid,
-        "Services",
-        "AczkjyWoOxdPAIRVxjy3",
-        "Vacations",
-        id
-      );
-      //  console.log("Fetching vacation data for ID:", id);
-      // make a snapshot of the vacation document
-      const vacationSnapshot = await getDoc(vacationRef);
-      // if the vacation document does not exist send alert
-      if (!vacationSnapshot.exists()) {
-        //  console.error("Vacation not found in Firestore.");
-        useAlertStore.getState().showAlert("Error", "Vacation not found.");
-        return;
-      }
-      // make a snapshot of the vacation data
-      const vacationData = vacationSnapshot.data();
-      //  console.log("Vacation data:", vacationData);
-
-      // if the vacation already has a reminder send alert
-      if (vacationData?.reminderDuration) {
-        useAlertStore
-          .getState()
-          .showAlert(
-            "Error",
-            "Vacation already has a reminder. If   you want to change it, delete vacation and create a new one."
-          );
-        return; // stop the function if user tries to add a reminder to a vacation that already has one
-      }
-      // set the start date from the vacation data
-      const startDate = new Date(vacationData?.startDate);
-      // console.log("Parsed startDate:", startDate);
-      // if the start date is invalid send alert
-      if (isNaN(startDate.getTime())) {
-        // console.error("Invalid vacation start date.");
-        useAlertStore
-          .getState()
-          .showAlert("Error", "Invalid vacation start date.");
-        return;
-      }
-      // console.log("Selected Option for reminderDuration:", selectedOption);
-      // if selected option is undefined or invalid send alert
-      if (selectedOption == null || selectedOption < 0) {
-        // console.error("Selected Option is undefined or invalid.");
+      const chosenIndex = selectedOption;
+      if (
+        chosenIndex == null ||
+        chosenIndex < 0 ||
+        chosenIndex >= reminderDurations.length
+      ) {
         useAlertStore
           .getState()
           .showAlert("Error", "Please select a reminder duration.");
         return;
       }
+      const reminderDuration = reminderDurations[chosenIndex];
 
-      // update the reminderDuration in the vacation document
+      // validate user doc (only pushToken needed)
+      const UserPushSchema = z
+        .object({ pushToken: z.string().optional() })
+        .catchall(z.any());
+      const userDocRef = doc(FIREBASE_FIRESTORE, "Users", currentUid);
+      const userDoc = await getValidatedDoc(userDocRef, UserPushSchema);
+
+      if (!userDoc) {
+        useAlertStore
+          .getState()
+          .showAlert("Error", "User document invalid or missing.");
+        return;
+      }
+      const pushToken = (userDoc as any).pushToken;
+      if (!pushToken) {
+        useAlertStore.getState().showAlert("Error", "Push Token not found.");
+        return;
+      }
+
+      // validate vacation doc
+      const vacationRef = doc(
+        FIREBASE_FIRESTORE,
+        "Users",
+        currentUid,
+        "Services",
+        "AczkjyWoOxdPAIRVxjy3",
+        "Vacations",
+        id
+      );
+      const vacationDoc = await getValidatedDoc(
+        vacationRef,
+        FirestoreVacationSchema
+      );
+
+      if (!vacationDoc) {
+        useAlertStore
+          .getState()
+          .showAlert("Error", "Vacation not found or invalid.");
+        return;
+      }
+
+      if ((vacationDoc as any).reminderDuration) {
+        useAlertStore
+          .getState()
+          .showAlert(
+            "Error",
+            "Vacation already has a reminder. If you want to change it, delete vacation and create a new one."
+          );
+        return;
+      }
+
+      // parse and validate startDate
+      const startDateRaw = (vacationDoc as any).startDate;
+      const startDate = new Date(startDateRaw);
+      if (isNaN(startDate.getTime())) {
+        useAlertStore
+          .getState()
+          .showAlert("Error", "Invalid vacation start date.");
+        return;
+      }
+
+      // write reminder (merge)
       await setDoc(
         vacationRef,
         {
-          reminderDuration, // duraction of the reminder
+          ...vacationDoc,
+          reminderDuration,
           createdAt: new Date(),
-          ...vacationData, // keep the rest of the data
         },
-        { merge: true } // update only the specified fields
+        { merge: true }
       );
-      // console.log("Reminder saved successfully.");
 
-      // calculate the reminder date with the selected duration
+      // schedule notification
       const reminderDate = new Date(startDate);
       reminderDate.setDate(reminderDate.getDate() - reminderDuration);
-      // console.log("Calculated reminder date:", reminderDate);
-      // console.log("Scheduling notification...");
 
-      // plane the notification with the calculated date
       await NotificationManager.scheduleVacationReminder(
         "Vacation Reminder",
         `Your vacation starts in ${reminderDuration} days.`,
         reminderDate,
         pushToken
       );
-      // console.log("Notification successfully scheduled.");
 
-      // success alert
+      // reset selected option so modal is clean for the next use
+      setSelectedOption(null);
+
       useAlertStore
         .getState()
         .showAlert("Success", "Reminder saved successfully.");
-      // console.log("Reminder save process completed.");
-      onClose(); // close the modal after saving
-    } catch (error) {
-      //  console.error("Failed to save reminder:", error);
+      if (typeof onClose === "function") onClose();
+    } catch (err) {
+      console.error("Failed to save reminder:", err);
       useAlertStore
         .getState()
         .showAlert("Error", "Failed to save reminder. Please try again.");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
     (state) => state.accessibilityEnabled
   );
-  // console.log("accessMode in LoginScreen:", accessMode);
 
   return (
     <Modal
