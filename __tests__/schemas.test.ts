@@ -53,6 +53,7 @@ describe("Firestore Schemas", () => {
     expect(FirestoreUserSchema.safeParse(data).success).toBe(true);
   });
 
+  // HomeScreen Login/TOTP/Tour
   it("applies defaults for missing optional fields", () => {
     const data = { email: "user@example.com" };
     const result = FirestoreUserSchema.safeParse(data);
@@ -62,6 +63,34 @@ describe("Firestore Schemas", () => {
       expect(result.data.totpEnabled).toBe(false);
       expect(result.data.hasSeenHomeTour).toBe(false);
     }
+  });
+
+  //WorkHoursScreen Tour
+  it("applies defaults for workhours tour flag", () => {
+    const data = { email: "user@example.com" };
+    const result = FirestoreUserSchema.safeParse(data);
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.hasSeenWorkHoursTour).toBe(false);
+  });
+
+  it("respects hasSeenWorkHoursTour when present", () => {
+    const r = FirestoreUserSchema.safeParse({ hasSeenWorkHoursTour: true });
+    expect(r.success).toBe(true);
+    if (r.success) expect(r.data.hasSeenWorkHoursTour).toBe(true);
+  });
+
+  // VacationScreen Tour
+  it("applies defaults for vacation tour flag", () => {
+    const data = { email: "user@example.com" };
+    const result = FirestoreUserSchema.safeParse(data);
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.hasSeenVacationTour).toBe(false);
+  });
+
+  it("respects hasSeenVacationTour when present", () => {
+    const r = FirestoreUserSchema.safeParse({ hasSeenVacationTour: true });
+    expect(r.success).toBe(true);
+    if (r.success) expect(r.data.hasSeenVacationTour).toBe(true);
   });
 
   it("validates TOTPUser data correctly", () => {
