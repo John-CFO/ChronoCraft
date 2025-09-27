@@ -83,14 +83,27 @@ export const TOTPUserSchema = z.object({
 export type TOTPUser = z.infer<typeof TOTPUserSchema>;
 
 // validate the workhours global states
-export const FirestoreWorkHoursSchema = z.object({
-  elapsedTime: z.number().nonnegative().optional().default(0),
-  isWorking: z.boolean().optional().default(false),
-  startWorkTime: timestampToDateOptional, // accepts Timestamp/Date/number -> Date | undefined
-  currentDocId: z.string().nullable().optional(),
-  lastUpdatedDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD")
-    .optional(),
-});
+export const FirestoreWorkHoursSchema = z
+  .object({
+    elapsedTime: z.number().nonnegative().optional().default(0),
+    isWorking: z.boolean().optional().default(false),
+    startWorkTime: timestampToDateOptional,
+    currentDocId: z.string().nullable().optional(),
+    lastUpdatedDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD")
+      .optional(),
+
+    // (optional with Defaults)
+    expectedHours: z.number().min(0).max(24).optional().default(0),
+    overHours: z.number().min(0).optional().default(0),
+    duration: z.number().nonnegative().optional().default(0),
+    userId: z.string().optional(), // optional
+    workDay: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/)
+      .optional(), // optional
+  })
+  .strict();
+
 export type FirestoreWorkHours = z.infer<typeof FirestoreWorkHoursSchema>;
