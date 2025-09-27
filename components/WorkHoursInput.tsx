@@ -23,6 +23,7 @@ import WorkHoursState from "../components/WorkHoursState";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { sanitizeHours } from "./InputSanitizers";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+import { FirestoreWorkHoursSchema } from "../validation/firestoreSchemas";
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -59,7 +60,11 @@ const WorkHoursInput = () => {
     const fetchExpectedHours = async () => {
       try {
         const userId = getAuth().currentUser?.uid;
-        if (!userId) return;
+        if (!userId) {
+          console.log("No user authenticated");
+          return;
+        }
+
         const tz = dayjs.tz.guess();
         const workDay = dayjs().tz(tz).format("YYYY-MM-DD");
         const docRef = doc(
@@ -71,17 +76,51 @@ const WorkHoursInput = () => {
           "WorkHours",
           workDay
         );
+
         const docSnap = await getDoc(docRef);
+
         if (docSnap.exists()) {
           const data = docSnap.data();
-          setExpectedHours(data.expectedHours.toString());
-          setDocExists(true);
-          setGlobalDocId(docRef.id);
+          const parsed = FirestoreWorkHoursSchema.safeParse(data);
+
+          if (parsed.success) {
+            // validate the data with zod
+            const validatedData = parsed.data;
+            setExpectedHours(validatedData.expectedHours?.toString() || "0");
+            setDocExists(true);
+            setGlobalDocId(docRef.id);
+          } else {
+            // invalid data detected -> use default values
+            console.error("Invalid Firestore document:", parsed.error);
+            useAlertStore
+              .getState()
+              .showAlert(
+                "Data Error",
+                "Invalid work hours data detected. Using default values.",
+                [{ text: "OK", style: "default" }]
+              );
+            // Fallback to default values
+            setExpectedHours("0");
+            setDocExists(false);
+            setGlobalDocId(null);
+          }
+        } else {
+          // doc does not exist -> use default values
+          setExpectedHours("0");
+          setDocExists(false);
+          setGlobalDocId(null);
         }
       } catch (error) {
         console.error("Error fetching hours:", error);
+        // show error alert
+        useAlertStore
+          .getState()
+          .showAlert("Error", "Failed to load work hours. Please try again.", [
+            { text: "OK", style: "default" },
+          ]);
       }
     };
+
     fetchExpectedHours();
   }, []); // empty array enshures that this runs only once by mount
 
@@ -199,6 +238,26 @@ const WorkHoursInput = () => {
         workDay
       );
 
+      // validate the user data with zod
+      const dataToSave = {
+        userId,
+        expectedHours: hours,
+        workDay,
+      };
+      const validation = FirestoreWorkHoursSchema.safeParse(dataToSave);
+      if (!validation.success) {
+        console.error("Data validation failed:", validation.error);
+        useAlertStore
+          .getState()
+          .showAlert(
+            "Validation Error",
+            "Invalid data format. Please check your input.",
+            [{ text: "OK", style: "default" }]
+          );
+        setSaving(false);
+        return;
+      }
+
       // get existing data
       const existingSnap = await getDoc(docRef);
 
@@ -231,7 +290,9 @@ const WorkHoursInput = () => {
               .getState()
               .showAlert(
                 "Tracker is running",
-                `You have already ${duration.toFixed(2)}h tracked. While tracker is running, the expected hours can't be changed.`,
+                `You have already ${duration.toFixed(
+                  2
+                )}h tracked. While tracker is running, the expected hours can't be changed.`,
                 [{ text: "OK", style: "default" }]
               );
 
@@ -243,7 +304,9 @@ const WorkHoursInput = () => {
               .getState()
               .showAlert(
                 "Change Expected Hours",
-                `You have already ${duration.toFixed(2)}h tracked. If you change your expected hours from ${prevExpected}h to ${hours}h the Over -/Worked time will new calculated. Tracked time will not be changed. Continue?`,
+                `You have already ${duration.toFixed(
+                  2
+                )}h tracked. If you change your expected hours from ${prevExpected}h to ${hours}h the Over -/Worked time will new calculated. Tracked time will not be changed. Continue?`,
                 [
                   {
                     text: "Delete",
@@ -258,14 +321,39 @@ const WorkHoursInput = () => {
                     onPress: async () => {
                       setSaving(true);
                       try {
+                        // validate the user data with zod
+                        const recalcData = {
+                          ...data,
+                          expectedHours: hours,
+                          workDay,
+                          userId,
+                        };
+
+                        const recalcValidation =
+                          FirestoreWorkHoursSchema.safeParse(recalcData);
+                        if (!recalcValidation.success) {
+                          console.error(
+                            "Recalc data validation failed:",
+                            recalcValidation.error
+                          );
+                          useAlertStore
+                            .getState()
+                            .showAlert(
+                              "Validation Error",
+                              "Invalid data for recalculation.",
+                              [{ text: "OK", style: "default" }]
+                            );
+                          return;
+                        }
+
                         await recalcAndSaveForDay(
                           docRef,
                           duration,
                           hours,
-                          data
+                          recalcValidation.data
                         );
                         setCurrentDocId(docRef.id);
-                        setExpectedHours?.(hours.toString());
+                        setExpectedHours(hours.toString());
                         setTempExpectedHours("");
                         setDocExists(true);
                         setGlobalDocId(docRef.id);
@@ -292,24 +380,32 @@ const WorkHoursInput = () => {
       }
 
       // No conflict: write (merge) expected hours
-      await setDoc(
-        docRef,
-        {
-          userId,
-          expectedHours: hours,
-          workDay,
-        },
-        { merge: true }
-      );
+      await setDoc(docRef, validation.data, { merge: true });
 
       // If duration already exists (e. g. resume), recalculate once (no race)
       const finalSnap = await getDoc(docRef);
       const finalData = finalSnap.exists() ? finalSnap.data() : {};
       const durationFinal = Number(finalData.duration) || 0;
       if (durationFinal > 0) {
-        await recalcAndSaveForDay(docRef, durationFinal, hours, finalData);
-      }
+        // validate the user data with zod for the final update
+        const finalDataToValidate = {
+          ...finalData,
+          expectedHours: hours,
+          workDay,
+          userId,
+        };
 
+        const finalValidation =
+          FirestoreWorkHoursSchema.safeParse(finalDataToValidate);
+        if (finalValidation.success) {
+          await recalcAndSaveForDay(
+            docRef,
+            durationFinal,
+            hours,
+            finalValidation.data
+          );
+        }
+      }
       // Simple unique update - UI-local states
       setCurrentDocId(docRef.id);
       setExpectedHours?.(hours.toString());
@@ -469,7 +565,9 @@ const WorkHoursInput = () => {
           {/* Hourly Rate info container */}
           <View
             accessible={true}
-            accessibilityLabel={`Your expected work hours are ${expectedHours || "not set"}`}
+            accessibilityLabel={`Your expected work hours are ${
+              expectedHours || "not set"
+            }`}
             style={{
               width: "100%",
               height: 50,
