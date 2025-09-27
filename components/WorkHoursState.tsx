@@ -10,6 +10,7 @@ import { getAuth } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
+import { FirestoreWorkHoursSchema } from "../validation/firestoreSchemas";
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -27,6 +28,7 @@ interface WorkHoursStateProps {
   workHours: any[];
   data: any[];
   selectedBar: any[];
+  lastUpdatedDate?: string;
 
   saveState: () => Promise<void>;
   loadState: () => Promise<void>;
@@ -59,10 +61,13 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
   data: [],
   selectedBar: [],
 
-  //  load state from firestore
+  // load state from firestore
   loadState: async () => {
     const user = getAuth().currentUser;
-    if (!user) return;
+    if (!user) {
+      console.log("No user found, skipping loadState");
+      return;
+    }
 
     try {
       const today = new Date().toISOString().split("T")[0];
@@ -77,18 +82,28 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
       );
 
       const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const state = docSnap.data();
-        const savedDate = state.lastUpdatedDate || "";
 
-        // set the state if the saved date is today
-        if (savedDate === today) {
-          set({
-            currentDocId: today,
-            lastUpdatedDate: today,
-          });
-        }
+      if (!docSnap.exists()) {
+        console.log("Document does not exist");
+        return;
       }
+
+      const raw = docSnap.data();
+      const parsed = FirestoreWorkHoursSchema.safeParse(raw);
+
+      if (!parsed.success) {
+        console.error("Invalid WorkHours doc:", parsed.error);
+        return;
+      }
+
+      const data = parsed.data;
+      set({
+        currentDocId: data.currentDocId ?? today,
+        lastUpdatedDate: data.lastUpdatedDate ?? today,
+        elapsedTime: data.elapsedTime ?? 0,
+        isWorking: data.isWorking ?? false,
+        startWorkTime: data.startWorkTime ?? null,
+      });
     } catch (error) {
       console.error("Error loading state:", error);
     }
@@ -97,27 +112,37 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
   // save state to firestore
   saveState: async () => {
     const user = getAuth().currentUser;
-    if (!user) return;
+    if (!user) {
+      console.log("No user found, skipping saveState");
+      return;
+    }
 
-    const state = get();
-    const stateToSave = {
-      elapsedTime: state.elapsedTime,
-      isWorking: state.isWorking,
-      startWorkTime: state.startWorkTime,
-      currentDocId: state.currentDocId,
-    };
+    try {
+      const state = get();
+      const today = new Date().toISOString().split("T")[0];
 
-    const docRef = doc(
-      FIREBASE_FIRESTORE,
-      "Users",
-      user.uid,
-      "Services",
-      "AczkjyWoOxdPAIRVxjy3",
-      "WorkHours",
-      state.currentDocId || "defaultDocId"
-    );
+      const stateToSave = {
+        elapsedTime: state.elapsedTime,
+        isWorking: state.isWorking,
+        startWorkTime: state.startWorkTime,
+        currentDocId: state.currentDocId,
+        lastUpdatedDate: today,
+      };
 
-    await setDoc(docRef, stateToSave);
+      const docRef = doc(
+        FIREBASE_FIRESTORE,
+        "Users",
+        user.uid,
+        "Services",
+        "AczkjyWoOxdPAIRVxjy3",
+        "WorkHours",
+        state.currentDocId || today
+      );
+
+      await setDoc(docRef, stateToSave);
+    } catch (error) {
+      console.error("Error saving state:", error);
+    }
   },
 
   // actions to update the workhoursstate
