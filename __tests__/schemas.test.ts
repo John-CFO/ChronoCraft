@@ -49,6 +49,7 @@ describe("Firestore Schemas", () => {
       totpEnabled: true,
       totpSecret: "SECRET123",
       hasSeenHomeTour: false,
+      hasSeenDetailsTour: true,
     };
     expect(FirestoreUserSchema.safeParse(data).success).toBe(true);
   });
@@ -62,10 +63,25 @@ describe("Firestore Schemas", () => {
       expect(result.data.firstLogin).toBe(false);
       expect(result.data.totpEnabled).toBe(false);
       expect(result.data.hasSeenHomeTour).toBe(false);
+      expect(result.data.hasSeenDetailsTour).toBe(false);
     }
   });
 
-  //WorkHoursScreen Tour
+  // DetailsScreen Tour
+  it("applies defaults for details tour flag", () => {
+    const data = { email: "user@example.com" };
+    const result = FirestoreUserSchema.safeParse(data);
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.hasSeenDetailsTour).toBe(false);
+  });
+
+  it("respects hasSeenDetailsTour when present", () => {
+    const r = FirestoreUserSchema.safeParse({ hasSeenDetailsTour: true });
+    expect(r.success).toBe(true);
+    if (r.success) expect(r.data.hasSeenDetailsTour).toBe(true);
+  });
+
+  // WorkHoursScreen Tour
   it("applies defaults for workhours tour flag", () => {
     const data = { email: "user@example.com" };
     const result = FirestoreUserSchema.safeParse(data);
