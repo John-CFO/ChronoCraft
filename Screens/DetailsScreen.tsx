@@ -26,6 +26,7 @@ import { useCopilotOffset } from "../components/services/copilotTour/CopilotOffs
 import CustomTooltip from "../components/services/copilotTour/CustomToolTip";
 import ProgressCard from "../components/ProgressCard";
 import { usePreventBackWhileTracking } from "../components/PreventBackBTN";
+import { FirestoreUserSchema } from "../validation/firestoreSchemas";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -101,15 +102,29 @@ const DetailsScreen: React.FC = () => {
     useCallback(() => {
       const fetchTourStatus = async () => {
         const uid = auth.currentUser?.uid;
-        if (!uid) return;
+        if (!uid) {
+          setShowTourCard(false);
+          return;
+        }
         try {
           const docRef = doc(FIREBASE_FIRESTORE, "Users", uid);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             const data = docSnap.data();
-            setShowTourCard(data.hasSeenDetailsTour === false);
+            const validationResult = FirestoreUserSchema.safeParse(data);
+
+            if (validationResult.success) {
+              // data is valid -y use it
+              const userData = validationResult.data;
+              setShowTourCard(userData.hasSeenDetailsTour === false);
+            } else {
+              // invalid data -> Fallback: set showTourCard to false
+              console.error("Invalid user data:", validationResult.error);
+              setShowTourCard(false);
+            }
           } else {
-            setShowTourCard(false); // if doc does not exist
+            // document does not exist
+            setShowTourCard(false);
           }
         } catch (err) {
           console.error("Error fetching tour status:", err);
