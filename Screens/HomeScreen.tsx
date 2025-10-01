@@ -244,7 +244,7 @@ const HomeScreen: React.FC = () => {
       return;
     }
 
-    // Input Validation
+    // input validation
     if (newProjectName.length > 100) {
       useAlertStore.getState().showAlert("Error", "Project name too long");
       return;
@@ -279,19 +279,18 @@ const HomeScreen: React.FC = () => {
         timer: 0,
       });
 
-      // add project with fallback - OHNE notes array
+      // add project with fallback
       const projectWithFallback = {
         id: newProjectRef.id,
         name: newProjectName,
         createdAt: new Date(),
-        // notes wurde entfernt, da jetzt in Subcollection
       };
 
       // validate project with zod schema
       const validatedProject =
         FirestoreProjectSchema.parse(projectWithFallback);
 
-      // State update with guaranteed values
+      // state update with guaranteed values
       setProjects((prev) => [
         ...prev,
         {
