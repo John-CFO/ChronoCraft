@@ -84,11 +84,6 @@ type HomeScreenRouteProp = RouteProp<
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
-interface Note {
-  content: string;
-  timestamp: Date;
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 // definition of the walkthroughable component to handle the copilot with (TouchableOpacity)
@@ -226,10 +221,6 @@ const HomeScreen: React.FC = () => {
           (p: FirestoreProject) => ({
             ...p,
             createdAt: p.createdAt ?? new Date(),
-            notes: p.notes.map((n: Note) => ({
-              ...n,
-              timestamp: n.timestamp ?? new Date(),
-            })),
           })
         );
         setProjects(projectsWithFallback);
@@ -250,6 +241,12 @@ const HomeScreen: React.FC = () => {
       useAlertStore
         .getState()
         .showAlert("Sorry", "Add a project title first to continue.");
+      return;
+    }
+
+    // Input Validation
+    if (newProjectName.length > 100) {
+      useAlertStore.getState().showAlert("Error", "Project name too long");
       return;
     }
 
@@ -282,12 +279,12 @@ const HomeScreen: React.FC = () => {
         timer: 0,
       });
 
-      // add project with fallback
+      // add project with fallback - OHNE notes array
       const projectWithFallback = {
         id: newProjectRef.id,
         name: newProjectName,
         createdAt: new Date(),
-        notes: [] as { content: string; timestamp: Date }[],
+        // notes wurde entfernt, da jetzt in Subcollection
       };
 
       // validate project with zod schema
@@ -300,12 +297,6 @@ const HomeScreen: React.FC = () => {
         {
           ...validatedProject,
           createdAt: validatedProject.createdAt ?? new Date(),
-          notes: validatedProject.notes.map(
-            (n: { content: string; timestamp?: Date }) => ({
-              content: n.content,
-              timestamp: n.timestamp ?? new Date(),
-            })
-          ),
         },
       ]);
 
