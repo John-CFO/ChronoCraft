@@ -84,11 +84,6 @@ type HomeScreenRouteProp = RouteProp<
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
-interface Note {
-  content: string;
-  timestamp: Date;
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 // definition of the walkthroughable component to handle the copilot with (TouchableOpacity)
@@ -226,10 +221,6 @@ const HomeScreen: React.FC = () => {
           (p: FirestoreProject) => ({
             ...p,
             createdAt: p.createdAt ?? new Date(),
-            notes: p.notes.map((n: Note) => ({
-              ...n,
-              timestamp: n.timestamp ?? new Date(),
-            })),
           })
         );
         setProjects(projectsWithFallback);
@@ -250,6 +241,12 @@ const HomeScreen: React.FC = () => {
       useAlertStore
         .getState()
         .showAlert("Sorry", "Add a project title first to continue.");
+      return;
+    }
+
+    // input validation
+    if (newProjectName.length > 100) {
+      useAlertStore.getState().showAlert("Error", "Project name too long");
       return;
     }
 
@@ -287,25 +284,18 @@ const HomeScreen: React.FC = () => {
         id: newProjectRef.id,
         name: newProjectName,
         createdAt: new Date(),
-        notes: [] as { content: string; timestamp: Date }[],
       };
 
       // validate project with zod schema
       const validatedProject =
         FirestoreProjectSchema.parse(projectWithFallback);
 
-      // State update with guaranteed values
+      // state update with guaranteed values
       setProjects((prev) => [
         ...prev,
         {
           ...validatedProject,
           createdAt: validatedProject.createdAt ?? new Date(),
-          notes: validatedProject.notes.map(
-            (n: { content: string; timestamp?: Date }) => ({
-              content: n.content,
-              timestamp: n.timestamp ?? new Date(),
-            })
-          ),
         },
       ]);
 

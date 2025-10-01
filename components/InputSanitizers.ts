@@ -10,7 +10,7 @@ export const sanitizeTitle = (text: string) =>
 
 // sanatize to alow more characters, but limited to 300
 export const sanitizeComment = (text: string) =>
-  text.replace(/[^\w\s\-.,!?'"()@€$%:;\/]/g, "").slice(0, 300);
+  text.replace(/[^\w\s\-.,!?'"()@€$%:;\/]/g, "").slice(0, 1000);
 
 // sanitize Hours – max 24h, only numbers + optional comma/point
 export const sanitizeHours = (text: string) => {
