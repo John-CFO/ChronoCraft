@@ -10,19 +10,17 @@ import React from "react";
 import { AntDesign } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { doc, deleteDoc } from "firebase/firestore";
+import { z } from "zod";
 
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
-import { access } from "fs";
+import { FirestoreNoteSchema } from "../validation/noteSchemas";
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-interface Note {
-  id: string;
-  comment: string;
-  createdAt: Date;
-}
+// use zod type for notes
+type Note = z.infer<typeof FirestoreNoteSchema>;
 
 interface NoteCardProps {
   note: Note;
@@ -65,7 +63,36 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
               const user = FIREBASE_AUTH.currentUser;
               if (!user) {
                 console.error("User is not authenticated.");
-                return false;
+                return;
+              }
+
+              // validate note - check if note structure is valid
+              const noteValidation = FirestoreNoteSchema.safeParse(note);
+              if (!noteValidation.success) {
+                console.error("Invalid note structure:", noteValidation.error);
+                useAlertStore
+                  .getState()
+                  .showAlert("Error", "Invalid note data");
+                return;
+              }
+
+              // check if user is authorized to delete the note
+              if (note.uid !== user.uid) {
+                console.error("User not authorized to delete this note");
+                useAlertStore
+                  .getState()
+                  .showAlert("Error", "Not authorized to delete this note");
+                return;
+              }
+
+              // validate path parameters to cach path traversal
+              const idRegex = /^[a-zA-Z0-9_-]+$/;
+              if (!idRegex.test(projectId) || !idRegex.test(note.id)) {
+                console.error("Invalid path parameters detected");
+                useAlertStore
+                  .getState()
+                  .showAlert("Error", "Invalid note data");
+                return;
               }
               // try to delete the note from firestore whith the note id and useRef
               try {
@@ -84,7 +111,10 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
                 // console.log("Note deleted successfully.");
                 onDelete(note.id);
               } catch (error) {
-                console.error("Error deleting note:", error);
+                console.error("Error deleting note");
+                useAlertStore
+                  .getState()
+                  .showAlert("Error", "Failed to delete note");
               }
             },
             style: "destructive",
@@ -97,7 +127,9 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
     // card container
     <View
       accessible={true}
-      accessibilityLabel={`Note added at ${note.createdAt.toLocaleString()}. ${note.comment}`}
+      accessibilityLabel={`Note added at ${note.createdAt.toLocaleString()}. ${
+        note.comment
+      }`}
       style={{
         backgroundColor: "#191919",
         minWidth: 320,

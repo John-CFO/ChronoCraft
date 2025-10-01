@@ -6,20 +6,19 @@
 
 import React, { useState, useEffect } from "react";
 import { ScrollView, View, Text, ActivityIndicator } from "react-native";
-import { collection, query, getDocs, DocumentData } from "firebase/firestore";
+import { collection, query, getDocs } from "firebase/firestore";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
+import { z } from "zod";
 
 import NoteCard from "./NoteCard";
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+import { FirestoreNoteSchema } from "../validation/noteSchemas";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-interface Note {
-  id: string;
-  comment: string;
-  createdAt: Date;
-}
+// use zod type for notes
+type Note = z.infer<typeof FirestoreNoteSchema>;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -48,7 +47,17 @@ const NoteList: React.FC<{ projectId: string }> = ({ projectId }) => {
       const user = FIREBASE_AUTH.currentUser;
       if (!user) {
         console.error("User is not authenticated.");
-        return false;
+        setError(new Error("Authentication required"));
+        setLoading(false);
+        return;
+      }
+      // project Id validation - Path Traversal Prevention
+      const idRegex = /^[a-zA-Z0-9_-]+$/;
+      if (!idRegex.test(projectId)) {
+        console.error("Invalid project ID:", projectId);
+        setError(new Error("Invalid project"));
+        setLoading(false);
+        return;
       }
       // try to get the notes from Firestore
       try {
@@ -61,22 +70,51 @@ const NoteList: React.FC<{ projectId: string }> = ({ projectId }) => {
           )
         );
         const notesSnapshot = await getDocs(notesQuery);
-        // condition to check if notesSnapshot is empty
-        if (!notesSnapshot.empty) {
-          const fetchedNotes: Note[] = notesSnapshot.docs.map((doc) => {
-            const data = doc.data() as DocumentData;
-            return {
-              id: doc.id,
-              comment: data.comment,
-              createdAt: data.createdAt.toDate(),
-            };
+        // validate data with zod
+        const validatedNotes: Note[] = [];
+        const validationErrors: string[] = [];
+
+        notesSnapshot.docs.forEach((doc) => {
+          const data = doc.data();
+
+          // validate every note
+          const validationResult = FirestoreNoteSchema.safeParse({
+            id: doc.id,
+            comment: data.comment,
+            createdAt: data.createdAt?.toDate(), // Safe conversion
+            uid: data.uid,
           });
-          setNotes(fetchedNotes);
-        } else {
-          console.log("No notes found for this project.");
+
+          if (validationResult.success) {
+            validatedNotes.push(validationResult.data);
+          } else {
+            // log validation errors
+            console.warn("Invalid note data skipped:", {
+              docId: doc.id,
+              error: validationResult.error.issues,
+            });
+            validationErrors.push(`Note ${doc.id} has invalid data`);
+          }
+        });
+
+        // log validation summary
+        if (validationErrors.length > 0) {
+          console.warn(
+            `Skipped ${validationErrors.length} invalid notes:`,
+            validationErrors
+          );
+        }
+
+        setNotes(validatedNotes);
+
+        // condition to check if notesSnapshot is empty
+        if (notesSnapshot.empty && validatedNotes.length === 0) {
+          console.log("No valid notes found for this project.");
         }
       } catch (error) {
-        console.error("Error fetching notes: ", error);
+        // secure error handling
+        console.error("Error fetching notes");
+        setError(new Error("Failed to load notes"));
       } finally {
         setLoading(false);
       }

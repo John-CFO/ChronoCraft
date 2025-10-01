@@ -55,23 +55,11 @@ export const FirestoreUserSchema = z.object({
 });
 export type FirestoreUser = z.infer<typeof FirestoreUserSchema>;
 
-/**
- * FirestoreProjectSchema
- * - createdAt is REQUIRED and must be a valid Timestamp/Date/number (strict).
- * - notes is an array with each note having content and a strict timestamp.
- * - notes defaults to an empty array when missing.
- */
-export const FirestoreNoteSchema = z.object({
-  content: z.string(),
-  timestamp: timestampToDateStrict,
-});
-export type FirestoreNote = z.infer<typeof FirestoreNoteSchema>;
-
+// FirestoreProjectSchema
 export const FirestoreProjectSchema = z.object({
   id: z.string(),
-  name: z.string(),
+  name: z.string().min(1).max(100), // length limit validation
   createdAt: timestampToDateStrict, // required and strict
-  notes: z.array(FirestoreNoteSchema).default([]),
 });
 export type FirestoreProject = z.infer<typeof FirestoreProjectSchema>;
 

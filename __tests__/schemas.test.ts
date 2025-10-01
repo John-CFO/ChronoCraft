@@ -109,6 +109,7 @@ describe("Firestore Schemas", () => {
     if (r.success) expect(r.data.hasSeenVacationTour).toBe(true);
   });
 
+  // test TOTPUser validation
   it("validates TOTPUser data correctly", () => {
     expect(
       TOTPUserSchema.safeParse({ totpEnabled: true, totpSecret: "SECRET123" })
@@ -129,20 +130,6 @@ describe("Firestore Project Schema validation", () => {
     ).toBe(false);
   });
 
-  it("rejects notes with missing fields", () => {
-    const badNotes = [
-      { text: "no content" }, // missing content
-      { content: "ok", timestamp: "not a date" },
-    ];
-    const data = {
-      id: "proj_1",
-      name: "Test Project",
-      createdAt: new Date(),
-      notes: badNotes,
-    };
-    expect(FirestoreProjectSchema.safeParse(data).success).toBe(false);
-  });
-
   it("rejects createdAt with wrong type", () => {
     const data = {
       id: "proj_2",
@@ -158,8 +145,25 @@ describe("Firestore Project Schema validation", () => {
       id: "proj_3",
       name: "Valid Project",
       createdAt: new Date(),
-      notes: [{ content: "note", timestamp: new Date() }],
     };
     expect(FirestoreProjectSchema.safeParse(data).success).toBe(true);
   });
+});
+
+it("rejects project name that is too long", () => {
+  const data = {
+    id: "proj_4",
+    name: "A".repeat(101), // 101 letters - too long
+    createdAt: new Date(),
+  };
+  expect(FirestoreProjectSchema.safeParse(data).success).toBe(false);
+});
+
+it("accepts project name with maximum length", () => {
+  const data = {
+    id: "proj_5",
+    name: "A".repeat(100), // 100 letters - maximum
+    createdAt: new Date(),
+  };
+  expect(FirestoreProjectSchema.safeParse(data).success).toBe(true);
 });

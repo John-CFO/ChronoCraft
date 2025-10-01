@@ -28,6 +28,7 @@ import { useAlertStore } from "./services/customAlert/alertStore";
 import { useDotAnimation } from "../components/DotAnimation";
 import { sanitizeComment } from "./InputSanitizers";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+import { NoteInputSchema } from "../validation/noteSchemas";
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -77,13 +78,15 @@ const NoteModal: React.FC<NoteModalProps> = ({
 
   // function to handle comment submission
   const [saving, setSaving] = useState(false);
+
+  // function to handle comment submission
   const handleSubmitComment = async (
     projectId: string,
     comment: string,
     userId: string,
     serviceId: string
   ) => {
-    // alert to inform user what he has to do first before pressed the send button
+    // Initial client-side validation
     if (!comment.trim()) {
       useAlertStore
         .getState()
@@ -94,48 +97,90 @@ const NoteModal: React.FC<NoteModalProps> = ({
       return;
     }
 
-    // console.log("Submitting comment with projectId:", projectId);
     setSaving(true);
     try {
-      if (!projectId || !userId || !serviceId) {
-        // console.error("Invalid projectId:", projectId);
+      // sanatize the comment
+      const sanitizedComment = sanitizeComment(comment.trim());
+
+      // validate the input with Zod
+      const inputValidation = NoteInputSchema.safeParse({
+        comment: sanitizedComment, // use sanatized comment
+        projectId,
+        userId,
+      });
+
+      if (!inputValidation.success) {
+        console.error("Invalid note input:", inputValidation.error);
+        useAlertStore
+          .getState()
+          .showAlert("Error", "Invalid note data provided");
         return;
       }
 
-      // condition to check if user is authenticated
-      const user = FIREBASE_AUTH.currentUser;
-      if (user) {
-        const projectRef = doc(
-          FIREBASE_FIRESTORE,
-          `Users/${userId}/Services/${serviceId}/Projects/${projectId}`
-        );
-        // initialize the project snapshot
-        const projectSnapshot = await getDoc(projectRef);
-        // condition to check if the project exists
-        if (projectSnapshot.exists()) {
-          const projectNotesRef = collection(
-            FIREBASE_FIRESTORE,
-            `Users/${userId}/Services/${serviceId}/Projects/${projectId}/Notes`
-          );
-          // add the comment to the project
-          await addDoc(projectNotesRef, {
-            uid: user.uid,
-            comment: comment,
-            createdAt: serverTimestamp(),
-          });
-          // console.log("Comment saved");
-          setComment("");
-          onClose();
-        } else {
-          console.error("Project does not exist:", projectId);
-        }
-      } else {
-        console.log("User not authenticated");
+      // validate the service ID
+      const VALID_SERVICE_IDS = ["AczkjyWoOxdPAIRVxjy3"];
+      if (!VALID_SERVICE_IDS.includes(serviceId)) {
+        console.error("Invalid service ID:", serviceId);
+        useAlertStore
+          .getState()
+          .showAlert("Error", "Invalid service configuration");
+        return;
       }
+
+      // validate path parameters
+      const idRegex = /^[a-zA-Z0-9_-]+$/;
+      if (
+        !idRegex.test(projectId) ||
+        !idRegex.test(userId) ||
+        !idRegex.test(serviceId)
+      ) {
+        console.error("Invalid path parameters detected");
+        useAlertStore.getState().showAlert("Error", "Invalid project data");
+        return;
+      }
+
+      // authentication and authorization
+      const user = FIREBASE_AUTH.currentUser;
+      if (!user || user.uid !== userId) {
+        console.error("Authentication or authorization failed");
+        useAlertStore.getState().showAlert("Error", "Not authorized");
+        return;
+      }
+
+      // check if project exists
+      const projectRef = doc(
+        FIREBASE_FIRESTORE,
+        `Users/${userId}/Services/${serviceId}/Projects/${projectId}`
+      );
+
+      const projectSnapshot = await getDoc(projectRef);
+      if (!projectSnapshot.exists()) {
+        console.error("Project does not exist:", projectId);
+        useAlertStore.getState().showAlert("Error", "Project not found");
+        return;
+      }
+
+      // write firestore
+      const projectNotesRef = collection(
+        FIREBASE_FIRESTORE,
+        `Users/${userId}/Services/${serviceId}/Projects/${projectId}/Notes`
+      );
+
+      await addDoc(projectNotesRef, {
+        uid: user.uid,
+        comment: sanitizedComment, // use sanatized comment
+        createdAt: serverTimestamp(),
+      });
+
+      // console.log("Comment saved successfully");
+      setComment("");
+      onClose();
     } catch (error) {
-      console.error("Saving comment failed", error);
+      console.error("Saving comment failed");
+      useAlertStore.getState().showAlert("Error", "Failed to save note");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   // function to handle comment change
@@ -147,7 +192,6 @@ const NoteModal: React.FC<NoteModalProps> = ({
   const accessMode = useAccessibilityStore(
     (state) => state.accessibilityEnabled
   );
-  // console.log("accessMode in LoginScreen:", accessMode);
 
   return (
     <View>
