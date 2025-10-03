@@ -25,6 +25,10 @@ import { useStore } from "./TimeTrackingState";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { sanitizeRateInput } from "./InputSanitizers";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+import {
+  FirestoreEarningsSchema,
+  HourlyRateSchema,
+} from "../validation/earningsSchemas";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -60,7 +64,9 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
     (state) => state.accessibilityEnabled
   );
 
-  // console.log("EarningsCalculatorCard - projectId:", projectId);
+  // constants for validation
+  const MAX_HOURLY_RATE = 1000;
+  const MIN_HOURLY_RATE = 0;
 
   // global state
   const { setHourlyRate } = useStore();
@@ -94,11 +100,24 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         const data = docSnap.data();
-        const fetchedRate = data?.hourlyRate || 0;
-        const fetchedEarnings = data?.totalEarnings || 0;
+        // authorization check: make sure the user is authorized to access this project
+        if (data.uid !== user.uid) {
+          console.error("User not authorized to access this project");
+          return;
+        }
 
-        setHourlyRate(projectId, fetchedRate);
-        useStore.getState().setTotalEarnings(projectId, fetchedEarnings);
+        // validate the earnings data
+        const validationResult = FirestoreEarningsSchema.safeParse(data);
+        if (validationResult.success) {
+          const { hourlyRate = 0, totalEarnings = 0 } = validationResult.data;
+          setHourlyRate(projectId, hourlyRate);
+          useStore.getState().setTotalEarnings(projectId, totalEarnings);
+        } else {
+          console.warn("Invalid earnings data structure");
+          // fail secure: set standard values
+          setHourlyRate(projectId, 0);
+          useStore.getState().setTotalEarnings(projectId, 0);
+        }
       }
     } catch (error) {
       console.error("Error fetching earnings data:", error);
@@ -125,22 +144,47 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
 
   // function to handle save
   const handleSave = async () => {
+    const user = FIREBASE_AUTH.currentUser;
+    if (!user) {
+      useAlertStore.getState().showAlert("Error", "Authentication required");
+      return;
+    }
+
+    // input validation
     const rate = parseFloat(rateInput);
-    if (!isNaN(rate)) {
-      setSaving(true);
-      try {
-        await updateProjectData(projectId, { hourlyRate: rate });
-        setHourlyRate(projectId, rate);
-        setRateInput("");
-      } catch (error) {
-        console.error("Error saving hourly rate:", error);
-      }
-      setSaving(false);
-    } else {
+    const inputValidation = HourlyRateSchema.safeParse({
+      hourlyRate: rate,
+      projectId,
+      userId: user.uid,
+    });
+
+    if (!inputValidation.success) {
+      const errorMessage =
+        inputValidation.error.issues[0]?.message || "Invalid input";
+      useAlertStore.getState().showAlert("Invalid Input", errorMessage);
+      return;
+    }
+
+    // logic validation
+    if (rate < MIN_HOURLY_RATE || rate > MAX_HOURLY_RATE) {
       useAlertStore
         .getState()
-        .showAlert("Invalid Input", "Please enter a valid hourly rate.");
+        .showAlert(
+          "Invalid Rate",
+          `Hourly rate must be between ${MIN_HOURLY_RATE} and ${MAX_HOURLY_RATE}`
+        );
+      return;
     }
+    setSaving(true);
+    try {
+      await updateProjectData(projectId, { hourlyRate: rate });
+      setHourlyRate(projectId, rate);
+      setRateInput("");
+    } catch (error) {
+      console.error("Error saving hourly rate");
+      useAlertStore.getState().showAlert("Error", "Failed to save hourly rate");
+    }
+    setSaving(false);
   };
 
   return (
@@ -154,7 +198,11 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
         {/* Earnings Calculator Card */}
         <CopilotWalkthroughView
           accessible={true}
-          accessibilityLabel={`Earnings calculator. Total earnings ${Number(totalEarnings || 0).toFixed(2)} dollars. Your hourly rate is ${hourlyRate || "not set yet"}.`}
+          accessibilityLabel={`Earnings calculator. Total earnings ${Number(
+            totalEarnings || 0
+          ).toFixed(2)} dollars. Your hourly rate is ${
+            hourlyRate || "not set yet"
+          }.`}
           style={{
             height: 420,
             marginBottom: 20,
@@ -183,7 +231,9 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
           {/* Total Earnings viewport */}
           <View
             accessible={true}
-            accessibilityLabel={`Total earnings ${Number(totalEarnings || 0).toFixed(2)} dollars`}
+            accessibilityLabel={`Total earnings ${Number(
+              totalEarnings || 0
+            ).toFixed(2)} dollars`}
             style={{
               width: "80%",
               height: 100,
