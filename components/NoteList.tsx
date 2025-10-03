@@ -51,14 +51,7 @@ const NoteList: React.FC<{ projectId: string }> = ({ projectId }) => {
         setLoading(false);
         return;
       }
-      // project Id validation - Path Traversal Prevention
-      const idRegex = /^[a-zA-Z0-9_-]+$/;
-      if (!idRegex.test(projectId)) {
-        console.error("Invalid project ID:", projectId);
-        setError(new Error("Invalid project"));
-        setLoading(false);
-        return;
-      }
+
       // try to get the notes from Firestore
       try {
         const notesQuery = query(
