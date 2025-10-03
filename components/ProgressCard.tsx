@@ -18,7 +18,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import CircularProgress from "react-native-circular-progress-indicator";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, getDoc } from "firebase/firestore";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
@@ -27,6 +27,7 @@ import { sanitizeMaxWorkHours } from "./InputSanitizers";
 import useDebounceValue from "../hooks/useDebounceValue";
 import { NotificationManager } from "./services/PushNotifications";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+import { MaxWorkHoursSchema } from "../validation/progressSchemas";
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -107,10 +108,14 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
     const debouncedSave = useCallback(
       useDebounceValue(async (hours: number) => {
         const user = FIREBASE_AUTH.currentUser;
-        if (!user) return;
+        if (!user) {
+          Alert.alert("Error", "Authentication required");
+          return;
+        }
 
         try {
-          const docRef = doc(
+          // check authorization
+          const projectRef = doc(
             FIREBASE_FIRESTORE,
             "Users",
             user.uid,
@@ -120,7 +125,19 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
             projectId
           );
 
-          await updateDoc(docRef, { maxWorkHours: hours });
+          const projectSnap = await getDoc(projectRef);
+          if (!projectSnap.exists()) {
+            Alert.alert("Error", "Project not found");
+            return;
+          }
+
+          const projectData = projectSnap.data();
+          if (projectData.uid !== user.uid) {
+            Alert.alert("Error", "Not authorized");
+            return;
+          }
+
+          await updateDoc(projectRef, { maxWorkHours: hours });
           setProjectData(projectId, { maxWorkHours: hours });
 
           if (onSaveSuccess) onSaveSuccess();
@@ -129,19 +146,33 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
           Alert.alert("Failed to save. Try again.");
         }
       }, 500),
-      [projectId, setProjectData]
+      [projectId, setProjectData, onSaveSuccess]
     );
 
     // function to save the maxWorkHours
     const handleSave = () => {
+      const user = FIREBASE_AUTH.currentUser;
+      if (!user) {
+        Alert.alert("Error", "Authentication required");
+        return;
+      }
+
       const hours = parseFloat(inputMaxWorkHours);
-      if (isNaN(hours) || hours <= 0) {
-        Alert.alert("Please enter a valid number of hours > 0");
+
+      // validate input
+      const validationResult = MaxWorkHoursSchema.safeParse({
+        maxWorkHours: hours,
+        projectId,
+        userId: user.uid,
+      });
+
+      if (!validationResult.success) {
+        Alert.alert("Invalid input", "Please enter hours between 1 and 10000");
         return;
       }
 
       setSaving(true);
-      debouncedSave(hours);
+      debouncedSave(hours); // debounce with authorization
       setInputMaxWorkHours("");
 
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
@@ -251,7 +282,9 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
             accessible={true}
             accessibilityLabel={
               maxWorkHours > 0 && timer > 0
-                ? `Deadline tracker. ${(displayProgress * 100).toFixed(1)} percent of your maximum work time used. Your deadline is ${maxWorkHours} hours.`
+                ? `Deadline tracker. ${(displayProgress * 100).toFixed(
+                    1
+                  )} percent of your maximum work time used. Your deadline is ${maxWorkHours} hours.`
                 : `Deadline tracker. No deadline set.`
             }
             style={{
@@ -451,7 +484,9 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
             {maxWorkHours > 0 && timer > 0 && (
               <Text
                 accessible={true}
-                accessibilityLabel={`${(displayProgress * 100).toFixed(1)} percent of your maximum work time used`}
+                accessibilityLabel={`${(displayProgress * 100).toFixed(
+                  1
+                )} percent of your maximum work time used`}
                 style={{
                   color: "white",
                   fontFamily: accessMode
