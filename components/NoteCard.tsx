@@ -85,15 +85,6 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
                 return;
               }
 
-              // validate path parameters to cach path traversal
-              const idRegex = /^[a-zA-Z0-9_-]+$/;
-              if (!idRegex.test(projectId) || !idRegex.test(note.id)) {
-                console.error("Invalid path parameters detected");
-                useAlertStore
-                  .getState()
-                  .showAlert("Error", "Invalid note data");
-                return;
-              }
               // try to delete the note from firestore whith the note id and useRef
               try {
                 const noteDocRef = doc(
