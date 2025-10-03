@@ -1,7 +1,7 @@
 //////////////////////earningsCalculator.test.ts////////////////////////////
 
 // This file is used to test the earnings calculator component with unit tests
-// It includes the tests for user authorization, Zod validation and reject invalid project IDs
+// It includes the tests for user authorization and Zod validation
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -57,39 +57,13 @@ describe("EarningsCalculator Security", () => {
       expect(result.success).toBe(true);
     });
 
-    it("rejects invalid project IDs", () => {
-      const invalidIds = ["../other", "project<script>", "project' OR 1=1"];
-      invalidIds.forEach((id) => {
-        const result = HourlyRateSchema.safeParse({
-          hourlyRate: 50,
-          projectId: id,
-          userId: "user123",
-        });
-        expect(result.success).toBe(false);
+    it("rejects negative hourly rates", () => {
+      const result = HourlyRateSchema.safeParse({
+        hourlyRate: -10,
+        projectId: "valid123",
+        userId: "user123",
       });
-    });
-  });
-
-  describe("Path Validation", () => {
-    it("validates path parameters correctly", () => {
-      const validPaths = [
-        { projectId: "abc123", userId: "user123" },
-        { projectId: "project_1", userId: "user-456" },
-      ];
-
-      const invalidPaths = [
-        { projectId: "../../other", userId: "user123" },
-        { projectId: "project<script>", userId: "user123" },
-      ];
-
-      validPaths.forEach((path) => {
-        expect(/^[a-zA-Z0-9_-]+$/.test(path.projectId)).toBe(true);
-        expect(/^[a-zA-Z0-9_-]+$/.test(path.userId)).toBe(true);
-      });
-
-      invalidPaths.forEach((path) => {
-        expect(/^[a-zA-Z0-9_-]+$/.test(path.projectId)).toBe(false);
-      });
+      expect(result.success).toBe(false);
     });
   });
 

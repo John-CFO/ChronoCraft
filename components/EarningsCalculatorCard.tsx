@@ -68,15 +68,6 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
   const MAX_HOURLY_RATE = 1000;
   const MIN_HOURLY_RATE = 0;
 
-  // function to validate the path parameters
-  const validatePathParameters = (
-    projectId: string,
-    userId: string
-  ): boolean => {
-    const idRegex = /^[a-zA-Z0-9_-]+$/;
-    return idRegex.test(projectId) && idRegex.test(userId);
-  };
-
   // global state
   const { setHourlyRate } = useStore();
   const hourlyRate = useStore(
@@ -94,12 +85,6 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
   const fetchEarningsData = useCallback(async () => {
     const user = FIREBASE_AUTH.currentUser;
     if (!user || !projectId) return;
-
-    // validate the path parameters
-    if (!validatePathParameters(projectId, user.uid)) {
-      console.error("Invalid path parameters detected");
-      return;
-    }
 
     try {
       const docRef = doc(
@@ -162,12 +147,6 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
     const user = FIREBASE_AUTH.currentUser;
     if (!user) {
       useAlertStore.getState().showAlert("Error", "Authentication required");
-      return;
-    }
-
-    // path validation
-    if (!validatePathParameters(projectId, user.uid)) {
-      useAlertStore.getState().showAlert("Error", "Invalid project data");
       return;
     }
 

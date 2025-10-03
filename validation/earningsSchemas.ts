@@ -9,21 +9,14 @@ import { z } from "zod";
 ///////////////////////////////////////////////////////////////////////
 
 // hourly rate schema to check if the input is valid, if so, return the value
-// It sanatizes the input by converting it to a number and checking if it is between 0 and 300
 export const HourlyRateSchema = z.object({
   hourlyRate: z
     .number()
     .min(0, "Hourly rate cannot be negative")
     .max(300, "Hourly rate cannot exceed 300")
     .refine((val) => !isNaN(val), "Hourly rate must be a valid number"),
-  projectId: z
-    .string()
-    .min(1)
-    .regex(/^[a-zA-Z0-9_-]+$/, "Invalid project ID"),
-  userId: z
-    .string()
-    .min(1)
-    .regex(/^[a-zA-Z0-9_-]+$/, "Invalid user ID"),
+  projectId: z.string().min(1, "Project ID is required"),
+  userId: z.string().min(1, "User ID is required"),
 });
 
 export const FirestoreEarningsSchema = z.object({
