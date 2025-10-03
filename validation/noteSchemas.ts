@@ -30,11 +30,9 @@ export const NoteInputSchema = z.object({
   comment: z
     .string()
     .min(1, "Comment cannot be empty")
-    .max(1000, "Comment too long")
-    .refine((val) => !val.includes("<script>"), "Invalid input detected")
-    .refine((val) => !val.includes("javascript:"), "Invalid input detected"),
-  projectId: z.string().min(1),
-  userId: z.string().min(1),
+    .max(1000, "Comment too long"),
+  projectId: z.string().min(1, "Project ID is required"),
+  userId: z.string().min(1, "User ID is required"),
 });
 
 export type FirestoreNote = z.infer<typeof FirestoreNoteSchema>;

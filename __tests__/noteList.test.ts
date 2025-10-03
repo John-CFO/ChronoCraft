@@ -10,13 +10,6 @@ import { FirestoreNoteSchema } from "../validation/noteSchemas";
 ///////////////////////////////////////////////////////////////////////////////
 
 describe("NoteList Security", () => {
-  it("should reject invalid project IDs", () => {
-    const invalidIds = ["../otheruser", "project<script>", "project' OR 1=1"];
-    invalidIds.forEach((id) => {
-      expect(/^[a-zA-Z0-9_-]+$/.test(id)).toBe(false);
-    });
-  });
-
   it("should filter invalid note data", () => {
     const invalidNotes = [
       { id: "1", comment: "", createdAt: new Date(), uid: "user123" }, // Empty comment
@@ -29,9 +22,20 @@ describe("NoteList Security", () => {
       { id: "3", comment: "Valid", createdAt: "invalid-date", uid: "user123" }, // Invalid date
     ];
 
-    // Simuliere dass FirestoreNoteSchema diese ablehnt
+    // test that FirestoreNoteSchema rejects invalid data
     invalidNotes.forEach((note) => {
       expect(FirestoreNoteSchema.safeParse(note).success).toBe(false);
     });
+  });
+
+  it("should accept valid note data", () => {
+    const validNote = {
+      id: "note1",
+      comment: "Valid note content",
+      createdAt: new Date(),
+      uid: "user123",
+    };
+
+    expect(FirestoreNoteSchema.safeParse(validNote).success).toBe(true);
   });
 });

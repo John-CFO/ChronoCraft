@@ -33,4 +33,15 @@ describe("NoteCard Delete Security", () => {
 
     expect(FirestoreNoteSchema.safeParse(invalidNote).success).toBe(false);
   });
+
+  it("should reject notes that are too long", () => {
+    const longNote = {
+      id: "note1",
+      comment: "a".repeat(1001), // 1001 characters - too long
+      createdAt: new Date(),
+      uid: "user123",
+    };
+
+    expect(FirestoreNoteSchema.safeParse(longNote).success).toBe(false);
+  });
 });

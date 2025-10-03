@@ -127,18 +127,6 @@ const NoteModal: React.FC<NoteModalProps> = ({
         return;
       }
 
-      // validate path parameters
-      const idRegex = /^[a-zA-Z0-9_-]+$/;
-      if (
-        !idRegex.test(projectId) ||
-        !idRegex.test(userId) ||
-        !idRegex.test(serviceId)
-      ) {
-        console.error("Invalid path parameters detected");
-        useAlertStore.getState().showAlert("Error", "Invalid project data");
-        return;
-      }
-
       // authentication and authorization
       const user = FIREBASE_AUTH.currentUser;
       if (!user || user.uid !== userId) {
