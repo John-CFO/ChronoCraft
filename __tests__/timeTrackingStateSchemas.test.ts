@@ -181,7 +181,7 @@ describe("TimeTrackingState Schemas", () => {
 
     it("rejects invalid projectId", () => {
       const invalidProjectId = {
-        projectId: "", // Leere ID
+        projectId: "", // empty ID
         timer: 100,
         totalEarnings: 10,
       };
