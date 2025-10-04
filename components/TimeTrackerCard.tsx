@@ -38,6 +38,7 @@ import { computeEarnings } from "./utils/earnings";
 import { useStore, ProjectState } from "./TimeTrackingState";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+import { useValidatedStore } from "../validation/useValidatedStore";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 type RootStackParamList = {
@@ -141,9 +142,25 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
     (state) => state.projects[projectId]?.hourlyRate || 0
   );
 
+  // validated + passthrough actions (AppSec-relevant actions via validated store)
+  const {
+    // heavy validations (IO paths)
+    setProjectData,
+    // light (hot-path) and heavy timer update functions
+    setTimerAndEarnings, // heavy (Zod) — for IO/restore if needed
+    setTimerAndEarningsLight, // light — use this in the 1×/s hot path
+    // control actions with validation
+    startTimer,
+    stopTimer,
+    updateTimer,
+    // passthrough / non-appsec
+    resetAll,
+    setAppState,
+  } = useValidatedStore();
+
   // global state
-  const { stopTimer, updateTimer, resetAll, setAppState, setProjectData } =
-    useStore();
+  // const { stopTimer, updateTimer, resetAll, setAppState, setProjectData } =
+  //   useStore();
 
   // refs for timer logic
   const animationRef = useRef<number | null>(null);
@@ -172,6 +189,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
       console.error("User is not authenticated.");
       return;
     }
+
     try {
       const docRef = doc(
         FIREBASE_FIRESTORE,
@@ -197,14 +215,21 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
             ? projectData.lastStartTime.toDate()
             : null,
         };
-        // console.log("Project data fetched successfully", formattedData);
-        setProjectData(projectId, formattedData as ProjectState);
+
+        try {
+          // heavy validation (Zod) — Firestore → store
+          setProjectData(projectId, formattedData as ProjectState);
+        } catch (err) {
+          console.error(
+            `[TT:${projectId}] setProjectData validation failed on fetch:`,
+            err
+          );
+        }
       } else {
-        // console.error("No such document!");
-        // console.warn("Project document does not exist");
+        console.error(`[TT:${projectId}] Project data not found in Firestore`);
       }
     } catch (error) {
-      console.error("Error fetching Firestore data:", error);
+      console.error(`[TT:${projectId}] Firestore fetch failed:`, error);
     }
   }, [projectId, setProjectData]);
 
@@ -262,7 +287,16 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
     if (wholeSecond !== lastWholeSecondRef.current) {
       const earnings = computeEarnings(wholeSecond, hourlyRateRef.current);
-      useStore.getState().setTimerAndEarnings(projectId, wholeSecond, earnings);
+      try {
+        // use the LIGHT version here (very cheap checks only)
+        setTimerAndEarningsLight(projectId, wholeSecond, earnings);
+      } catch (err) {
+        // hot path must not crash UI — log + continue
+        console.error(
+          `[TT:${projectId}] setTimerAndEarningsLight failed:`,
+          err
+        );
+      }
       lastWholeSecondRef.current = wholeSecond;
     }
 
@@ -281,23 +315,65 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
           const bgKey = `bgTime_${projectId}`;
           const storedBgTime = await AsyncStorage.getItem(bgKey);
 
+          // inside handleAppStateChange when coming to foreground
           if (storedBgTime && isTrackingRef.current) {
-            const bgEnterTime = new Date(storedBgTime).getTime();
-            const elapsedSeconds = (Date.now() - bgEnterTime) / 1000;
-            const newAccum = accumulatedTimeRef.current + elapsedSeconds;
-            const wholeNew = Math.floor(newAccum);
-            const earnings = computeEarnings(wholeNew, hourlyRateRef.current);
+            // parse ISO stored time safely
+            const bgEnter = Date.parse(storedBgTime);
+            if (!Number.isFinite(bgEnter)) {
+              console.warn(
+                `[TT:${projectId}] invalid bgTime in AsyncStorage:`,
+                storedBgTime
+              );
+              // clean up obviously bad value
+              try {
+                await AsyncStorage.removeItem(bgKey);
+              } catch (_) {}
+            } else {
+              const elapsedSeconds = (Date.now() - bgEnter) / 1000;
+              if (!Number.isFinite(elapsedSeconds) || elapsedSeconds < 0) {
+                console.warn(
+                  `[TT:${projectId}] computed invalid elapsedSeconds:`,
+                  elapsedSeconds
+                );
+                // do not apply resume when nonsense
+              } else {
+                const newAccum = accumulatedTimeRef.current + elapsedSeconds;
+                const wholeNew = Math.floor(newAccum);
 
-            useStore
-              .getState()
-              .setTimerAndEarnings(projectId, wholeNew, earnings);
+                // optional plausibility cap (example: 10 years in seconds)
+                const MAX_SECONDS = 10 * 365 * 24 * 3600;
+                if (wholeNew < 0 || wholeNew > MAX_SECONDS) {
+                  console.warn(
+                    `[TT:${projectId}] implausible resumed timer:`,
+                    wholeNew
+                  );
+                  // choose to clamp or ignore — here: ignore resume and keep previous values
+                } else {
+                  const earnings = computeEarnings(
+                    wholeNew,
+                    hourlyRateRef.current
+                  );
+                  try {
+                    // LIGHT validation + write — cheap checks only (hot-path)
+                    setTimerAndEarningsLight(projectId, wholeNew, earnings);
+                  } catch (err) {
+                    console.error(
+                      `[TT:${projectId}] bg resume setTimerAndEarningsLight failed:`,
+                      err
+                    );
+                  }
 
-            accumulatedTimeRef.current = newAccum;
-            lastWholeSecondRef.current = wholeNew;
-            setDisplayTime(newAccum);
+                  accumulatedTimeRef.current = newAccum;
+                  lastWholeSecondRef.current = wholeNew;
+                  setDisplayTime(newAccum);
+                }
+              }
+            }
 
-            await AsyncStorage.removeItem(bgKey);
-
+            // cleanup and restart animation if needed
+            try {
+              await AsyncStorage.removeItem(bgKey);
+            } catch (_) {}
             if (isTrackingRef.current && !animationRef.current) {
               startAnimation();
             }
@@ -363,10 +439,58 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
         ]);
 
         if (savedTime) {
-          const parsedTime = parseFloat(savedTime);
-          accumulatedTimeRef.current = parsedTime;
-          setDisplayTime(parsedTime);
-          updateTimer(projectId, Math.floor(parsedTime));
+          const parsedTime = Number.parseFloat(savedTime);
+
+          // basic sanity checks
+          if (!Number.isFinite(parsedTime) || parsedTime < 0) {
+            console.warn(
+              `[TT:${projectId}] invalid persistedTimer value:`,
+              savedTime
+            );
+            // cleanup bad persisted value and fallback to 0
+            try {
+              await AsyncStorage.removeItem(`persistedTimer_${projectId}`);
+            } catch (_) {}
+            accumulatedTimeRef.current = 0;
+            setDisplayTime(0);
+          } else {
+            // compute whole seconds + earnings
+            const whole = Math.floor(parsedTime);
+
+            // optional plausibility cap (example: 10 years in seconds)
+            const MAX_SECONDS = 10 * 365 * 24 * 3600;
+            if (whole < 0 || whole > MAX_SECONDS) {
+              console.warn(
+                `[TT:${projectId}] implausible persisted timer:`,
+                whole
+              );
+              try {
+                await AsyncStorage.removeItem(`persistedTimer_${projectId}`);
+              } catch (_) {}
+              accumulatedTimeRef.current = 0;
+              setDisplayTime(0);
+            } else {
+              const earnings = computeEarnings(whole, hourlyRateRef.current);
+              try {
+                // HEAVY validation once on restore — use Zod-backed method
+                setTimerAndEarnings(projectId, whole, earnings);
+                // apply local refs / UI after successful validation/write
+                accumulatedTimeRef.current = parsedTime;
+                setDisplayTime(parsedTime);
+              } catch (err) {
+                console.error(
+                  `[TT:${projectId}] persisted timer failed heavy validation:`,
+                  err
+                );
+                // clear corrupted persisted value and fallback
+                try {
+                  await AsyncStorage.removeItem(`persistedTimer_${projectId}`);
+                } catch (_) {}
+                accumulatedTimeRef.current = 0;
+                setDisplayTime(0);
+              }
+            }
+          }
         }
 
         if (isTrackingSaved === "true" && appState === "active") {
@@ -452,7 +576,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
       return;
     }
 
-    await useStore.getState().startTimer(projectId);
+    await startTimer(projectId);
     isTrackingRef.current = true;
     startAnimation();
 
