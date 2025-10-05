@@ -8,6 +8,15 @@
 import { z } from "zod";
 
 ///////////////////////////////////////////////////////////////////
+
+// validate Firestore Doc ID
+export const isValidFirestoreDocId = (id: unknown): id is string => {
+  if (typeof id !== "string") return false;
+  if (id.length === 0 || id.length > 1500) return false; // Firestore Limit
+  const reservedChars = /[.$[\]#\/]/;
+  return !reservedChars.test(id);
+};
+
 /**
  * Preprocessors
  *
@@ -37,62 +46,74 @@ const timestampToDateOptional = z.preprocess((val) => {
   return undefined;
 }, z.date().optional());
 
+const safeEmailSchema = z.string().email().max(254);
 /**
  * FirestoreUserSchema
  * - createdAt is optional (common for user docs that might not include it).
  * - other fields validated with defaults where appropriate.
  */
-export const FirestoreUserSchema = z.object({
-  email: z.email().optional(),
-  firstLogin: z.boolean().optional().default(false),
-  totpEnabled: z.boolean().optional().default(false),
-  totpSecret: z.string().nullable().optional(),
-  hasSeenHomeTour: z.boolean().optional().default(false),
-  hasSeenVacationTour: z.boolean().optional().default(false),
-  hasSeenWorkHoursTour: z.boolean().optional().default(false),
-  hasSeenDetailsTour: z.boolean().optional().default(false),
-  createdAt: timestampToDateOptional, // optional, converted to Date when present
-});
-export type FirestoreUser = z.infer<typeof FirestoreUserSchema>;
+export const FirestoreUserSchema = z
+  .object({
+    email: safeEmailSchema.optional(),
+    firstLogin: z.boolean().optional().default(false),
+    totpEnabled: z.boolean().optional().default(false),
+    totpSecret: z.string().max(100).nullable().optional(),
+    hasSeenHomeTour: z.boolean().optional().default(false),
+    hasSeenVacationTour: z.boolean().optional().default(false),
+    hasSeenWorkHoursTour: z.boolean().optional().default(false),
+    hasSeenDetailsTour: z.boolean().optional().default(false),
+    createdAt: timestampToDateOptional, // optional, converted to Date when present
+  })
+  .strict();
 
 // FirestoreProjectSchema
-export const FirestoreProjectSchema = z.object({
-  id: z.string(),
-  name: z.string().min(1).max(100), // length limit validation
-  createdAt: timestampToDateStrict, // required and strict
-});
-export type FirestoreProject = z.infer<typeof FirestoreProjectSchema>;
+export const FirestoreProjectSchema = z
+  .object({
+    id: z.string().refine(isValidFirestoreDocId, "Invalid document ID"),
+    name: z.string().min(1).max(100), // length limit validation
+    createdAt: timestampToDateStrict, // required and strict
+  })
+  .strict();
 
 // validate is TOTP exists and is enabled
-export const TOTPUserSchema = z.object({
-  totpEnabled: z.boolean().optional().default(false),
-  totpSecret: z.string().nullable().optional(),
-});
-
-export type TOTPUser = z.infer<typeof TOTPUserSchema>;
+export const TOTPUserSchema = z
+  .object({
+    totpEnabled: z.boolean().optional().default(false),
+    totpSecret: z.string().max(100).nullable().optional(),
+  })
+  .strict();
 
 // validate the workhours global states
 export const FirestoreWorkHoursSchema = z
   .object({
-    elapsedTime: z.number().nonnegative().optional().default(0),
+    elapsedTime: z.number().min(0).max(31536000).optional().default(0), // ~10 Years in seconds
     isWorking: z.boolean().optional().default(false),
     startWorkTime: timestampToDateOptional,
-    currentDocId: z.string().nullable().optional(),
+    currentDocId: z
+      .string()
+      .refine(isValidFirestoreDocId, "Invalid document ID")
+      .nullable()
+      .optional(),
     lastUpdatedDate: z
       .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD")
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD format")
       .optional(),
 
     // (optional with Defaults)
-    expectedHours: z.number().min(0).max(24).optional().default(0),
-    overHours: z.number().min(0).optional().default(0),
-    duration: z.number().nonnegative().optional().default(0),
-    userId: z.string().optional(), // optional
+    expectedHours: z.number().min(0).max(24).optional().default(0), // Max 1 Day in Hours
+    overHours: z.number().min(0).max(8760).optional().default(0), // Max 1 Year in seconds
+    duration: z.number().min(0).max(8760).optional().default(0),
+    userId: z
+      .string()
+      .refine(isValidFirestoreDocId, "Invalid user ID")
+      .optional(),
     workDay: z
       .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/)
-      .optional(), // optional
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD format")
+      .optional(),
   })
   .strict();
 
-export type FirestoreWorkHours = z.infer<typeof FirestoreWorkHoursSchema>;
+// helper function to validate the workhours schema
+export const validateWorkHoursSchema = (data: unknown) =>
+  FirestoreWorkHoursSchema.safeParse(data).success;

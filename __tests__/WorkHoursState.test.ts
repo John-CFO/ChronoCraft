@@ -37,18 +37,18 @@ describe("WorkHoursState — AppSec Validation", () => {
   });
 
   // Input Validation
-  it("rejects malicious Firestore document data types", async () => {
+  it("rejects invalid Firestore document numeric or date values", async () => {
     const mockUser = { uid: "test-user" };
     getAuth.mockReturnValue({ currentUser: mockUser });
 
-    // Mock Firestore responses
+    // Mock invalid Firestore document
     doc.mockReturnValue({});
     getDoc.mockResolvedValue({
       exists: () => true,
       data: () => ({
-        elapsedTime: "<script>alert('xss')</script>",
-        isWorking: { malicious: "payload" },
-        currentDocId: "../../../etc/passwd",
+        elapsedTime: -100, // negative time value - invalid
+        isWorking: "true", // wrong Type
+        currentDocId: "invalid/id", // Firestore reserved characters
       }),
     });
 
@@ -64,6 +64,32 @@ describe("WorkHoursState — AppSec Validation", () => {
       expect.any(Object)
     );
     expect(WorkHoursState.getState().elapsedTime).toBe(originalElapsedTime);
+
+    consoleSpy.mockRestore();
+  });
+
+  // testing rejection of invalid data
+  it("does not save invalid data violating schema constraints", async () => {
+    const mockUser = { uid: "test-user" };
+    getAuth.mockReturnValue({ currentUser: mockUser });
+
+    const consoleSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    const mockDocRef = {};
+    doc.mockReturnValue(mockDocRef);
+
+    // add invalid data
+    WorkHoursState.getState().setElapsedTime(-5);
+    WorkHoursState.getState().setCurrentDocId("invalid/id");
+
+    await WorkHoursState.getState().saveState();
+
+    expect(setDoc).not.toHaveBeenCalled();
+    expect(consoleSpy).toHaveBeenCalledWith(
+      "Invalid WorkHours state:",
+      expect.any(Object)
+    );
 
     consoleSpy.mockRestore();
   });
@@ -105,8 +131,8 @@ describe("WorkHoursState — AppSec Validation", () => {
     expect(setDoc).not.toHaveBeenCalled();
   });
 
-  // Data Sanitization
-  it("sanitizes data before saving to Firestore", async () => {
+  // testing only valid data is written
+  it("only writes valid, schema-confirmed data to Firestore", async () => {
     const mockUser = { uid: "test-user" };
     getAuth.mockReturnValue({ currentUser: mockUser });
 
@@ -114,10 +140,10 @@ describe("WorkHoursState — AppSec Validation", () => {
     doc.mockReturnValue(mockDocRef);
     setDoc.mockResolvedValue(undefined);
 
-    // set state
+    // Set state with valid data
     WorkHoursState.getState().setElapsedTime(3600);
     WorkHoursState.getState().setIsWorking(true);
-    WorkHoursState.getState().setCurrentDocId("safe-document-id");
+    WorkHoursState.getState().setCurrentDocId("valid-document-id");
 
     await WorkHoursState.getState().saveState();
 
@@ -126,7 +152,7 @@ describe("WorkHoursState — AppSec Validation", () => {
       expect.objectContaining({
         elapsedTime: 3600,
         isWorking: true,
-        currentDocId: "safe-document-id",
+        currentDocId: "valid-document-id",
       })
     );
   });
