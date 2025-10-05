@@ -152,15 +152,10 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
     // control actions with validation
     startTimer,
     stopTimer,
-    updateTimer,
     // passthrough / non-appsec
     resetAll,
     setAppState,
   } = useValidatedStore();
-
-  // global state
-  // const { stopTimer, updateTimer, resetAll, setAppState, setProjectData } =
-  //   useStore();
 
   // refs for timer logic
   const animationRef = useRef<number | null>(null);

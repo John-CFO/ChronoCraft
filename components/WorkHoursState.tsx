@@ -10,7 +10,10 @@ import { getAuth } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
-import { FirestoreWorkHoursSchema } from "../validation/firestoreSchemas";
+import {
+  FirestoreWorkHoursSchema,
+  validateWorkHoursSchema,
+} from "../validation/firestoreSchemas";
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -128,6 +131,13 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
         currentDocId: state.currentDocId,
         lastUpdatedDate: today,
       };
+
+      // validate the schema
+      const valid = validateWorkHoursSchema(stateToSave);
+      if (!valid) {
+        console.error("Invalid WorkHours state:", stateToSave);
+        return; // skip saving if invalid
+      }
 
       const docRef = doc(
         FIREBASE_FIRESTORE,
