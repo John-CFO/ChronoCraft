@@ -132,11 +132,11 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
         lastUpdatedDate: today,
       };
 
-      // 🔒 Vor dem Speichern validieren
+      // validate the schema
       const valid = validateWorkHoursSchema(stateToSave);
       if (!valid) {
         console.error("Invalid WorkHours state:", stateToSave);
-        return; // ❌ Kein Firestore-Aufruf bei ungültigen Daten
+        return; // skip saving if invalid
       }
 
       const docRef = doc(
