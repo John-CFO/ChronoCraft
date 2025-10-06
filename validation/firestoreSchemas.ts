@@ -66,6 +66,14 @@ export const FirestoreUserSchema = z
   })
   .strict();
 
+// validate the custom user data using the FirestoreUserSchema
+export const FirestoreCustomUserSchema = FirestoreUserSchema.extend({
+  uid: z.string().min(1), // UID from Auth-System
+  displayName: z.string().optional().nullable(),
+  personalID: z.string().optional().nullable(),
+  photoURL: z.url().optional().nullable(),
+}).strict();
+
 // FirestoreProjectSchema
 export const FirestoreProjectSchema = z
   .object({

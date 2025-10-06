@@ -33,12 +33,13 @@ import { getDoc, doc } from "firebase/firestore";
 import EditProfileModal from "./EditProfileModal";
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import FAQBottomSheet from "./FAQBottomSheet";
-import { CustomUser } from "./types/CustomUser"; // CustomUser type definition import to handle conflict with FirebaseUser
+import { MergedUser } from "./types/CustomUser";
 import RestartTourButton from "./../components/services/copilotTour/RestartTourButton";
 import AccessibilityToggleButton from "./services/accessibility/AccessibilityToggleButton";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import TFAButton from "./services/TFAButton";
 import TwoFactorModal from "./TwoFactorModal";
+import { FirestoreUserSchema } from "../validation/firestoreSchemas";
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -57,7 +58,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
   const [profileModalVisible, setProfileModalVisible] = useState(false);
 
   // declare state for user data
-  const [user, setUser] = useState<CustomUser | null>(null);
+  const [user, setUser] = useState<MergedUser | null>(null);
 
   // declare state for 2FA modal
   const [tfaModalVisible, setTfaModalVisible] = useState(false);
@@ -92,17 +93,25 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
       if (currentUser && currentUser.uid) {
         const userRef = doc(FIREBASE_FIRESTORE, "Users", currentUser.uid);
         const userDoc = await getDoc(userRef);
+
         if (userDoc.exists()) {
-          const data = {
+          // validate and parse user data
+          const parsedData = FirestoreUserSchema.parse({
             uid: currentUser.uid,
             ...userDoc.data(),
-          } as CustomUser;
-          setUser(data);
-          setIsEnrolled(!!data.totpEnabled);
+          });
+
+          const mergedUser: MergedUser = {
+            ...currentUser,
+            ...parsedData,
+          };
+
+          setUser(mergedUser);
+          setIsEnrolled(!!mergedUser.totpEnabled);
         }
       }
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching user profile:", error);
     }
   };
 
