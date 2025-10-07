@@ -113,73 +113,6 @@ const LoginScreen: React.FC = () => {
   };
 
   // function to handle the login process
-  // const handleLogin = async () => {
-  //   if (!validateLoginInputs()) return;
-  //   setLoading(true);
-
-  //   try {
-  //     const response = await signInWithEmailAndPassword(
-  //       getAuth(FIREBASE_APP),
-  //       email,
-  //       password
-  //     );
-  //     const user = response.user;
-
-  //     // store signed-in user for later (TOTP flow)
-  //     setPendingUser(user);
-
-  //     const userRef = doc(FIREBASE_FIRESTORE, "Users", user.uid);
-  //     const userSnap = await getDoc(userRef);
-
-  //     let userData: UserProfile | null = null;
-
-  //     if (userSnap.exists()) {
-  //       const raw = userSnap.data();
-  //       const parsed = FirestoreUserSchema.safeParse(raw);
-
-  //       if (parsed.success) {
-  //         userData = parsed.data;
-  //         if (userData.firstLogin) {
-  //           await setDoc(userRef, { firstLogin: false }, { merge: true });
-  //         }
-  //       } else {
-  //         console.warn("Invalid Users doc for", user.uid, parsed.error);
-  //       }
-  //     }
-
-  //     // If TOTP is active
-  //     if (userData?.totpEnabled) {
-  //       const totpSecret = userData.totpSecret ?? null;
-
-  //       if (!totpSecret) {
-  //         useAlertStore
-  //           .getState()
-  //           .showAlert("2FA Error", "TOTP not configured.");
-  //         await signOut(getAuth(FIREBASE_APP));
-  //         setPendingUser(null);
-  //         setLoading(false);
-  //         return;
-  //       }
-
-  //       // Save secret for TOTP modal
-  //       setPendingTotpSecret(totpSecret);
-  //       setTotpModalVisible(true);
-  //       setLoading(false);
-  //       return; // Modal will handle the rest
-  //     }
-
-  //     // No TOTP → normal login
-  //     setUser(user);
-  //   } catch (error) {
-  //     console.error(error);
-  //     useAlertStore
-  //       .getState()
-  //       .showAlert("Login failed", "Something went wrong, please try again!");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const handleLogin = async () => {
     if (!validateLoginInputs()) return;
     setLoading(true);
@@ -194,7 +127,7 @@ const LoginScreen: React.FC = () => {
       const user = response.user; // FirebaseUser
       setPendingUser(user); // save for TOTP modal later
 
-      // 2️⃣ Get Firestore user document
+      // get Firestore user document
       const userRef = doc(FIREBASE_FIRESTORE, "Users", user.uid);
       const userSnap = await getDoc(userRef);
 
@@ -208,7 +141,7 @@ const LoginScreen: React.FC = () => {
           // Add uid from Firebase user
           userData = { ...parsed.data, uid: user.uid };
 
-          // Handle first login flag
+          // handle first login flag
           if (userData.firstLogin) {
             await setDoc(userRef, { firstLogin: false }, { merge: true });
           }
@@ -234,6 +167,7 @@ const LoginScreen: React.FC = () => {
             .getState()
             .showAlert("2FA Error", "TOTP not configured.");
           await signOut(getAuth(FIREBASE_APP));
+          // Save secret for TOTP modal
           setPendingUser(null);
           setLoading(false);
           return;
@@ -245,7 +179,7 @@ const LoginScreen: React.FC = () => {
         return; // TOTP flow handled by modal
       }
 
-      // Normal login
+      // No TOTP → normal login
       setUser(user);
     } catch (error) {
       console.error(error);
