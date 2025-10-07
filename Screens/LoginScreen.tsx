@@ -51,10 +51,8 @@ import {
   RegisterInputSchema,
   TotpCodeSchema,
 } from "../validation/authSchemas";
-import {
-  FirestoreUserSchema,
-  FirestoreUser,
-} from "../validation/firestoreSchemas";
+import { FirestoreUserSchema } from "../validation/firestoreSchemas";
+import { UserProfile } from "../components/types/UserProfile";
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -120,27 +118,30 @@ const LoginScreen: React.FC = () => {
     setLoading(true);
 
     try {
+      // 1️⃣ Sign in with Firebase Auth
       const response = await signInWithEmailAndPassword(
         getAuth(FIREBASE_APP),
         email,
         password
       );
-      const user = response.user;
+      const user = response.user; // FirebaseUser
+      setPendingUser(user); // save for TOTP modal later
 
-      // store signed-in user for later (TOTP flow)
-      setPendingUser(user);
-
+      // get Firestore user document
       const userRef = doc(FIREBASE_FIRESTORE, "Users", user.uid);
       const userSnap = await getDoc(userRef);
 
-      let userData: FirestoreUser | null = null;
+      let userData: UserProfile | null = null;
 
       if (userSnap.exists()) {
         const raw = userSnap.data();
         const parsed = FirestoreUserSchema.safeParse(raw);
 
         if (parsed.success) {
-          userData = parsed.data;
+          // Add uid from Firebase user
+          userData = { ...parsed.data, uid: user.uid };
+
+          // handle first login flag
           if (userData.firstLogin) {
             await setDoc(userRef, { firstLogin: false }, { merge: true });
           }
@@ -149,8 +150,16 @@ const LoginScreen: React.FC = () => {
         }
       }
 
+      // TS-Safe check
+      if (!userData) {
+        // No valid user data from Firestore
+        setUser(user); // fallback to FirebaseUser only
+        setLoading(false);
+        return;
+      }
+
       // If TOTP is active
-      if (userData?.totpEnabled) {
+      if (userData.totpEnabled) {
         const totpSecret = userData.totpSecret ?? null;
 
         if (!totpSecret) {
@@ -158,16 +167,16 @@ const LoginScreen: React.FC = () => {
             .getState()
             .showAlert("2FA Error", "TOTP not configured.");
           await signOut(getAuth(FIREBASE_APP));
+          // Save secret for TOTP modal
           setPendingUser(null);
           setLoading(false);
           return;
         }
 
-        // Save secret for TOTP modal
         setPendingTotpSecret(totpSecret);
         setTotpModalVisible(true);
         setLoading(false);
-        return; // Modal will handle the rest
+        return; // TOTP flow handled by modal
       }
 
       // No TOTP → normal login

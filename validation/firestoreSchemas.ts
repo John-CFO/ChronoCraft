@@ -125,3 +125,6 @@ export const FirestoreWorkHoursSchema = z
 // helper function to validate the workhours schema
 export const validateWorkHoursSchema = (data: unknown) =>
   FirestoreWorkHoursSchema.safeParse(data).success;
+
+// export FirestoreProject explicid, based on FirestoreProjectSchema
+export type FirestoreProject = z.infer<typeof FirestoreProjectSchema>;

@@ -17,14 +17,7 @@ import {
 } from "react-native";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { LinearGradient } from "expo-linear-gradient";
-import {
-  collection,
-  setDoc,
-  getDocs,
-  getDoc,
-  doc,
-  updateDoc,
-} from "firebase/firestore";
+import { collection, setDoc, getDocs, getDoc, doc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
@@ -37,13 +30,9 @@ import WorkTimeAnimation from "../components/WorkTimeAnimation";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import { FirestoreWorkHoursSchema } from "../validation/firestoreSchemas";
-import {
-  AsyncStorageWorkTrackerSchema,
-  AsyncStorageAppStateSchema,
-} from "../validation/asyncStorageSchemas";
+import { AsyncStorageWorkTrackerSchema } from "../validation/asyncStorageSchemas";
 import {
   getValidatedDoc,
-  getValidatedDocs,
   getValidatedDocsFromSnapshot,
 } from "../validation/getDocsWrapper";
 
