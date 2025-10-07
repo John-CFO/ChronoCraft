@@ -46,6 +46,7 @@ import { NotificationManager } from "./components/services/PushNotifications";
 import { useAccessibilityStore } from "./components/services/accessibility/accessibilityStore";
 import { AuthContext } from "./components/contexts/AuthContext";
 import { navigationRef } from "./navigation/NavigationRef";
+import { handleAuthStateChange } from "./validation/authHelper";
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -237,33 +238,9 @@ const App = () => {
   // hook to navigate use after login to an other screen
   useEffect(() => {
     const unsub = onAuthStateChanged(FIREBASE_AUTH, (u) => {
+      // delegate to handleAuthStateChange: (validation: authHelper.ts)
       (async () => {
-        try {
-          if (!u) {
-            // logged out
-            setUser(null);
-            return;
-          }
-
-          // get user doc from firestore to check if TOTP is enabled
-          const uref = doc(FIREBASE_FIRESTORE, "Users", u.uid);
-          const snap = await getDoc(uref);
-          if (snap.exists()) {
-            const d = snap.data() as any;
-            // If TOTP is enabled, block auto-navigation
-            if (d?.totpEnabled) {
-              // NOT seUser(u); - let LoginScreen handle the TOTP flow and then call setUser
-              return;
-            }
-          }
-
-          // No TOTP – secure the user and thus the navigation
-          setUser(u);
-        } catch (err) {
-          console.error("[Auth] onAuthStateChanged handler error:", err);
-          // Fallback: set (to secure the navigation from limbo)
-          setUser(u);
-        }
+        await handleAuthStateChange(u, setUser);
       })();
     });
 
