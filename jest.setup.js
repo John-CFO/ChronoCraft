@@ -1,26 +1,11 @@
-import { jest } from "@jest/globals";
-
-// Minimal mocks for security testing
-jest.mock("@react-native-async-storage/async-storage", () => ({
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-}));
+// jest.setup.js
 
 jest.mock("firebase/auth", () => ({
-  getAuth: jest.fn(),
+  getAuth: jest.fn(() => ({ currentUser: { uid: "test-uid" } })),
+  User: jest.fn(),
 }));
 
 jest.mock("firebase/firestore", () => ({
   doc: jest.fn(),
-  getDoc: jest.fn(),
-  setDoc: jest.fn(),
+  updateDoc: jest.fn(),
 }));
-
-// Error suppression for clean test output
-beforeAll(() => {
-  jest.spyOn(console, "error").mockImplementation(() => {});
-});
-
-afterAll(() => {
-  jest.restoreAllMocks();
-});

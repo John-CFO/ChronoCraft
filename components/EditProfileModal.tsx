@@ -1,6 +1,6 @@
 ////////////////////////////////////EditProfileModal Component////////////////////////////////////////
 
-// this component is used to edit user profile
+// This component is used to edit user profile
 // users can change their name, personal ID and profile picture
 // name and personal ID are stored in Firestore while the profile picture is stored in Firebase Storage
 
@@ -19,20 +19,15 @@ import {
 } from "react-native";
 import React, { useEffect, useState, useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
-import { doc, updateDoc } from "firebase/firestore";
-import { User } from "firebase/auth";
+import { User, getAuth } from "firebase/auth";
 import * as ImagePicker from "expo-image-picker";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
-import {
-  FIREBASE_FIRESTORE,
-  FIREBASE_AUTH,
-  FIREBASE_APP,
-} from "../firebaseConfig";
+import { FIREBASE_AUTH } from "../firebaseConfig";
 import DismissKeyboard from "../components/DismissKeyboard";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { sanitizeName, sanitizePersonalID } from "./InputSanitizers";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+import { handleSaveProfile } from "../components/utils/handleSaveProfile";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -111,7 +106,6 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     });
     if (!result.canceled) {
       setImageUri(result.assets[0].uri);
-      // console.log("Image selected:", result.assets[0].uri);
     } else {
       useAlertStore
         .getState()
@@ -119,79 +113,31 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     }
   };
 
-  // initialize Firebase Storage
-  const storage = getStorage(FIREBASE_APP);
-
-  // uploade user-image to Fiorebase Storage and get the download URL
-  const uploadImage = async (uri: string, userId: string) => {
-    try {
-      // console.log("Fetching the image from the URI:", uri);
-      const response = await fetch(uri);
-      // console.log("Image fetched, converting to blob...");
-      const blob = await response.blob();
-      // console.log("Blob created successfully:", blob);
-      const storageRef = ref(storage, `profilePictures/${userId}`);
-      // console.log("Storage reference created:", storageRef.fullPath);
-
-      // console.log("Uploading the image to Firebase Storage...");
-      const uploadResult = await uploadBytes(storageRef, blob);
-      // console.log("Image uploaded, getting download URL...");
-      const downloadURL = await getDownloadURL(uploadResult.ref);
-      // console.log("Image uploaded successfully, download URL:", downloadURL);
-      return downloadURL;
-    } catch (error) {
-      // console.error("Error uploading image:", error);
-      throw error; // Propagate the error
-    }
-  };
-
   // handleSave function to check user auth and save data from current user in Firestore and then close modal
   const [saving, setSaving] = useState(false);
   const handleSave = async () => {
-    const currentUser = FIREBASE_AUTH.currentUser;
-    if (!currentUser || !currentUser.uid) {
-      // console.log("Invalid user ID provided");
+    const currentUser = getAuth().currentUser ?? FIREBASE_AUTH.currentUser;
+    if (!currentUser?.uid) {
+      console.warn("No authenticated user; aborting profile update");
       return;
     }
 
-    let imageUrl: string | undefined = "";
-    setSaving(true);
-    try {
-      if (imageUri) {
-        //  console.log("Uploading image with URI:", imageUri);
-        imageUrl = await uploadImage(imageUri as string, currentUser.uid);
-      }
-    } catch (error) {
-      // console.error("Error uploading image:", error);
-      return; // Stop execution if image upload fails
-    }
-
-    try {
-      const userRef = doc(FIREBASE_FIRESTORE, "Users", currentUser.uid);
-      await updateDoc(userRef, {
-        displayName: newName || currentUser.displayName || "",
-        personalID: newPersonalID || "",
-        photoURL: imageUrl || currentUser.photoURL || "",
-      });
-      /* console.log("Profile data saved", {
-        displayName: newName || currentUser.displayName || "",
-        personalID: newPersonalID || "",
-        photoURL: imageUrl || currentUser.photoURL || "",
-      }); */
-
-      onClose();
-    } catch (error) {
-      // console.error("Error updating user profile:", error);
-    }
-
-    setSaving(false);
+    // delegate to helper
+    await handleSaveProfile({
+      userId: currentUser.uid,
+      newName,
+      newPersonalID,
+      imageUri,
+      showAlert: useAlertStore.getState().showAlert,
+      onClose,
+      setSaving,
+    });
   };
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
     (state) => state.accessibilityEnabled
   );
-  // console.log("accessMode in LoginScreen:", accessMode);
 
   return (
     <DismissKeyboard>
