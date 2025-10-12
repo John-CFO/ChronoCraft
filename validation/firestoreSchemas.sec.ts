@@ -12,14 +12,13 @@ import { z } from "zod";
 // validate Firestore Doc ID
 export const isValidFirestoreDocId = (id: unknown): id is string => {
   if (typeof id !== "string") return false;
-  if (id.length === 0 || id.length > 1500) return false; // Firestore Limit
+  if (id.length === 0 || id.length > 255) return false;
   const reservedChars = /[.$[\]#\/]/;
   return !reservedChars.test(id);
 };
 
 /**
  * Preprocessors
- *
  * - timestampToDateStrict: only accepts Firestore Timestamp-like (has toDate),
  *   Date instances or numbers (Unix ms). Any other input will be left unchanged
  *   and rejected by z.date(), so invalid types (e.g. string) fail validation.
@@ -46,12 +45,12 @@ const timestampToDateOptional = z.preprocess((val) => {
   return undefined;
 }, z.date().optional());
 
-const safeEmailSchema = z.string().email().max(254);
-/**
- * FirestoreUserSchema
- * - createdAt is optional (common for user docs that might not include it).
- * - other fields validated with defaults where appropriate.
- */
+const safeEmailSchema = z.email().max(254);
+
+// FirestoreUserSchema
+// - createdAt is optional (common for user docs that might not include it).
+// - other fields validated with defaults where appropriate.
+
 export const FirestoreUserSchema = z
   .object({
     email: safeEmailSchema.optional(),
@@ -88,6 +87,20 @@ export const TOTPUserSchema = z
   .object({
     totpEnabled: z.boolean().optional().default(false),
     totpSecret: z.string().max(100).nullable().optional(),
+  })
+  .strict();
+
+// ProjectUpdateSchema
+// - single place to validate what updates are allowed for a Project document.
+// - strict(): unknown keys are rejected (prevents arbitrary fields being written).
+
+export const ProjectUpdateSchema = z
+  .object({
+    name: z.string().min(1).max(100).optional(),
+    description: z.string().max(1000).optional(),
+    archived: z.boolean().optional(),
+    // fixed: use two args to satisfy this project's zod typings -> key and value as strings
+    metadata: z.record(z.string(), z.string()).optional(),
   })
   .strict();
 
