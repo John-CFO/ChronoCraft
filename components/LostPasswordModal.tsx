@@ -21,7 +21,7 @@ import { FIREBASE_AUTH } from "../firebaseConfig";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useDotAnimation } from "../components/DotAnimation";
 import { useAccessibilityStore } from "./services/accessibility/accessibilityStore";
-import { validateEmail } from "../validation/passwordResetSchemas";
+import { validateEmail } from "../validation/passwordResetSchemas.sec";
 
 ////////////////////////////////////////////////////////////////////////////////////////
 

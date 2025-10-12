@@ -17,7 +17,7 @@ import { CopilotStep, walkthroughable } from "react-native-copilot";
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useCalendarStore } from "../components/CalendarState";
 import { useAlertStore } from "./services/customAlert/alertStore";
-import { VacationInputSchema } from "../validation/vacationSchemas";
+import { VacationInputSchema } from "../validation/vacationSchemas.sec";
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 

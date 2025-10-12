@@ -12,7 +12,7 @@ import {
   ProjectStateSchema,
   TimerAndEarningsSchema,
   SetProjectDataSchema,
-} from "../validation/timeTrackingStateSchemas";
+} from "../validation/timeTrackingStateSchemas.sec";
 
 ///////////////////////////////////////////////////////////////////////////////
 

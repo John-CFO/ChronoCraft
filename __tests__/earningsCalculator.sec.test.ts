@@ -8,7 +8,7 @@
 import {
   HourlyRateSchema,
   FirestoreEarningsSchema,
-} from "../validation/earningsSchemas";
+} from "../validation/earningsSchemas.sec";
 
 ///////////////////////////////////////////////////////////////////////////////
 

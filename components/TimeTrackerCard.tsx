@@ -38,7 +38,7 @@ import { computeEarnings } from "./utils/earnings";
 import { useStore, ProjectState } from "./TimeTrackingState";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
-import { useValidatedStore } from "../validation/useValidatedStore";
+import { useValidatedStore } from "../validation/useValidatedStore.sec";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 type RootStackParamList = {

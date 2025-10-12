@@ -37,8 +37,8 @@ import { useAccessibilityStore } from "../components/services/accessibility/acce
 import OTPInput from "./OTPInput";
 import DismissKeyboard from "../components/DismissKeyboard";
 import { useDotAnimation } from "../components/DotAnimation";
-import { TOTPUserSchema } from "../validation/firestoreSchemas";
-import { TotpCodeSchema } from "../validation/authSchemas";
+import { TOTPUserSchema } from "../validation/firestoreSchemas.sec";
+import { TotpCodeSchema } from "../validation/authSchemas.sec";
 
 ///////////////////////////////////////////////////////////////////////////////////////
 

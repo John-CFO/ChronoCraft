@@ -23,7 +23,7 @@ import WorkHoursState from "../components/WorkHoursState";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { sanitizeHours } from "./InputSanitizers";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
-import { FirestoreWorkHoursSchema } from "../validation/firestoreSchemas";
+import { FirestoreWorkHoursSchema } from "../validation/firestoreSchemas.sec";
 
 //////////////////////////////////////////////////////////////////////////////////
 

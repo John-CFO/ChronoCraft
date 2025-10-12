@@ -29,12 +29,12 @@ import { formatTime } from "../components/WorkTimeCalc";
 import WorkTimeAnimation from "../components/WorkTimeAnimation";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
-import { FirestoreWorkHoursSchema } from "../validation/firestoreSchemas";
-import { AsyncStorageWorkTrackerSchema } from "../validation/asyncStorageSchemas";
+import { FirestoreWorkHoursSchema } from "../validation/firestoreSchemas.sec";
+import { AsyncStorageWorkTrackerSchema } from "../validation/asyncStorageSchemas.sec";
 import {
   getValidatedDoc,
   getValidatedDocsFromSnapshot,
-} from "../validation/getDocsWrapper";
+} from "../validation/getDocsWrapper.sec";
 
 ///////////////////////////////////////////////////////////////////////////////////
 

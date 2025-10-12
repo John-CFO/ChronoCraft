@@ -1,4 +1,4 @@
-//////////////////////////////////authHelper.ts////////////////////////////////////
+//////////////////////////////////authHelper.sec.ts////////////////////////////////////
 
 /**
  * - Validates the user's Firestore doc before deciding to call setUser(u)
@@ -13,7 +13,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { User } from "firebase/auth";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
-import { FirestoreUserSchema } from "./firestoreSchemas";
+import { FirestoreUserSchema } from "./firestoreSchemas.sec";
 
 ///////////////////////////////////////////////////////////////////////////////////
 

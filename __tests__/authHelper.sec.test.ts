@@ -6,8 +6,8 @@
 
 import { getDoc } from "firebase/firestore";
 
-import { FirestoreUserSchema } from "../validation/firestoreSchemas";
-import { handleAuthStateChange } from "../validation/authHelper";
+import { FirestoreUserSchema } from "../validation/firestoreSchemas.sec";
+import { handleAuthStateChange } from "../validation/authHelper.sec";
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -21,7 +21,7 @@ jest.mock("../firebaseConfig", () => ({
   FIREBASE_FIRESTORE: {},
 }));
 
-jest.mock("../validation/firestoreSchemas", () => ({
+jest.mock("../validation/firestoreSchemas.sec", () => ({
   FirestoreUserSchema: {
     safeParse: jest.fn(),
   },

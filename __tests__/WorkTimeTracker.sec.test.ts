@@ -9,8 +9,8 @@
 import {
   FirestoreWorkHoursSchema,
   isValidFirestoreDocId,
-} from "../validation/firestoreSchemas";
-import { AsyncStorageWorkTrackerSchema } from "../validation/asyncStorageSchemas";
+} from "../validation/firestoreSchemas.sec";
+import { AsyncStorageWorkTrackerSchema } from "../validation/asyncStorageSchemas.sec";
 
 /////////////////////////////////////////////////////////////////////////////////////
 

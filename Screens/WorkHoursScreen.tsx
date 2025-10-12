@@ -21,7 +21,7 @@ import ErrorBoundary from "../components/ErrorBoundary";
 import TourCard from "../components/services/copilotTour/TourCard";
 import { useCopilotOffset } from "../components/services/copilotTour/CopilotOffset";
 import CustomTooltip from "../components/services/copilotTour/CustomToolTip";
-import { FirestoreUserSchema } from "../validation/firestoreSchemas";
+import { FirestoreUserSchema } from "../validation/firestoreSchemas.sec";
 
 /////////////////////////////////////////////////////////////////////////////////////
 
