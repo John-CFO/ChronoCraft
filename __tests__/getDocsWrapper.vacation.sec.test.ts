@@ -5,8 +5,8 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-import { getValidatedDocs } from "../validation/getDocsWrapper";
-import { FirestoreVacationSchema } from "../validation/vacationSchemas";
+import { getValidatedDocs } from "../validation/getDocsWrapper.sec";
+import { FirestoreVacationSchema } from "../validation/vacationSchemas.sec";
 
 ///////////////////////////////////////////////////////////////////////////////
 

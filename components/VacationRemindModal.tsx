@@ -24,8 +24,8 @@ import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import CheckmarkAnimation from "./Checkmark";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useAccessibilityStore } from "./services/accessibility/accessibilityStore";
-import { getValidatedDoc } from "../validation/getDocsWrapper";
-import { FirestoreVacationSchema } from "../validation/vacationSchemas";
+import { getValidatedDoc } from "../validation/getDocsWrapper.sec";
+import { FirestoreVacationSchema } from "../validation/vacationSchemas.sec";
 
 /////////////////////////////////////////////////////////////////////////////////
 

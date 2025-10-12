@@ -13,7 +13,7 @@ import { z } from "zod";
 import NoteCard from "./NoteCard";
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
-import { FirestoreNoteSchema } from "../validation/noteSchemas";
+import { FirestoreNoteSchema } from "../validation/noteSchemas.sec";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 

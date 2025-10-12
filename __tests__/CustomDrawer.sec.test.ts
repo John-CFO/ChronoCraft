@@ -8,7 +8,7 @@ import { getDoc, doc } from "firebase/firestore";
 import { z } from "zod";
 
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
-import { FirestoreUserSchema } from "../validation/firestoreSchemas";
+import { FirestoreUserSchema } from "../validation/firestoreSchemas.sec";
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -23,7 +23,7 @@ jest.mock("../firebaseConfig", () => ({
   FIREBASE_FIRESTORE: {},
 }));
 
-jest.mock("../validation/firestoreSchemas", () => ({
+jest.mock("../validation/firestoreSchemas.sec", () => ({
   FirestoreUserSchema: {
     parse: jest.fn((data) => data),
   },

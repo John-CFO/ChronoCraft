@@ -7,7 +7,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { sanitizeHours } from "../components/InputSanitizers";
-import { FirestoreWorkHoursSchema } from "../validation/firestoreSchemas";
+import { FirestoreWorkHoursSchema } from "../validation/firestoreSchemas.sec";
 
 ///////////////////////////////////////////////////////////////////////////////
 

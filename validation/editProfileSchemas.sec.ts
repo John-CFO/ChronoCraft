@@ -1,4 +1,4 @@
-///////////////////////editProfileSchemas.ts////////////////////////////
+///////////////////////editProfileSchemas.sec.ts////////////////////////////
 
 // Schema for updates to a user's profile coming from the client.
 // Only accepts allowed fields and constrains formats.

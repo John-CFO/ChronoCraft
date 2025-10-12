@@ -39,7 +39,7 @@ import AccessibilityToggleButton from "./services/accessibility/AccessibilityTog
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import TFAButton from "./services/TFAButton";
 import TwoFactorModal from "./TwoFactorModal";
-import { FirestoreUserSchema } from "../validation/firestoreSchemas";
+import { FirestoreUserSchema } from "../validation/firestoreSchemas.sec";
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
