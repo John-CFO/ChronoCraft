@@ -8,7 +8,7 @@
 import {
   VacationInputSchema,
   FirestoreVacationSchema,
-} from "../validation/vacationSchemas";
+} from "../validation/vacationSchemas.sec";
 
 ///////////////////////////////////////////////////////////////////////////////
 

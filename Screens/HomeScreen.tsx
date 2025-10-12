@@ -69,12 +69,12 @@ import { useDotAnimation } from "../components/DotAnimation";
 import { sanitizeTitle } from "../components/InputSanitizers";
 import SortModal from "../components/SortModal";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
-import { getValidatedDocs } from "../validation/getDocsWrapper";
+import { getValidatedDocs } from "../validation/getDocsWrapper.sec";
 import {
   FirestoreProjectSchema,
   FirestoreUserSchema,
   FirestoreProject,
-} from "../validation/firestoreSchemas";
+} from "../validation/firestoreSchemas.sec";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 type HomeScreenRouteProp = RouteProp<

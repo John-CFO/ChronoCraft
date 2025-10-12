@@ -11,7 +11,7 @@ import { z } from "zod";
 import {
   FirestoreVacationSchema,
   VacationInputSchema,
-} from "../validation/vacationSchemas";
+} from "../validation/vacationSchemas.sec";
 
 ////////////////////////////////////////////////////////////////////////////////////////
 

@@ -27,8 +27,8 @@ import { FIREBASE_AUTH } from "../firebaseConfig";
 import VacationRemindModal from "../components/VacationRemindModal";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
-import { FirestoreVacationSchema } from "../validation/vacationSchemas";
-import { getValidatedDocsFromSnapshot } from "../validation/getDocsWrapper";
+import { FirestoreVacationSchema } from "../validation/vacationSchemas.sec";
+import { getValidatedDocsFromSnapshot } from "../validation/getDocsWrapper.sec";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 

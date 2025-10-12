@@ -1,4 +1,4 @@
-/////////////////////////firestoreSchemas.ts////////////////////////
+/////////////////////////firestoreSchemas.sec.ts////////////////////////
 
 // This file is used to validate user data from firestore
 // also validate is TOTP exists and is enabled

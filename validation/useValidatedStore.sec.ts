@@ -1,4 +1,4 @@
-////////////////////////useValidatedStore.ts////////////////////////////////////
+////////////////////////useValidatedStore.sec.ts////////////////////////////////////
 
 // This file contains the validated actions for the global timetracking state
 
@@ -9,7 +9,7 @@ import {
   validateSetProjectData,
   validateTimerAndEarnings,
   isValidProjectId,
-} from "./timeTrackingStateSchemas";
+} from "./timeTrackingStateSchemas.sec";
 
 ////////////////////////////////////////////////////////////////////////////////
 

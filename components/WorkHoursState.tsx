@@ -13,7 +13,7 @@ import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import {
   FirestoreWorkHoursSchema,
   validateWorkHoursSchema,
-} from "../validation/firestoreSchemas";
+} from "../validation/firestoreSchemas.sec";
 
 ////////////////////////////////////////////////////////////////////////////
 

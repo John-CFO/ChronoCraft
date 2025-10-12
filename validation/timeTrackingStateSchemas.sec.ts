@@ -1,4 +1,4 @@
-///////////////////timeTrackingStateSchemas.ts//////////////////////
+///////////////////timeTrackingStateSchemas.sec.ts//////////////////////
 
 // This file is used to validate user inputs for time tracking
 

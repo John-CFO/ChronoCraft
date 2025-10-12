@@ -8,13 +8,13 @@ import {
   LoginInputSchema,
   RegisterInputSchema,
   TotpCodeSchema,
-} from "../validation/authSchemas";
+} from "../validation/authSchemas.sec";
 
 import {
   FirestoreUserSchema,
   FirestoreProjectSchema,
   TOTPUserSchema,
-} from "../validation/firestoreSchemas";
+} from "../validation/firestoreSchemas.sec";
 
 /////////////////////////////////////////////////////////////////////////
 

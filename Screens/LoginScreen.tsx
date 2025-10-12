@@ -50,8 +50,8 @@ import {
   LoginInputSchema,
   RegisterInputSchema,
   TotpCodeSchema,
-} from "../validation/authSchemas";
-import { FirestoreUserSchema } from "../validation/firestoreSchemas";
+} from "../validation/authSchemas.sec";
+import { FirestoreUserSchema } from "../validation/firestoreSchemas.sec";
 import { UserProfile } from "../components/types/UserProfile";
 
 //////////////////////////////////////////////////////////////////////////////////////////////

@@ -26,7 +26,7 @@ import { useCopilotOffset } from "../components/services/copilotTour/CopilotOffs
 import CustomTooltip from "../components/services/copilotTour/CustomToolTip";
 import ProgressCard from "../components/ProgressCard";
 import { usePreventBackWhileTracking } from "../components/PreventBackBTN";
-import { FirestoreUserSchema } from "../validation/firestoreSchemas";
+import { FirestoreUserSchema } from "../validation/firestoreSchemas.sec";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -28,7 +28,7 @@ import { useAccessibilityStore } from "../components/services/accessibility/acce
 import {
   FirestoreEarningsSchema,
   HourlyRateSchema,
-} from "../validation/earningsSchemas";
+} from "../validation/earningsSchemas.sec";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

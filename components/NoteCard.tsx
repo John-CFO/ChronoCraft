@@ -15,7 +15,7 @@ import { z } from "zod";
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
-import { FirestoreNoteSchema } from "../validation/noteSchemas";
+import { FirestoreNoteSchema } from "../validation/noteSchemas.sec";
 
 ///////////////////////////////////////////////////////////////////////////////////
 
