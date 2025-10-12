@@ -5,7 +5,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import { FIREBASE_AUTH } from "../firebaseConfig";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useDotAnimation } from "../components/DotAnimation";
 import { useAccessibilityStore } from "./services/accessibility/accessibilityStore";
+import { validateEmail } from "../validation/passwordResetSchemas";
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -41,32 +42,68 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
   // state to hold the email
   const [email, setEmail] = useState("");
 
-  // function to handle the password reset
+  const sendingRef = useRef(false);
+
+  // state to handle the password reset
   const [sending, setSending] = useState(false);
+
+  //state to handle the cooldown
+  const [cooldown, setCooldown] = useState<number | null>(null);
+
   const handlePasswordReset = async () => {
-    // condition: if no email is entered show an alert
-    if (!email) {
-      useAlertStore.getState().showAlert("Error", "Please enter your email.");
+    if (sendingRef.current || cooldown) return; // prevent floods
+    sendingRef.current = true;
+    setSending(true);
+    // validate the email
+    const normalized = validateEmail(email);
+    if (!normalized) {
+      // condition: if no email is entered show an alert
+      useAlertStore
+        .getState()
+        .showAlert("Error", "Please enter a valid email address.");
+      sendingRef.current = false;
+      setSending(false);
       return;
     }
     // try to send the password reset email, if it was successful show an alert with instructions
-    setSending(true);
     try {
-      await sendPasswordResetEmail(FIREBASE_AUTH, email);
+      await sendPasswordResetEmail(FIREBASE_AUTH, normalized);
       useAlertStore
         .getState()
         .showAlert(
-          "E-Mails sent",
-          "An E-Mail has been sent to you with instructions on how to reset your password."
+          "Email sent",
+          "If an account exists for that email, you will receive instructions to reset your password."
         );
       onClose(); // close the modal
-    } catch (error) {
-      console.error(error);
-      useAlertStore
-        .getState()
-        .showAlert("Error", "There was an error resetting your password.");
+      // start cooldown (e.g. 60s)
+      setCooldown(60);
+      const t = setInterval(
+        () => setCooldown((c) => (c && c > 0 ? c - 1 : null)),
+        1000
+      );
+      setTimeout(() => {
+        clearInterval(t);
+        setCooldown(null);
+      }, 60000);
+    } catch (err: any) {
+      // map known errors, otherwise generic
+      const code = err?.code ?? "";
+      if (code === "auth/invalid-email") {
+        useAlertStore
+          .getState()
+          .showAlert("Error", "Please enter a valid email address.");
+      } else {
+        useAlertStore
+          .getState()
+          .showAlert(
+            "Error",
+            "If an account exists for that email, you will receive instructions to reset your password."
+          );
+      }
+    } finally {
+      sendingRef.current = false;
+      setSending(false);
     }
-    setSending(false);
   };
 
   // define the dot animation with a delay
@@ -77,7 +114,6 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
   const accessMode = useAccessibilityStore(
     (state) => state.accessibilityEnabled
   );
-  // console.log("accessMode in LoginScreen:", accessMode);
 
   return (
     <Modal
