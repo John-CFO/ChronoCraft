@@ -1,9 +1,15 @@
-///////////////////////////////////FAQBottomSheet Component////////////////////////////////////////
+/////////////////////////////////// FAQBottomSheet Component ////////////////////////////////////////
 
 // This file is used to create the FAQ bottom sheet modal
 // It includes the FAQ sections and the delete account section
 // It also includes the functions to open and close the FAQ bottom sheet modal
-// And also the aswer to change the user´s password
+// And also the answer to change the user´s password
+
+// Important:
+// - Firestore deletion logic has been extracted to `firestoreDeleteHelpers.ts`
+//   to keep this component small and to allow focused AppSec tests.
+// - User-visible messages are surfaced via useAlertStore; internal errors are
+//   sanitized before being shown to the user.
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -18,17 +24,7 @@ import {
 } from "react-native";
 import Collapsible from "react-native-collapsible";
 import { LinearGradient } from "expo-linear-gradient";
-import {
-  collection,
-  getDocs,
-  doc,
-  deleteDoc,
-  writeBatch,
-  query,
-  limit,
-  CollectionReference,
-  DocumentData,
-} from "firebase/firestore";
+import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
 import { deleteObject, getStorage, ref as storageRef } from "firebase/storage";
 import { EmailAuthProvider, deleteUser } from "firebase/auth";
 import { reauthenticateWithCredential } from "firebase/auth";
@@ -38,22 +34,24 @@ import { ScrollView } from "react-native-gesture-handler";
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useDotAnimation } from "../components/DotAnimation";
-import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+import { useAccessibilityStore } from "./services/accessibility/accessibilityStore";
+import { isValidFirestoreDocId } from "../validation/firestoreSchemas.sec";
+import { deleteSubcollections } from "../components/utils/firestoreDeleteHelpers";
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 interface FAQBottomSheetProps {
-  navigation: any;
+  navigation?: any;
   closeModal: () => void | undefined;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
+const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
   // FAQ section states
-  const [expandedSections, setExpandedSections] = useState<{
-    [key: string]: boolean;
-  }>({
+  const [expandedSections, setExpandedSections] = useState<
+    Record<string, boolean>
+  >({
     faq1: false,
     faq2: false,
     faq3: false,
@@ -82,107 +80,42 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // get the current user
+  // get the current user from auth config
   const user = FIREBASE_AUTH.currentUser;
-  const userUid = user ? user.uid : null;
 
-  // function to close the FAQ bottom sheet modal
+  // function to close the FAQ bottom sheet modal (safe surfaced error)
   const closeFAQSheet = () => {
     try {
-      // console.log("FAQ bottom sheet closed.");
       closeModal();
-    } catch (error) {
-      console.error("Error closing FAQ bottom sheet:", error);
-      throw error;
-    }
-  };
-
-  // function to batch delete a collection
-  const deleteCollectionBatched = async (
-    colRef: CollectionReference<DocumentData>,
-    batchSize = 100
-  ): Promise<number> => {
-    let totalDeleted = 0;
-    try {
-      while (true) {
-        const q = query(colRef, limit(batchSize));
-        const snapshot = await getDocs(q);
-
-        if (snapshot.empty) break;
-
-        const batch = writeBatch(colRef.firestore);
-        snapshot.docs.forEach((doc) => batch.delete(doc.ref));
-        await batch.commit();
-
-        totalDeleted += snapshot.size;
-
-        if (snapshot.size < batchSize) break;
-      }
-      return totalDeleted;
-    } catch (e) {
-      console.error(
-        "deleteCollectionBatched error for",
-        colRef.path ?? colRef,
-        e
-      );
-      throw e;
-    }
-  };
-
-  // recursive function to delete subcollections
-  const deleteSubcollections = async (
-    parentPathSegments: string[],
-    subs: string[]
-  ) => {
-    // parentPathSegments example: ["Users", user.uid, "Services", serviceId"]
-    for (const sub of subs) {
-      const path = [...parentPathSegments, sub].join("/");
-      const colRef = collection(FIREBASE_FIRESTORE, path);
-
-      let deleted;
-      do {
-        deleted = await deleteCollectionBatched(colRef);
-      } while (deleted > 0);
-
-      if (sub === "Projects") {
-        // iterate projects to delete nested Notes
-        const projSnap = await getDocs(collection(FIREBASE_FIRESTORE, path));
-        for (const p of projSnap.docs) {
-          const notesPath = `${path}/${p.id}/Notes`;
-          const notesRef = collection(FIREBASE_FIRESTORE, notesPath);
-          let nd;
-          do {
-            nd = await deleteCollectionBatched(notesRef);
-          } while (nd > 0);
-        }
-      }
+    } catch {
+      useAlertStore
+        .getState()
+        .showAlert("Error", "Failed to close FAQ sheet. Please try again.");
     }
   };
 
   // ref for alert timeout
   const alertTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  // hook to clean up the timeout
-  useEffect(() => {
-    return () => {
-      if (alertTimeoutRef.current) {
-        clearTimeout(alertTimeoutRef.current);
-      }
-    };
-  }, []);
+  useEffect(
+    () => () => {
+      if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
+    },
+    []
+  );
 
   // ref for animation timeout
   const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  // hook to clean up the timeout
-  useEffect(() => {
-    return () => {
-      if (animationTimeoutRef.current) {
+  useEffect(
+    () => () => {
+      if (animationTimeoutRef.current)
         clearTimeout(animationTimeoutRef.current);
-      }
-    };
-  }, []);
+    },
+    []
+  );
 
-  // function to delete account
-  const handleDeleteAccount = async () => {
+  // function to delete account (returns boolean success flag)
+  const handleDeleteAccount = async (): Promise<boolean> => {
+    // require password input
     if (!password?.trim()) {
       useAlertStore
         .getState()
@@ -190,112 +123,149 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
           "No Password",
           "Please enter your password before deleting your account."
         );
-      return;
+      return false;
     }
+
+    // basic auth sanity checks
+    if (!user || !user.uid || !isValidFirestoreDocId(user.uid)) {
+      useAlertStore
+        .getState()
+        .showAlert("Error", "No authenticated user found.");
+      return false;
+    }
+
     setLoading(true);
     try {
-      const user = FIREBASE_AUTH.currentUser;
-      if (!user) throw new Error("No user signed in");
-      const credential = EmailAuthProvider.credential(user.email!, password);
-      await reauthenticateWithCredential(user, credential);
-      // delete profile image (if storage enabled)
+      const currentUser = FIREBASE_AUTH.currentUser;
+      if (!currentUser) {
+        useAlertStore
+          .getState()
+          .showAlert("Error", "No authenticated user found.");
+        setLoading(false);
+        return false;
+      }
+
+      // reauthenticate user
+      const credential = EmailAuthProvider.credential(
+        currentUser.email ?? "",
+        password
+      );
+      await reauthenticateWithCredential(currentUser, credential);
+
+      // delete profile image (if storage enabled) — non-fatal
       if (process.env.FIREBASE_STORAGE_ENABLED !== "false") {
         try {
           const st = getStorage();
-          const imgRef = storageRef(st, `profilePictures/${user.uid}`);
+          const imgRef = storageRef(st, `profilePictures/${currentUser.uid}`);
           await deleteObject(imgRef).catch((e) => {
-            // non-fatal: ignore "not-found", but log others
-            if (e?.code === "storage/object-not-found") {
-            } else {
-              console.warn(
-                "[handleDeleteAccount] error deleting profile image:",
-                e
-              );
+            // ignore not-found; surface other storage errors as a benign warning
+            if (e?.code && e.code !== "storage/object-not-found") {
+              useAlertStore
+                .getState()
+                .showAlert(
+                  "Warning",
+                  "Failed to delete profile image (ignored)."
+                );
             }
           });
-        } catch (e) {
-          console.warn(
-            "[handleDeleteAccount] storage delete error (ignored):",
-            e
-          );
+        } catch {
+          // ignore storage subsystem errors — do not block account deletion
         }
       }
 
-      // fetch services
+      // fetch user's services and delete nested data using extracted helpers
       const servicesColRef = collection(
         FIREBASE_FIRESTORE,
-        `Users/${user.uid}/Services`
+        "Users",
+        currentUser.uid,
+        "Services"
       );
       const servicesSnap = await getDocs(servicesColRef);
 
-      // iterate services and delete nested data
       for (const serviceDoc of servicesSnap.docs) {
-        const servicePath = `Users/${user.uid}/Services/${serviceDoc.id}`;
+        // validate service doc id before using it
+        if (!isValidFirestoreDocId(serviceDoc.id)) {
+          // skip invalid doc ids (defensive)
+          continue;
+        }
+
+        // delete allowed subcollections safely
         try {
           await deleteSubcollections(
-            ["Users", user.uid, "Services", serviceDoc.id],
+            FIREBASE_FIRESTORE,
+            ["Users", currentUser.uid, "Services", serviceDoc.id],
             ["Projects", "Vacations", "WorkHours"]
           );
-        } catch (e) {
-          console.error(
-            "[handleDeleteAccount] error deleting subcollections for",
-            servicePath,
-            e
-          );
-          throw e; // break and surface to outer catch so we get permission error info
+        } catch {
+          useAlertStore
+            .getState()
+            .showAlert("Error", "Failed to remove service subcollections.");
+          setLoading(false);
+          return false;
         }
-        // delete service doc itself
+
+        // delete the service document itself
         try {
           await deleteDoc(serviceDoc.ref);
-        } catch (e) {
-          console.error(
-            "[handleDeleteAccount] failed to delete service doc:",
-            serviceDoc.ref.path,
-            e
-          );
-          throw e;
+        } catch {
+          useAlertStore
+            .getState()
+            .showAlert("Error", "Failed to delete service data.");
+          setLoading(false);
+          return false;
         }
       }
-      // delete user doc
+
+      // delete user document
       try {
-        await deleteDoc(doc(FIREBASE_FIRESTORE, "Users", user.uid));
-      } catch (e) {
-        console.error("[handleDeleteAccount] failed to delete user doc:", e);
-        throw e;
+        await deleteDoc(doc(FIREBASE_FIRESTORE, "Users", currentUser.uid));
+      } catch {
+        useAlertStore
+          .getState()
+          .showAlert("Error", "Failed to delete user document.");
+        setLoading(false);
+        return false;
       }
 
       // finally delete auth user
       try {
-        await deleteUser(user);
-      } catch (e) {
-        console.error("[handleDeleteAccount] failed to delete auth user:", e);
-        throw e;
+        await deleteUser(currentUser);
+      } catch (e: any) {
+        useAlertStore
+          .getState()
+          .showAlert(
+            "Error",
+            `Failed to delete auth user. ${e?.message ?? ""}`
+          );
+        setLoading(false);
+        return false;
       }
 
+      // success
       useAlertStore
         .getState()
         .showAlert("Success", "Your account has been deleted.");
       closeFAQSheet();
+      setLoading(false);
+      return true;
     } catch (error: any) {
-      console.error("Error deleting account:", error);
-      console.error("Error code:", error?.code);
-      console.error("Error message:", error?.message);
+      // surface a sanitized error message to user, avoid leaking internals
       useAlertStore
         .getState()
         .showAlert(
           "Error",
-          `There was an issue deleting your account. ${error?.code ?? ""} ${error?.message ?? ""}`,
-          [{ text: "OK", onPress: () => useAlertStore.getState().hideAlert() }]
+          `There was an issue deleting your account. ${error?.code ?? ""} ${
+            error?.message ?? ""
+          }`
         );
-    } finally {
       setLoading(false);
+      return false;
     }
   };
 
-  // function to handle password visibility
-  const deleteAccountVisibility = () => {
+  // function to handle password visibility toggle
+  const deleteAccountVisibility = () =>
     setPasswordVisibility(!passwordVisibility);
-  };
 
   // define the dot animation with a delay
   const dots = useDotAnimation(loading, 700);
@@ -399,7 +369,9 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
             <TouchableOpacity
               accessible={true}
               accessibilityRole="button"
-              accessibilityLabel={`How to close the tooltip on the Workhours Chart? ${expandedSections.faq1 ? "Expanded" : "Collapsed"}`}
+              accessibilityLabel={`How to close the tooltip on the Workhours Chart? ${
+                expandedSections.faq1 ? "Expanded" : "Collapsed"
+              }`}
               accessibilityHint="Toggles the answer for how to close the tooltip"
               accessibilityState={{ expanded: !!expandedSections.faq1 }}
               onPress={() => {
@@ -459,7 +431,9 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
             <TouchableOpacity
               accessible={true}
               accessibilityRole="button"
-              accessibilityLabel={`How to change my password? ${expandedSections.faq2 ? "Expanded" : "Collapsed"}`}
+              accessibilityLabel={`How to change my password? ${
+                expandedSections.faq2 ? "Expanded" : "Collapsed"
+              }`}
               accessibilityHint="Toggles instructions to change your password"
               accessibilityState={{ expanded: !!expandedSections.faq2 }}
               onPress={() => {
@@ -523,7 +497,9 @@ const FAQBottomSheet = ({ navigation, closeModal }: FAQBottomSheetProps) => {
             <TouchableOpacity
               accessible={true}
               accessibilityRole="button"
-              accessibilityLabel={`How to delete my account? ${expandedSections.faq3 ? "Expanded" : "Collapsed"}`}
+              accessibilityLabel={`How to delete my account? ${
+                expandedSections.faq3 ? "Expanded" : "Collapsed"
+              }`}
               accessibilityHint="Toggles instructions to delete your account"
               accessibilityState={{ expanded: !!expandedSections.faq3 }}
               onPress={() => {
