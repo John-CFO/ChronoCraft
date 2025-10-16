@@ -37,7 +37,7 @@ describe("useNotes Hook - AppSec & Validation", () => {
     const { result } = renderHook(() => useNotes(""));
 
     await act(async () => {
-      // keine async Arbeit nötig, aber wir warten, bis Hook-State gesetzt ist
+      // no async work needed, but waiting for hook state to be set
     });
 
     expect(result.current.error).toBeInstanceOf(Error);
