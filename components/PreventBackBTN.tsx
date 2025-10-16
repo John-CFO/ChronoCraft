@@ -14,10 +14,7 @@ import { useAlertStore } from "./services/customAlert/alertStore";
 
 ///////////////////////////////////////////////////////////////////////////////
 
-export function usePreventBackWhileTracking(
-  projectId: string,
-  isTracking: boolean
-) {
+export function usePreventBackWhileTracking(projectId: string) {
   // useRef to store the current value of isTracking
   const isTrackingRef = useRef(false);
 
@@ -36,14 +33,25 @@ export function usePreventBackWhileTracking(
     );
 
     // Firestore Real-Time Listener
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        const trackingStatus = data?.isTracking || false;
-        console.log("Realtime Firestore isTracking:", trackingStatus);
-        isTrackingRef.current = trackingStatus;
+    const unsubscribe = onSnapshot(
+      docRef,
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const trackingStatus = data?.isTracking || false;
+          isTrackingRef.current = trackingStatus;
+        }
+      },
+      // show an alert if an error occurs
+      (error) => {
+        useAlertStore
+          .getState()
+          .showAlert(
+            "Error",
+            "Failed to fetch project data. Please try again."
+          );
       }
-    });
+    );
 
     // BackHandler Listener
     const onBackPress = () => {
