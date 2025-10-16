@@ -1,4 +1,4 @@
-/////////////////////////////WorkHoursState.test.ts////////////////////////////
+/////////////////////////////WorkHoursState.sec.test.ts////////////////////////////
 
 // This file is used to test the WorkHoursState with unit tests
 // It includes the tests for the input validation, authentication bypass protection,

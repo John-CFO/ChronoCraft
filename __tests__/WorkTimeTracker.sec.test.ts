@@ -1,4 +1,4 @@
-/////////////////////////////////WorkTimeTracker.test.ts/////////////////////////////
+/////////////////////////////////WorkTimeTracker.sec.test.ts/////////////////////////////
 
 // This file is used to test the WorkTimeTracker with unit tests
 // It includes the tests for the Zod validation, input sanitization,

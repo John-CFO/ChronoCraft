@@ -1,4 +1,4 @@
-/////////////////////////////WorkHoursInput.test.tsx////////////////////////////
+/////////////////////////////WorkHoursInput.sec.test.tsx////////////////////////////
 
 // This file is used to test the WorkHoursInput with unit tests
 // It includes the tests for the Zod validation, input sanitization,

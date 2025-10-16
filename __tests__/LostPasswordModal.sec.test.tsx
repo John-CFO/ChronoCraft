@@ -1,4 +1,4 @@
-//////////////////LostPasswordModal.test.tsx////////////////////
+//////////////////LostPasswordModal.sec.test.tsx////////////////////
 
 // This file contains the unit tests for the LostPasswordModal component
 // It tests the user authorization and input validation
