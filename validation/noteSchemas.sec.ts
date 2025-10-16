@@ -6,6 +6,8 @@
 
 import { z } from "zod";
 
+import { isValidFirestoreDocId } from "./firestoreSchemas.sec";
+
 //////////////////////////////////////////////////////////////
 
 // validate the timestamp and convert to Date
@@ -31,8 +33,14 @@ export const NoteInputSchema = z.object({
     .string()
     .min(1, "Comment cannot be empty")
     .max(1000, "Comment too long"),
-  projectId: z.string().min(1, "Project ID is required"),
-  userId: z.string().min(1, "User ID is required"),
+  projectId: z
+    .string()
+    .min(1, "Project ID is required")
+    .refine(isValidFirestoreDocId, "Invalid project ID"),
+  userId: z
+    .string()
+    .min(1, "User ID is required")
+    .refine(isValidFirestoreDocId, "Invalid user ID"),
 });
 
 export type FirestoreNote = z.infer<typeof FirestoreNoteSchema>;

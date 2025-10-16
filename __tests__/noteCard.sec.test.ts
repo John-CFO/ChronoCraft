@@ -1,4 +1,4 @@
-////////////////////////////////noteCard.test.ts////////////////////////////////
+////////////////////////////////noteCard.sec.test.ts////////////////////////////////
 
 // This file is used to test the note card component with unit tests
 // It includes the tests to delete notes from other users and validate note structure before deletion

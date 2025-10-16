@@ -1,4 +1,4 @@
-//////////////////////////////vacationSchemas.test.ts////////////////////////////
+//////////////////////////////vacationSchemas.sec.test.ts////////////////////////////
 
 // This file is used to test the vacation schemas with unit tests
 // It tests the VacationInputSchema and FirestoreVacationSchema

@@ -1,4 +1,4 @@
-//////////////////////passwordResetSchemas.test.ts////////////////////
+//////////////////////passwordResetSchemas.sec.test.ts////////////////////
 
 // This file is used to test passoword validation with unit tests
 

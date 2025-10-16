@@ -1,4 +1,4 @@
-////////////////timeTrackingStateSchemas.test.ts////////////////////////////
+////////////////timeTrackingStateSchemas.sec.test.ts////////////////////////////
 
 // This file is used to test the timeTrackingStateSchemas with unit tests
 

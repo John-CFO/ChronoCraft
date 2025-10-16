@@ -1,4 +1,4 @@
-/////////////////////////////uploadImageToProfile.test.ts//////////////////////
+/////////////////////////////uploadImageToProfile.sec.test.ts//////////////////////
 
 // This file is used to test the uploadImageToProfile function with unit tests
 
