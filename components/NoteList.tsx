@@ -4,21 +4,13 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { ScrollView, View, Text, ActivityIndicator } from "react-native";
-import { collection, query, getDocs } from "firebase/firestore";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
-import { z } from "zod";
 
 import NoteCard from "./NoteCard";
-import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
+import { useNotes } from "../hooks/fetchNotesHook";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
-import { FirestoreNoteSchema } from "../validation/noteSchemas.sec";
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-
-// use zod type for notes
-type Note = z.infer<typeof FirestoreNoteSchema>;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -26,111 +18,18 @@ type Note = z.infer<typeof FirestoreNoteSchema>;
 const CopilotTouchableView = walkthroughable(View);
 
 const NoteList: React.FC<{ projectId: string }> = ({ projectId }) => {
-  // note state
-  const [notes, setNotes] = useState<Note[]>([]);
-
-  // error handling stae
-  const [error, setError] = useState<Error | null>(null);
-
-  // loading state if backend isn´t ready
-  const [loading, setLoading] = useState<boolean>(true);
+  // use the useNotes hook
+  const { notes, loading, error, removeNote } = useNotes(projectId);
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
     (state) => state.accessibilityEnabled
   );
 
-  // hook to fetch the notes from Firestore with snapshot
-  useEffect(() => {
-    const fetchNotes = async () => {
-      // condition to check if user is authenticated
-      const user = FIREBASE_AUTH.currentUser;
-      if (!user) {
-        console.error("User is not authenticated.");
-        setError(new Error("Authentication required"));
-        setLoading(false);
-        return;
-      }
-
-      // try to get the notes from Firestore
-      try {
-        const notesQuery = query(
-          collection(
-            FIREBASE_FIRESTORE,
-            "Users",
-            user.uid,
-            `Services/AczkjyWoOxdPAIRVxjy3/Projects/${projectId}/Notes`
-          )
-        );
-        const notesSnapshot = await getDocs(notesQuery);
-        // validate data with zod
-        const validatedNotes: Note[] = [];
-        const validationErrors: string[] = [];
-
-        notesSnapshot.docs.forEach((doc) => {
-          const data = doc.data();
-
-          // validate every note
-          const validationResult = FirestoreNoteSchema.safeParse({
-            id: doc.id,
-            comment: data.comment,
-            createdAt: data.createdAt?.toDate(), // Safe conversion
-            uid: data.uid,
-          });
-
-          if (validationResult.success) {
-            validatedNotes.push(validationResult.data);
-          } else {
-            // log validation errors
-            console.warn("Invalid note data skipped:", {
-              docId: doc.id,
-              error: validationResult.error.issues,
-            });
-            validationErrors.push(`Note ${doc.id} has invalid data`);
-          }
-        });
-
-        // log validation summary
-        if (validationErrors.length > 0) {
-          console.warn(
-            `Skipped ${validationErrors.length} invalid notes:`,
-            validationErrors
-          );
-        }
-
-        setNotes(validatedNotes);
-
-        // condition to check if notesSnapshot is empty
-        if (notesSnapshot.empty && validatedNotes.length === 0) {
-          console.log("No valid notes found for this project.");
-        }
-      } catch (error) {
-        // secure error handling
-        console.error("Error fetching notes");
-        setError(new Error("Failed to load notes"));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchNotes();
-  }, [projectId]);
-
-  if (loading) {
-    return (
-      <View>
-        <ActivityIndicator size="large" color="white" />
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View>
-        <Text style={{ color: "red" }}>Error: {error.message}</Text>
-      </View>
-    );
-  }
+  // loaduing and error conditions
+  if (loading) return <ActivityIndicator size="large" color="white" />;
+  if (error)
+    return <Text style={{ color: "red" }}>Error: {error.message}</Text>;
 
   return (
     <ScrollView>
@@ -175,11 +74,7 @@ const NoteList: React.FC<{ projectId: string }> = ({ projectId }) => {
                   key={note.id}
                   note={note}
                   projectId={projectId}
-                  onDelete={(noteId: string) =>
-                    setNotes((prevNotes) =>
-                      prevNotes.filter((n) => n.id !== noteId)
-                    )
-                  }
+                  onDelete={(noteId: string) => removeNote(noteId)}
                 />
               ))
             ) : (

@@ -1,4 +1,4 @@
-////////////////////////////////vacationReminderModal.test.ts////////////////////////////
+////////////////////////////////vacationReminderModal.sec.test.ts////////////////////////////
 
 // This file tests the VacationReminderModal with unit tests
 // It includes the tests for the Zod validation, is there a pushToken and has the correct type,

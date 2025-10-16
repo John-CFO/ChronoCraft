@@ -1,4 +1,4 @@
-///////////////////////noteModal.test.ts///////////////////////////////////////
+///////////////////////noteModal.sec.test.ts///////////////////////////////////////
 
 // This file is used to test the note modal component with unit tests
 // It includes the tests for user authorization and input validation

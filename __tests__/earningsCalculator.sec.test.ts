@@ -1,4 +1,4 @@
-//////////////////////earningsCalculator.test.ts////////////////////////////
+//////////////////////earningsCalculator.sec.test.ts////////////////////////////
 
 // This file is used to test the earnings calculator component with unit tests
 // It includes the tests for user authorization and Zod validation
