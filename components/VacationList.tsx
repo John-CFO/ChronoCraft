@@ -84,28 +84,42 @@ const VacationList = () => {
     );
 
     // unsubscribe from the snapshot to avoid memory leaks
-    const unsubscribe = onSnapshot(vacationsCollection, (snapshot) => {
-      const vacationsData = getValidatedDocsFromSnapshot(
-        snapshot,
-        FirestoreVacationSchema
-      );
-      // extract the key from the markedDates object to get the array of dates
-      const mapped = vacationsData.map((v) => ({
-        id: v.id!,
-        markedDates: Object.keys(v.markedDates),
-        reminderActive: !!v.reminderDuration,
-      }));
-
-      mapped.sort((a, b) => {
-        if (a.markedDates.length === 0 || b.markedDates.length === 0) return 0;
-        return (
-          new Date(a.markedDates[0]).getTime() -
-          new Date(b.markedDates[0]).getTime()
+    const unsubscribe = onSnapshot(
+      vacationsCollection,
+      (snapshot) => {
+        const vacationsData = getValidatedDocsFromSnapshot(
+          snapshot,
+          FirestoreVacationSchema
         );
-      });
+        // extract the key from the markedDates object to get the array of dates
+        const mapped = vacationsData.map((v) => ({
+          id: v.id!,
+          markedDates: Object.keys(v.markedDates),
+          reminderActive: !!v.reminderDuration,
+        }));
 
-      setVacations(mapped);
-    });
+        mapped.sort((a, b) => {
+          if (a.markedDates.length === 0 || b.markedDates.length === 0)
+            return 0;
+          return (
+            new Date(a.markedDates[0]).getTime() -
+            new Date(b.markedDates[0]).getTime()
+          );
+        });
+
+        setVacations(mapped);
+      },
+      // show an alert if an error occurs
+      (error) => {
+        useAlertStore
+          .getState()
+          .showAlert(
+            "Error loading vacations",
+            "Could not fetch vacation data. Please try again."
+          );
+      }
+    );
+
     return () => unsubscribe();
   }, [user]);
 
