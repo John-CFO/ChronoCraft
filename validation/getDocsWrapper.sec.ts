@@ -11,6 +11,7 @@ import {
   getDoc,
   QuerySnapshot,
   DocumentData,
+  DocumentSnapshot,
 } from "firebase/firestore";
 import { z } from "zod";
 
@@ -67,6 +68,24 @@ export async function getValidatedDocs<T>(
   return validated;
 }
 
+// Validate a single document reference (getDoc)
+export async function getValidatedDoc<T>(
+  docRef: DocumentReference,
+  schema: z.ZodSchema<T>
+): Promise<T | null> {
+  const docSnap = await getDoc(docRef);
+  if (!docSnap.exists()) return null;
+
+  const raw = normalizeDocRaw(docSnap);
+  const result = schema.safeParse(raw);
+  if (!result.success) {
+    console.error("Invalid Firestore document:", docSnap.id, result.error);
+    return null;
+  }
+
+  return result.data;
+}
+
 // Synchronous helper validator for use inside onSnapshot callbacks.
 // Accepts a QuerySnapshot<DocumentData> or snapshot-like object ({ docs: any[] }).
 
@@ -99,20 +118,36 @@ export function getValidatedDocsFromSnapshot<T>(
   return validated;
 }
 
-// Validate a single document reference (getDoc)
-export async function getValidatedDoc<T>(
-  docRef: DocumentReference,
+// Validate a single DocumentSnapshot (used inside onSnapshot(docRef, ...))
+export function getValidatedDocFromSnapshot<T>(
+  docSnap: DocumentSnapshot<DocumentData>,
   schema: z.ZodSchema<T>
-): Promise<T | null> {
-  const docSnap = await getDoc(docRef);
-  if (!docSnap.exists()) return null;
+): T | null {
+  try {
+    if (!docSnap.exists()) {
+      console.error("DocumentSnapshot does not exist:", docSnap.id);
+      return null;
+    }
 
-  const raw = normalizeDocRaw(docSnap);
-  const result = schema.safeParse(raw);
-  if (!result.success) {
-    console.error("Invalid Firestore document:", docSnap.id, result.error);
+    const raw = { id: docSnap.id, ...docSnap.data() };
+    const result = schema.safeParse(raw);
+
+    if (!result.success) {
+      console.error(
+        "Invalid Firestore document (snapshot):",
+        docSnap.id,
+        result.error
+      );
+      return null;
+    }
+
+    return result.data;
+  } catch (err) {
+    console.error(
+      "Unexpected error while validating DocumentSnapshot:",
+      docSnap.id,
+      err
+    );
     return null;
   }
-
-  return result.data;
 }

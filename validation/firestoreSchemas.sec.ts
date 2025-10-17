@@ -79,6 +79,7 @@ export const FirestoreProjectSchema = z
     id: z.string().refine(isValidFirestoreDocId, "Invalid document ID"),
     name: z.string().min(1).max(100), // length limit validation
     createdAt: timestampToDateStrict, // required and strict
+    isTracking: z.boolean().optional().default(false),
   })
   .strict();
 
