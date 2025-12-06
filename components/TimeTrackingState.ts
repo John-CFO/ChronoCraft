@@ -14,6 +14,7 @@ import { getAuth } from "firebase/auth";
 
 import { updateProjectData } from "../components/FirestoreService";
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
+import { useService } from "../components/contexts/ServiceContext";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -502,6 +503,8 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
 
   // function to get the project tracking state in the TimeTrackerCard using snapshot from firebase
   getProjectTrackingState: async (projectId: string) => {
+    const { serviceId } = useService();
+    if (!serviceId) return;
     const user = getAuth().currentUser; // gets the current user from firebase
     if (!user) {
       console.error("User is not authenticated.");
@@ -517,7 +520,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
         "Users",
         user.uid,
         "Services",
-        "AczkjyWoOxdPAIRVxjy3",
+        serviceId,
         "Projects",
         projectId
       );

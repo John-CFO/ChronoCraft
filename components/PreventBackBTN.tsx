@@ -10,6 +10,7 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
+import { useService } from "../components/contexts/ServiceContext";
 import { getValidatedDocFromSnapshot } from "../validation/getDocsWrapper.sec";
 import { FirestoreProjectSchema } from "../validation/firestoreSchemas.sec";
 import { useAlertStore } from "./services/customAlert/alertStore";
@@ -19,8 +20,11 @@ import { useAlertStore } from "./services/customAlert/alertStore";
 export function usePreventBackWhileTracking(projectId: string) {
   // useRef to store the current value of isTracking
   const isTrackingRef = useRef(false);
+  // declare useService hook
+  const { serviceId } = useService();
 
   useEffect(() => {
+    if (!serviceId) return;
     const user = getAuth().currentUser;
     if (!user || !projectId) return;
 
@@ -29,7 +33,7 @@ export function usePreventBackWhileTracking(projectId: string) {
       "Users",
       user.uid,
       "Services",
-      "AczkjyWoOxdPAIRVxjy3",
+      serviceId,
       "Projects",
       projectId
     );
@@ -78,5 +82,5 @@ export function usePreventBackWhileTracking(projectId: string) {
       unsubscribe();
       BackHandler.removeEventListener("hardwareBackPress", onBackPress);
     };
-  }, [projectId]);
+  }, [projectId, serviceId]);
 }

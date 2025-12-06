@@ -16,6 +16,7 @@ import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useCalendarStore } from "../components/CalendarState";
+import { useService } from "../components/contexts/ServiceContext";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { VacationInputSchema } from "../validation/vacationSchemas.sec";
 
@@ -25,6 +26,9 @@ import { VacationInputSchema } from "../validation/vacationSchemas.sec";
 const CopilotTouchableView = walkthroughable(View);
 
 const VacationForm = () => {
+  // declare serviceId
+  const { serviceId } = useService();
+
   // initial start and end dates states
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
@@ -41,6 +45,7 @@ const VacationForm = () => {
   // function to save vacation data to Firestore
   const handleSaveVacation = async () => {
     try {
+      if (!serviceId) return;
       // check if user is logged in
       const user = FIREBASE_AUTH.currentUser;
       if (!user) {
@@ -87,7 +92,7 @@ const VacationForm = () => {
         "Users",
         user.uid,
         "Services",
-        "AczkjyWoOxdPAIRVxjy3",
+        serviceId,
         "Vacations"
       );
 

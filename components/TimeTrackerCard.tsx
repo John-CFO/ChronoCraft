@@ -36,9 +36,10 @@ import { CopilotStep, walkthroughable } from "react-native-copilot";
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { computeEarnings } from "./utils/earnings";
 import { useStore, ProjectState } from "./TimeTrackingState";
+import { useService } from "../components/contexts/ServiceContext";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
-import { useValidatedStore } from "../validation/useValidatedStore.sec";
+import { useValidatedStore } from "../validation/useValidatedStore";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 type RootStackParamList = {
@@ -90,6 +91,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   // initialize the routing
   const route = useRoute<TimeTrackerRouteProp>();
   const { projectId } = route.params;
+  const { serviceId } = useService();
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
@@ -178,6 +180,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
   // hook to fetch project data from firestore when navigate from home screen to details screen
   const fetchProjectData = useCallback(async () => {
+    if (!serviceId) return;
     // console.log("Fetching project data started");
     const user = getAuth().currentUser;
     if (!user) {
@@ -191,7 +194,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
         "Users",
         user.uid,
         "Services",
-        "AczkjyWoOxdPAIRVxjy3",
+        serviceId,
         "Projects",
         projectId
       );
@@ -525,6 +528,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   // hook to update the project data
   const updateProjectData = useCallback(
     async (data: Partial<ProjectState>) => {
+      if (!serviceId) return;
       const user = getAuth().currentUser;
       if (!user) {
         console.error("User is not authenticated.");
@@ -537,7 +541,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
           "Users",
           user.uid,
           "Services",
-          "AczkjyWoOxdPAIRVxjy3",
+          serviceId,
           "Projects",
           projectId
         );
@@ -558,7 +562,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
         console.error("Error updating project data:", error);
       }
     },
-    [projectId]
+    [projectId, serviceId]
   );
 
   // function to start the timer

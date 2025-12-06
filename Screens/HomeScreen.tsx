@@ -60,6 +60,7 @@ import { RootStackParamList } from "../navigation/RootStackParams";
 import { useStore } from "../components/TimeTrackingState";
 import NoteModal from "../components/NoteModal";
 import RoutingLoader from "../components/RoutingLoader";
+import { useService } from "../components/contexts/ServiceContext";
 import TourCard from "../components/services/copilotTour/TourCard";
 import DismissKeyboard from "../components/DismissKeyboard";
 import { useCopilotOffset } from "../components/services/copilotTour/CopilotOffset";
@@ -117,6 +118,9 @@ const HomeScreen: React.FC = () => {
 
   // declaire the firebase authentication
   const auth: Auth = getAuth(FIREBASE_APP);
+
+  // declare the service id
+  const { serviceId } = useService();
 
   // initialize the project id globally to reset all components in the details screen
   const { setProjectId } = useStore();
@@ -191,6 +195,7 @@ const HomeScreen: React.FC = () => {
 
   // function to load data from firestore
   useEffect(() => {
+    if (!serviceId) return;
     const timer = setTimeout(async () => {
       const user = FIREBASE_AUTH.currentUser;
       if (!user) {
@@ -206,7 +211,7 @@ const HomeScreen: React.FC = () => {
           "Users",
           user.uid,
           "Services",
-          "AczkjyWoOxdPAIRVxjy3",
+          serviceId,
           "Projects"
         );
 
@@ -232,10 +237,11 @@ const HomeScreen: React.FC = () => {
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [refresh]);
+  }, [refresh, serviceId]);
 
   // function to add projects
   const handleAddProject = async () => {
+    if (!serviceId) return;
     // check if project name is empty
     if (!newProjectName.trim()) {
       useAlertStore
@@ -260,7 +266,7 @@ const HomeScreen: React.FC = () => {
         "Users",
         user.uid,
         "Services",
-        "AczkjyWoOxdPAIRVxjy3",
+        serviceId,
         "Projects"
       );
 
