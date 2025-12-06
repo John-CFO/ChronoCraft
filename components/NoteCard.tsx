@@ -13,6 +13,7 @@ import { doc, deleteDoc } from "firebase/firestore";
 import { z } from "zod";
 
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
+import { useService } from "../components/contexts/ServiceContext";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import { FirestoreNoteSchema } from "../validation/noteSchemas.sec";
@@ -34,6 +35,8 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
   if (!note) {
     return null;
   }
+  // declare the useService hook
+  const { serviceId } = useService();
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
@@ -45,6 +48,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
 
   // function to handle note deletion in firestore
   const handleDeletComment = async () => {
+    if (!serviceId) return;
     useAlertStore
       .getState()
       .showAlert(
@@ -92,7 +96,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
                   "Users",
                   user.uid,
                   "Services",
-                  "AczkjyWoOxdPAIRVxjy3",
+                  serviceId,
                   "Projects",
                   projectId,
                   "Notes",

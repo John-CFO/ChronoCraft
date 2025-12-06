@@ -20,7 +20,6 @@ import {
 } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 import { User, onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-gesture-handler";
@@ -35,7 +34,7 @@ import HomeScreen from "./Screens/HomeScreen";
 import DetailsScreen from "./Screens/DetailsScreen";
 import WorkHoursScreen from "./Screens/WorkHoursScreen";
 import VacationScreen from "./Screens/VacationScreen";
-import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "./firebaseConfig";
+import { FIREBASE_AUTH } from "./firebaseConfig";
 import CustomDrawer from "./components/CustomDrawer";
 import CustomMenuBTN from "./components/CustomMenuBTN";
 import HeaderHelpComponent from "./components/HeaderHelpComp";
@@ -45,6 +44,7 @@ import { useAlertStore } from "./components/services/customAlert/alertStore";
 import { NotificationManager } from "./components/services/PushNotifications";
 import { useAccessibilityStore } from "./components/services/accessibility/accessibilityStore";
 import { AuthContext } from "./components/contexts/AuthContext";
+import { ServiceProvider } from "./components/contexts/ServiceContext";
 import { navigationRef } from "./navigation/NavigationRef";
 import { handleAuthStateChange } from "./validation/authHelper";
 
@@ -255,130 +255,132 @@ const App = () => {
 
   return (
     <AuthContext.Provider value={{ setUser }}>
-      <SafeAreaProvider>
-        {/* <GestureHandlerRootView style={{ flex: 1 }}> //important to set the bottomsheetmodal in the app, not the drawer */}
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <BottomSheetModalProvider>
-            {/* navigation container */}
-            <NavigationContainer ref={navigationRef}>
-              <CustomAlert />
-              {fontsLoaded && (
-                <Stack.Navigator
-                  screenOptions={{
-                    headerShown: false,
-                    animationEnabled: false, // importent to disable the default animation wich produces a header jump bug
-                    // This part is used to slide the stack from the right into the screen
-                    gestureEnabled: true,
-                    gestureDirection: "horizontal",
-                    transitionSpec: {
-                      open: {
-                        animation: "timing",
-                        config: { duration: 300 },
-                      },
-                      close: {
-                        animation: "timing",
-                        config: { duration: 300 },
-                      },
-                    },
-                    // function to slide the stack from the right into the screen
-                    cardStyleInterpolator: ({ current, layouts }) => {
-                      return {
-                        cardStyle: {
-                          transform: [
-                            {
-                              translateX: current.progress.interpolate({
-                                inputRange: [0, 1],
-                                outputRange: [layouts.screen.width, 0],
-                              }),
-                            },
-                          ],
+      <ServiceProvider>
+        <SafeAreaProvider>
+          {/* <GestureHandlerRootView style={{ flex: 1 }}> //important to set the bottomsheetmodal in the app, not the drawer */}
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <BottomSheetModalProvider>
+              {/* navigation container */}
+              <NavigationContainer ref={navigationRef}>
+                <CustomAlert />
+                {fontsLoaded && (
+                  <Stack.Navigator
+                    screenOptions={{
+                      headerShown: false,
+                      animationEnabled: false, // importent to disable the default animation wich produces a header jump bug
+                      // This part is used to slide the stack from the right into the screen
+                      gestureEnabled: true,
+                      gestureDirection: "horizontal",
+                      transitionSpec: {
+                        open: {
+                          animation: "timing",
+                          config: { duration: 300 },
                         },
-                      };
-                    },
-                  }}
-                >
-                  {/* Login navigation when user is logged in or logged out */}
-                  {user ? (
-                    // Inside Screen with drawer navigation
-                    <Stack.Screen
-                      name="Inside"
-                      component={AppDrawerNavigator}
-                      options={{ headerShown: false }}
-                    />
-                  ) : (
-                    // Login Screen
-                    <Stack.Screen
-                      name="Login"
-                      component={LoginScreen}
-                      options={{ headerShown: false }}
-                    />
-                  )}
-
-                  {/* Details Screen */}
-                  <Stack.Screen
-                    name="Details"
-                    component={DetailsScreen as any}
-                    initialParams={{
-                      projectId: "",
+                        close: {
+                          animation: "timing",
+                          config: { duration: 300 },
+                        },
+                      },
+                      // function to slide the stack from the right into the screen
+                      cardStyleInterpolator: ({ current, layouts }) => {
+                        return {
+                          cardStyle: {
+                            transform: [
+                              {
+                                translateX: current.progress.interpolate({
+                                  inputRange: [0, 1],
+                                  outputRange: [layouts.screen.width, 0],
+                                }),
+                              },
+                            ],
+                          },
+                        };
+                      },
                     }}
-                    // custom header config. for Details Screen
-                    options={({ navigation }) => ({
-                      headerShown: true,
-                      presentation: "modal", //card test
-                      animationTypeForReplace: "push",
-                      headerRight: () => (
-                        <HeaderHelpComponent navigation={navigation} />
-                      ),
-                      // Back button includes the if statement to check if the project is still running
-                      headerLeft: () => (
-                        <TouchableOpacity
-                          onPress={async () => {
-                            const projectId = useStore
-                              .getState()
-                              .getProjectId();
-                            const isTracking = await useStore
-                              .getState()
-                              .getProjectTrackingState(projectId);
+                  >
+                    {/* Login navigation when user is logged in or logged out */}
+                    {user ? (
+                      // Inside Screen with drawer navigation
+                      <Stack.Screen
+                        name="Inside"
+                        component={AppDrawerNavigator}
+                        options={{ headerShown: false }}
+                      />
+                    ) : (
+                      // Login Screen
+                      <Stack.Screen
+                        name="Login"
+                        component={LoginScreen}
+                        options={{ headerShown: false }}
+                      />
+                    )}
 
-                            if (isTracking) {
-                              useAlertStore
+                    {/* Details Screen */}
+                    <Stack.Screen
+                      name="Details"
+                      component={DetailsScreen as any}
+                      initialParams={{
+                        projectId: "",
+                      }}
+                      // custom header config. for Details Screen
+                      options={({ navigation }) => ({
+                        headerShown: true,
+                        presentation: "modal", //card test
+                        animationTypeForReplace: "push",
+                        headerRight: () => (
+                          <HeaderHelpComponent navigation={navigation} />
+                        ),
+                        // Back button includes the if statement to check if the project is still running
+                        headerLeft: () => (
+                          <TouchableOpacity
+                            onPress={async () => {
+                              const projectId = useStore
                                 .getState()
-                                .showAlert(
-                                  "Project is still running.",
-                                  " You can't leave the app. Please stop the project first."
-                                );
-                            } else {
-                              navigation.goBack();
-                            }
-                          }}
-                          accessibilityRole="button"
-                          accessibilityLabel="Back"
-                          accessibilityHint="Button to go back to the previous screen"
-                          accessibilityState={{ expanded: true }}
-                          style={{ marginLeft: 20 }}
-                        >
-                          <AntDesign
-                            name="doubleleft"
-                            size={28}
-                            color="white"
-                          />
-                        </TouchableOpacity>
-                      ),
-                      headerStyle: {
-                        backgroundColor: "black",
-                      },
-                      headerTintColor: "black",
-                      headerTitleStyle: {
-                        fontSize: 24,
-                      },
-                    })}
-                  />
-                </Stack.Navigator>
-              )}
-            </NavigationContainer>
-          </BottomSheetModalProvider>
-        </GestureHandlerRootView>
-      </SafeAreaProvider>
+                                .getProjectId();
+                              const isTracking = await useStore
+                                .getState()
+                                .getProjectTrackingState(projectId);
+
+                              if (isTracking) {
+                                useAlertStore
+                                  .getState()
+                                  .showAlert(
+                                    "Project is still running.",
+                                    " You can't leave the app. Please stop the project first."
+                                  );
+                              } else {
+                                navigation.goBack();
+                              }
+                            }}
+                            accessibilityRole="button"
+                            accessibilityLabel="Back"
+                            accessibilityHint="Button to go back to the previous screen"
+                            accessibilityState={{ expanded: true }}
+                            style={{ marginLeft: 20 }}
+                          >
+                            <AntDesign
+                              name="doubleleft"
+                              size={28}
+                              color="white"
+                            />
+                          </TouchableOpacity>
+                        ),
+                        headerStyle: {
+                          backgroundColor: "black",
+                        },
+                        headerTintColor: "black",
+                        headerTitleStyle: {
+                          fontSize: 24,
+                        },
+                      })}
+                    />
+                  </Stack.Navigator>
+                )}
+              </NavigationContainer>
+            </BottomSheetModalProvider>
+          </GestureHandlerRootView>
+        </SafeAreaProvider>
+      </ServiceProvider>
     </AuthContext.Provider>
   );
 };

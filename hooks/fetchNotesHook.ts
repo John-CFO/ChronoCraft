@@ -9,6 +9,7 @@ import {
 } from "../validation/noteSchemas.sec";
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { isValidFirestoreDocId } from "../validation/firestoreSchemas.sec";
+import { useService } from "../components/contexts/ServiceContext";
 
 //////////////////////////////////////////////////////////////
 
@@ -18,6 +19,7 @@ export const useNotes = (projectId: string) => {
   const [notes, setNotes] = useState<FirestoreNote[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
+  const { serviceId } = useService();
 
   // function to remove a note in the notes array (NoteList)
   const removeNote = (noteId: string) => {
@@ -27,6 +29,7 @@ export const useNotes = (projectId: string) => {
   // fetch notes hook
   useEffect(() => {
     const fetchNotes = async () => {
+      if (!serviceId) return;
       setLoading(true);
       setError(null);
 
@@ -52,7 +55,11 @@ export const useNotes = (projectId: string) => {
             FIREBASE_FIRESTORE,
             "Users",
             user.uid,
-            `Services/AczkjyWoOxdPAIRVxjy3/Projects/${projectId}/Notes`
+            "Services",
+            serviceId,
+            "Projects",
+            projectId,
+            "Notes"
           )
         );
 
@@ -77,7 +84,7 @@ export const useNotes = (projectId: string) => {
     };
 
     fetchNotes();
-  }, [projectId]);
+  }, [projectId, serviceId]);
 
   return { notes, loading, error, removeNote };
 };

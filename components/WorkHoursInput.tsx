@@ -18,6 +18,7 @@ import { setDoc, doc, getDoc } from "firebase/firestore";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
+import { useService } from "../components/contexts/ServiceContext";
 import dayjs from "../dayjsConfig";
 import WorkHoursState from "../components/WorkHoursState";
 import { useAlertStore } from "./services/customAlert/alertStore";
@@ -55,10 +56,14 @@ const WorkHoursInput = () => {
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
 
+  // declare useService hook
+  const { serviceId } = useService();
+
   // hook to fetch the expected hours from Firestore by mount
   useEffect(() => {
     const fetchExpectedHours = async () => {
       try {
+        if (!serviceId) return;
         const userId = getAuth().currentUser?.uid;
         if (!userId) {
           console.log("No user authenticated");
@@ -72,7 +77,7 @@ const WorkHoursInput = () => {
           "Users",
           userId,
           "Services",
-          "AczkjyWoOxdPAIRVxjy3",
+          serviceId,
           "WorkHours",
           workDay
         );
@@ -199,6 +204,7 @@ const WorkHoursInput = () => {
   // function to save the expected hours
   const [saving, setSaving] = useState(false);
   const handleSaveMinHours = async () => {
+    if (!serviceId) return;
     const hours = parseFloat(tempExpectedHours);
     // console.log(
     //   "[DEBUG save] tempExpectedHours:",
@@ -233,7 +239,7 @@ const WorkHoursInput = () => {
         "Users",
         userId,
         "Services",
-        "AczkjyWoOxdPAIRVxjy3",
+        serviceId,
         "WorkHours",
         workDay
       );

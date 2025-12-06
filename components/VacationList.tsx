@@ -23,6 +23,7 @@ import Entypo from "@expo/vector-icons/Entypo";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
+import { useService } from "../components/contexts/ServiceContext";
 import { FIREBASE_AUTH } from "../firebaseConfig";
 import VacationRemindModal from "../components/VacationRemindModal";
 import { useAlertStore } from "./services/customAlert/alertStore";
@@ -41,6 +42,10 @@ const VacationList = () => {
     { id: string; markedDates: string[]; reminderActive: boolean }[]
   >([]);
 
+  // declare useService hook
+  const { serviceId } = useService();
+
+  // state for user
   const [user, setUser] = useState<any>(null);
 
   // screensize for dynamic size calculation
@@ -72,6 +77,7 @@ const VacationList = () => {
 
   // effect hook to get the data from firestore with snapshot
   useEffect(() => {
+    if (!serviceId) return;
     if (!user) return;
 
     const vacationsCollection = collection(
@@ -79,7 +85,7 @@ const VacationList = () => {
       "Users",
       user.uid,
       "Services",
-      "AczkjyWoOxdPAIRVxjy3",
+      serviceId,
       "Vacations"
     );
 
@@ -121,10 +127,11 @@ const VacationList = () => {
     );
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user, serviceId]);
 
   // function to delete vacation dates
   const handleDeleteDate = async (vacationId: string) => {
+    if (!serviceId) return;
     // alert to confirm deletion
     useAlertStore
       .getState()
@@ -143,7 +150,7 @@ const VacationList = () => {
                 "Users",
                 user.uid,
                 "Services",
-                "AczkjyWoOxdPAIRVxjy3",
+                serviceId,
                 "Vacations",
                 vacationId
               );
@@ -365,8 +372,8 @@ const VacationList = () => {
                             item.reminderActive
                               ? "aqua"
                               : accessMode
-                              ? "white"
-                              : "grey"
+                                ? "white"
+                                : "grey"
                           }
                         />
                         {/* vacation delete button */}
