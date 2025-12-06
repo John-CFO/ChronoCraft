@@ -44,3 +44,8 @@ _active.uuser
 # Native folders
 android/
 ios/
+
+#rules-generator
+rules.config.json
+.zod-mapping.json
+firestore.rules
