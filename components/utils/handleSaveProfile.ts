@@ -86,7 +86,7 @@ export async function handleSaveProfile({
       return;
     }
 
-    const userDocRef = doc(FIREBASE_FIRESTORE, "users", userId);
+    const userDocRef = doc(FIREBASE_FIRESTORE, "Users", userId);
     await updateDoc(userDocRef, updatePayload);
 
     onClose();

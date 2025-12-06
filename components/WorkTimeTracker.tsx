@@ -23,6 +23,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
+import { useService } from "../components/contexts/ServiceContext";
 import dayjs from "../dayjsConfig";
 import WorkHoursState from "../components/WorkHoursState";
 import { formatTime } from "../components/WorkTimeCalc";
@@ -101,6 +102,9 @@ const WorkTimeTracker = () => {
   const auth = getAuth();
   const user = auth.currentUser;
 
+  // declare serviceId
+  const { serviceId } = useService();
+
   // hook to load state
   useEffect(() => {
     loadState();
@@ -115,6 +119,7 @@ const WorkTimeTracker = () => {
   // useEffect to get the expected hours for today
   useEffect(() => {
     const getExpectedHoursForToday = async () => {
+      if (!serviceId) return;
       const userId = getAuth().currentUser?.uid;
       if (!userId) return;
       const today = dayjs().format("YYYY-MM-DD"); // current day
@@ -125,7 +130,7 @@ const WorkTimeTracker = () => {
           "Users",
           userId,
           "Services",
-          "AczkjyWoOxdPAIRVxjy3",
+          serviceId,
           "WorkHours",
           today
         );
@@ -264,6 +269,7 @@ const WorkTimeTracker = () => {
 
   // function to start work
   const handleStartWork = async () => {
+    if (!serviceId) return;
     const userId = getAuth().currentUser?.uid;
     if (!userId) {
       console.error("User ID not available.");
@@ -279,7 +285,7 @@ const WorkTimeTracker = () => {
         "Users",
         userId,
         "Services",
-        "AczkjyWoOxdPAIRVxjy3",
+        serviceId,
         "WorkHours",
         workDay
       );
@@ -326,6 +332,7 @@ const WorkTimeTracker = () => {
 
   // function to stop work
   const handleStopWork = async () => {
+    if (!serviceId) return;
     // stop the timer
     setIsWorking(false);
 
@@ -368,7 +375,7 @@ const WorkTimeTracker = () => {
           "Users",
           userId,
           "Services",
-          "AczkjyWoOxdPAIRVxjy3",
+          serviceId,
           "WorkHours",
           docIdToUse
         );
@@ -413,6 +420,7 @@ const WorkTimeTracker = () => {
 
   // function to get the chart data from firestore
   const fetchChartData = async () => {
+    if (!serviceId) return;
     if (!user) return [];
 
     try {
@@ -422,7 +430,7 @@ const WorkTimeTracker = () => {
           "Users",
           user.uid,
           "Services",
-          "AczkjyWoOxdPAIRVxjy3",
+          serviceId,
           "WorkHours"
         )
       );
@@ -449,14 +457,15 @@ const WorkTimeTracker = () => {
   useEffect(() => {
     const fetchData = async () => {
       const newData = await fetchChartData();
-      setData(newData);
+      setData(newData ?? []);
     };
     fetchData();
-  }, [user, currentDocId, refreshTrigger]);
+  }, [user, currentDocId, refreshTrigger, serviceId]);
 
   // function to get the list data from firestore
   useEffect(() => {
     const fetchListData = async () => {
+      if (!serviceId) return;
       if (!user) return;
 
       try {
@@ -467,7 +476,7 @@ const WorkTimeTracker = () => {
             "Users",
             user.uid,
             "Services",
-            "AczkjyWoOxdPAIRVxjy3",
+            serviceId,
             "WorkHours"
           )
         );
@@ -511,7 +520,7 @@ const WorkTimeTracker = () => {
     };
 
     fetchListData();
-  }, [user, currentDocId, refreshTrigger]);
+  }, [user, currentDocId, refreshTrigger, serviceId]);
 
   // hook to update the local accumulated duration
   useEffect(() => {
@@ -577,6 +586,7 @@ const WorkTimeTracker = () => {
   useEffect(() => {
     const restoreState = async () => {
       try {
+        if (!serviceId) return;
         const saved = await AsyncStorage.getItem("workTimeTrackerState");
         if (!saved) return;
         const parsed = JSON.parse(saved);
@@ -607,7 +617,7 @@ const WorkTimeTracker = () => {
             "Users",
             userId,
             "Services",
-            "AczkjyWoOxdPAIRVxjy3",
+            serviceId,
             "WorkHours",
             docIdToCheck
           );
@@ -731,8 +741,8 @@ const WorkTimeTracker = () => {
                   docExists
                     ? ["#00f7f7", "#005757"]
                     : accessMode
-                    ? ["#888", "#3b626bff"]
-                    : ["#53b2c7ff", "#aaa"]
+                      ? ["#888", "#3b626bff"]
+                      : ["#53b2c7ff", "#aaa"]
                 }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}

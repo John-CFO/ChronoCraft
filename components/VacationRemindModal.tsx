@@ -21,6 +21,7 @@ import { z } from "zod";
 
 import { NotificationManager } from "./services/PushNotifications";
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
+import { useService } from "../components/contexts/ServiceContext";
 import CheckmarkAnimation from "./Checkmark";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useAccessibilityStore } from "./services/accessibility/accessibilityStore";
@@ -67,6 +68,9 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
 
+  // declare the useService hook
+  const { serviceId } = useService();
+
   // state for selected reminder option
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
 
@@ -95,6 +99,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
   ): Promise<void> => {
     setSaving(true);
     try {
+      if (!serviceId) return;
       if (!id) {
         useAlertStore.getState().showAlert("Error", "No vacation selected.");
         return;
@@ -147,7 +152,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
         "Users",
         currentUid,
         "Services",
-        "AczkjyWoOxdPAIRVxjy3",
+        serviceId,
         "Vacations",
         id
       );

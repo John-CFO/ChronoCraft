@@ -22,6 +22,7 @@ import { doc, updateDoc, getDoc } from "firebase/firestore";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
+import { useService } from "../components/contexts/ServiceContext";
 import { useStore } from "./TimeTrackingState";
 import { sanitizeMaxWorkHours } from "./InputSanitizers";
 import useDebounceValue from "../hooks/useDebounceValue";
@@ -47,6 +48,7 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
   ({ projectId, onSaveSuccess }) => {
     // initialize the navigation
     const navigation = useNavigation();
+    const { serviceId } = useService();
 
     // initialize the screensize
     const { width: screenWidth } = useWindowDimensions();
@@ -107,6 +109,7 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
     // function to save the maxWorkHours in firestore
     const debouncedSave = useCallback(
       useDebounceValue(async (hours: number) => {
+        if (!serviceId) return;
         const user = FIREBASE_AUTH.currentUser;
         if (!user) {
           Alert.alert("Error", "Authentication required");
@@ -120,7 +123,7 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
             "Users",
             user.uid,
             "Services",
-            "AczkjyWoOxdPAIRVxjy3",
+            serviceId,
             "Projects",
             projectId
           );
@@ -146,7 +149,7 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
           Alert.alert("Failed to save. Try again.");
         }
       }, 500),
-      [projectId, setProjectData, onSaveSuccess]
+      [projectId, setProjectData, onSaveSuccess, serviceId]
     );
 
     // function to save the maxWorkHours

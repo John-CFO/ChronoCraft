@@ -21,6 +21,7 @@ import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { updateProjectData } from "../components/FirestoreService";
+import { useService } from "../components/contexts/ServiceContext";
 import { useStore } from "./TimeTrackingState";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { sanitizeRateInput } from "./InputSanitizers";
@@ -55,6 +56,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
 }) => {
   // navigation
   const navigation = useNavigation();
+  const { serviceId } = useService();
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
@@ -83,6 +85,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
 
   // function to fetch data from firestore if user navigate to details screen
   const fetchEarningsData = useCallback(async () => {
+    if (!serviceId) return;
     const user = FIREBASE_AUTH.currentUser;
     if (!user || !projectId) return;
 
@@ -92,7 +95,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
         "Users",
         user.uid,
         "Services",
-        "AczkjyWoOxdPAIRVxjy3",
+        serviceId,
         "Projects",
         projectId
       );
@@ -122,7 +125,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
     } catch (error) {
       console.error("Error fetching earnings data:", error);
     }
-  }, [projectId, setHourlyRate]);
+  }, [projectId, setHourlyRate, serviceId]);
 
   // hook to load by mount
   useEffect(() => {

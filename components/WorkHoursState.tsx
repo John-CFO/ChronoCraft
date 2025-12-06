@@ -10,6 +10,7 @@ import { getAuth } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
+import { useService } from "../components/contexts/ServiceContext";
 import {
   FirestoreWorkHoursSchema,
   validateWorkHoursSchema,
@@ -66,6 +67,8 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
 
   // load state from firestore
   loadState: async () => {
+    const { serviceId } = useService();
+    if (!serviceId) return;
     const user = getAuth().currentUser;
     if (!user) {
       console.log("No user found, skipping loadState");
@@ -79,7 +82,7 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
         "Users",
         user.uid,
         "Services",
-        "AczkjyWoOxdPAIRVxjy3",
+        serviceId,
         "WorkHours",
         today
       );
@@ -114,6 +117,8 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
 
   // save state to firestore
   saveState: async () => {
+    const { serviceId } = useService();
+    if (!serviceId) return;
     const user = getAuth().currentUser;
     if (!user) {
       console.log("No user found, skipping saveState");
@@ -144,7 +149,7 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
         "Users",
         user.uid,
         "Services",
-        "AczkjyWoOxdPAIRVxjy3",
+        serviceId,
         "WorkHours",
         state.currentDocId || today
       );

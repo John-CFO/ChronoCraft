@@ -10,6 +10,7 @@
 import { doc, updateDoc } from "firebase/firestore";
 
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
+import { useService } from "../components/contexts/ServiceContext";
 import {
   isValidFirestoreDocId,
   ProjectUpdateSchema,
@@ -21,6 +22,8 @@ import {
 // Returns true on success, false on failure (auth, validation or Firestore error).
 
 export const updateProjectData = async (projectId: string, data: any) => {
+  const { serviceId } = useService();
+  if (!serviceId) return;
   // condition to check if user is authenticated
   const user = FIREBASE_AUTH?.currentUser;
   if (!user?.uid) {
@@ -46,7 +49,7 @@ export const updateProjectData = async (projectId: string, data: any) => {
       "Users",
       user.uid,
       "Services",
-      "AczkjyWoOxdPAIRVxjy3",
+      serviceId,
       "Projects",
       projectId
     );
