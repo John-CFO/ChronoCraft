@@ -28,6 +28,9 @@ export const FirestoreNoteSchema = z.object({
 });
 
 // validate note input
+/**
+ * @AppSec
+ */
 export const NoteInputSchema = z.object({
   comment: z
     .string()

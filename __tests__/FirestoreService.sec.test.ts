@@ -13,6 +13,7 @@ import {
 
 ////////////////////////////////////////////////////////////////
 
+// mock firebase/firestore
 jest.mock("firebase/firestore", () => ({
   doc: jest.fn(() => ({ mockDoc: true })),
   updateDoc: jest.fn(),
@@ -22,6 +23,11 @@ jest.mock("firebase/firestore", () => ({
 jest.mock("../firebaseConfig", () => ({
   FIREBASE_AUTH: { currentUser: { uid: "test-uid" } },
   FIREBASE_FIRESTORE: {},
+}));
+// mock ServiceContext
+jest.mock("../components/contexts/ServiceContext", () => ({
+  useService: () => ({ serviceId: "test-service-id" }),
+  ServiceProvider: ({ children }: any) => children,
 }));
 
 ////////////////////////////////////////////////////////////////

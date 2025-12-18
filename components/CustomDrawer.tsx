@@ -104,6 +104,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
           const mergedUser: MergedUser = {
             ...currentUser,
             ...parsedData,
+            personalID: parsedData.personalID ?? undefined,
           };
 
           setUser(mergedUser);
