@@ -9,24 +9,40 @@ import { secureDeleteLogic } from "../../src/secureDelete";
 //////////////////////////////////////////////////////////////////////////////
 
 describe("secureDeleteLogic (unit)", () => {
-  it("throws when not authenticated", async () => {
+  it("throws and logs warn when not authenticated", async () => {
+    const logEvent = jest.fn();
+
     await expect(
       secureDeleteLogic(
         { userId: "u", serviceId: "s", subs: ["a"] },
         undefined,
-        { deleteSubcollections: jest.fn() }
+        { deleteSubcollections: jest.fn(), logEvent }
       )
     ).rejects.toThrow();
+
+    expect(logEvent).toHaveBeenCalledWith(
+      expect.stringContaining("unauthenticated"),
+      "warn",
+      expect.any(Object)
+    );
   });
 
-  it("throws when uid mismatch", async () => {
+  it("throws and logs warn when uid mismatch", async () => {
+    const logEvent = jest.fn();
+
     await expect(
       secureDeleteLogic(
         { userId: "victim", serviceId: "s", subs: ["a"] },
         "attacker",
-        { deleteSubcollections: jest.fn(), logEvent: jest.fn() }
+        { deleteSubcollections: jest.fn(), logEvent }
       )
     ).rejects.toThrow();
+
+    expect(logEvent).toHaveBeenCalledWith(
+      expect.stringContaining("permission denied"),
+      "warn",
+      expect.any(Object)
+    );
   });
 
   it("calls deleteSubcollections when authorized", async () => {

@@ -9,14 +9,22 @@ import { projectsAndWorkLogic } from "../../src/projectsAndWorkValidator";
 ////////////////////////////////////////////////////////////////////////////////
 
 describe("projectsAndWorkLogic (unit)", () => {
-  it("throws when not authenticated", async () => {
+  it("throws and logs warn when not authenticated", async () => {
+    const logEvent = jest.fn();
+
     await expect(
       projectsAndWorkLogic(
         { action: "updateProject", payload: {} },
         undefined,
-        {}
+        { logEvent }
       )
     ).rejects.toThrow();
+
+    expect(logEvent).toHaveBeenCalledWith(
+      expect.stringContaining("unauthorized"),
+      "warn",
+      expect.any(Object)
+    );
   });
 
   it("updateProject succeeds when owner matches", async () => {
@@ -36,18 +44,26 @@ describe("projectsAndWorkLogic (unit)", () => {
     expect(updateProject).toHaveBeenCalledWith("proj1", expect.any(Object));
   });
 
-  it("updateProject rejects when not owner", async () => {
-    const getProjectDoc = jest.fn(async (id: string) => ({
+  it("updateProject rejects and logs warn when user is not owner", async () => {
+    const getProjectDoc = jest.fn(async () => ({
       exists: true,
       data: () => ({ userId: "owner" }),
     }));
+    const logEvent = jest.fn();
+
     await expect(
       projectsAndWorkLogic(
         { action: "updateProject", payload: { id: "proj1" } },
         "attacker",
-        { getProjectDoc, updateProject: jest.fn(), logEvent: jest.fn() }
+        { getProjectDoc, updateProject: jest.fn(), logEvent }
       )
     ).rejects.toThrow();
+
+    expect(logEvent).toHaveBeenCalledWith(
+      expect.stringContaining("unauthorized"),
+      "warn",
+      expect.any(Object)
+    );
   });
 
   it("setHourlyRate sets rate", async () => {

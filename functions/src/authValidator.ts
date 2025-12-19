@@ -14,7 +14,7 @@ import {
   LoginInputSchema,
   RegisterInputSchema,
   TotpCodeSchema,
-} from "../../validation/authSchemas.sec";
+} from "../../validation/authSchemas";
 import { verifyToken } from "../../validation/utils/totp";
 
 /////////////////////////////////////////////////////////////////

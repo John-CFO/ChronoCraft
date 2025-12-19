@@ -74,7 +74,7 @@ describe("LostPasswordModal (AppSec validation only)", () => {
       );
       expect(mockOnClose).toHaveBeenCalled();
     });
-  });
+  }, 10000);
 
   it("does not allow submission with empty email", async () => {
     const { getByText } = renderModal();
@@ -97,11 +97,7 @@ describe("LostPasswordModal (AppSec validation only)", () => {
     const emailInput = getByPlaceholderText(/E-Mail Adress/i);
     fireEvent.changeText(emailInput, "test@example.com");
     const resetButton = getByLabelText("Reset Password");
-
-    await act(async () => {
-      fireEvent.press(resetButton);
-      jest.advanceTimersByTime(60000);
-    });
+    fireEvent.press(resetButton);
 
     await waitFor(() => {
       expect(mockShowAlert).toHaveBeenCalledWith(

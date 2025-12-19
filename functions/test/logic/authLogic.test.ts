@@ -22,6 +22,23 @@ describe("authValidatorLogic (unit)", () => {
     jest.resetAllMocks();
   });
 
+  it("logs unauthorized access", async () => {
+    const mockLogEvent = jest.fn();
+    await expect(
+      authValidatorLogic(
+        { action: "verifyTotp", payload: "123456" },
+        undefined,
+        { ip: "1.2.3.4" },
+        { logEvent: mockLogEvent }
+      )
+    ).rejects.toThrow();
+
+    expect(mockLogEvent).toHaveBeenCalledWith(
+      expect.stringContaining("Unauthenticated"),
+      "warn"
+    );
+  });
+
   it("throws when action missing", async () => {
     await expect(
       authValidatorLogic(undefined, undefined, { ip: "1.2.3.4" }, {})
