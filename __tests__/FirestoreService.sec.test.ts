@@ -63,7 +63,7 @@ describe("FirestoreService — AppSec validation", () => {
 
   it("accepts valid payload and calls updateDoc with sanitized data", async () => {
     (updateDoc as jest.Mock).mockResolvedValue(undefined);
-    const payload = { name: "Project A", archived: false };
+    const payload = { id: "proj-ok", name: "Project A", archived: false };
     const ok = await updateProjectData("proj-ok", payload);
     expect(ok).toBe(true);
     expect(doc).toHaveBeenCalled(); // doc path built
@@ -72,7 +72,7 @@ describe("FirestoreService — AppSec validation", () => {
 
   it("returns false on Firestore error", async () => {
     (updateDoc as jest.Mock).mockRejectedValue(new Error("db fail"));
-    const ok = await updateProjectData("proj-ok", { name: "X" });
+    const ok = await updateProjectData("proj-ok", { id: "proj-ok", name: "X" });
     expect(ok).toBe(false);
     expect(updateDoc).toHaveBeenCalled();
   });

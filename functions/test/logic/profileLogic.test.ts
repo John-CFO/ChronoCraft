@@ -10,11 +10,20 @@ import { profileValidatorLogic } from "../../src/profileValidator";
 
 describe("profileValidatorLogic (unit)", () => {
   it("throws when not authenticated", async () => {
+    const logEvent = jest.fn();
+
     await expect(
       profileValidatorLogic({ name: "x" }, undefined, {
         getUserDoc: async () => ({ exists: true, data: () => ({}) }),
+        logEvent,
       })
     ).rejects.toThrow();
+
+    expect(logEvent).toHaveBeenCalledWith(
+      expect.stringContaining("unauthorized"),
+      "warn",
+      expect.any(Object)
+    );
   });
 
   it("updates profile when user exists and input valid", async () => {
@@ -39,12 +48,20 @@ describe("profileValidatorLogic (unit)", () => {
       exists: false,
       data: () => null,
     }));
+    const logEvent = jest.fn();
+
     await expect(
       profileValidatorLogic({ displayName: "x" }, "uid1", {
         getUserDoc,
         updateUser: jest.fn(),
-        logEvent: jest.fn(),
+        logEvent,
       })
     ).rejects.toThrow();
+
+    expect(logEvent).toHaveBeenCalledWith(
+      expect.stringContaining("user missing"),
+      "warn",
+      expect.any(Object)
+    );
   });
 });

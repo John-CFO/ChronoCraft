@@ -190,6 +190,10 @@ export async function projectsAndWorkLogic(
     }
     const projData = projectDoc.data();
     if (projData.userId !== uid) {
+      logEvent("projectsAndWork unauthorized access - not owner", "warn", {
+        uid,
+        projectId: input.id,
+      });
       throw new Error("permission-denied");
     }
     await updateProject(input.id, input);
