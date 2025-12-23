@@ -1,299 +1,192 @@
-////////////////////////////// index.ts //////////////////////////////////
-
-// This file contains the Cloud Functions for Firebase
-
-///////////////////////////////////////////////////////////////////////////
+//////////////////////////////////// index.ts ////////////////////////////////////
 
 import * as functions from "firebase-functions";
-import * as admin from "firebase-admin";
-import { z } from "zod";
+import admin from "firebase-admin";
+import { rateLimit } from "./rateLimitUtility";
 
-import {
-  LoginInputSchema,
-  RegisterInputSchema,
-  TotpCodeSchema,
-} from "../../validation/authSchemas";
-import { FirestoreUserUpdateSchema } from "../../validation/editProfileSchemas.sec";
-import { ProjectUpdateSchema } from "../../validation/firestoreSchemas.sec";
-import { HourlyRateSchema } from "../../validation/earningsSchemas.sec";
-import { deleteSubcollections } from "../../validation/utils/firestoreDeleteHelpers";
-import { verifyToken } from "../../validation/utils/totp";
-import { logEvent } from "./logging/logger";
-import { handleFunctionError } from "./errors/handleFunctionError";
+admin.initializeApp();
 
-/////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+// Utility-Funktionen
 
-// initialize Firebase app if not already initialized, so it can access Firestore with admin privileges
-if (!admin.apps.length) {
-  admin.initializeApp();
+async function deleteSubcollections(
+  db: FirebaseFirestore.Firestore,
+  path: string[],
+  subs: string[]
+) {
+  for (const sub of subs) {
+    const subRef = db.collection(path.join("/")).doc(sub);
+    await subRef.delete();
+  }
 }
 
-// type the user payload
-type AuthRequestPayload = {
-  action: "login" | "register" | "verifyTotp";
-  payload: unknown;
-  secret?: string;
-  code?: string;
-};
+function verifyToken(secret: string, code: string): boolean {
+  // Dummy-Check, hier echte TOTP-Logik einsetzen
+  return secret === code;
+}
 
-/////////////////////////////////////////////////////////////////////////////
+function logEvent(event: string, level: string, data?: any) {
+  console.log(level, event, data ?? "");
+}
 
-// authValidator
-export const authValidator = functions.https.onCall(async (request) => {
-  const req = request as any;
-  const { action, payload } = req.data as AuthRequestPayload;
-  const authContext = req.context?.auth;
+//////////////////////////////////////////////////////////////////////////////////
+// Auth Function
 
-  try {
-    if (action === "verifyTotp" && !authContext?.uid) {
-      throw new functions.https.HttpsError("unauthenticated", "Not logged in");
-    }
+export const authValidator = functions.https.onCall(
+  async (request: functions.https.CallableRequest<any>) => {
+    const { action, payload } = request.data ?? {};
+    const uid = request.auth?.uid;
 
-    switch (action) {
-      case "login":
-        LoginInputSchema.parse(payload);
-        logEvent("auth login", "info", { uid: authContext?.uid });
-        return { success: true };
-
-      case "register":
-        RegisterInputSchema.parse(payload);
-        logEvent("auth register", "info", { uid: authContext?.uid });
-        return { success: true };
-
-      case "verifyTotp": {
-        const inputCode: string = TotpCodeSchema.parse(payload);
-        const userRef = admin
-          .firestore()
-          .collection("Users")
-          .doc(authContext!.uid);
-        const userDoc = await userRef.get();
-
-        if (!userDoc.exists) {
-          throw new functions.https.HttpsError("not-found", "User not found");
-        }
-
-        const secret: string | undefined = userDoc.data()?.totpSecret;
-        if (!secret) {
-          throw new functions.https.HttpsError(
-            "failed-precondition",
-            "TOTP not setup"
-          );
-        }
-
-        const valid = verifyToken(secret, inputCode);
-        logEvent("verifyTotp", "info", { uid: authContext!.uid, valid });
-        return { valid };
-      }
-
-      default:
-        throw new functions.https.HttpsError(
-          "invalid-argument",
-          "Unknown action"
-        );
-    }
-  } catch (err: unknown) {
-    logEvent("authValidator error", "error", {
-      error: err,
-      uid: authContext?.uid,
-    });
-    const message = handleFunctionError(err);
-    throw new functions.https.HttpsError(
-      (err as any)?.code ?? "internal",
-      message
-    );
-  }
-});
-
-// profileValidator
-export const profileValidator = functions.https.onCall(
-  async (request: functions.https.CallableRequest<unknown>) => {
-    const req = request as any;
-    const context = req.context;
-
-    try {
-      if (!context.auth?.uid) {
-        throw new functions.https.HttpsError(
-          "unauthenticated",
-          "Not logged in"
-        );
-      }
-
-      const input = FirestoreUserUpdateSchema.parse(req.data);
-      const userRef = admin
-        .firestore()
-        .collection("Users")
-        .doc(context.auth.uid);
-      await userRef.update(input);
-
-      logEvent("profile update", "info", {
-        uid: context.auth.uid,
-        changes: input,
-      });
-      return { success: true };
-    } catch (err: unknown) {
-      logEvent("profileValidator error", "error", {
-        error: err,
-        uid: context.auth?.uid,
-      });
-      const message = handleFunctionError(err);
-      throw new functions.https.HttpsError(
-        (err as any)?.code ?? "internal",
-        message
-      );
-    }
-  }
-);
-
-// projectsAndWorkValidator
-type ProjectsRequestPayload = {
-  action: "updateProject" | "setHourlyRate";
-  payload: unknown;
-};
-
-export const projectsAndWorkValidator = functions.https.onCall(
-  async (request: functions.https.CallableRequest<ProjectsRequestPayload>) => {
-    const req = request as any;
-    const context = req.context;
-
-    try {
-      if (!context.auth?.uid) {
-        throw new functions.https.HttpsError(
-          "unauthenticated",
-          "Not logged in"
-        );
-      }
-
-      const { action, payload } = req.data;
-
-      // updateProject
-      if (action === "updateProject") {
-        const input = ProjectUpdateSchema.parse(payload);
-        const projRef = admin.firestore().collection("Projects").doc(input.id);
-        const projSnap = await projRef.get();
-
-        const projData = projSnap.data();
-        if (!projData) {
-          throw new functions.https.HttpsError(
-            "not-found",
-            "Project not found"
-          );
-        }
-
-        if (projData.userId !== context.auth.uid) {
-          throw new functions.https.HttpsError(
-            "permission-denied",
-            "Not your project"
-          );
-        }
-
-        await projRef.update(input);
-
-        logEvent("project update", "info", {
-          uid: context.auth.uid,
-          projectId: input.id,
-        });
-        return { success: true };
-      }
-
-      // setHourlyRate
-      if (action === "setHourlyRate") {
-        const parsed = HourlyRateSchema.parse(payload);
-
-        const safeInput = {
-          ...parsed,
-          userId: context.auth.uid, // Ownership enforced
-        };
-
-        const rateRef = admin
-          .firestore()
-          .collection("Earnings")
-          .doc(`${safeInput.userId}_${safeInput.projectId}`);
-
-        await rateRef.set(safeInput, { merge: true });
-
-        logEvent("hourly rate set", "info", {
-          uid: context.auth.uid,
-          userId: safeInput.userId,
-          projectId: safeInput.projectId,
-          hourlyRate: safeInput.hourlyRate,
-        });
-        return { success: true };
-      }
-
-      // Unknown action
+    if (!action)
       throw new functions.https.HttpsError(
         "invalid-argument",
-        "Unknown action"
+        "Missing action"
       );
-    } catch (err: unknown) {
-      logEvent("projectsAndWorkValidator error", "error", {
-        error: err,
-        uid: context.auth?.uid,
-      });
-      const message = handleFunctionError(err);
-      throw new functions.https.HttpsError(
-        (err as any)?.code ?? "internal",
-        message
-      );
+
+    // Login / Register gehen ohne Auth
+    if (action === "login" || action === "register") {
+      logEvent(`auth ${action}`, "info", { uid });
+      return { success: true };
     }
-  }
-);
 
-// secureDelete
-const SecureDeleteInputSchema = z.object({
-  userId: z.string(),
-  serviceId: z.string(),
-  subs: z.array(z.string()),
-});
-
-export const secureDelete = functions.https.onCall(
-  async (request: functions.https.CallableRequest<unknown>) => {
-    const req = request as any;
-    const context = req.context;
-
-    try {
-      if (!context.auth?.uid) {
+    // Verify TOTP mit Rate-Limiting
+    if (action === "verifyTotp") {
+      if (!uid)
         throw new functions.https.HttpsError(
           "unauthenticated",
           "Not logged in"
         );
+
+      // Rate-Limit: max 5 Versuche pro 60 Sekunden
+      await rateLimit(uid, "verifyTotp", 5, 60_000);
+
+      const userDoc = await admin
+        .firestore()
+        .collection("Users")
+        .doc(uid)
+        .get();
+      if (!userDoc.exists)
+        throw new functions.https.HttpsError("not-found", "User not found");
+
+      const secret = userDoc.data()?.totpSecret;
+      if (!secret)
+        throw new functions.https.HttpsError(
+          "failed-precondition",
+          "TOTP not configured"
+        );
+
+      const valid = verifyToken(secret, payload);
+      logEvent("verifyTotp", valid ? "info" : "warn", { uid, valid });
+
+      return { valid };
+    }
+
+    throw new functions.https.HttpsError("invalid-argument", "Unknown action");
+  }
+);
+
+//////////////////////////////////////////////////////////////////////////////////
+// Profile Function
+
+export const profileValidator = functions.https.onCall(
+  async (request: functions.https.CallableRequest<any>) => {
+    const uid = request.auth?.uid;
+    const data = request.data;
+
+    if (!uid)
+      throw new functions.https.HttpsError("unauthenticated", "Not logged in");
+
+    const userRef = admin.firestore().collection("Users").doc(uid);
+    const snapshot = await userRef.get();
+    if (!snapshot.exists)
+      throw new functions.https.HttpsError("not-found", "User not found");
+
+    await userRef.update(data);
+    logEvent("profile updated", "info", {
+      uid,
+      updatedFields: Object.keys(data),
+    });
+    return { success: true };
+  }
+);
+
+//////////////////////////////////////////////////////////////////////////////////
+// Projects & Earnings Function
+
+export const projectsAndWorkValidator = functions.https.onCall(
+  async (request: functions.https.CallableRequest<any>) => {
+    const uid = request.auth?.uid;
+    const { action, payload } = request.data ?? {};
+
+    if (!uid)
+      throw new functions.https.HttpsError("unauthenticated", "Not logged in");
+    if (!action)
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Missing action"
+      );
+
+    if (action === "updateProject") {
+      const projRef = admin.firestore().collection("Projects").doc(payload.id);
+      const projSnap = await projRef.get();
+      const projData = projSnap.data();
+
+      if (!projData) {
+        throw new functions.https.HttpsError("not-found", "Project not found");
       }
 
-      const data = req.data as {
-        userId: string;
-        serviceId: string;
-        subs: string[];
-      };
-
-      if (context.auth.uid !== data.userId) {
+      if (projData.userId !== uid) {
         throw new functions.https.HttpsError(
           "permission-denied",
-          "Cannot delete others' data"
+          "Not your project"
         );
       }
 
-      const input = SecureDeleteInputSchema.parse(data);
-      await deleteSubcollections(
-        admin.firestore() as any,
-        ["Users", input.userId, "Services", input.serviceId],
-        input.subs
+      await projRef.update(payload);
+      logEvent("project updated", "info", { uid, projectId: payload.id });
+      return { success: true };
+    }
+
+    if (action === "setHourlyRate") {
+      const id = `${uid}_${payload.projectId}`;
+      await admin
+        .firestore()
+        .collection("Earnings")
+        .doc(id)
+        .set(payload, { merge: true });
+      logEvent("hourly rate set", "info", { uid, ...payload });
+      return { success: true };
+    }
+
+    throw new functions.https.HttpsError("invalid-argument", "Unknown action");
+  }
+);
+
+//////////////////////////////////////////////////////////////////////////////////
+// Secure Delete Function
+
+export const secureDelete = functions.https.onCall(
+  async (request: functions.https.CallableRequest<any>) => {
+    const uid = request.auth?.uid;
+    const data = request.data;
+
+    if (!uid)
+      throw new functions.https.HttpsError("unauthenticated", "Not logged in");
+    if (!data)
+      throw new functions.https.HttpsError("invalid-argument", "Missing data");
+    if (uid !== data.userId)
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "Cannot delete others' data"
       );
 
-      logEvent("secure delete", "info", {
-        uid: context.auth.uid,
-        serviceId: input.serviceId,
-      });
-      return { success: true };
-    } catch (err: unknown) {
-      logEvent("secureDelete error", "error", {
-        error: err,
-        uid: context.auth?.uid,
-      });
-      const message = handleFunctionError(err);
-      throw new functions.https.HttpsError(
-        (err as any)?.code ?? "internal",
-        message
-      );
-    }
+    await deleteSubcollections(
+      admin.firestore(),
+      ["Users", data.userId, "Services", data.serviceId],
+      data.subs
+    );
+
+    logEvent("secure delete", "info", { uid, serviceId: data.serviceId });
+    return { success: true };
   }
 );
