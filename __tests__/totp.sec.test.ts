@@ -8,7 +8,7 @@ import {
   generateSecret,
   generateOtpAuthUrl,
   verifyToken,
-} from "../components/utils/totp";
+} from "../validation/utils/totp";
 
 ////////////////////////////////////////////////////////////////////////
 

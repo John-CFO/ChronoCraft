@@ -32,7 +32,7 @@ interface WorkHoursStateProps {
   workHours: any[];
   data: any[];
   selectedBar: any[];
-  lastUpdatedDate?: string;
+  lastUpdatedDate?: string | null;
 
   saveState: () => Promise<void>;
   loadState: () => Promise<void>;
@@ -159,6 +159,17 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
       console.error("Error saving state:", error);
     }
   },
+
+  // reset the state for the WorkHours test suite
+  reset: () =>
+    set({
+      elapsedTime: 0,
+      isWorking: false,
+      currentDocId: null,
+      startWorkTime: null,
+      lastUpdatedDate: null,
+      // alles andere initiale ebenfalls hier rein
+    }),
 
   // actions to update the workhoursstate
   setUserTimeZone: (timeZone) => set({ useTimeZone: timeZone }),

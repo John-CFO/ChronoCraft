@@ -1,4 +1,4 @@
-///////////////passwordResetSchemas.ts/////////////////
+///////////////passwordResetSchemas.sec.ts/////////////////
 
 // a simple email validator schema
 // It returns the normalized email if valid, otherwise null

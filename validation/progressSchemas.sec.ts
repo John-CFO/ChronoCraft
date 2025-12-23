@@ -9,6 +9,9 @@ import { z } from "zod";
 //////////////////////////////////////////////////////////////////
 
 // validate progress schema
+/**
+ * @AppSec
+ */
 export const MaxWorkHoursSchema = z.object({
   maxWorkHours: z.number().int().min(1).max(10000),
   projectId: z.string().min(1),

@@ -9,6 +9,9 @@ import { z } from "zod";
 
 ////////////////////////////////////////////////////////////////////////
 
+/**
+ * @AppSec
+ */
 export const FirestoreUserUpdateSchema = z
   .object({
     displayName: z

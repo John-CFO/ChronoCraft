@@ -7,7 +7,7 @@
 import { getDoc } from "firebase/firestore";
 
 import { FirestoreUserSchema } from "../validation/firestoreSchemas.sec";
-import { handleAuthStateChange } from "../validation/authHelper.sec";
+import { handleAuthStateChange } from "../validation/authHelper";
 
 ///////////////////////////////////////////////////////////////////////////////
 

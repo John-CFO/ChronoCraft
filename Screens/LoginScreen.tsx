@@ -44,13 +44,13 @@ import DismissKeyboard from "../components/DismissKeyboard";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import AuthForm from "../components/AuthForm";
-import { verifyToken } from "../components/utils/totp";
+import { verifyToken } from "../validation/utils/totp";
 import TotpCodeModal from "../components/TotpCodeModal";
 import {
   LoginInputSchema,
   RegisterInputSchema,
   TotpCodeSchema,
-} from "../validation/authSchemas.sec";
+} from "../validation/authSchemas";
 import { FirestoreUserSchema } from "../validation/firestoreSchemas.sec";
 import { UserProfile } from "../components/types/UserProfile";
 

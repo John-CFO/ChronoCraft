@@ -8,7 +8,7 @@ import {
   LoginInputSchema,
   RegisterInputSchema,
   TotpCodeSchema,
-} from "../validation/authSchemas.sec";
+} from "../validation/authSchemas";
 
 import {
   FirestoreUserSchema,
@@ -44,6 +44,7 @@ describe("Auth Schemas", () => {
 describe("Firestore Schemas", () => {
   it("accepts valid FirestoreUser data", () => {
     const data = {
+      uid: "user123",
       email: "user@example.com",
       firstLogin: true,
       totpEnabled: true,
@@ -133,6 +134,7 @@ describe("Firestore Project Schema validation", () => {
   it("rejects createdAt with wrong type", () => {
     const data = {
       id: "proj_2",
+      uid: "user123",
       name: "Test Project",
       createdAt: "2025-09-21",
       notes: [],
@@ -143,6 +145,7 @@ describe("Firestore Project Schema validation", () => {
   it("accepts valid project", () => {
     const data = {
       id: "proj_3",
+      uid: "user123",
       name: "Valid Project",
       createdAt: new Date(),
     };
@@ -153,6 +156,7 @@ describe("Firestore Project Schema validation", () => {
 it("rejects project name that is too long", () => {
   const data = {
     id: "proj_4",
+    uid: "user123",
     name: "A".repeat(101), // 101 letters - too long
     createdAt: new Date(),
   };
@@ -162,6 +166,7 @@ it("rejects project name that is too long", () => {
 it("accepts project name with maximum length", () => {
   const data = {
     id: "proj_5",
+    uid: "user123",
     name: "A".repeat(100), // 100 letters - maximum
     createdAt: new Date(),
   };

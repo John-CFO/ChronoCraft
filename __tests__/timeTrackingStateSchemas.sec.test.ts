@@ -68,6 +68,7 @@ describe("TimeTrackingState Schemas", () => {
   describe("ProjectStateSchema Validation", () => {
     it("validates complete project state with realistic values", () => {
       const validState = {
+        uid: "test-user-123",
         id: "proj-1",
         timer: 3600,
         isTracking: true,
@@ -83,6 +84,7 @@ describe("TimeTrackingState Schemas", () => {
 
     it("applies default values for missing fields", () => {
       const minimalState = {
+        uid: "test-user-123",
         id: "proj-1",
       };
 
@@ -97,6 +99,7 @@ describe("TimeTrackingState Schemas", () => {
 
     it("rejects negative numeric values", () => {
       const invalidState = {
+        uid: "test-user-123",
         id: "proj-1",
         timer: -100,
         totalEarnings: -50,
@@ -110,6 +113,7 @@ describe("TimeTrackingState Schemas", () => {
 
     it("rejects values exceeding realistic maximums", () => {
       const exceedingState = {
+        uid: "test-user-123",
         id: "proj-1",
         timer: 315360001, // over 10 Years
         hourlyRate: 10001, // over 10.000$/h
@@ -124,6 +128,7 @@ describe("TimeTrackingState Schemas", () => {
   describe("SetProjectDataSchema Validation", () => {
     it("validates setProjectData with partial project data", () => {
       const validData = {
+        uid: "test-user-123",
         projectId: "proj-1",
         projectData: {
           timer: 7200,
@@ -137,6 +142,7 @@ describe("TimeTrackingState Schemas", () => {
 
     it("rejects invalid projectId in setProjectData", () => {
       const invalidData = {
+        uid: "test-user-123",
         projectId: "proj.123", // invalid ID
         projectData: { timer: 3600 },
       };
@@ -146,6 +152,7 @@ describe("TimeTrackingState Schemas", () => {
 
     it("rejects invalid data types in projectData", () => {
       const invalidTypes = {
+        uid: "test-user-123",
         projectId: "proj-1",
         projectData: {
           timer: "7200" as any, // String instead of Number
@@ -161,6 +168,7 @@ describe("TimeTrackingState Schemas", () => {
   describe("TimerAndEarningsSchema Validation", () => {
     it("validates correct timer and earnings data", () => {
       const validData = {
+        uid: "test-user-123",
         projectId: "proj-1",
         timer: 7200,
         totalEarnings: 50.0,
@@ -171,6 +179,7 @@ describe("TimeTrackingState Schemas", () => {
 
     it("rejects negative timer and earnings", () => {
       const negativeData = {
+        uid: "test-user-123",
         projectId: "proj-1",
         timer: -100,
         totalEarnings: -50,
@@ -181,6 +190,7 @@ describe("TimeTrackingState Schemas", () => {
 
     it("rejects invalid projectId", () => {
       const invalidProjectId = {
+        uid: "test-user-123",
         projectId: "", // empty ID
         timer: 100,
         totalEarnings: 10,
@@ -191,6 +201,7 @@ describe("TimeTrackingState Schemas", () => {
 
     it("rejects values exceeding maximum limits", () => {
       const exceedingData = {
+        uid: "test-user-123",
         projectId: "proj-1",
         timer: 315360001, // over Maximum
         totalEarnings: 10000001, // over Maximum
@@ -203,6 +214,7 @@ describe("TimeTrackingState Schemas", () => {
   describe("Real-World Scenario Validation", () => {
     it("handles typical work day scenario", () => {
       const workDayData = {
+        uid: "test-user-123",
         projectId: "client-project-123",
         projectData: {
           timer: 28800, // 8 Hours
@@ -219,6 +231,7 @@ describe("TimeTrackingState Schemas", () => {
 
     it("handles paused timer state", () => {
       const pausedData = {
+        uid: "test-user-123",
         projectId: "proj-456",
         projectData: {
           timer: 7200, // 2 Hours
@@ -234,6 +247,7 @@ describe("TimeTrackingState Schemas", () => {
 
     it("handles reset scenario with zero values", () => {
       const resetData = {
+        uid: "test-user-123",
         projectId: "proj-1",
         projectData: {
           timer: 0,
@@ -252,6 +266,7 @@ describe("TimeTrackingState Schemas", () => {
   describe("Validation Functions Integration", () => {
     it("validateSetProjectData works with valid data", () => {
       const validData = {
+        uid: "test-user-123",
         projectId: "proj-1",
         projectData: { timer: 3600, hourlyRate: 25 },
       };
@@ -261,6 +276,7 @@ describe("TimeTrackingState Schemas", () => {
 
     it("validateSetProjectData throws with invalid data", () => {
       const invalidData = {
+        uid: "test-user-123",
         projectId: "proj.1", // invalid ID
         projectData: { timer: -100 },
       };
@@ -270,6 +286,7 @@ describe("TimeTrackingState Schemas", () => {
 
     it("validateTimerAndEarnings works with valid data", () => {
       const validData = {
+        uid: "test-user-123",
         projectId: "proj-1",
         timer: 1800,
         totalEarnings: 12.5,
@@ -280,6 +297,7 @@ describe("TimeTrackingState Schemas", () => {
 
     it("validateTimerAndEarnings throws with invalid data", () => {
       const invalidData = {
+        uid: "test-user-123",
         projectId: "", // invalid ID
         timer: -50,
         totalEarnings: -10,
@@ -292,6 +310,7 @@ describe("TimeTrackingState Schemas", () => {
   describe("Edge Cases and Boundary Values", () => {
     it("accepts maximum allowed values", () => {
       const maxValues = {
+        uid: "test-user-123",
         projectId: "proj-1",
         projectData: {
           timer: 315360000, // Max alowed (~10 Years)
@@ -306,6 +325,7 @@ describe("TimeTrackingState Schemas", () => {
 
     it("rejects just above maximum values", () => {
       const aboveMaxValues = {
+        uid: "test-user-123",
         projectId: "proj-1",
         projectData: {
           timer: 315360001, // 1 Hours over Maximum
@@ -319,6 +339,7 @@ describe("TimeTrackingState Schemas", () => {
 
     it("handles zero values correctly", () => {
       const zeroValues = {
+        uid: "test-user-123",
         projectId: "proj-1",
         projectData: {
           timer: 0,
@@ -334,6 +355,7 @@ describe("TimeTrackingState Schemas", () => {
 
     it("rejects NaN and Infinity values", () => {
       const invalidNumbers = {
+        uid: "test-user-123",
         projectId: "proj-1",
         projectData: {
           timer: NaN,

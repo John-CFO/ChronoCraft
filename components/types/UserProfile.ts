@@ -15,7 +15,8 @@
 /////////////////////////////////////////////////////////
 
 export interface UserProfile {
-  uid: string;
+  uid?: string; // brauchst du sowieso überall
+  personalID?: string | null;
   email?: string | null;
   firstLogin?: boolean;
   totpEnabled?: boolean;
@@ -25,6 +26,6 @@ export interface UserProfile {
   hasSeenWorkHoursTour?: boolean;
   hasSeenDetailsTour?: boolean;
   createdAt?: Date;
-  personalID?: string;
+
   photoURL?: string | null;
 }

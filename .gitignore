@@ -45,7 +45,13 @@ _active.uuser
 android/
 ios/
 
+<<<<<<< Updated upstream
 #rules-generator
 rules.config.json
 .zod-mapping.json
 firestore.rules
+=======
+# sec-rules-generator CLI files
+firestore.rules
+
+>>>>>>> Stashed changes

@@ -15,10 +15,11 @@ import {
 describe("Vacation Schemas", () => {
   it("accepts valid vacation input", () => {
     const valid = {
+      uid: "user1",
       startDate: "2025-09-23",
       markedDates: {
         "2025-09-23": { selected: true },
-        "2025-09-24": { selected: true, color: "blue" },
+        "2025-09-24": { selected: true, color: "#0000ff" },
       },
     };
     const r = VacationInputSchema.safeParse(valid);
@@ -27,9 +28,10 @@ describe("Vacation Schemas", () => {
 
   it("rejects invalid date keys in markedDates", () => {
     const invalid = {
+      uid: "user1",
       startDate: "2025-09-23",
       markedDates: {
-        "23-09-2025": { selected: true }, // wrong format
+        "23-09-2025": { selected: true },
       },
     };
     expect(VacationInputSchema.safeParse(invalid).success).toBe(false);
@@ -37,6 +39,7 @@ describe("Vacation Schemas", () => {
 
   it("rejects missing startDate", () => {
     const invalid = {
+      uid: "user1",
       markedDates: {
         "2025-09-23": { selected: true },
       },
@@ -45,13 +48,14 @@ describe("Vacation Schemas", () => {
   });
 
   it("accepts Firestore vacation with Timestamp-like createdAt", () => {
-    // mock Firestore Timestamp object with toDate()
     const mockTimestamp = { toDate: () => new Date("2025-09-23T00:00:00Z") };
     const doc = {
       id: "abc",
       uid: "user1",
       startDate: "2025-09-23",
-      markedDates: { "2025-09-23": { selected: true } },
+      markedDates: {
+        "2025-09-23": { selected: true },
+      },
       createdAt: mockTimestamp,
     };
 
@@ -67,7 +71,9 @@ describe("Vacation Schemas", () => {
       id: "abc",
       uid: "user1",
       startDate: "23.09.2025",
-      markedDates: { "2025-09-23": { selected: true } },
+      markedDates: {
+        "2025-09-23": { selected: true },
+      },
     };
     expect(FirestoreVacationSchema.safeParse(doc).success).toBe(false);
   });

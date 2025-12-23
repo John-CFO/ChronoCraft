@@ -10,6 +10,9 @@ import { z } from "zod";
 ///////////////////////////////////////////////////////////////////
 
 // validate Firestore Doc ID
+/**
+ * @AppSec
+ */
 export const isValidFirestoreDocId = (id: unknown): id is string => {
   if (typeof id !== "string") return false;
   if (id.length === 0 || id.length > 255) return false;
@@ -50,10 +53,17 @@ const safeEmailSchema = z.email().max(254);
 // FirestoreUserSchema
 // - createdAt is optional (common for user docs that might not include it).
 // - other fields validated with defaults where appropriate.
-
+/**
+ * @AppSec
+ */
 export const FirestoreUserSchema = z
   .object({
+    uid: z.string().min(1).optional(), // WICHTIG: optional() für Lesen
     email: safeEmailSchema.optional(),
+    pushToken: z.string().optional().nullable(),
+    displayName: z.string().optional().nullable(),
+    personalID: z.string().optional().nullable(),
+    photoURL: z.string().url().optional().nullable(),
     firstLogin: z.boolean().optional().default(false),
     totpEnabled: z.boolean().optional().default(false),
     totpSecret: z.string().max(100).nullable().optional(),
@@ -61,29 +71,44 @@ export const FirestoreUserSchema = z
     hasSeenVacationTour: z.boolean().optional().default(false),
     hasSeenWorkHoursTour: z.boolean().optional().default(false),
     hasSeenDetailsTour: z.boolean().optional().default(false),
-    createdAt: timestampToDateOptional, // optional, converted to Date when present
+    createdAt: timestampToDateOptional,
+    lastAuth: timestampToDateOptional,
+    mfaEnabled: z.boolean().optional().default(false),
   })
   .strict();
 
 // validate the custom user data using the FirestoreUserSchema
+/**
+ * @AppSec
+ */
 export const FirestoreCustomUserSchema = FirestoreUserSchema.extend({
   uid: z.string().min(1), // UID from Auth-System
-  displayName: z.string().optional().nullable(),
-  personalID: z.string().optional().nullable(),
-  photoURL: z.url().optional().nullable(),
+  // displayName: z.string().optional().nullable(),
+  // personalID: z.string().optional().nullable(),
+  // photoURL: z.url().optional().nullable(),
+  // pushToken: z.string().optional().nullable(),
+  // lastAuth: timestampToDateOptional,
+  // mfaEnabled: z.boolean().optional().default(false),
 }).strict();
 
 // FirestoreProjectSchema
+/**
+ * @AppSec
+ */
 export const FirestoreProjectSchema = z
   .object({
     id: z.string().refine(isValidFirestoreDocId, "Invalid document ID"),
     name: z.string().min(1).max(100), // length limit validation
+    uid: z.string(),
     createdAt: timestampToDateStrict, // required and strict
     isTracking: z.boolean().optional().default(false),
   })
   .strict();
 
 // validate is TOTP exists and is enabled
+/**
+ * @AppSec
+ */
 export const TOTPUserSchema = z
   .object({
     totpEnabled: z.boolean().optional().default(false),
@@ -94,7 +119,9 @@ export const TOTPUserSchema = z
 // ProjectUpdateSchema
 // - single place to validate what updates are allowed for a Project document.
 // - strict(): unknown keys are rejected (prevents arbitrary fields being written).
-
+/**
+ * @AppSec
+ */
 export const ProjectUpdateSchema = z
   .object({
     name: z.string().min(1).max(100).optional(),
@@ -106,6 +133,9 @@ export const ProjectUpdateSchema = z
   .strict();
 
 // validate the workhours global states
+/**
+ * @AppSec
+ */
 export const FirestoreWorkHoursSchema = z
   .object({
     elapsedTime: z.number().min(0).max(31536000).optional().default(0), // ~10 Years in seconds

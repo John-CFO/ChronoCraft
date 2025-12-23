@@ -47,7 +47,9 @@ describe("VacationRemindModal - Zod validation (AppSec relevant)", () => {
       id: "vac1",
       uid: "user1",
       startDate: "2025-09-23",
-      markedDates: { "2025-09-23": { selected: true } },
+      markedDates: {
+        "2025-09-23": { selected: true },
+      },
       createdAt: mockTimestampLike,
     };
 
@@ -65,7 +67,9 @@ describe("VacationRemindModal - Zod validation (AppSec relevant)", () => {
       id: "vac2",
       uid: "user1",
       startDate: "23.09.2025", // invalid format
-      markedDates: { "2025-09-23": { selected: true } },
+      markedDates: {
+        "2025-09-23": { selected: true },
+      },
     };
     const r = FirestoreVacationSchema.safeParse(doc);
     expect(r.success).toBe(false);
@@ -76,7 +80,9 @@ describe("VacationRemindModal - Zod validation (AppSec relevant)", () => {
       id: "vac3",
       uid: "user1",
       startDate: "2025-10-01",
-      markedDates: { "2025-10-01": { selected: true } },
+      markedDates: {
+        "2025-10-01": { selected: true },
+      },
       reminderDuration: 3,
     };
     const r = FirestoreVacationSchema.safeParse(doc);
@@ -89,7 +95,9 @@ describe("VacationRemindModal - Zod validation (AppSec relevant)", () => {
       id: "vac4",
       uid: "user1",
       startDate: "2025-10-01",
-      markedDates: { "2025-10-01": { selected: true } },
+      markedDates: {
+        "2025-10-01": { selected: true },
+      },
       // wrong type:
       reminderDuration: "three",
     };
@@ -100,10 +108,11 @@ describe("VacationRemindModal - Zod validation (AppSec relevant)", () => {
   // VacationForm input (frontend -> validated before addDoc)
   it("accepts valid VacationForm input (startDate + markedDates)", () => {
     const input = {
+      uid: "user1",
       startDate: "2025-09-23",
       markedDates: {
         "2025-09-23": { selected: true },
-        "2025-09-24": { selected: true, color: "blue" },
+        "2025-09-24": { selected: true, color: "#0000ff" },
       },
     };
     const r = VacationInputSchema.safeParse(input);
@@ -112,9 +121,9 @@ describe("VacationRemindModal - Zod validation (AppSec relevant)", () => {
 
   it("rejects VacationForm input with invalid date keys", () => {
     const input = {
+      uid: "user1",
       startDate: "2025-09-23",
       markedDates: {
-        // wrong key format
         "23-09-2025": { selected: true },
       },
     };

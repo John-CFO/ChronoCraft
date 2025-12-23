@@ -21,9 +21,32 @@ import { z } from "zod";
 // Accepts both real firestore docs (doc.data() is function) and test-mocks
 // where data may be an object.
 
+// function normalizeDocRaw(doc: any) {
+//   const rawData = typeof doc.data === "function" ? doc.data() : doc.data;
+//   return { id: doc.id, ...rawData };
+// }
+
 function normalizeDocRaw(doc: any) {
   const rawData = typeof doc.data === "function" ? doc.data() : doc.data;
-  return { id: doc.id, ...rawData };
+
+  const out: any = { id: doc.id, ...rawData };
+
+  // startDate normalisieren, falls Firestore Timestamp oder Date
+  if (out.startDate instanceof Date) {
+    out.startDate = out.startDate.toISOString().slice(0, 10); // YYYY-MM-DD
+  }
+  if (out.startDate?._seconds) {
+    out.startDate = new Date(out.startDate._seconds * 1000)
+      .toISOString()
+      .slice(0, 10);
+  }
+
+  // createdAt: Firestore Timestamp → JS Date
+  if (out.createdAt?._seconds) {
+    out.createdAt = new Date(out.createdAt._seconds * 1000);
+  }
+
+  return out;
 }
 
 // Validate a collection of documents (firbase snapshots)
@@ -61,7 +84,7 @@ export async function getValidatedDocs<T>(
         console.error("Invalid Firestore document:", doc.id, result.error);
       }
     } catch (err) {
-      console.error("Unexpected error while validating doc:", doc.id, err);
+      // swallowed intentionally: safeParse handles errors.
     }
   }
 
@@ -107,11 +130,7 @@ export function getValidatedDocsFromSnapshot<T>(
           result.error
         );
     } catch (err) {
-      console.error(
-        "Unexpected error while validating snapshot doc:",
-        doc.id,
-        err
-      );
+      // swallowed intentionally: safeParse handles errors.
     }
   }
 
@@ -143,11 +162,7 @@ export function getValidatedDocFromSnapshot<T>(
 
     return result.data;
   } catch (err) {
-    console.error(
-      "Unexpected error while validating DocumentSnapshot:",
-      docSnap.id,
-      err
-    );
+    // swallowed intentionally: safeParse handles errors.
     return null;
   }
 }

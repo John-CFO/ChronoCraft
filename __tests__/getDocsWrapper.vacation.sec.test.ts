@@ -20,11 +20,19 @@ jest.mock("firebase/firestore", () => ({
 }));
 
 describe("getValidatedDocs with FirestoreVacationSchema", () => {
+  let consoleErrorSpy: jest.SpyInstance;
+
+  beforeAll(() => {
+    // console.error vor allen Tests mocken
+    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterAll(() => {
+    // wiederherstellen, damit andere Tests normale Logs sehen
+    consoleErrorSpy.mockRestore();
+  });
+
   it("returns only valid vacation docs", async () => {
-    // spy console.error
-    const consoleErrorSpy = jest
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
     // generate a mock snapshot
     const mockSnapshot = {
       docs: [
@@ -33,8 +41,10 @@ describe("getValidatedDocs with FirestoreVacationSchema", () => {
           data: () => ({
             uid: "user1",
             startDate: "2025-09-23",
-            markedDates: { "2025-09-23": { selected: true } },
-            createdAt: new Date("2025-09-23"),
+            markedDates: {
+              "2025-09-23": { selected: true },
+            },
+            createdAt: { toDate: () => new Date("2025-09-23") }, // Firestore Timestamp Mock
             reminderDuration: 10,
           }),
         },
@@ -42,24 +52,23 @@ describe("getValidatedDocs with FirestoreVacationSchema", () => {
           id: "invalid",
           data: () => ({
             uid: "user2",
-            startDate: "23.09.2025", // wrong date format -> invalid
-            markedDates: {},
+            startDate: "23.09.2025", // falsch, wird verworfen
+            markedDates: { "23.09.2025": { selected: true } },
           }),
         },
       ],
     };
 
-    // Call: The wrapper function can either expect a CollectionRef or a Snapshot.
-    const result = await getValidatedDocs(
-      mockSnapshot as any,
-      FirestoreVacationSchema as any
-    );
     // assert a console.error happened for the invalid doc
-    expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
-    expect(consoleErrorSpy.mock.calls[0][0]).toEqual(
-      expect.stringContaining("Invalid Firestore document")
+    const validatedDocs = await getValidatedDocs(
+      mockSnapshot,
+      FirestoreVacationSchema
     );
-    // restore
-    consoleErrorSpy.mockRestore();
+    // valid doc kommt zurück
+    expect(validatedDocs).toHaveLength(1);
+    expect(validatedDocs[0].id).toBe("abc");
+
+    // invalid doc wird verworfen
+    expect(validatedDocs.find((d) => d.id === "invalid")).toBeUndefined();
   });
 });
