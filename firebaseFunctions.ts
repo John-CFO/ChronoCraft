@@ -12,7 +12,7 @@ import {
   LoginInputSchema,
   RegisterInputSchema,
   TotpCodeSchema,
-} from "./validation/authSchemas.sec";
+} from "./validation/authSchemas";
 import { FirestoreUserUpdateSchema } from "./validation/editProfileSchemas.sec";
 import { ProjectUpdateSchema } from "./validation/firestoreSchemas.sec";
 import { HourlyRateSchema } from "./validation/earningsSchemas.sec";
