@@ -12,13 +12,14 @@ import { getFunctions, httpsCallable } from "firebase/functions";
 type AuthValidatorResponse = { success: boolean };
 type SecureDeleteResponse = { success: boolean };
 
-// Nutze Emulator-Projekt-ID
+//////////////////////////////////////////////////////////////////////////
+
+// use Emulator-Project-ID
 const app = initializeApp({ projectId: "chrono-craft-worktime-manager" });
 const functions = getFunctions(app, "http://127.0.0.1:5001");
 
 describe("Firebase Functions E2E Tests", () => {
   const testUid = "test-user";
-  const projectId = "test-project";
   const serviceId = "test-service";
 
   it("authValidator: login should succeed", async () => {
@@ -52,7 +53,7 @@ describe("Firebase Functions E2E Tests", () => {
 
   it("secureDelete: only owner can delete", async () => {
     const secureDelete = httpsCallable(functions, "secureDelete");
-    // Versuch mit falschem userId
+    // Attempt with wrong userId
     await expect(
       secureDelete({ userId: "other-user", serviceId, subs: ["sub1"] })
     ).rejects.toThrow(/permission-denied/);

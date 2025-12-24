@@ -11,6 +11,8 @@ import { functions } from "./setup";
 
 type DeleteResponse = { success: boolean };
 
+////////////////////////////////////////////////////////////////////////////////////////
+
 describe("secureDelete (E2E)", () => {
   it("blocks deletion of foreign user data", async () => {
     const call = httpsCallable<any, DeleteResponse>(functions, "secureDelete");

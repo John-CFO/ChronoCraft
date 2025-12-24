@@ -4,11 +4,11 @@ import * as functions from "firebase-functions";
 import admin from "firebase-admin";
 import { rateLimit } from "./rateLimitUtility";
 
+//////////////////////////////////////////////////////////////////////////////////
+
 admin.initializeApp();
 
-//////////////////////////////////////////////////////////////////////////////////
-// Utility-Funktionen
-
+// Utility-Functions
 async function deleteSubcollections(
   db: FirebaseFirestore.Firestore,
   path: string[],
@@ -21,7 +21,6 @@ async function deleteSubcollections(
 }
 
 function verifyToken(secret: string, code: string): boolean {
-  // Dummy-Check, hier echte TOTP-Logik einsetzen
   return secret === code;
 }
 
@@ -30,8 +29,8 @@ function logEvent(event: string, level: string, data?: any) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////
-// Auth Function
 
+// Auth Function
 export const authValidator = functions.https.onCall(
   async (request: functions.https.CallableRequest<any>) => {
     const { action, payload } = request.data ?? {};
@@ -43,13 +42,13 @@ export const authValidator = functions.https.onCall(
         "Missing action"
       );
 
-    // Login / Register gehen ohne Auth
+    // Login / register without auth
     if (action === "login" || action === "register") {
       logEvent(`auth ${action}`, "info", { uid });
       return { success: true };
     }
 
-    // Verify TOTP mit Rate-Limiting
+    // Verify TOTP with Rate-Limiting
     if (action === "verifyTotp") {
       if (!uid)
         throw new functions.https.HttpsError(
@@ -57,7 +56,7 @@ export const authValidator = functions.https.onCall(
           "Not logged in"
         );
 
-      // Rate-Limit: max 5 Versuche pro 60 Sekunden
+      // Rate-Limit: max 5 attempts per minute
       await rateLimit(uid, "verifyTotp", 5, 60_000);
 
       const userDoc = await admin
@@ -86,8 +85,8 @@ export const authValidator = functions.https.onCall(
 );
 
 //////////////////////////////////////////////////////////////////////////////////
-// Profile Function
 
+// Profile Function
 export const profileValidator = functions.https.onCall(
   async (request: functions.https.CallableRequest<any>) => {
     const uid = request.auth?.uid;
@@ -111,8 +110,8 @@ export const profileValidator = functions.https.onCall(
 );
 
 //////////////////////////////////////////////////////////////////////////////////
-// Projects & Earnings Function
 
+// Projects & Earnings Function
 export const projectsAndWorkValidator = functions.https.onCall(
   async (request: functions.https.CallableRequest<any>) => {
     const uid = request.auth?.uid;
@@ -163,8 +162,8 @@ export const projectsAndWorkValidator = functions.https.onCall(
 );
 
 //////////////////////////////////////////////////////////////////////////////////
-// Secure Delete Function
 
+// Secure Delete Function
 export const secureDelete = functions.https.onCall(
   async (request: functions.https.CallableRequest<any>) => {
     const uid = request.auth?.uid;

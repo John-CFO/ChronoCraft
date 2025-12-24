@@ -123,7 +123,7 @@ describe("WorkHoursState — AppSec Validation", () => {
   it("validates Firestore data against schema before processing", async () => {
     const mockUser = { uid: "test-user" };
 
-    // Auth MUSS vor render passieren
+    // Auth must pass render
     getAuth.mockReturnValue({ currentUser: mockUser });
 
     const testDate = new Date("2024-01-01T10:00:00Z");
@@ -153,7 +153,7 @@ describe("WorkHoursState — AppSec Validation", () => {
       </ServiceProvider>
     );
 
-    // Warte auf asynchrones loadState()
+    // Whait for asynchronous loadState()
     await Promise.resolve();
     await Promise.resolve();
 

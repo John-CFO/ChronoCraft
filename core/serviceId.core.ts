@@ -1,5 +1,13 @@
+////////////////////serviceId.core.ts/////////////////////////////
+
+// This file is used to generate a serviceId for the app
+
+/////////////////////////////////////////////////////////////////
+
 import * as SecureStore from "expo-secure-store";
 import { nanoid } from "nanoid/non-secure";
+
+/////////////////////////////////////////////////////////////////
 
 export async function loadOrCreateServiceId(): Promise<string> {
   let serviceId = await SecureStore.getItemAsync("serviceId");

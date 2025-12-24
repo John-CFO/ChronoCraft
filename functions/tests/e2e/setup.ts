@@ -5,9 +5,11 @@
 ////////////////////////////////////////////////////////////////////
 
 import { initializeApp } from "firebase/app";
-import { getAuth, signInWithCustomToken } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
+
+////////////////////////////////////////////////////////////////////
 
 const app = initializeApp({
   apiKey: "fake",

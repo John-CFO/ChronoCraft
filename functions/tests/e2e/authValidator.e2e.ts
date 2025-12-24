@@ -24,6 +24,7 @@ import {
 
 ////////////////////////////////////////////////////////////////////////
 
+// use Emulator-Project-ID
 const app = initializeApp({
   projectId: "chrono-craft-worktime-manager",
 });
@@ -32,6 +33,7 @@ const auth = getAuth(app);
 const functions = getFunctions(app);
 const db = getFirestore(app);
 
+// use localhost
 connectAuthEmulator(auth, "http://localhost:5001");
 connectFunctionsEmulator(functions, "localhost", 4001);
 connectFirestoreEmulator(db, "localhost", 8001);
@@ -48,7 +50,7 @@ describe("authValidator (E2E)", () => {
   const secretCode = "123456";
 
   beforeAll(async () => {
-    // Minimaler User für verifyTotp
+    // minimal user for TOTP
     await setDoc(doc(db, "Users", uid), {
       totpSecret: secretCode,
     });
@@ -56,7 +58,7 @@ describe("authValidator (E2E)", () => {
     // Fake-Login im Auth Emulator
     await signInWithCustomToken(
       auth,
-      // Emulator akzeptiert jedes Token mit uid
+      // Emulator accepts each token with uid
       Buffer.from(JSON.stringify({ uid })).toString("base64")
     );
   });
@@ -74,7 +76,7 @@ describe("authValidator (E2E)", () => {
   it("rejects verifyTotp without auth", async () => {
     const call = httpsCallable(functions, "authValidator");
 
-    // bewusst ohne eingeloggten User
+    // logout first
     await auth.signOut();
 
     await expect(
@@ -90,7 +92,7 @@ describe("authValidator (E2E)", () => {
       AuthResponse
     >(functions, "authValidator");
 
-    // wieder einloggen
+    // login again
     await signInWithCustomToken(
       auth,
       Buffer.from(JSON.stringify({ uid })).toString("base64")
