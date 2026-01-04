@@ -18,7 +18,9 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
-    "validation/overrides/firestore.override.js"
+    "validation/overrides/firestore.override.js",
+    "functions/jest.unit.config.js",
+    "functions/src/functions/projectAndWorkValidator.functionsts"
   ],
   "exclude": ["node_modules"],
   "rootDir": "./"

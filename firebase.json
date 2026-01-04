@@ -2,6 +2,7 @@
   "functions": [
     {
       "source": "functions",
+      "runtime": "nodejs20",
       "codebase": "default",
       "disallowLegacyRuntimeConfig": true,
       "ignore": [
@@ -11,9 +12,23 @@
         "firebase-debug.*.log",
         "*.local"
       ],
-      "predeploy": [
-        "npm --prefix \"$RESOURCE_DIR\" run build"
-      ]
+      "predeploy": ["npm --prefix \"functions\" run build"]
     }
-  ]
+  ],
+  "emulators": {
+    "auth": {
+      "port": 5001
+    },
+    "functions": {
+      "port": 4001
+    },
+    "firestore": {
+      "port": 8001
+    },
+    "ui": {
+      "enabled": true,
+      "port": 1001
+    },
+    "singleProjectMode": true
+  }
 }

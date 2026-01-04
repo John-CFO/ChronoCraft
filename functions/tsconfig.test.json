@@ -1,0 +1,31 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "lib-test",
+    "rootDir": ".",
+    "esModuleInterop": true,
+    "module": "commonjs",
+    "target": "ES2020",
+    "isolatedModules": true,
+    "moduleResolution": "node",
+
+    // IMPORTANT: baseUrl and paths for absolute Imports
+    "baseUrl": ".",
+    "paths": {
+      "src/*": ["src/*"],
+      "@/*": ["src/*"], // Optional for @/ Alias
+      "@repos/*": ["src/repos/*"], // Optional for specific paths
+      "@services/*": ["src/services/*"],
+      "@utils/*": ["src/utils/*"],
+      "@errors/*": ["src/errors/*"]
+    },
+
+    "types": ["jest", "node"],
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*.ts", "tests/**/*.ts", "jest.config.js"],
+  "exclude": ["node_modules", "lib", "dist", "lib-test"]
+}
