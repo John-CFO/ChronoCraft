@@ -9,6 +9,9 @@ import { z } from "zod";
 ///////////////////////////////////////////////////////////////////////
 
 // hourly rate schema to check if the input is valid, if so, return the value
+/**
+ * @AppSec
+ */
 export const HourlyRateSchema = z.object({
   hourlyRate: z
     .number()
@@ -19,9 +22,13 @@ export const HourlyRateSchema = z.object({
   userId: z.string().min(1, "User ID is required"),
 });
 
+/**
+ * @AppSec
+ */
 export const FirestoreEarningsSchema = z.object({
   hourlyRate: z.number().min(0).max(300).optional(),
   totalEarnings: z.number().min(0).optional(),
+  uid: z.string(),
 });
 
 export type HourlyRateInput = z.infer<typeof HourlyRateSchema>;

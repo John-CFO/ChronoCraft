@@ -70,6 +70,7 @@ describe("EarningsCalculator Security", () => {
   describe("FirestoreEarningsSchema Validation", () => {
     it("accepts valid earnings data", () => {
       const validData = {
+        uid: "test-user-123",
         hourlyRate: 50,
         totalEarnings: 125.75,
       };
@@ -78,6 +79,7 @@ describe("EarningsCalculator Security", () => {
 
     it("handles missing fields gracefully", () => {
       const partialData = {
+        uid: "test-user-123",
         hourlyRate: 50,
       };
       expect(FirestoreEarningsSchema.safeParse(partialData).success).toBe(true);
@@ -85,6 +87,7 @@ describe("EarningsCalculator Security", () => {
 
     it("rejects invalid data types", () => {
       const invalidData = {
+        uid: "test-user-123",
         hourlyRate: "fifty", // string instead of number
         totalEarnings: 125.75,
       };

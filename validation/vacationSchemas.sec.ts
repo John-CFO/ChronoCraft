@@ -16,18 +16,22 @@ import { z } from "zod";
 export const MarkedDateEntrySchema = z
   .object({
     selected: z.boolean().optional(),
-    color: z.string().optional(),
-    textColor: z.string().optional(),
-    // additional keys are allowed and will be accepted as 'any'
+    color: z
+      .string()
+      .regex(/^#?[0-9A-Fa-f]{3,8}$/, "invalid color")
+      .optional(),
+    textColor: z
+      .string()
+      .regex(/^#?[0-9A-Fa-f]{3,8}$/, "invalid textColor")
+      .optional(),
   })
-  .catchall(z.any());
-
+  .strict();
 /**
  * MarkedDates: record where keys are ISO date strings (YYYY-MM-DD)
  * and values must match MarkedDateEntrySchema
  */
 export const MarkedDatesSchema = z.record(
-  z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "invalid date key format"),
+  z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   MarkedDateEntrySchema
 );
 
@@ -36,10 +40,12 @@ export const MarkedDatesSchema = z.record(
  * - startDate: first day (string in YYYY-MM-DD)
  * - markedDates: map validated by MarkedDatesSchema
  */
+/**
+ * @AppSec
+ */
 export const VacationInputSchema = z.object({
-  startDate: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "startDate must be YYYY-MM-DD"),
+  uid: z.string(),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   markedDates: MarkedDatesSchema,
 });
 export type VacationInput = z.infer<typeof VacationInputSchema>;

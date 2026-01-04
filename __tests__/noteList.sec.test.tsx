@@ -5,8 +5,9 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-import { renderHook, act } from "@testing-library/react-hooks";
+import { renderHook, act, waitFor } from "@testing-library/react-native";
 import { useNotes } from "../hooks/fetchNotesHook";
+import { ServiceProvider } from "../components/contexts/ServiceContext";
 import { getDocs } from "firebase/firestore";
 
 import { FIREBASE_AUTH } from "../firebaseConfig";
@@ -14,6 +15,7 @@ import { FIREBASE_AUTH } from "../firebaseConfig";
 ///////////////////////////////////////////////////////////////////////////////
 
 jest.mock("firebase/firestore", () => ({
+  onSnapshot: jest.fn(() => jest.fn()),
   collection: jest.fn(),
   query: jest.fn(),
   getDocs: jest.fn(),
@@ -33,14 +35,16 @@ describe("useNotes Hook - AppSec & Validation", () => {
     });
   });
 
+  // wrapper to provide ServiceProvider
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <ServiceProvider>{children}</ServiceProvider>
+  );
+
   it("should set error for invalid projectId", async () => {
-    const { result } = renderHook(() => useNotes(""));
+    const { result } = renderHook(() => useNotes(""), { wrapper });
 
-    await act(async () => {
-      // no async work needed, but waiting for hook state to be set
-    });
+    await waitFor(() => expect(result.current.error).toBeInstanceOf(Error));
 
-    expect(result.current.error).toBeInstanceOf(Error);
     expect(result.current.error?.message).toBe("Invalid project ID");
     expect(result.current.notes).toHaveLength(0);
     expect(result.current.loading).toBe(false);
@@ -52,7 +56,9 @@ describe("useNotes Hook - AppSec & Validation", () => {
       value: null,
     });
 
-    const { result } = renderHook(() => useNotes("validProjectId"));
+    const { result } = renderHook(() => useNotes("validProjectId"), {
+      wrapper,
+    });
 
     await act(async () => {});
 
@@ -85,11 +91,13 @@ describe("useNotes Hook - AppSec & Validation", () => {
 
     (getDocs as jest.Mock).mockResolvedValue({ docs: mockDocs });
 
-    const { result, waitForNextUpdate } = renderHook(() =>
-      useNotes("validProjectId")
-    );
+    const { result } = renderHook(() => useNotes("validProjectId"), {
+      wrapper,
+    });
 
-    await waitForNextUpdate();
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
 
     expect(result.current.error).toBeNull();
     expect(result.current.notes).toHaveLength(1);
@@ -124,17 +132,22 @@ describe("useNotes Hook - AppSec & Validation", () => {
 
     (getDocs as jest.Mock).mockResolvedValue({ docs: mockDocs });
 
-    const { result, waitForNextUpdate } = renderHook(() =>
-      useNotes("validProjectId")
-    );
+    const { result } = renderHook(() => useNotes("validProjectId"), {
+      wrapper,
+    });
 
-    await waitForNextUpdate();
-
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+    // synchroner removeNote
     act(() => {
       result.current.removeNote("1");
     });
 
-    expect(result.current.notes).toHaveLength(1);
-    expect(result.current.notes[0].id).toBe("2");
+    // danach sicherheitshalber warten, bis das Hook-State aktualisiert wurde
+    await waitFor(() => {
+      expect(result.current.notes).toHaveLength(1);
+      expect(result.current.notes[0].id).toBe("2");
+    });
   });
 });

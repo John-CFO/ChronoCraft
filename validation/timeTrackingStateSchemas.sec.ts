@@ -23,6 +23,9 @@ export const isValidProjectId = (projectId: unknown): projectId is string => {
   return !dangerousPatterns.some((pattern) => pattern.test(projectId));
 };
 
+/**
+ * @AppSec
+ */
 export const ProjectStateSchema = z.object({
   id: z.string().min(1).max(100),
   name: z.string().max(200).optional(),
@@ -43,23 +46,34 @@ export const ProjectStateSchema = z.object({
 });
 
 // Schema for setTimerAndEarnings Parameters
+/**
+ * @AppSec
+ */
 export const TimerAndEarningsSchema = z.object({
   projectId: z.string().refine(isValidProjectId, {
     message: "Invalid projectId format",
   }),
   timer: z.number().min(0).max(315360000),
   totalEarnings: z.number().min(0).max(10000000),
+  uid: z.string(), // UID from Auth-System
 });
 
 // Schema for setProjectData Parameters
+/**
+ * @AppSec
+ */
 export const SetProjectDataSchema = z.object({
   projectId: z.string().refine(isValidProjectId, {
     message: "Invalid projectId format",
   }),
   projectData: ProjectStateSchema.partial(),
+  uid: z.string(),
 });
 
 // Schema for startTimer Parameters
+/**
+ * @AppSec
+ */
 export const StartTimerSchema = z.object({
   projectId: z.string().refine(isValidProjectId, {
     message: "Invalid projectId format",
@@ -69,6 +83,7 @@ export const StartTimerSchema = z.object({
       silent: z.boolean().optional(),
     })
     .optional(),
+  uid: z.string(),
 });
 
 // Validation functions

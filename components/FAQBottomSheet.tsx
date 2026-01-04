@@ -36,7 +36,7 @@ import { useAlertStore } from "./services/customAlert/alertStore";
 import { useDotAnimation } from "../components/DotAnimation";
 import { useAccessibilityStore } from "./services/accessibility/accessibilityStore";
 import { isValidFirestoreDocId } from "../validation/firestoreSchemas.sec";
-import { deleteSubcollections } from "../components/utils/firestoreDeleteHelpers";
+import { deleteSubcollections } from "../validation/utils/firestoreDeleteHelpers";
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 

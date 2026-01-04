@@ -1,0 +1,19 @@
+# Node dependencies
+node_modules/
+
+# Compiled JS output
+lib/
+# oder spezifisch JS + source maps
+# lib/**/*.js
+# lib/**/*.js.map
+
+# TypeScript declaration files
+typings/
+
+# Lokal Configurations
+*.local
+.env
+
+# Logs
+firebase-debug.log
+firebase-debug.*.log

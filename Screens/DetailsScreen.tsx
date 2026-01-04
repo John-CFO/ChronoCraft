@@ -81,7 +81,7 @@ const DetailsScreen: React.FC = () => {
   const scrollViewRef = useRef<ScrollView>(null);
 
   // use the preventBackWhileTracking hook from PreventBackBTN.tsx
-  usePreventBackWhileTracking(projectId, isTracking);
+  usePreventBackWhileTracking(projectId);
 
   // ensure state initialization consistency
   useEffect(() => {

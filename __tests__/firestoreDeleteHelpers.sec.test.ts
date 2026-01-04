@@ -29,7 +29,7 @@ import { Firestore } from "firebase/firestore";
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 // require helpers after the mock is set up
-const helpers = require("../components/utils/firestoreDeleteHelpers");
+const helpers = require("../validation/utils/firestoreDeleteHelpers");
 
 describe("firestoreDeleteHelpers — AppSec validation (mocked firestore)", () => {
   // Provide fresh mock implementations before each test on global placeholders

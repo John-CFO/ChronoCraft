@@ -31,14 +31,14 @@ import {
   generateSecret,
   generateOtpAuthUrl,
   verifyToken,
-} from "../components/utils/totp";
+} from "../validation/utils/totp";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import OTPInput from "./OTPInput";
 import DismissKeyboard from "../components/DismissKeyboard";
 import { useDotAnimation } from "../components/DotAnimation";
 import { TOTPUserSchema } from "../validation/firestoreSchemas.sec";
-import { TotpCodeSchema } from "../validation/authSchemas.sec";
+import { TotpCodeSchema } from "../validation/authSchemas";
 
 ///////////////////////////////////////////////////////////////////////////////////////
 

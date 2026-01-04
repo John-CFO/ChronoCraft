@@ -6,22 +6,34 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+import React from "react";
+import { render } from "@testing-library/react-native";
 import { jest } from "@jest/globals";
+
+import { ServiceProvider } from "../components/contexts/ServiceContext";
 
 ///////////////////////////////////////////////////////////////////////////////
 
 // Mocks
+// mock react-native-async-storage
 jest.mock("@react-native-async-storage/async-storage", () => ({}));
 jest.mock("firebase/auth", () => ({
   getAuth: jest.fn(() => ({ currentUser: null })),
 }));
+// mock firebase/firestore
 jest.mock("firebase/firestore", () => ({
   doc: jest.fn(),
   getDoc: jest.fn(),
   setDoc: jest.fn(),
 }));
+// mock firebaseConfig
 jest.mock("../firebaseConfig", () => ({
   FIREBASE_FIRESTORE: {},
+}));
+// mock ServiceContext
+jest.mock("../components/contexts/ServiceContext", () => ({
+  useService: () => ({ serviceId: "test-service-id" }),
+  ServiceProvider: ({ children }: any) => children,
 }));
 
 // Import the component
@@ -34,6 +46,7 @@ const { doc, getDoc, setDoc } = require("firebase/firestore");
 describe("WorkHoursState — AppSec Validation", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    WorkHoursState.getState().reset();
   });
 
   // Input Validation
@@ -56,6 +69,18 @@ describe("WorkHoursState — AppSec Validation", () => {
       .spyOn(console, "error")
       .mockImplementation(() => {});
     const originalElapsedTime = WorkHoursState.getState().elapsedTime;
+
+    // Wrap loadState in a TestComponent to satisfy hooks
+    const TestComponent = () => {
+      WorkHoursState.getState().loadState();
+      return null;
+    };
+
+    render(
+      <ServiceProvider>
+        <TestComponent />
+      </ServiceProvider>
+    );
 
     await WorkHoursState.getState().loadState();
 
@@ -97,6 +122,8 @@ describe("WorkHoursState — AppSec Validation", () => {
   // Schema Validation
   it("validates Firestore data against schema before processing", async () => {
     const mockUser = { uid: "test-user" };
+
+    // Auth must pass render
     getAuth.mockReturnValue({ currentUser: mockUser });
 
     const testDate = new Date("2024-01-01T10:00:00Z");
@@ -113,7 +140,22 @@ describe("WorkHoursState — AppSec Validation", () => {
       }),
     });
 
-    await WorkHoursState.getState().loadState();
+    const TestComponent = () => {
+      React.useEffect(() => {
+        WorkHoursState.getState().loadState();
+      }, []);
+      return null;
+    };
+
+    render(
+      <ServiceProvider>
+        <TestComponent />
+      </ServiceProvider>
+    );
+
+    // Whait for asynchronous loadState()
+    await Promise.resolve();
+    await Promise.resolve();
 
     expect(WorkHoursState.getState().elapsedTime).toBe(3600);
     expect(WorkHoursState.getState().isWorking).toBe(true);

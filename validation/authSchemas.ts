@@ -9,12 +9,18 @@ import { z } from "zod";
 //////////////////////////////////////////////////////////////
 
 // validate login schema
+/**
+ * @AppSec
+ */
 export const LoginInputSchema = z.object({
   email: z.email({ message: "Please enter a valid E-Mail." }),
   password: z.string().min(1, { message: "Password cannot be empty." }),
 });
 
 // validate register schema
+/**
+ * @AppSec
+ */
 export const RegisterInputSchema = z.object({
   email: z.email({ message: "Please enter a valid E-Mail." }),
   password: z
@@ -30,6 +36,9 @@ export const RegisterInputSchema = z.object({
 });
 
 // validate totp schema
+/**
+ * @AppSec
+ */
 export const TotpCodeSchema = z
   .string()
   .regex(/^\d{6}$/, { message: "TOTP must be 6 digits" });
