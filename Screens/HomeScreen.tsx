@@ -106,6 +106,9 @@ const HomeScreen: React.FC = () => {
   // state to handle the loading animation
   const [isLoading, setIsLoading] = useState(true);
 
+  // state to handle if the user can read the projects
+  const [canReadProjects, setCanReadProjects] = useState(false);
+
   // states to control the loading screen
   const [minTimePassed, setMinTimePassed] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -191,23 +194,77 @@ const HomeScreen: React.FC = () => {
   // scroll animation declaration
   const ITEM_HEIGHT: number = 100;
   const scrollY = useRef(new Animated.Value(0)).current;
+
   const [averageItemHeight, setAverageItemHeight] = useState(ITEM_HEIGHT);
+
+  // Gatecheck to check if the user can read the projects
+  useEffect(() => {
+    if (!serviceId) return;
+    const checkCanReadProjects = async () => {
+      const user = FIREBASE_AUTH.currentUser;
+      if (!user) {
+        setCanReadProjects(false);
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const serviceRef = doc(
+          FIREBASE_FIRESTORE,
+          "Users",
+          user.uid,
+          "Services",
+          serviceId
+        );
+
+        const serviceSnap = await getDoc(serviceRef);
+        if (!serviceSnap.exists()) {
+          setCanReadProjects(true);
+        } else {
+          setCanReadProjects(true);
+        }
+      } catch {
+        // expected on first entry
+        setCanReadProjects(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkCanReadProjects();
+  }, [serviceId]);
 
   // function to load data from firestore
   useEffect(() => {
-    if (!serviceId) return;
-    const timer = setTimeout(async () => {
+    if (!canReadProjects || !serviceId) return;
+
+    let cancelled = false;
+    setIsLoading(true);
+
+    const fetchProjects = async () => {
       const user = FIREBASE_AUTH.currentUser;
       if (!user) {
-        console.warn("User not authenticated");
         setIsLoading(false);
         return;
       }
 
       try {
-        const db = FIREBASE_FIRESTORE;
+        // Check if the service exists
+        const serviceRef = doc(
+          FIREBASE_FIRESTORE,
+          "Users",
+          user.uid,
+          "Services",
+          serviceId
+        );
+        const serviceSnap = await getDoc(serviceRef);
+        if (!serviceSnap.exists()) {
+          setProjects([]);
+          setIsLoading(false);
+          return;
+        }
+
         const projectsCollection = collection(
-          db,
+          FIREBASE_FIRESTORE,
           "Users",
           user.uid,
           "Services",
@@ -221,6 +278,7 @@ const HomeScreen: React.FC = () => {
           FirestoreProjectSchema
         );
 
+        if (cancelled) return;
         // ensure createdAt is always set
         const projectsWithFallback = validatedProjects.map(
           (p: FirestoreProject) => ({
@@ -228,16 +286,21 @@ const HomeScreen: React.FC = () => {
             createdAt: p.createdAt ?? new Date(),
           })
         );
+
         setProjects(projectsWithFallback);
       } catch (error) {
         console.error("Error fetching projects", error);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
-    }, 3000);
+    };
 
-    return () => clearTimeout(timer);
-  }, [refresh, serviceId]);
+    fetchProjects();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [canReadProjects, refresh, serviceId]);
 
   // function to add projects
   const handleAddProject = async () => {
