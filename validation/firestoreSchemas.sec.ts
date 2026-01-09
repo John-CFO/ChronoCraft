@@ -6,6 +6,7 @@
 ///////////////////////////////////////////////////////////////////
 
 import { z } from "zod";
+import { Timestamp } from "firebase/firestore";
 
 ///////////////////////////////////////////////////////////////////
 
@@ -50,6 +51,10 @@ const timestampToDateOptional = z.preprocess((val) => {
 
 const safeEmailSchema = z.email().max(254);
 
+const timestampRequired = z
+  .union([z.date(), z.instanceof(Timestamp)])
+  .refine((val) => !!val, "Timestamp required");
+
 // FirestoreUserSchema
 // - createdAt is optional (common for user docs that might not include it).
 // - other fields validated with defaults where appropriate.
@@ -58,12 +63,12 @@ const safeEmailSchema = z.email().max(254);
  */
 export const FirestoreUserSchema = z
   .object({
-    uid: z.string().min(1).optional(), // WICHTIG: optional() für Lesen
+    uid: z.string().min(1).optional(), // Important: optional() for read
     email: safeEmailSchema.optional(),
     pushToken: z.string().optional().nullable(),
     displayName: z.string().optional().nullable(),
     personalID: z.string().optional().nullable(),
-    photoURL: z.string().url().optional().nullable(),
+    photoURL: z.url().optional().nullable(),
     firstLogin: z.boolean().optional().default(false),
     totpEnabled: z.boolean().optional().default(false),
     totpSecret: z.string().max(100).nullable().optional(),
@@ -98,21 +103,51 @@ export const FirestoreCustomUserSchema = FirestoreUserSchema.extend({
 export const FirestoreProjectSchema = z
   .object({
     id: z.string().refine(isValidFirestoreDocId, "Invalid document ID"),
-    name: z.string().min(1).max(100), // length limit validation
-    uid: z.string(),
-    createdAt: timestampToDateStrict, // required and strict
-    isTracking: z.boolean().optional().default(false),
+
+    uid: z.string().min(1),
+    name: z.string().min(1).max(100),
+
+    createdAt: timestampToDateStrict,
+
+    timer: z.number().min(0),
+    elapsedTime: z.number().min(0),
+
+    hourlyRate: z.number().min(0),
+    totalEarnings: z.number().min(0),
+
+    isTracking: z.boolean(),
+
+    startTime: z.date().nullable(),
+    pauseTime: z.date().nullable(),
+    endTime: z.date().nullable(),
+    lastStartTime: z.date().nullable(),
+    originalStartTime: z.date().nullable(),
   })
   .strict();
 
-// validate is TOTP exists and is enabled
 /**
  * @AppSec
+ * Guarantees: A Firestore Project document is COMPLETE and VALID at creation time.
  */
-export const TOTPUserSchema = z
+export const ProjectCreateSchema = z
   .object({
-    totpEnabled: z.boolean().optional().default(false),
-    totpSecret: z.string().max(100).nullable().optional(),
+    uid: z.string().min(1),
+    name: z.string().min(1).max(200),
+    createdAt: timestampRequired,
+
+    // Time tracking defaults (explicit!)
+    timer: z.number().min(0).max(315360000),
+    elapsedTime: z.number().min(0).max(315360000),
+    hourlyRate: z.number().min(0).max(10000),
+    totalEarnings: z.number().min(0).max(10000000),
+
+    isTracking: z.boolean(),
+
+    startTime: z.date().nullable(),
+    pauseTime: z.date().nullable(),
+    endTime: z.date().nullable(),
+    lastStartTime: z.date().nullable(),
+    originalStartTime: z.date().nullable(),
   })
   .strict();
 
@@ -130,6 +165,17 @@ export const ProjectUpdateSchema = z
     archived: z.boolean().optional(),
     // fixed: use two args to satisfy this project's zod typings -> key and value as strings
     metadata: z.record(z.string(), z.string()).optional(),
+  })
+  .strict();
+
+// validate is TOTP exists and is enabled
+/**
+ * @AppSec
+ */
+export const TOTPUserSchema = z
+  .object({
+    totpEnabled: z.boolean().optional().default(false),
+    totpSecret: z.string().max(100).nullable().optional(),
   })
   .strict();
 

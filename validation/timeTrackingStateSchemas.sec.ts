@@ -66,7 +66,7 @@ export const SetProjectDataSchema = z.object({
   projectId: z.string().refine(isValidProjectId, {
     message: "Invalid projectId format",
   }),
-  projectData: ProjectStateSchema.partial(),
+  projectData: ProjectStateSchema,
   uid: z.string(),
 });
 
