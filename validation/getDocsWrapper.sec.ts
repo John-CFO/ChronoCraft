@@ -25,9 +25,7 @@ export function normalizeDocRaw(
   doc: DocumentSnapshot<any> | { id: string; data: () => any }
 ) {
   const rawData = typeof doc.data === "function" ? doc.data() : doc.data;
-  console.log("Normalized doc:", rawData);
   const out: any = { id: doc.id, ...rawData };
-  console.log("Normalized doc:", out);
   // Firestore Timestamp → JS Date for all familiar fields
   const timestampFields = [
     "createdAt",
@@ -73,7 +71,7 @@ export async function getValidatedDocs<T>(
     // assume CollectionReference
     snapshot = await getDocs(collectionOrSnapshot as CollectionReference);
   }
-  console.log("Fetched docs count:", snapshot.docs.length);
+
   const validated: T[] = [];
 
   for (const doc of (snapshot as any).docs) {
