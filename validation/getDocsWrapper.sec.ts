@@ -12,6 +12,7 @@ import {
   QuerySnapshot,
   DocumentData,
   DocumentSnapshot,
+  Timestamp,
 } from "firebase/firestore";
 import { z } from "zod";
 
@@ -20,30 +21,31 @@ import { z } from "zod";
 // This function normalizes a Firestore doc-like object so we can safely call schema on it.
 // Accepts both real firestore docs (doc.data() is function) and test-mocks
 // where data may be an object.
-
-// function normalizeDocRaw(doc: any) {
-//   const rawData = typeof doc.data === "function" ? doc.data() : doc.data;
-//   return { id: doc.id, ...rawData };
-// }
-
-function normalizeDocRaw(doc: any) {
+export function normalizeDocRaw(
+  doc: DocumentSnapshot<any> | { id: string; data: () => any }
+) {
   const rawData = typeof doc.data === "function" ? doc.data() : doc.data;
-
+  console.log("Normalized doc:", rawData);
   const out: any = { id: doc.id, ...rawData };
+  console.log("Normalized doc:", out);
+  // Firestore Timestamp → JS Date for all familiar fields
+  const timestampFields = [
+    "createdAt",
+    "startTime",
+    "pauseTime",
+    "endTime",
+    "lastStartTime",
+    "originalStartTime",
+  ];
 
-  // startDate normalisieren, falls Firestore Timestamp oder Date
-  if (out.startDate instanceof Date) {
-    out.startDate = out.startDate.toISOString().slice(0, 10); // YYYY-MM-DD
-  }
-  if (out.startDate?._seconds) {
-    out.startDate = new Date(out.startDate._seconds * 1000)
-      .toISOString()
-      .slice(0, 10);
-  }
-
-  // createdAt: Firestore Timestamp → JS Date
-  if (out.createdAt?._seconds) {
-    out.createdAt = new Date(out.createdAt._seconds * 1000);
+  for (const field of timestampFields) {
+    if (out[field] instanceof Timestamp) {
+      out[field] = out[field].toDate();
+    } else if (out[field]?._seconds) {
+      out[field] = new Date(out[field]._seconds * 1000);
+    } else if (!out[field]) {
+      out[field] = null; // fallback for nullable Dates
+    }
   }
 
   return out;
@@ -71,7 +73,7 @@ export async function getValidatedDocs<T>(
     // assume CollectionReference
     snapshot = await getDocs(collectionOrSnapshot as CollectionReference);
   }
-
+  console.log("Fetched docs count:", snapshot.docs.length);
   const validated: T[] = [];
 
   for (const doc of (snapshot as any).docs) {

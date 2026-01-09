@@ -101,7 +101,7 @@ const CustomCalendar = forwardRef<CustomCalendarRef, CustomCalendarProps>(
               minDate={"2024-01-01"}
               maxDate={"2030-12-31"}
               style={{
-                height: 350,
+                height: 360,
                 width: 430,
                 marginBottom: accessMode ? 95 : 50,
               }}

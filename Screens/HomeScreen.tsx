@@ -36,7 +36,7 @@ import {
   doc,
   deleteDoc,
   addDoc,
-  serverTimestamp,
+  Timestamp,
   getDoc,
 } from "firebase/firestore";
 import { getAuth, Auth } from "firebase/auth";
@@ -75,6 +75,7 @@ import {
   FirestoreProjectSchema,
   FirestoreUserSchema,
   FirestoreProject,
+  ProjectCreateSchema,
 } from "../validation/firestoreSchemas.sec";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -235,51 +236,36 @@ const HomeScreen: React.FC = () => {
 
   // function to load data from firestore
   useEffect(() => {
-    if (!canReadProjects || !serviceId) return;
-
     let cancelled = false;
     setIsLoading(true);
 
     const fetchProjects = async () => {
+      if (!canReadProjects || !serviceId) {
+        setIsLoading(false);
+        return;
+      }
       const user = FIREBASE_AUTH.currentUser;
       if (!user) {
         setIsLoading(false);
         return;
       }
 
+      const projectsCollection = collection(
+        FIREBASE_FIRESTORE,
+        "Users",
+        user.uid,
+        "Services",
+        serviceId,
+        "Projects"
+      );
       try {
-        // Check if the service exists
-        const serviceRef = doc(
-          FIREBASE_FIRESTORE,
-          "Users",
-          user.uid,
-          "Services",
-          serviceId
-        );
-        const serviceSnap = await getDoc(serviceRef);
-        if (!serviceSnap.exists()) {
-          setProjects([]);
-          setIsLoading(false);
-          return;
-        }
-
-        const projectsCollection = collection(
-          FIREBASE_FIRESTORE,
-          "Users",
-          user.uid,
-          "Services",
-          serviceId,
-          "Projects"
-        );
-
-        // validated projects from Firestore
         const validatedProjects = await getValidatedDocs(
           projectsCollection,
           FirestoreProjectSchema
         );
 
         if (cancelled) return;
-        // ensure createdAt is always set
+
         const projectsWithFallback = validatedProjects.map(
           (p: FirestoreProject) => ({
             ...p,
@@ -288,15 +274,13 @@ const HomeScreen: React.FC = () => {
         );
 
         setProjects(projectsWithFallback);
-      } catch (error) {
-        console.error("Error fetching projects", error);
+      } catch (err) {
+        console.error("Error fetching projects", err);
       } finally {
         if (!cancelled) setIsLoading(false);
       }
     };
-
     fetchProjects();
-
     return () => {
       cancelled = true;
     };
@@ -332,42 +316,53 @@ const HomeScreen: React.FC = () => {
         serviceId,
         "Projects"
       );
-
-      const newProjectRef = await addDoc(projectsCollection, {
+      // build the project object via schema (guaranteed valid)
+      const projectToAdd = ProjectCreateSchema.parse({
         uid: user.uid,
         name: newProjectName,
-        createdAt: serverTimestamp(),
-        startTime: null,
-        endTime: null,
-        pauseTime: null,
-        elapsedTime: 0,
-        hourlyRate: 0.0,
-        totalEarnings: 0,
-        originalStartTime: null,
-        lastStartTime: null,
+        createdAt: new Date(),
+        // Time tracking defaults
         timer: 0,
+        elapsedTime: 0,
+        hourlyRate: 0,
+        totalEarnings: 0,
+        isTracking: false,
+
+        startTime: null,
+        pauseTime: null,
+        endTime: null,
+        lastStartTime: null,
+        originalStartTime: null,
       });
 
-      // add project with fallback
-      const projectWithFallback = {
-        id: newProjectRef.id,
-        name: newProjectName,
-        createdAt: new Date(),
-      };
+      // Add to Firestore
+      const newProjectRef = await addDoc(projectsCollection, projectToAdd);
 
-      // validate project with zod schema
-      const validatedProject =
-        FirestoreProjectSchema.parse(projectWithFallback);
-
-      // state update with guaranteed values
+      // Update UI state
       setProjects((prev) => [
         ...prev,
         {
-          ...validatedProject,
-          createdAt: validatedProject.createdAt ?? new Date(),
+          id: newProjectRef.id,
+          uid: projectToAdd.uid,
+          name: projectToAdd.name,
+          createdAt:
+            projectToAdd.createdAt instanceof Timestamp
+              ? projectToAdd.createdAt.toDate()
+              : projectToAdd.createdAt,
+
+          timer: projectToAdd.timer,
+          elapsedTime: projectToAdd.elapsedTime,
+          hourlyRate: projectToAdd.hourlyRate,
+          totalEarnings: projectToAdd.totalEarnings,
+          isTracking: projectToAdd.isTracking,
+
+          startTime: projectToAdd.startTime,
+          pauseTime: projectToAdd.pauseTime,
+          endTime: projectToAdd.endTime,
+          lastStartTime: projectToAdd.lastStartTime,
+          originalStartTime: projectToAdd.originalStartTime,
         },
       ]);
-
       setNewProjectName("");
       setRefresh((r) => !r);
       Keyboard.dismiss();
