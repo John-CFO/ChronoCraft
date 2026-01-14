@@ -11,10 +11,6 @@ import { doc, setDoc, getDoc } from "firebase/firestore";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useService } from "../components/contexts/ServiceContext";
-import {
-  FirestoreWorkHoursSchema,
-  validateWorkHoursSchema,
-} from "../validation/firestoreSchemas.sec";
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -94,15 +90,7 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
         return;
       }
 
-      const raw = docSnap.data();
-      const parsed = FirestoreWorkHoursSchema.safeParse(raw);
-
-      if (!parsed.success) {
-        console.error("Invalid WorkHours doc:", parsed.error);
-        return;
-      }
-
-      const data = parsed.data;
+      const data = docSnap.data();
       set({
         currentDocId: data.currentDocId ?? today,
         lastUpdatedDate: data.lastUpdatedDate ?? today,
@@ -136,13 +124,6 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
         currentDocId: state.currentDocId,
         lastUpdatedDate: today,
       };
-
-      // validate the schema
-      const valid = validateWorkHoursSchema(stateToSave);
-      if (!valid) {
-        console.error("Invalid WorkHours state:", stateToSave);
-        return; // skip saving if invalid
-      }
 
       const docRef = doc(
         FIREBASE_FIRESTORE,

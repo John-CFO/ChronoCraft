@@ -30,12 +30,7 @@ import { formatTime } from "../components/WorkTimeCalc";
 import WorkTimeAnimation from "../components/WorkTimeAnimation";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
-import { FirestoreWorkHoursSchema } from "../validation/firestoreSchemas.sec";
-import { AsyncStorageWorkTrackerSchema } from "../validation/asyncStorageSchemas.sec";
-import {
-  getValidatedDoc,
-  getValidatedDocsFromSnapshot,
-} from "../validation/getDocsWrapper.sec";
+import { AsyncStorageWorkTrackerSchema } from "../validation/asyncStorageSchemas";
 
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -275,7 +270,6 @@ const WorkTimeTracker = () => {
       console.error("User ID not available.");
       return;
     }
-    // get the current work day
     try {
       const workDay = dayjs().tz(userTimeZone).format("YYYY-MM-DD");
       setCurrentDocId(workDay);
@@ -289,34 +283,25 @@ const WorkTimeTracker = () => {
         "WorkHours",
         workDay
       );
-      const validatedDoc = await getValidatedDoc(
-        workRef,
-        FirestoreWorkHoursSchema
-      );
 
-      if (validatedDoc) {
+      const docSnap = await getDoc(workRef);
+
+      if (docSnap.exists()) {
+        const validatedDoc = docSnap.data();
         const expectedHoursFromFirestore = validatedDoc.expectedHours;
-        // current accumulated duration (if exists)
         const prevDuration = validatedDoc.duration || 0;
 
         setAccumulatedDuration(prevDuration);
-        // set new start time, so that already tracked time is considered
         const newStartTime = new Date();
 
-        // validate the new start time before writing
         const dataToWrite = {
           startTime: newStartTime.toISOString(),
           expectedHours: expectedHoursFromFirestore,
           workDay,
           userId,
         };
-        const writeValidation = FirestoreWorkHoursSchema.safeParse(dataToWrite);
-        if (!writeValidation.success) {
-          console.error("Invalid data to write:", writeValidation.error);
-          return;
-        }
 
-        await setDoc(workRef, writeValidation.data, { merge: true });
+        await setDoc(workRef, dataToWrite, { merge: true });
         setStartWorkTime(newStartTime);
         setIsWorking(true);
       } else {
@@ -325,7 +310,7 @@ const WorkTimeTracker = () => {
           .showAlert("Attention", "First add your expected hours.");
       }
     } catch (error) {
-      console.error("WorkTracker: Start operation failed");
+      console.error("WorkTracker: Start operation failed", error);
       useAlertStore.getState().showAlert("Error", "Failed to start tracking");
     }
   };
@@ -333,7 +318,6 @@ const WorkTimeTracker = () => {
   // function to stop work
   const handleStopWork = async () => {
     if (!serviceId) return;
-    // stop the timer
     setIsWorking(false);
 
     const currentStartTime = startWorkTime;
@@ -345,28 +329,16 @@ const WorkTimeTracker = () => {
       return;
     }
 
-    // catch the end time
-    // calculate the duration of the current session
     try {
       const endTime = new Date();
       let sessionHours =
         (endTime.getTime() - currentStartTime.getTime()) / (1000 * 60 * 60);
-      // basic sanity clamp
-      if (sessionHours < 0 || sessionHours > 24) {
-        console.error("Invalid session hours calculated:", sessionHours);
-        sessionHours = 0; // or handle if needed
-      }
+      if (sessionHours < 0 || sessionHours > 24) sessionHours = 0;
 
       const totalHours = currentAccumulated + sessionHours;
       const roundedDuration = parseFloat(totalHours.toFixed(2));
+      if (roundedDuration < 0 || roundedDuration > 24 * 365) return;
 
-      // validate the final duration
-      if (roundedDuration < 0 || roundedDuration > 24 * 365) {
-        console.error("Invalid total duration:", roundedDuration);
-        return;
-      }
-
-      // update firestore with new data (use setDoc merge so it works when doc missing)
       const userId = getAuth().currentUser?.uid;
       if (userId) {
         const docIdToUse = currentDocId || dayjs().format("YYYY-MM-DD");
@@ -380,7 +352,6 @@ const WorkTimeTracker = () => {
           docIdToUse
         );
 
-        // validate the data before writing
         const dataToWrite = {
           endTime: endTime.toISOString(),
           duration: roundedDuration,
@@ -393,35 +364,24 @@ const WorkTimeTracker = () => {
           workDay: docIdToUse,
         };
 
-        const validation = FirestoreWorkHoursSchema.safeParse(dataToWrite);
-        if (!validation.success) {
-          console.error("Invalid Firestore data:", validation.error);
-          return;
-        }
-
-        await setDoc(workRef, validation.data, { merge: true });
-        // ensure local state reflects docId used
+        await setDoc(workRef, dataToWrite, { merge: true });
         setCurrentDocId(docIdToUse);
       }
 
-      // update local state after firestore update
       setAccumulatedDuration(roundedDuration);
       setElapsedTime(roundedDuration);
       setStartWorkTime(null);
-
-      // update UI
       setRefreshTrigger((prev) => prev + 1);
       loadState();
     } catch (error) {
-      console.error("Error in handleStopWork");
+      console.error("Error in handleStopWork", error);
       useAlertStore.getState().showAlert("Error", "Failed to stop tracking");
     }
   };
 
   // function to get the chart data from firestore
   const fetchChartData = async () => {
-    if (!serviceId) return;
-    if (!user) return [];
+    if (!serviceId || !user) return [];
 
     try {
       const snapshot = await getDocs(
@@ -435,20 +395,17 @@ const WorkTimeTracker = () => {
         )
       );
 
-      // validate the data with zod before returning
-      const validatedData = getValidatedDocsFromSnapshot(
-        snapshot,
-        FirestoreWorkHoursSchema
-      );
-
-      return validatedData.map((item) => ({
-        day: item.workDay || "",
-        expectedHours: item.expectedHours || 0,
-        overHours: item.overHours || 0,
-        elapsedTime: item.duration || 0,
-      }));
+      return snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          day: data.workDay || "",
+          expectedHours: data.expectedHours || 0,
+          overHours: data.overHours || 0,
+          elapsedTime: data.duration || 0,
+        };
+      });
     } catch (error) {
-      console.error("Error fetching chart data");
+      console.error("Error fetching chart data", error);
       return [];
     }
   };
@@ -465,11 +422,9 @@ const WorkTimeTracker = () => {
   // function to get the list data from firestore
   useEffect(() => {
     const fetchListData = async () => {
-      if (!serviceId) return;
-      if (!user) return;
+      if (!serviceId || !user) return;
 
       try {
-        // snapshot of firestore data
         const snapshot = await getDocs(
           collection(
             FIREBASE_FIRESTORE,
@@ -481,41 +436,26 @@ const WorkTimeTracker = () => {
           )
         );
 
-        // validate the data with zod
-        const validatedData = getValidatedDocsFromSnapshot(
-          snapshot,
-          FirestoreWorkHoursSchema
-        );
-
-        // condition to check if the snapshot is empty
-        if (snapshot.empty) {
-          return;
-        }
-
-        const formattedData = validatedData
-          // map the data to the expected format
-          .map((item) => {
-            // additionaly validate the data for next day
+        const formattedData = snapshot.docs
+          .map((doc) => {
+            const item = doc.data();
             if (!item.workDay || isNaN(new Date(item.workDay).getTime())) {
               console.warn("Invalid workDay in item:", item);
               return null;
             }
-
-            // return the validated data as expected
             return {
               day: new Date(item.workDay).toISOString().split("T")[0],
               workDay: new Date(item.workDay).toISOString().split("T")[0],
               expectedHours: item.expectedHours || 0,
               overHours: item.overHours || 0,
-              elapsedTime: item.duration || 0, // add elapsedTime from Firestore
+              elapsedTime: item.duration || 0,
             };
           })
-          // filter out null values
           .filter((item): item is DataPoint => item !== null);
 
         setData(formattedData);
       } catch (error) {
-        console.error("Error fetching list data");
+        console.error("Error fetching list data", error);
       }
     };
 
@@ -591,24 +531,22 @@ const WorkTimeTracker = () => {
         if (!saved) return;
         const parsed = JSON.parse(saved);
 
-        //validate the data with zod from AsyncStorage
+        // AsyncStorage Schema validation
         const validation = AsyncStorageWorkTrackerSchema.safeParse(parsed);
         if (!validation.success) {
           console.error("Invalid AsyncStorage data:", validation.error);
           await AsyncStorage.removeItem("workTimeTrackerState");
           return;
         }
+
         const validatedData = validation.data;
 
-        // restore basic data
         setAccumulatedDuration(validatedData.accumulatedDuration || 0);
         setElapsedTime(validatedData.elapsedTime || 0);
 
-        // continue only if the data is valid
-        // only resume if previously marked as running AND startTime available
         if (validatedData.isWorking && validatedData.startWorkTime) {
           const userId = getAuth().currentUser?.uid;
-          if (!userId) return; // no logged user -> no resume
+          if (!userId) return;
 
           const docIdToCheck =
             validatedData.currentDocId || dayjs().format("YYYY-MM-DD");
@@ -621,10 +559,9 @@ const WorkTimeTracker = () => {
             "WorkHours",
             docIdToCheck
           );
-          const snap = await getValidatedDoc(workRef, FirestoreWorkHoursSchema);
-
-          if (!snap) {
-            // inconsistent saved session -> not auto-resume
+          const docSnap = await getDoc(workRef);
+          const data = docSnap.exists() ? docSnap.data() : null;
+          if (!data) {
             console.warn(
               "Saved running session exists but no firestore doc -> not auto-resuming."
             );
@@ -632,7 +569,6 @@ const WorkTimeTracker = () => {
             return;
           }
 
-          // safe resume
           const startTime = new Date(validatedData.startWorkTime);
           const now = new Date();
           const elapsedSince =
@@ -642,7 +578,7 @@ const WorkTimeTracker = () => {
 
           setAccumulatedDuration(newAccumulated);
           setElapsedTime(newAccumulated);
-          setStartWorkTime(new Date()); // set new startpoint to resume
+          setStartWorkTime(new Date());
           setIsWorking(true);
           setCurrentDocId(docIdToCheck);
         }

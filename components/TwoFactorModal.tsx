@@ -18,27 +18,14 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import QRCode from "react-native-qrcode-svg";
 import { getAuth } from "firebase/auth";
-import {
-  doc,
-  setDoc,
-  getDoc,
-  updateDoc,
-  deleteField,
-} from "firebase/firestore";
+import { doc, getDoc, updateDoc, deleteField } from "firebase/firestore";
 
 import { FIREBASE_APP, FIREBASE_FIRESTORE } from "../firebaseConfig";
-import {
-  generateSecret,
-  generateOtpAuthUrl,
-  verifyToken,
-} from "../validation/utils/totp";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import OTPInput from "./OTPInput";
 import DismissKeyboard from "../components/DismissKeyboard";
 import { useDotAnimation } from "../components/DotAnimation";
-import { TOTPUserSchema } from "../validation/firestoreSchemas.sec";
-import { TotpCodeSchema } from "../validation/authSchemas";
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -92,26 +79,22 @@ const TwoFactorModal: React.FC<Props> = ({
   useEffect(() => {
     (async () => {
       if (!user) {
-        setInitialized(true); // no User -> initialized
+        setInitialized(true);
         return;
       }
       try {
         const userRef = doc(FIREBASE_FIRESTORE, "Users", user.uid);
         const snap = await getDoc(userRef);
         if (snap.exists()) {
-          const raw = snap.data();
-          // validate the data from firestore
-          const parsed = TOTPUserSchema.safeParse(raw);
-          if (!parsed.success) {
-            console.warn("Invalid TOTP user data", parsed.error);
-            setIsEnrolled(false);
-          } else {
-            setIsEnrolled(parsed.data.totpEnabled);
-            setSecret(parsed.data.totpSecret ?? null);
-          }
+          const data = snap.data();
+          // minimal: check only if TOTPenabled exists
+          setIsEnrolled(!!data?.totpEnabled);
+          // don't set secret locally
+          setSecret(null);
         }
       } catch (e) {
         console.error("Error loading TOTP enrollment", e);
+        setIsEnrolled(false);
       } finally {
         setInitialized(true);
       }
@@ -124,24 +107,16 @@ const TwoFactorModal: React.FC<Props> = ({
   // function to start TOTP enrollment
   const startEnroll = async () => {
     if (!user) return;
+
     setLoading(true);
-    // generate secret
     try {
-      const s = await generateSecret();
-      setSecret(s);
-      const url = generateOtpAuthUrl(
-        `ChronoCraft:${user.email}`,
-        "ChronoCraft",
-        s
-      );
-      setOtpUrl(url);
-      // use InteractionManager to show the alert after the UI has been updated
+      // Info to user that TOTP is now handled by the backend
       InteractionManager.runAfterInteractions(() => {
         useAlertStore
           .getState()
           .showAlert(
-            "Scan QR",
-            "Scan the QR code with Google Authenticator / Authy or enter the secret key (TOTP) manually."
+            "Enroll TOTP",
+            "TOTP enrollment is now handled by the backend. Please follow the instructions from the server."
           );
       });
     } catch (e) {
@@ -149,7 +124,7 @@ const TwoFactorModal: React.FC<Props> = ({
       InteractionManager.runAfterInteractions(() => {
         useAlertStore
           .getState()
-          .showAlert("Error", "Cannot generate TOTP secret.");
+          .showAlert("Error", "Cannot start TOTP enrollment.");
       });
     } finally {
       setLoading(false);
@@ -158,64 +133,27 @@ const TwoFactorModal: React.FC<Props> = ({
 
   // function to confirm TOTP
   const confirmEnroll = async () => {
-    if (!user || !secret) return;
+    if (!user) return;
 
     setLoading(true);
-    const start = Date.now();
-    let success = false;
-
     try {
-      // validate token
-      const parsed = TotpCodeSchema.safeParse(tokenInput.trim());
-      if (!parsed.success) {
-        setLoading(false);
+      // Backend should confirm TOTP
+      // Frontend gives only feedback
+      InteractionManager.runAfterInteractions(() => {
         useAlertStore
           .getState()
           .showAlert(
-            "Invalid Code",
-            parsed.error.issues[0]?.message ?? "Code must be 6 digits"
+            "TOTP Enrollment",
+            "Please confirm your TOTP via the backend service."
           );
-        return;
-      }
-      // verify token against secret
-      const ok = verifyToken(secret!, parsed.data);
-      if (!ok) throw new Error("INVALID_CODE");
-      // update firestore user
-      await setDoc(
-        doc(FIREBASE_FIRESTORE, "Users", user.uid),
-        {
-          totpEnabled: true,
-          totpSecret: secret,
-        },
-        { merge: true }
-      );
-      success = true;
+      });
     } catch (err) {
       console.error("confirmEnroll error", err);
     } finally {
-      // forced min delay
-      const elapsed = Date.now() - start;
-      const remaining = MIN_ACTION_DURATION_MS - elapsed;
-      if (remaining > 0) await wait(remaining);
-
-      if (!isMounted.current) return;
-
       setLoading(false);
-
-      if (success) {
-        useAlertStore
-          .getState()
-          .showAlert("2FA activated", "TOTP successfully activated.");
-        setIsEnrolled(true);
-        setSecret(null);
-        setTokenInput("");
-        setOtpUrl(null);
-        onClose();
-      } else {
-        useAlertStore
-          .getState()
-          .showAlert("Error", "Code invalid oder expired.");
-      }
+      setTokenInput("");
+      setOtpUrl(null);
+      onClose();
     }
   };
 
@@ -224,59 +162,24 @@ const TwoFactorModal: React.FC<Props> = ({
     if (!user) return;
 
     setLoading(true);
-    const start = Date.now();
-    let success = false;
-    let warningMessage: string | null = null;
-
     try {
       const ref = doc(FIREBASE_FIRESTORE, "Users", user.uid);
       await updateDoc(ref, {
-        totpEncrypted: deleteField(),
-        totpSecret: deleteField(),
         totpEnabled: false,
+        totpSecret: deleteField(),
+        totpEncrypted: deleteField(),
       });
 
-      // verify the update was successful by reading the doc
-      const snap = await getDoc(ref);
-      const rawAfter = snap.exists() ? snap.data() : {};
-      const parsedAfter = TOTPUserSchema.safeParse(rawAfter);
-      if (!parsedAfter.success) {
-        console.warn("Unexpected Users doc after delete:", parsedAfter.error);
-        warningMessage = "Unexpected user doc shape after delete.";
-        success = false;
-      } else {
-        const after = parsedAfter.data;
-        if (after.totpSecret || (rawAfter as any).totpEncrypted) {
-          // totpEncrypted might be stored differently; check raw field presence too
-          warningMessage =
-            "TOTP secret could not be removed. Check Firestore rules/permissions.";
-          success = false;
-        } else {
-          success = true;
-        }
-      }
+      // Eset success directly
+      setIsEnrolled(false);
+      useAlertStore
+        .getState()
+        .showAlert("2FA deactivated", "TOTP successfully disabled.");
     } catch (err) {
       console.error("disableTotp error", err);
+      useAlertStore.getState().showAlert("Error", "Cannot disable TOTP.");
     } finally {
-      // forced min delay
-      const elapsed = Date.now() - start;
-      const remaining = MIN_ACTION_DURATION_MS - elapsed;
-      if (remaining > 0) await wait(remaining);
-
-      if (!isMounted.current) return;
-
       setLoading(false);
-
-      if (success) {
-        useAlertStore
-          .getState()
-          .showAlert("2FA deactivated", "TOTP successfully disabled.");
-        setIsEnrolled(false);
-      } else if (warningMessage) {
-        useAlertStore.getState().showAlert("Warning", warningMessage);
-      } else {
-        useAlertStore.getState().showAlert("Error", "Cannot disable TOTP.");
-      }
     }
   };
 

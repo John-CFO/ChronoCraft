@@ -11,8 +11,6 @@ import { getAuth } from "firebase/auth";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useService } from "../components/contexts/ServiceContext";
-import { getValidatedDocFromSnapshot } from "../validation/getDocsWrapper.sec";
-import { FirestoreProjectSchema } from "../validation/firestoreSchemas.sec";
 import { useAlertStore } from "./services/customAlert/alertStore";
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -42,16 +40,15 @@ export function usePreventBackWhileTracking(projectId: string) {
     const unsubscribe = onSnapshot(
       docRef,
       (docSnap) => {
-        // validate the project data with zod
-        const data = getValidatedDocFromSnapshot(
-          docSnap,
-          FirestoreProjectSchema
-        );
+        if (!docSnap.exists()) return;
+
+        const data = docSnap.data();
         if (!data) return;
 
-        isTrackingRef.current = data.isTracking ?? false;
+        // minimal check for isTracking
+        isTrackingRef.current =
+          typeof data.isTracking === "boolean" ? data.isTracking : false;
       },
-      // show an alert if an error occurs
       (error) => {
         useAlertStore
           .getState()

@@ -28,7 +28,7 @@ import { sanitizeMaxWorkHours } from "./InputSanitizers";
 import useDebounceValue from "../hooks/useDebounceValue";
 import { NotificationManager } from "./services/PushNotifications";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
-import { MaxWorkHoursSchema } from "../validation/progressSchemas.sec";
+import { MaxWorkHoursSchema } from "../validation/progressSchemas";
 
 ///////////////////////////////////////////////////////////////////////////////////////
 

@@ -24,7 +24,6 @@ import WorkHoursState from "../components/WorkHoursState";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { sanitizeHours } from "./InputSanitizers";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
-import { FirestoreWorkHoursSchema } from "../validation/firestoreSchemas.sec";
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -86,29 +85,13 @@ const WorkHoursInput = () => {
 
         if (docSnap.exists()) {
           const data = docSnap.data();
-          const parsed = FirestoreWorkHoursSchema.safeParse(data);
 
-          if (parsed.success) {
-            // validate the data with zod
-            const validatedData = parsed.data;
-            setExpectedHours(validatedData.expectedHours?.toString() || "0");
-            setDocExists(true);
-            setGlobalDocId(docRef.id);
-          } else {
-            // invalid data detected -> use default values
-            console.error("Invalid Firestore document:", parsed.error);
-            useAlertStore
-              .getState()
-              .showAlert(
-                "Data Error",
-                "Invalid work hours data detected. Using default values.",
-                [{ text: "OK", style: "default" }]
-              );
-            // Fallback to default values
-            setExpectedHours("0");
-            setDocExists(false);
-            setGlobalDocId(null);
-          }
+          // check if expectedHours exists
+          const expectedHours = Number(data?.expectedHours) || 0;
+
+          setExpectedHours(expectedHours.toString());
+          setDocExists(true);
+          setGlobalDocId(docRef.id);
         } else {
           // doc does not exist -> use default values
           setExpectedHours("0");
@@ -117,7 +100,6 @@ const WorkHoursInput = () => {
         }
       } catch (error) {
         console.error("Error fetching hours:", error);
-        // show error alert
         useAlertStore
           .getState()
           .showAlert("Error", "Failed to load work hours. Please try again.", [
@@ -206,12 +188,6 @@ const WorkHoursInput = () => {
   const handleSaveMinHours = async () => {
     if (!serviceId) return;
     const hours = parseFloat(tempExpectedHours);
-    // console.log(
-    //   "[DEBUG save] tempExpectedHours:",
-    //   tempExpectedHours,
-    //   "parsed:",
-    //   hours
-    // );
     if (!tempExpectedHours || isNaN(hours) || hours <= 0) {
       useAlertStore
         .getState()
@@ -233,7 +209,6 @@ const WorkHoursInput = () => {
       }
 
       const workDay = dayjs().tz(userTimeZone).format("YYYY-MM-DD");
-      // console.log("[DEBUG save] userId:", userId, "workDay:", workDay);
       const docRef = doc(
         FIREBASE_FIRESTORE,
         "Users",
@@ -244,177 +219,83 @@ const WorkHoursInput = () => {
         workDay
       );
 
-      // validate the user data with zod
-      const dataToSave = {
-        userId,
-        expectedHours: hours,
-        workDay,
-      };
-      const validation = FirestoreWorkHoursSchema.safeParse(dataToSave);
-      if (!validation.success) {
-        console.error("Data validation failed:", validation.error);
+      const existingSnap = await getDoc(docRef);
+      const existingData = existingSnap.exists() ? existingSnap.data() : {};
+      const prevExpected = Number(existingData.expectedHours) || 0;
+      const duration = Number(existingData.duration) || 0;
+
+      if (prevExpected !== hours && duration > 0) {
+        if (isWorking) {
+          useAlertStore
+            .getState()
+            .showAlert(
+              "Tracker is running",
+              `You have already ${duration.toFixed(
+                2
+              )}h tracked. While tracker is running, the expected hours can't be changed.`,
+              [{ text: "OK", style: "default" }]
+            );
+          setSaving(false);
+          return;
+        }
+
+        // Confirmation if tracker is not running
         useAlertStore
           .getState()
           .showAlert(
-            "Validation Error",
-            "Invalid data format. Please check your input.",
-            [{ text: "OK", style: "default" }]
+            "Change Expected Hours",
+            `You have already ${duration.toFixed(
+              2
+            )}h tracked. Changing expected hours will not affect tracked time. Continue?`,
+            [
+              {
+                text: "Cancel",
+                style: "cancel",
+                onPress: () => setSaving(false),
+              },
+              {
+                text: "Continue",
+                style: "destructive",
+                onPress: async () => {
+                  try {
+                    await recalcAndSaveForDay(docRef, duration, hours, {
+                      ...existingData,
+                      expectedHours: hours,
+                      workDay,
+                      userId,
+                    });
+                    setCurrentDocId(docRef.id);
+                    setExpectedHours(hours.toString());
+                    setTempExpectedHours("");
+                    setDocExists(true);
+                    setGlobalDocId(docRef.id);
+                  } catch (err) {
+                    console.error(err);
+                    useAlertStore
+                      .getState()
+                      .showAlert(
+                        "Error",
+                        "Error updating data. Please try again.",
+                        [{ text: "OK", style: "default" }]
+                      );
+                  } finally {
+                    setSaving(false);
+                  }
+                },
+              },
+            ]
           );
-        setSaving(false);
-        return;
+        return; // Important: exit here because onPress is async
       }
 
-      // get existing data
-      const existingSnap = await getDoc(docRef);
-
-      if (existingSnap.exists()) {
-        const data = existingSnap.data();
-        // console.log("[DEBUG save] existingSnap:", data);
-        const prevExpected = Number(data.expectedHours) || 0;
-        const duration = Number(data.duration) || 0;
-        // console.log(
-        //   "[DEBUG save] prevExpected:",
-        //   prevExpected,
-        //   "duration:",
-        //   duration,
-        //   "newHours:",
-        //   hours
-        // );
-
-        // check if expected hours has changed
-        if (prevExpected !== hours && duration > 0) {
-          // console.log(
-          //   "[DEBUG save] change requested on tracked day. isWorking =",
-          //   isWorking
-          // );
-          // check if tracker is running
-          const trackerRunning = isWorking;
-
-          if (trackerRunning) {
-            // Custom Alert: block change
-            useAlertStore
-              .getState()
-              .showAlert(
-                "Tracker is running",
-                `You have already ${duration.toFixed(
-                  2
-                )}h tracked. While tracker is running, the expected hours can't be changed.`,
-                [{ text: "OK", style: "default" }]
-              );
-
-            setSaving(false);
-            return; // change is blocked
-          } else {
-            // Tracker is not runnig: Warning + Confirmation
-            useAlertStore
-              .getState()
-              .showAlert(
-                "Change Expected Hours",
-                `You have already ${duration.toFixed(
-                  2
-                )}h tracked. If you change your expected hours from ${prevExpected}h to ${hours}h the Over -/Worked time will new calculated. Tracked time will not be changed. Continue?`,
-                [
-                  {
-                    text: "Delete",
-                    style: "cancel",
-                    onPress: () => {
-                      setSaving(false);
-                    },
-                  },
-                  {
-                    text: "Continue",
-                    style: "destructive",
-                    onPress: async () => {
-                      setSaving(true);
-                      try {
-                        // validate the user data with zod
-                        const recalcData = {
-                          ...data,
-                          expectedHours: hours,
-                          workDay,
-                          userId,
-                        };
-
-                        const recalcValidation =
-                          FirestoreWorkHoursSchema.safeParse(recalcData);
-                        if (!recalcValidation.success) {
-                          console.error(
-                            "Recalc data validation failed:",
-                            recalcValidation.error
-                          );
-                          useAlertStore
-                            .getState()
-                            .showAlert(
-                              "Validation Error",
-                              "Invalid data for recalculation.",
-                              [{ text: "OK", style: "default" }]
-                            );
-                          return;
-                        }
-
-                        await recalcAndSaveForDay(
-                          docRef,
-                          duration,
-                          hours,
-                          recalcValidation.data
-                        );
-                        setCurrentDocId(docRef.id);
-                        setExpectedHours(hours.toString());
-                        setTempExpectedHours("");
-                        setDocExists(true);
-                        setGlobalDocId(docRef.id);
-                      } catch (err) {
-                        useAlertStore
-                          .getState()
-                          .showAlert(
-                            "Error",
-                            "Error by update the data. Please try again.",
-                            [{ text: "OK", style: "default" }]
-                          );
-                        console.error(err);
-                      } finally {
-                        setSaving(false);
-                      }
-                    },
-                  },
-                ]
-              );
-
-            return; // Important: return setSaving(false) here, because onPress is async
-          }
-        }
-      }
-
-      // No conflict: write (merge) expected hours
-      await setDoc(docRef, validation.data, { merge: true });
-
-      // If duration already exists (e. g. resume), recalculate once (no race)
-      const finalSnap = await getDoc(docRef);
-      const finalData = finalSnap.exists() ? finalSnap.data() : {};
-      const durationFinal = Number(finalData.duration) || 0;
-      if (durationFinal > 0) {
-        // validate the user data with zod for the final update
-        const finalDataToValidate = {
-          ...finalData,
-          expectedHours: hours,
-          workDay,
-          userId,
-        };
-
-        const finalValidation =
-          FirestoreWorkHoursSchema.safeParse(finalDataToValidate);
-        if (finalValidation.success) {
-          await recalcAndSaveForDay(
-            docRef,
-            durationFinal,
-            hours,
-            finalValidation.data
-          );
-        }
-      }
-      // Simple unique update - UI-local states
+      // Save normally (no conflict)
+      await setDoc(
+        docRef,
+        { ...existingData, expectedHours: hours, workDay, userId },
+        { merge: true }
+      );
       setCurrentDocId(docRef.id);
-      setExpectedHours?.(hours.toString());
+      setExpectedHours(hours.toString());
       setTempExpectedHours("");
       setDocExists(true);
       setGlobalDocId(docRef.id);
@@ -431,7 +312,6 @@ const WorkHoursInput = () => {
       setSaving(false);
     }
   };
-
   return (
     <>
       {/* DetailsScreen copilot tour step 2 */}

@@ -1,4 +1,4 @@
-//////////////////////////////vacationSchemas.sec.ts////////////////////////////
+//////////////////////////////vacationSchemas.ts////////////////////////////
 
 // This file validates user data coming from the VacationForm
 
@@ -41,7 +41,7 @@ export const MarkedDatesSchema = z.record(
  * - markedDates: map validated by MarkedDatesSchema
  */
 /**
- * @AppSec
+ * @AppSec // only for CLI-Purpose, kno real Security-Enforcement
  */
 export const VacationInputSchema = z.object({
   uid: z.string(),
@@ -51,14 +51,15 @@ export const VacationInputSchema = z.object({
 export type VacationInput = z.infer<typeof VacationInputSchema>;
 
 // Schema for Firestore-stored Vacation document
-const timestampToDateOptional = z.preprocess((val) => {
-  if (val == null) return undefined;
+const timestampToDateRequired = z.preprocess((val) => {
+  if (val == null) return undefined; // empty Value fails later
   if ((val as any)?.toDate && typeof (val as any).toDate === "function")
     return (val as any).toDate();
   if (val instanceof Date) return val;
   if (typeof val === "number") return new Date(val);
-  return undefined;
-}, z.date().optional());
+  // All others: *not* set to undefined, rather return, to safeParse fails
+  return val;
+}, z.date());
 
 export const FirestoreVacationSchema = z.object({
   id: z.string().optional(),
@@ -67,7 +68,7 @@ export const FirestoreVacationSchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "startDate must be YYYY-MM-DD"),
   markedDates: MarkedDatesSchema,
-  createdAt: timestampToDateOptional,
+  createdAt: timestampToDateRequired,
   reminderDuration: z.number().optional(),
 });
 export type FirestoreVacation = z.infer<typeof FirestoreVacationSchema>;
