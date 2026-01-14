@@ -28,7 +28,7 @@ import { useAlertStore } from "./services/customAlert/alertStore";
 import { useDotAnimation } from "../components/DotAnimation";
 import { sanitizeComment } from "./InputSanitizers";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
-import { NoteInputSchema } from "../validation/noteSchemas.sec";
+import { NoteInputSchema } from "../validation/noteSchemas";
 
 //////////////////////////////////////////////////////////////////////////////////////////
 

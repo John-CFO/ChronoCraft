@@ -10,21 +10,16 @@ import React from "react";
 import { AntDesign } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { doc, deleteDoc } from "firebase/firestore";
-import { z } from "zod";
 
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { useService } from "../components/contexts/ServiceContext";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
-import { FirestoreNoteSchema } from "../validation/noteSchemas.sec";
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-// use zod type for notes
-type Note = z.infer<typeof FirestoreNoteSchema>;
-
 interface NoteCardProps {
-  note: Note;
+  note: { id: string; uid: string; comment: string; createdAt: Date }; // minimal type
   projectId: string;
   onDelete: (noteId: string) => void;
 }
@@ -49,6 +44,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
   // function to handle note deletion in firestore
   const handleDeletComment = async () => {
     if (!serviceId) return;
+
     useAlertStore
       .getState()
       .showAlert(
@@ -63,24 +59,13 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
           {
             text: "Delete",
             onPress: async () => {
-              // condition to check if user is authenticated
               const user = FIREBASE_AUTH.currentUser;
               if (!user) {
                 console.error("User is not authenticated.");
                 return;
               }
 
-              // validate note - check if note structure is valid
-              const noteValidation = FirestoreNoteSchema.safeParse(note);
-              if (!noteValidation.success) {
-                console.error("Invalid note structure:", noteValidation.error);
-                useAlertStore
-                  .getState()
-                  .showAlert("Error", "Invalid note data");
-                return;
-              }
-
-              // check if user is authorized to delete the note
+              // minimal authorization check
               if (note.uid !== user.uid) {
                 console.error("User not authorized to delete this note");
                 useAlertStore
@@ -89,7 +74,6 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
                 return;
               }
 
-              // try to delete the note from firestore whith the note id and useRef
               try {
                 const noteDocRef = doc(
                   FIREBASE_FIRESTORE,
@@ -103,7 +87,6 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
                   note.id
                 );
                 await deleteDoc(noteDocRef);
-                // console.log("Note deleted successfully.");
                 onDelete(note.id);
               } catch (error) {
                 console.error("Error deleting note");

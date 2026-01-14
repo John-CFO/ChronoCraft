@@ -21,7 +21,6 @@ import ErrorBoundary from "../components/ErrorBoundary";
 import TourCard from "../components/services/copilotTour/TourCard";
 import { useCopilotOffset } from "../components/services/copilotTour/CopilotOffset";
 import CustomTooltip from "../components/services/copilotTour/CustomToolTip";
-import { FirestoreUserSchema } from "../validation/firestoreSchemas.sec";
 
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -72,22 +71,13 @@ const WorkHoursScreen: React.FC<WorkHoursScreenRouteProps> = () => {
         const docRef = doc(FIREBASE_FIRESTORE, "Users", userId);
         const docSnap = await getDoc(docRef);
 
-        if (docSnap.exists()) {
-          const raw = docSnap.data();
-          // validate the user data with zod
-          const parsed = FirestoreUserSchema.safeParse(raw);
-          if (!parsed.success) {
-            console.error(
-              "Invalid user data in WorkHoursScreen:",
-              parsed.error
-            );
-            setShowTourCard(false);
-            return;
-          }
-          setShowTourCard(parsed.data.hasSeenWorkHoursTour === false);
-        } else {
+        if (!docSnap.exists()) {
           setShowTourCard(false);
+          return;
         }
+
+        const data = docSnap.data();
+        setShowTourCard(data?.hasSeenWorkHoursTour === false);
       };
 
       fetchTourStatus();

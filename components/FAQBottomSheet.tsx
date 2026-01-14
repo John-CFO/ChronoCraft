@@ -35,8 +35,6 @@ import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useDotAnimation } from "../components/DotAnimation";
 import { useAccessibilityStore } from "./services/accessibility/accessibilityStore";
-import { isValidFirestoreDocId } from "../validation/firestoreSchemas.sec";
-import { deleteSubcollections } from "../validation/utils/firestoreDeleteHelpers";
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -115,7 +113,6 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
 
   // function to delete account (returns boolean success flag)
   const handleDeleteAccount = async (): Promise<boolean> => {
-    // require password input
     if (!password?.trim()) {
       useAlertStore
         .getState()
@@ -126,8 +123,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
       return false;
     }
 
-    // basic auth sanity checks
-    if (!user || !user.uid || !isValidFirestoreDocId(user.uid)) {
+    if (!user || !user.uid) {
       useAlertStore
         .getState()
         .showAlert("Error", "No authenticated user found.");
@@ -145,20 +141,19 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
         return false;
       }
 
-      // reauthenticate user
+      // Reauthenticate user
       const credential = EmailAuthProvider.credential(
         currentUser.email ?? "",
         password
       );
       await reauthenticateWithCredential(currentUser, credential);
 
-      // delete profile image (if storage enabled) — non-fatal
+      // Delete profile image (optional)
       if (process.env.FIREBASE_STORAGE_ENABLED !== "false") {
         try {
           const st = getStorage();
           const imgRef = storageRef(st, `profilePictures/${currentUser.uid}`);
           await deleteObject(imgRef).catch((e) => {
-            // ignore not-found; surface other storage errors as a benign warning
             if (e?.code && e.code !== "storage/object-not-found") {
               useAlertStore
                 .getState()
@@ -169,54 +164,32 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
             }
           });
         } catch {
-          // ignore storage subsystem errors — do not block account deletion
+          // ignore
         }
       }
 
-      // fetch user's services and delete nested data using extracted helpers
-      const servicesColRef = collection(
-        FIREBASE_FIRESTORE,
-        "Users",
-        currentUser.uid,
-        "Services"
+      // Delete services & nested docs without extra validation
+      const servicesSnap = await getDocs(
+        collection(FIREBASE_FIRESTORE, "Users", currentUser.uid, "Services")
       );
-      const servicesSnap = await getDocs(servicesColRef);
 
       for (const serviceDoc of servicesSnap.docs) {
-        // validate service doc id before using it
-        if (!isValidFirestoreDocId(serviceDoc.id)) {
-          // skip invalid doc ids (defensive)
-          continue;
-        }
-
-        // delete allowed subcollections safely
         try {
-          await deleteSubcollections(
-            FIREBASE_FIRESTORE,
-            ["Users", currentUser.uid, "Services", serviceDoc.id],
-            ["Projects", "Vacations", "WorkHours"]
-          );
-        } catch {
-          useAlertStore
-            .getState()
-            .showAlert("Error", "Failed to remove service subcollections.");
-          setLoading(false);
-          return false;
-        }
+          // Optional: defensive check
+          if (!serviceDoc.id) continue;
 
-        // delete the service document itself
-        try {
+          // delete service doc itself
           await deleteDoc(serviceDoc.ref);
         } catch {
           useAlertStore
             .getState()
-            .showAlert("Error", "Failed to delete service data.");
+            .showAlert("Error", "Failed to remove service data.");
           setLoading(false);
           return false;
         }
       }
 
-      // delete user document
+      // Delete user document
       try {
         await deleteDoc(doc(FIREBASE_FIRESTORE, "Users", currentUser.uid));
       } catch {
@@ -227,7 +200,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
         return false;
       }
 
-      // finally delete auth user
+      // Delete auth user
       try {
         await deleteUser(currentUser);
       } catch (e: any) {
@@ -241,7 +214,6 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
         return false;
       }
 
-      // success
       useAlertStore
         .getState()
         .showAlert("Success", "Your account has been deleted.");
@@ -249,7 +221,6 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
       setLoading(false);
       return true;
     } catch (error: any) {
-      // surface a sanitized error message to user, avoid leaking internals
       useAlertStore
         .getState()
         .showAlert(
@@ -262,7 +233,6 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
       return false;
     }
   };
-
   // function to handle password visibility toggle
   const deleteAccountVisibility = () =>
     setPasswordVisibility(!passwordVisibility);

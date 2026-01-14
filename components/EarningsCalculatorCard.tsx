@@ -26,10 +26,7 @@ import { useStore } from "./TimeTrackingState";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { sanitizeRateInput } from "./InputSanitizers";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
-import {
-  FirestoreEarningsSchema,
-  HourlyRateSchema,
-} from "../validation/earningsSchemas.sec";
+import { HourlyRateSchema } from "../validation/earningsSchemas";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -101,29 +98,39 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
       );
 
       const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        // authorization check: make sure the user is authorized to access this project
-        if (data.uid !== user.uid) {
-          console.error("User not authorized to access this project");
-          return;
-        }
+      if (!docSnap.exists()) return;
 
-        // validate the earnings data
-        const validationResult = FirestoreEarningsSchema.safeParse(data);
-        if (validationResult.success) {
-          const { hourlyRate = 0, totalEarnings = 0 } = validationResult.data;
-          setHourlyRate(projectId, hourlyRate);
-          useStore.getState().setTotalEarnings(projectId, totalEarnings);
-        } else {
-          console.warn("Invalid earnings data structure");
-          // fail secure: set standard values
-          setHourlyRate(projectId, 0);
-          useStore.getState().setTotalEarnings(projectId, 0);
-        }
+      const data = docSnap.data();
+
+      // authorization check
+      if (data.uid !== user.uid) {
+        console.error("User not authorized to access this project");
+        return;
       }
+
+      // hourlyRate: validate client input
+      let hourlyRate = 0;
+      if (
+        typeof data.hourlyRate === "number" &&
+        data.hourlyRate >= 0 &&
+        data.hourlyRate <= 10000
+      ) {
+        hourlyRate = data.hourlyRate;
+      } else {
+        console.warn("Invalid hourlyRate value, using 0");
+      }
+
+      // totalEarnings: adopt directly, fallback 0
+      const totalEarnings =
+        typeof data.totalEarnings === "number" ? data.totalEarnings : 0;
+
+      setHourlyRate(projectId, hourlyRate);
+      useStore.getState().setTotalEarnings(projectId, totalEarnings);
     } catch (error) {
       console.error("Error fetching earnings data:", error);
+      // fail safe
+      setHourlyRate(projectId, 0);
+      useStore.getState().setTotalEarnings(projectId, 0);
     }
   }, [projectId, setHourlyRate, serviceId]);
 
