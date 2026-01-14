@@ -1,4 +1,4 @@
-/////////////////////////authSchemas.sec.ts////////////////////////
+///////////////////////// authSchemas.ts ////////////////////////
 
 // This file is used to validate user inputs for login and registration
 
@@ -10,7 +10,7 @@ import { z } from "zod";
 
 // validate login schema
 /**
- * @AppSec
+ * @AppSec // only for CLI-Purpose, kno real Security-Enforcement
  */
 export const LoginInputSchema = z.object({
   email: z.email({ message: "Please enter a valid E-Mail." }),
@@ -19,7 +19,7 @@ export const LoginInputSchema = z.object({
 
 // validate register schema
 /**
- * @AppSec
+ * @AppSec // only for CLI-Purpose, kno real Security-Enforcement
  */
 export const RegisterInputSchema = z.object({
   email: z.email({ message: "Please enter a valid E-Mail." }),
@@ -37,7 +37,7 @@ export const RegisterInputSchema = z.object({
 
 // validate totp schema
 /**
- * @AppSec
+ * @AppSec // only for CLI-Purpose, kno real Security-Enforcement
  */
 export const TotpCodeSchema = z
   .string()

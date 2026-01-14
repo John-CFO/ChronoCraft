@@ -37,7 +37,7 @@ export interface ProjectState {
   isRestoring: boolean;
 }
 
-interface TimeTrackingState {
+export interface TimeTrackingState {
   setTimerAndEarnings: any;
   set: any;
   projects: { [key: string]: ProjectState };

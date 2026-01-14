@@ -1,22 +1,27 @@
-///////////////////fetchNotesHook.ts//////////////////////////
+/////////////////// fetchNotesHook.ts //////////////////////////
 
 import { useState, useEffect } from "react";
 import { collection, getDocs, query } from "firebase/firestore";
 
-import {
-  FirestoreNoteSchema,
-  FirestoreNote,
-} from "../validation/noteSchemas.sec";
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
-import { isValidFirestoreDocId } from "../validation/firestoreSchemas.sec";
 import { useService } from "../components/contexts/ServiceContext";
+
+//////////////////////////////////////////////////////////////
+
+type Note = {
+  id: string;
+  title?: string;
+  content?: string;
+  createdAt?: any;
+  updatedAt?: any;
+};
 
 //////////////////////////////////////////////////////////////
 
 // define the useNotes hook
 export const useNotes = (projectId: string) => {
   // states
-  const [notes, setNotes] = useState<FirestoreNote[]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
   const { serviceId } = useService();
@@ -29,21 +34,13 @@ export const useNotes = (projectId: string) => {
   // fetch notes hook
   useEffect(() => {
     const fetchNotes = async () => {
-      if (!serviceId) return;
+      if (!serviceId || !projectId) return;
+
       setLoading(true);
       setError(null);
 
-      // validate projectId
-      if (!projectId || !isValidFirestoreDocId(projectId)) {
-        setError(new Error("Invalid project ID"));
-        setLoading(false);
-        return;
-      }
-
       const user = FIREBASE_AUTH.currentUser;
-
-      // validate user
-      if (!user || !user.uid || !isValidFirestoreDocId(user.uid)) {
+      if (!user) {
         setError(new Error("User not authenticated"));
         setLoading(false);
         return;
@@ -65,18 +62,13 @@ export const useNotes = (projectId: string) => {
 
         const notesSnapshot = await getDocs(notesQuery);
 
-        const validatedNotes: FirestoreNote[] = notesSnapshot.docs
-          .map((doc) =>
-            FirestoreNoteSchema.safeParse({ id: doc.id, ...doc.data() })
-          )
-          .filter(
-            (result): result is { success: true; data: FirestoreNote } =>
-              result.success
-          )
-          .map((result) => result.data);
+        const notes: Note[] = notesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
 
-        setNotes(validatedNotes);
-      } catch {
+        setNotes(notes);
+      } catch (e) {
         setError(new Error("Failed to fetch notes"));
       } finally {
         setLoading(false);

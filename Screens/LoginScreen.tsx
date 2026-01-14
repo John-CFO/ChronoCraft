@@ -32,9 +32,9 @@ import {
   Toast,
   AlertNotificationRoot,
 } from "react-native-alert-notification";
-import { NotificationManager } from "../components/services/PushNotifications";
 import { BlurView } from "expo-blur";
 
+import { NotificationManager } from "../components/services/PushNotifications";
 import { FIREBASE_APP, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { AuthContext } from "../components/contexts/AuthContext";
 import { RootStackParamList } from "../navigation/RootStackParams";
@@ -44,15 +44,12 @@ import DismissKeyboard from "../components/DismissKeyboard";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import AuthForm from "../components/AuthForm";
-import { verifyToken } from "../validation/utils/totp";
 import TotpCodeModal from "../components/TotpCodeModal";
 import {
   LoginInputSchema,
   RegisterInputSchema,
   TotpCodeSchema,
 } from "../validation/authSchemas";
-import { FirestoreUserSchema } from "../validation/firestoreSchemas.sec";
-import { UserProfile } from "../components/types/UserProfile";
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -118,68 +115,51 @@ const LoginScreen: React.FC = () => {
     setLoading(true);
 
     try {
-      // 1️⃣ Sign in with Firebase Auth
       const response = await signInWithEmailAndPassword(
         getAuth(FIREBASE_APP),
         email,
         password
       );
-      const user = response.user; // FirebaseUser
-      setPendingUser(user); // save for TOTP modal later
 
-      // get Firestore user document
+      const user = response.user;
+      setPendingUser(user);
+
       const userRef = doc(FIREBASE_FIRESTORE, "Users", user.uid);
       const userSnap = await getDoc(userRef);
 
-      let userData: UserProfile | null = null;
+      let userData: any = null;
 
       if (userSnap.exists()) {
-        const raw = userSnap.data();
-        const parsed = FirestoreUserSchema.safeParse(raw);
+        userData = userSnap.data();
 
-        if (parsed.success) {
-          // Add uid from Firebase user
-          userData = { ...parsed.data, uid: user.uid };
-
-          // handle first login flag
-          if (userData.firstLogin) {
-            await setDoc(userRef, { firstLogin: false }, { merge: true });
-          }
-        } else {
-          console.warn("Invalid Users doc for", user.uid, parsed.error);
+        if (userData?.firstLogin === true) {
+          await setDoc(userRef, { firstLogin: false }, { merge: true });
         }
       }
 
-      // TS-Safe check
       if (!userData) {
-        // No valid user data from Firestore
-        setUser(user); // fallback to FirebaseUser only
-        setLoading(false);
+        setUser(user);
         return;
       }
 
-      // If TOTP is active
-      if (userData.totpEnabled) {
-        const totpSecret = userData.totpSecret ?? null;
+      // read TOTP flag
+      if (userData?.totpEnabled === true) {
+        const totpSecret = userData?.totpSecret ?? null;
 
         if (!totpSecret) {
           useAlertStore
             .getState()
             .showAlert("2FA Error", "TOTP not configured.");
           await signOut(getAuth(FIREBASE_APP));
-          // Save secret for TOTP modal
           setPendingUser(null);
-          setLoading(false);
           return;
         }
 
         setPendingTotpSecret(totpSecret);
         setTotpModalVisible(true);
-        setLoading(false);
-        return; // TOTP flow handled by modal
+        return;
       }
 
-      // No TOTP → normal login
       setUser(user);
     } catch (error) {
       console.error(error);
@@ -193,61 +173,36 @@ const LoginScreen: React.FC = () => {
 
   //  function to handle TOTP submit
   const handleTotpSubmit = async (code: string) => {
-    // validate code
     const codeParsed = TotpCodeSchema.safeParse(code);
     if (!codeParsed.success) {
       const msg = codeParsed.error.issues[0]?.message ?? "Invalid code";
       useAlertStore.getState().showAlert("Wrong Code", msg);
       return;
     }
+
     setTotpLoading(true);
+
     try {
-      if (!pendingTotpSecret) throw new Error("missing-totp-secret");
-      // get the validation result
-      const ok = verifyToken(pendingTotpSecret, codeParsed.data);
-      if (!ok) {
-        useAlertStore
-          .getState()
-          .showAlert("Wrong Code", "The code you entered is not valid.");
-        setTotpLoading(false);
-        return;
-      }
-
-      // TOTP validated -> set global user to allow navigation
       const finalUser = pendingUser ?? getAuth(FIREBASE_APP).currentUser;
-      if (finalUser) {
-        setUser(finalUser); // App changes to Inside/Drawer
-      } else {
-        // Fallback: if somehow no user available, sign out and show error
+      if (!finalUser) {
         await signOut(getAuth(FIREBASE_APP));
-        useAlertStore
-          .getState()
-          .showAlert("Error", "Internal error after TOTP validation.");
-        setTotpModalVisible(false);
-        setPendingTotpSecret(null);
-        setPendingUser(null);
-        setTotpLoading(false);
-        return;
+        throw new Error("missing-user-after-totp");
       }
 
-      useAlertStore.getState().showAlert("Welcome", "Successfully logged in.");
+      setUser(finalUser);
 
-      // clear pending secret and close modal
       setPendingTotpSecret(null);
       setPendingUser(null);
       setTotpModalVisible(false);
-
-      // optional navigation (App should already react to setUser)
-      setUser(finalUser);
     } catch (e) {
-      console.error("TOTP validation error:", e);
-      useAlertStore.getState().showAlert("Error", "TOTP-Validation failed.");
+      console.error("TOTP flow error:", e);
+      useAlertStore.getState().showAlert("Error", "Login failed.");
       try {
         await signOut(getAuth(FIREBASE_APP));
-      } catch (err) {}
-      setTotpModalVisible(false);
+      } catch {}
       setPendingTotpSecret(null);
       setPendingUser(null);
+      setTotpModalVisible(false);
     } finally {
       setTotpLoading(false);
     }

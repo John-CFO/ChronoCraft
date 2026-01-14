@@ -28,8 +28,7 @@ import { FIREBASE_AUTH } from "../firebaseConfig";
 import VacationRemindModal from "../components/VacationRemindModal";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
-import { FirestoreVacationSchema } from "../validation/vacationSchemas.sec";
-import { getValidatedDocsFromSnapshot } from "../validation/getDocsWrapper.sec";
+import { FirestoreVacationSchema } from "../validation/vacationSchemas";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -77,8 +76,7 @@ const VacationList = () => {
 
   // effect hook to get the data from firestore with snapshot
   useEffect(() => {
-    if (!serviceId) return;
-    if (!user) return;
+    if (!serviceId || !user) return;
 
     const vacationsCollection = collection(
       FIREBASE_FIRESTORE,
@@ -89,24 +87,37 @@ const VacationList = () => {
       "Vacations"
     );
 
-    // unsubscribe from the snapshot to avoid memory leaks
     const unsubscribe = onSnapshot(
       vacationsCollection,
       (snapshot) => {
-        const vacationsData = getValidatedDocsFromSnapshot(
-          snapshot,
-          FirestoreVacationSchema
-        );
-        // extract the key from the markedDates object to get the array of dates
+        const vacationsData = snapshot.docs.map((doc) => {
+          const rawData = { id: doc.id, ...doc.data() };
+
+          // optional: Zod Parsing, only warn if error, no blocking
+          const parsed = FirestoreVacationSchema.safeParse(rawData);
+          if (!parsed.success) {
+            console.warn(
+              "Invalid vacation doc structure:",
+              doc.id,
+              parsed.error
+            );
+          }
+
+          return rawData; // or parsed.data if clean parse
+        }) as {
+          id: string;
+          markedDates: Record<string, unknown>;
+          reminderDuration?: number;
+        }[];
+
         const mapped = vacationsData.map((v) => ({
-          id: v.id!,
-          markedDates: Object.keys(v.markedDates),
+          id: v.id,
+          markedDates: Object.keys(v.markedDates || {}),
           reminderActive: !!v.reminderDuration,
         }));
 
         mapped.sort((a, b) => {
-          if (a.markedDates.length === 0 || b.markedDates.length === 0)
-            return 0;
+          if (!a.markedDates.length || !b.markedDates.length) return 0;
           return (
             new Date(a.markedDates[0]).getTime() -
             new Date(b.markedDates[0]).getTime()
@@ -115,7 +126,6 @@ const VacationList = () => {
 
         setVacations(mapped);
       },
-      // show an alert if an error occurs
       (error) => {
         useAlertStore
           .getState()
@@ -128,7 +138,6 @@ const VacationList = () => {
 
     return () => unsubscribe();
   }, [user, serviceId]);
-
   // function to delete vacation dates
   const handleDeleteDate = async (vacationId: string) => {
     if (!serviceId) return;

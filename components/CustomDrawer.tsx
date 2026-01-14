@@ -39,7 +39,6 @@ import AccessibilityToggleButton from "./services/accessibility/AccessibilityTog
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import TFAButton from "./services/TFAButton";
 import TwoFactorModal from "./TwoFactorModal";
-import { FirestoreUserSchema } from "../validation/firestoreSchemas.sec";
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -90,27 +89,34 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
   const fetchUserProfile = async () => {
     try {
       const currentUser = FIREBASE_AUTH.currentUser;
-      if (currentUser && currentUser.uid) {
-        const userRef = doc(FIREBASE_FIRESTORE, "Users", currentUser.uid);
-        const userDoc = await getDoc(userRef);
+      if (!currentUser?.uid) return;
 
-        if (userDoc.exists()) {
-          // validate and parse user data
-          const parsedData = FirestoreUserSchema.parse({
-            uid: currentUser.uid,
-            ...userDoc.data(),
-          });
+      const userRef = doc(FIREBASE_FIRESTORE, "Users", currentUser.uid);
+      const userDoc = await getDoc(userRef);
 
-          const mergedUser: MergedUser = {
-            ...currentUser,
-            ...parsedData,
-            personalID: parsedData.personalID ?? undefined,
-          };
+      if (!userDoc.exists()) return;
 
-          setUser(mergedUser);
-          setIsEnrolled(!!mergedUser.totpEnabled);
-        }
-      }
+      const data = userDoc.data() || {};
+
+      // light validation / defaults
+      const mergedUser: MergedUser = {
+        ...currentUser,
+        uid: currentUser.uid,
+        displayName: data.displayName ?? undefined,
+        personalID: data.personalID ?? undefined,
+        photoURL: data.photoURL ?? undefined,
+        totpEnabled: data.totpEnabled ?? false,
+        hasSeenHomeTour: data.hasSeenHomeTour ?? false,
+        hasSeenVacationTour: data.hasSeenVacationTour ?? false,
+        hasSeenWorkHoursTour: data.hasSeenWorkHoursTour ?? false,
+        hasSeenDetailsTour: data.hasSeenDetailsTour ?? false,
+        totpSecret: data.totpSecret ?? undefined,
+        firstLogin: data.firstLogin ?? false,
+        createdAt: data.createdAt?.toDate?.() ?? undefined,
+      };
+
+      setUser(mergedUser);
+      setIsEnrolled(!!mergedUser.totpEnabled);
     } catch (error) {
       console.error("Error fetching user profile:", error);
     }

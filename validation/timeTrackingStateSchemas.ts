@@ -1,4 +1,4 @@
-///////////////////timeTrackingStateSchemas.sec.ts//////////////////////
+/////////////////// timeTrackingStateSchemas.ts //////////////////////
 
 // This file is used to validate user inputs for time tracking
 
@@ -24,7 +24,7 @@ export const isValidProjectId = (projectId: unknown): projectId is string => {
 };
 
 /**
- * @AppSec
+ * @AppSec // only for CLI-Purpose, kno real Security-Enforcement
  */
 export const ProjectStateSchema = z.object({
   id: z.string().min(1).max(100),
@@ -47,7 +47,7 @@ export const ProjectStateSchema = z.object({
 
 // Schema for setTimerAndEarnings Parameters
 /**
- * @AppSec
+ * @AppSec // only for CLI-Purpose, kno real Security-Enforcement
  */
 export const TimerAndEarningsSchema = z.object({
   projectId: z.string().refine(isValidProjectId, {
@@ -60,7 +60,7 @@ export const TimerAndEarningsSchema = z.object({
 
 // Schema for setProjectData Parameters
 /**
- * @AppSec
+ * @AppSec // only for CLI-Purpose, kno real Security-Enforcement
  */
 export const SetProjectDataSchema = z.object({
   projectId: z.string().refine(isValidProjectId, {
@@ -72,7 +72,7 @@ export const SetProjectDataSchema = z.object({
 
 // Schema for startTimer Parameters
 /**
- * @AppSec
+ * @AppSec // only for CLI-Purpose, kno real Security-Enforcement
  */
 export const StartTimerSchema = z.object({
   projectId: z.string().refine(isValidProjectId, {

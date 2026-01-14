@@ -26,7 +26,6 @@ import { useCopilotOffset } from "../components/services/copilotTour/CopilotOffs
 import CustomTooltip from "../components/services/copilotTour/CustomToolTip";
 import ProgressCard from "../components/ProgressCard";
 import { usePreventBackWhileTracking } from "../components/PreventBackBTN";
-import { FirestoreUserSchema } from "../validation/firestoreSchemas.sec";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -111,17 +110,7 @@ const DetailsScreen: React.FC = () => {
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             const data = docSnap.data();
-            const validationResult = FirestoreUserSchema.safeParse(data);
-
-            if (validationResult.success) {
-              // data is valid -y use it
-              const userData = validationResult.data;
-              setShowTourCard(userData.hasSeenDetailsTour === false);
-            } else {
-              // invalid data -> Fallback: set showTourCard to false
-              console.error("Invalid user data:", validationResult.error);
-              setShowTourCard(false);
-            }
+            setShowTourCard(data.hasSeenDetailsTour === false);
           } else {
             // document does not exist
             setShowTourCard(false);

@@ -1,35 +1,51 @@
-////////////////////////useValidatedStore.sec.ts////////////////////////////////////
+//////////////////////// useValidatedStore.ts ////////////////////////////////////
 
 // This file contains the validated actions for the global timetracking state
 
 ////////////////////////////////////////////////////////////////////////////////
 
-import { ProjectState, useStore } from "../components/TimeTrackingState";
+import { UseBoundStore, StoreApi } from "zustand";
+
+import {
+  ProjectState,
+  useStore as originalUseStore,
+  TimeTrackingState,
+} from "../components/TimeTrackingState";
 import {
   validateSetProjectData,
   validateTimerAndEarnings,
   isValidProjectId,
-} from "./timeTrackingStateSchemas.sec";
+} from "./timeTrackingStateSchemas";
 
-////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
 
+// Test-Hook Override
+let useStore: UseBoundStore<StoreApi<TimeTrackingState>> = originalUseStore;
+
+/**
+ * Only for Tests: Injected a Mock-Store.
+ */
+export const __setUseStoreForTest = (mock: Partial<TimeTrackingState>) => {
+  // Typecast, so TS knows, that  mock is compatible
+  useStore = (() => mock) as unknown as UseBoundStore<
+    StoreApi<TimeTrackingState>
+  >;
+};
+
+// Hook
 export const useValidatedStore = () => {
-  const store = useStore as any;
+  const store = useStore() as any;
 
-  // Heavy validation: Zod parsing + throws on invalid input
   const setProjectData = (
     projectId: string,
     projectData: Partial<ProjectState>
   ) => {
-    if (!isValidProjectId(projectId)) {
+    if (!isValidProjectId(projectId))
       throw new Error(`Invalid projectId format: ${projectId}`);
-    }
-
     const validatedData = validateSetProjectData({ projectId, projectData });
     store.setProjectData(validatedData.projectId, validatedData.projectData);
   };
 
-  // Heavy validation: Zod parsing
   const setTimerAndEarnings = (
     projectId: string,
     timer: number,
@@ -47,13 +63,11 @@ export const useValidatedStore = () => {
     );
   };
 
-  // Light validation: Hot-path for AppStateChange / AsyncStorage
   const setTimerAndEarningsLight = (
     projectId: string,
     timer: number,
     totalEarnings: number
   ) => {
-    // only minimal validation for performance
     if (!projectId || typeof projectId !== "string" || projectId.length === 0) {
       console.error(
         "setTimerAndEarningsLight ignored invalid projectId:",
@@ -64,7 +78,6 @@ export const useValidatedStore = () => {
     store.setTimerAndEarnings(projectId, timer, totalEarnings);
   };
 
-  // Timer control
   const startTimer = (projectId: string) => {
     if (!isValidProjectId(projectId))
       throw new Error(`Invalid projectId format: ${projectId}`);
@@ -93,27 +106,7 @@ export const useValidatedStore = () => {
     startTimer,
     stopTimer,
 
-    // Passthrough Actions (not appsec critical)
-    resetAll: store.resetAll,
-    setAppState: store.setAppState,
-    setHourlyRate: store.setHourlyRate,
-    updateTimer: store.updateTimer,
-    setTotalEarnings: store.setTotalEarnings,
-    getProjectState: store.getProjectState,
-    pauseTimer: store.pauseTimer,
-    calculateEarnings: store.calculateEarnings,
-    setProjectId: store.setProjectId,
-    setRateInput: store.setRateInput,
-    setIsInitialized: store.setIsInitialized,
-    setIsTracking: store.setIsTracking,
-    getProjectTrackingState: store.getProjectTrackingState,
-    getProjectId: store.getProjectId,
-    setProjectTime: store.setProjectTime,
-    setLastStartTime: store.setLastStartTime,
-    setOriginalStartTime: store.setOriginalStartTime,
-
-    // Store Methods
-    subscribe: store.subscribe,
-    getState: store.getState,
+    // Passthrough Actions
+    ...store,
   };
 };

@@ -16,8 +16,7 @@ import {
 } from "react-native";
 import Modal from "react-native-modal";
 import { LinearGradient } from "expo-linear-gradient";
-import { doc, setDoc } from "firebase/firestore";
-import { z } from "zod";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 
 import { NotificationManager } from "./services/PushNotifications";
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
@@ -25,8 +24,7 @@ import { useService } from "../components/contexts/ServiceContext";
 import CheckmarkAnimation from "./Checkmark";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useAccessibilityStore } from "./services/accessibility/accessibilityStore";
-import { getValidatedDoc } from "../validation/getDocsWrapper.sec";
-import { FirestoreVacationSchema } from "../validation/vacationSchemas.sec";
+import { FirestoreVacationSchema } from "../validation/vacationSchemas";
 
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -105,7 +103,6 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
         return;
       }
 
-      // prefer passed uid, otherwise fallback to auth
       const currentUid = uid || FIREBASE_AUTH.currentUser?.uid;
       if (!currentUid) {
         useAlertStore
@@ -127,26 +124,23 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
       }
       const reminderDuration = reminderDurations[chosenIndex];
 
-      // validate user doc (only pushToken needed)
-      const UserPushSchema = z
-        .object({ pushToken: z.string().optional() })
-        .catchall(z.any());
+      // fetch user doc directly
       const userDocRef = doc(FIREBASE_FIRESTORE, "Users", currentUid);
-      const userDoc = await getValidatedDoc(userDocRef, UserPushSchema);
+      const userSnap = await getDoc(userDocRef);
+      const userDoc = userSnap.exists() ? userSnap.data() : null;
 
       if (!userDoc) {
-        useAlertStore
-          .getState()
-          .showAlert("Error", "User document invalid or missing.");
+        useAlertStore.getState().showAlert("Error", "User document missing.");
         return;
       }
+
       const pushToken = (userDoc as any).pushToken;
       if (!pushToken) {
         useAlertStore.getState().showAlert("Error", "Push Token not found.");
         return;
       }
 
-      // validate vacation doc
+      // fetch vacation doc directly
       const vacationRef = doc(
         FIREBASE_FIRESTORE,
         "Users",
@@ -156,29 +150,30 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
         "Vacations",
         id
       );
-      const vacationDoc = await getValidatedDoc(
-        vacationRef,
-        FirestoreVacationSchema
-      );
+      const vacationSnap = await getDoc(vacationRef);
+      const vacationRaw = vacationSnap.exists() ? vacationSnap.data() : null;
 
-      if (!vacationDoc) {
-        useAlertStore
-          .getState()
-          .showAlert("Error", "Vacation not found or invalid.");
+      if (!vacationRaw) {
+        useAlertStore.getState().showAlert("Error", "Vacation not found.");
         return;
       }
+
+      // optional: parse with FirestoreVacationSchema
+      const vacationValidation = FirestoreVacationSchema.safeParse(vacationRaw);
+      const vacationDoc = vacationValidation.success
+        ? vacationValidation.data
+        : vacationRaw; // fallback on raw doc
 
       if ((vacationDoc as any).reminderDuration) {
         useAlertStore
           .getState()
           .showAlert(
             "Error",
-            "Vacation already has a reminder. If you want to change it, delete vacation and create a new one."
+            "Vacation already has a reminder. Delete and create a new one to change it."
           );
         return;
       }
 
-      // parse and validate startDate
       const startDateRaw = (vacationDoc as any).startDate;
       const startDate = new Date(startDateRaw);
       if (isNaN(startDate.getTime())) {
@@ -199,7 +194,6 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
         { merge: true }
       );
 
-      // schedule notification
       const reminderDate = new Date(startDate);
       reminderDate.setDate(reminderDate.getDate() - reminderDuration);
 
@@ -210,9 +204,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
         pushToken
       );
 
-      // reset selected option so modal is clean for the next use
       setSelectedOption(null);
-
       useAlertStore
         .getState()
         .showAlert("Success", "Reminder saved successfully.");
@@ -226,7 +218,6 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
       setSaving(false);
     }
   };
-
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
     (state) => state.accessibilityEnabled

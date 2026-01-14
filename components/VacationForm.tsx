@@ -18,7 +18,7 @@ import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useCalendarStore } from "../components/CalendarState";
 import { useService } from "../components/contexts/ServiceContext";
 import { useAlertStore } from "./services/customAlert/alertStore";
-import { VacationInputSchema } from "../validation/vacationSchemas.sec";
+import { VacationInputSchema } from "../validation/vacationSchemas";
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 

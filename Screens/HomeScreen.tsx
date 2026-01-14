@@ -36,7 +36,6 @@ import {
   doc,
   deleteDoc,
   addDoc,
-  Timestamp,
   getDoc,
 } from "firebase/firestore";
 import { getAuth, Auth } from "firebase/auth";
@@ -70,13 +69,6 @@ import { useDotAnimation } from "../components/DotAnimation";
 import { sanitizeTitle } from "../components/InputSanitizers";
 import SortModal from "../components/SortModal";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
-import { getValidatedDocs } from "../validation/getDocsWrapper.sec";
-import {
-  FirestoreProjectSchema,
-  FirestoreUserSchema,
-  FirestoreProject,
-  ProjectCreateSchema,
-} from "../validation/firestoreSchemas.sec";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 type HomeScreenRouteProp = RouteProp<
@@ -85,6 +77,13 @@ type HomeScreenRouteProp = RouteProp<
 >;
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
+
+interface Project {
+  id: string;
+  name: string;
+  createdAt: Date;
+  [key: string]: any;
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -130,7 +129,7 @@ const HomeScreen: React.FC = () => {
   const { setProjectId } = useStore();
 
   // handle project state with props title, id and name
-  const [projects, setProjects] = useState<FirestoreProject[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
 
   // new project name state
   const [newProjectName, setNewProjectName] = useState("");
@@ -258,28 +257,25 @@ const HomeScreen: React.FC = () => {
         serviceId,
         "Projects"
       );
+
       try {
-        const validatedProjects = await getValidatedDocs(
-          projectsCollection,
-          FirestoreProjectSchema
-        );
+        const snapshot = await getDocs(projectsCollection);
 
-        if (cancelled) return;
+        // mapping projectsData
+        const projectsData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt ?? new Date(),
+        }));
 
-        const projectsWithFallback = validatedProjects.map(
-          (p: FirestoreProject) => ({
-            ...p,
-            createdAt: p.createdAt ?? new Date(),
-          })
-        );
-
-        setProjects(projectsWithFallback);
+        setProjects(projectsData as any);
       } catch (err) {
         console.error("Error fetching projects", err);
       } finally {
-        if (!cancelled) setIsLoading(false);
+        setIsLoading(false);
       }
     };
+
     fetchProjects();
     return () => {
       cancelled = true;
@@ -289,7 +285,6 @@ const HomeScreen: React.FC = () => {
   // function to add projects
   const handleAddProject = async () => {
     if (!serviceId) return;
-    // check if project name is empty
     if (!newProjectName.trim()) {
       useAlertStore
         .getState()
@@ -297,7 +292,6 @@ const HomeScreen: React.FC = () => {
       return;
     }
 
-    // input validation
     if (newProjectName.length > 100) {
       useAlertStore.getState().showAlert("Error", "Project name too long");
       return;
@@ -316,52 +310,28 @@ const HomeScreen: React.FC = () => {
         serviceId,
         "Projects"
       );
-      // build the project object via schema (guaranteed valid)
-      const projectToAdd = ProjectCreateSchema.parse({
+
+      const projectToAdd = {
         uid: user.uid,
         name: newProjectName,
         createdAt: new Date(),
-        // Time tracking defaults
         timer: 0,
         elapsedTime: 0,
         hourlyRate: 0,
         totalEarnings: 0,
         isTracking: false,
-
         startTime: null,
         pauseTime: null,
         endTime: null,
         lastStartTime: null,
         originalStartTime: null,
-      });
+      };
 
-      // Add to Firestore
       const newProjectRef = await addDoc(projectsCollection, projectToAdd);
 
-      // Update UI state
       setProjects((prev) => [
         ...prev,
-        {
-          id: newProjectRef.id,
-          uid: projectToAdd.uid,
-          name: projectToAdd.name,
-          createdAt:
-            projectToAdd.createdAt instanceof Timestamp
-              ? projectToAdd.createdAt.toDate()
-              : projectToAdd.createdAt,
-
-          timer: projectToAdd.timer,
-          elapsedTime: projectToAdd.elapsedTime,
-          hourlyRate: projectToAdd.hourlyRate,
-          totalEarnings: projectToAdd.totalEarnings,
-          isTracking: projectToAdd.isTracking,
-
-          startTime: projectToAdd.startTime,
-          pauseTime: projectToAdd.pauseTime,
-          endTime: projectToAdd.endTime,
-          lastStartTime: projectToAdd.lastStartTime,
-          originalStartTime: projectToAdd.originalStartTime,
-        },
+        { id: newProjectRef.id, ...projectToAdd },
       ]);
       setNewProjectName("");
       setRefresh((r) => !r);
@@ -661,14 +631,8 @@ const HomeScreen: React.FC = () => {
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
-      const raw = docSnap.data();
-      const parsed = FirestoreUserSchema.safeParse(raw);
-      if (!parsed.success) {
-        console.error("Invalid user data in fetchTourStatus:", parsed.error);
-        setShowTourCard(false);
-        return;
-      }
-      setShowTourCard(parsed.data.hasSeenHomeTour === false);
+      const data = docSnap.data();
+      setShowTourCard(data.hasSeenHomeTour === false);
     } else {
       setShowTourCard(false);
     }

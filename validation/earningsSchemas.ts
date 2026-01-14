@@ -1,6 +1,7 @@
-/////////////////////////earningsSchemas.sec.ts////////////////////////////
+///////////////////////// earningsSchemas.ts ////////////////////////////
 
-// This file is used to validate user inputs for earnings and earnings from firestore
+// This file is used to validate user inputs for earnings on the client side
+// Backend / Firestore-specific schemas have been removed
 
 ///////////////////////////////////////////////////////////////////////
 
@@ -8,9 +9,9 @@ import { z } from "zod";
 
 ///////////////////////////////////////////////////////////////////////
 
-// hourly rate schema to check if the input is valid, if so, return the value
+// Client-only: hourly rate input validation
 /**
- * @AppSec
+ * @AppSec  // only for CLI-Purpose, kno real Security-Enforcement
  */
 export const HourlyRateSchema = z.object({
   hourlyRate: z
@@ -22,14 +23,5 @@ export const HourlyRateSchema = z.object({
   userId: z.string().min(1, "User ID is required"),
 });
 
-/**
- * @AppSec
- */
-export const FirestoreEarningsSchema = z.object({
-  hourlyRate: z.number().min(0).max(300).optional(),
-  totalEarnings: z.number().min(0).optional(),
-  uid: z.string(),
-});
-
+// Typen für Client-Input
 export type HourlyRateInput = z.infer<typeof HourlyRateSchema>;
-export type FirestoreEarnings = z.infer<typeof FirestoreEarningsSchema>;
