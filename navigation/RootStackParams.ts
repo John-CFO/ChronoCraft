@@ -10,6 +10,10 @@ export type RootStackParamList = {
   Login: undefined;
   Inside: NavigatorScreenParams<DrawerParamList>;
   Details: { projectId: string; projectName: string };
+  MfaScreen: {
+    onSuccess: () => void;
+    onCancel: () => void;
+  };
 };
 
 export type DrawerParamList = {

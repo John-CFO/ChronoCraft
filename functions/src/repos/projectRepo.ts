@@ -61,22 +61,26 @@ export class ProjectRepo {
   // Writes
   async updateProject(
     projectId: string,
-    input: UpdateProjectInput
+    input: UpdateProjectInput,
   ): Promise<void> {
-    try {
-      const updateData = this.mapUpdateInput(input);
-      await this.projectsRef.doc(projectId).update(updateData);
-    } catch (err: any) {
-      if (err.code === 5 || err.message.includes("NOT_FOUND")) {
-        throw new ProjectNotFoundError(`Project ${projectId} not found`);
-      }
-      throw err;
+    const ref = this.projectsRef.doc(projectId);
+
+    // Explicit existing check (Domain logic)
+    const snap = await ref.get();
+
+    if (!snap.exists) {
+      throw new ProjectNotFoundError(projectId);
     }
+
+    // Pure update (Infrastructur)
+    const updateData = this.mapUpdateInput(input);
+    await ref.update(updateData);
   }
 
+  // Hourly Rate
   async setProjectHourlyRate(
     projectId: string,
-    input: SetHourlyRateInput
+    input: SetHourlyRateInput,
   ): Promise<void> {
     await this.earningsRef.doc(projectId).set(input, { merge: true });
   }
@@ -107,7 +111,7 @@ export class ProjectRepo {
   }
 
   private mapUpdateInput(
-    input: UpdateProjectInput
+    input: UpdateProjectInput,
   ): FirebaseFirestore.UpdateData<Project> {
     const data: FirebaseFirestore.UpdateData<Project> = {};
 

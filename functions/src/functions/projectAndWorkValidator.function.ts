@@ -4,12 +4,14 @@
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-import { https } from "firebase-functions/v2";
+import { onCall, CallableRequest } from "firebase-functions/v2/https";
 
 import { projectsAndWorkValidatorLogic } from "./projectAndWorkValidator.logic";
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-export const projectsAndWorkValidator = https.onCall(
-  projectsAndWorkValidatorLogic
+export const projectsAndWorkValidator = onCall(
+  async (request: CallableRequest<any>) => {
+    return projectsAndWorkValidatorLogic(request);
+  },
 );

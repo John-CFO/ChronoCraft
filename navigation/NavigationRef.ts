@@ -11,8 +11,17 @@ import type { RootStackParamList } from "./RootStackParams";
 
 export const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
-export function navigate(name: keyof RootStackParamList, params?: any) {
-  if (navigationRef.isReady()) {
-    navigationRef.navigate(name, params);
+export function navigate<T extends keyof RootStackParamList>(
+  name: T,
+  params: RootStackParamList[T] extends undefined
+    ? undefined
+    : RootStackParamList[T],
+) {
+  if (!navigationRef.isReady()) return;
+
+  if (params) {
+    navigationRef.navigate(name as any, params as any);
+  } else {
+    navigationRef.navigate(name as any);
   }
 }

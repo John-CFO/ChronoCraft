@@ -1,239 +1,202 @@
-////////////////////////////////// setup.ts /////////////////////////////////////
+///////////////////////////// setup.ts /////////////////////////////////////
 
 // This file contains the setup for the end-to-end tests.
 
 /////////////////////////////////////////////////////////////////////////////////
 
 import * as admin from "firebase-admin";
-import firebaseFunctionsTest from "firebase-functions-test";
-import { CallableRequest } from "firebase-functions/v2/https";
-
-import {
-  authValidator,
-  profileValidator,
-  projectsAndWorkValidator,
-  secureDelete,
-} from "../../src/index";
 
 /////////////////////////////////////////////////////////////////////////////////
 
-// Firebase-Admin-initialization
 if (!admin.apps.length) {
   admin.initializeApp({
     projectId: process.env.GCLOUD_PROJECT || "test-project",
   });
 }
 
-// ensures that firestore returns a function to the emulator
-const firestore = admin.firestore();
+if (process.env.FIRESTORE_EMULATOR_HOST) {
+  admin.firestore().settings({
+    host: process.env.FIRESTORE_EMULATOR_HOST.replace("http://", ""),
+    ssl: false,
+  });
+}
 
-// Export for tests
-export { admin, firestore };
+export const FUNCTIONS_EMULATOR_ORIGIN =
+  process.env.FUNCTIONS_EMULATOR_ORIGIN || "http://localhost:4001";
 
-// Typedefinition
-interface TestUser {
+export const PROJECT_ID = process.env.GCLOUD_PROJECT || "test-project";
+export const REGION = process.env.FUNCTIONS_REGION || "us-central1";
+
+export interface TestUser {
   uid: string;
   email: string;
   displayName: string;
   totpSecret: string;
 }
 
-// expanded JWT-Interface
-interface JWT extends admin.auth.DecodedIdToken {
-  header: {
-    alg: string;
-    kid: string;
-    typ: string;
-  };
-}
-
-//////////////////////////////////////////////////////////////////////////////////
-
-// Initialize the Firebase Functions Test-Framework
-const testEnv = firebaseFunctionsTest({
-  projectId: "your-project-id",
-});
-
-const wrapped = testEnv.wrap(authValidator);
-
-// Dummy-Data
-const TEST_USERS: TestUser[] = [
+export const TEST_USERS: TestUser[] = [
   {
     uid: "user1",
     email: "user1@example.com",
     displayName: "Test User 1",
-    totpSecret: "secret1",
+    totpSecret: "",
   },
   {
     uid: "user2",
     email: "user2@example.com",
     displayName: "Test User 2",
-    totpSecret: "secret2",
+    totpSecret: "",
   },
 ];
 
-// Dummy Token for Auth
-const fakeToken = (user: TestUser): JWT => ({
-  header: {
-    alg: "RS256",
-    kid: "fakekid",
-    typ: "JWT",
-  },
-  payload: {
-    aud: "your-project-id",
-    auth_time: Math.floor(Date.now() / 1000),
-    exp: Math.floor(Date.now() / 1000) + 3600,
-    firebase: {
-      identities: {
-        email: [user.email],
-      },
-      sign_in_provider: "password",
-    },
-    iat: Math.floor(Date.now() / 1000),
-    iss: "https://securetoken.google.com/your-project-id",
-    sub: user.uid,
-    uid: user.uid,
-  },
-  aud: "your-project-id",
-  auth_time: Math.floor(Date.now() / 1000),
-  exp: Math.floor(Date.now() / 1000) + 3600,
-  firebase: {
-    identities: {
-      email: [user.email],
-    },
-    sign_in_provider: "password",
-  },
-  iat: Math.floor(Date.now() / 1000),
-  iss: "https://securetoken.google.com/your-project-id",
-  sub: user.uid,
-  uid: user.uid,
-});
+//////////////////////////////////////////////////////////////////////////
 
-// Helper-Function to create a CallableRequest object
-export const createMockCallableRequest = (
-  user: TestUser,
-  data: any
-): CallableRequest<typeof data> => {
-  return {
-    data,
-    auth: {
-      uid: user.uid,
-      token: fakeToken(user),
-    },
-    instanceIdToken: undefined,
-    app: undefined,
-    rawRequest: {
-      headers: {
-        "content-type": "application/json",
-      },
-      body: {},
-      rawBody: Buffer.from(JSON.stringify(data)),
-      query: {},
-      params: {},
-      method: "POST",
-      url: "/",
-      get: (header: string) => {
-        if (header === "Content-Type") return "application/json";
-        return undefined;
-      },
-      header: (header: string) => {
-        if (header === "Content-Type") return "application/json";
-        return undefined;
-      },
-      accepts: () => "application/json",
-    } as any, // used any for rawRequest, as we don't implement the full Express Request interface
-  };
+// helper to get idToken from Auth Emulator
+const getAuthEmulatorHost = () => {
+  const host = process.env.FIREBASE_AUTH_EMULATOR_HOST;
+  if (!host) {
+    throw new Error(
+      "FIREBASE_AUTH_EMULATOR_HOST is not set. Run tests with firebase emulators:exec",
+    );
+  }
+  return host;
 };
 
-// Setup-Function
-const setupTestData = async () => {
-  const usersRef = admin.firestore().collection("Users");
+// fetch idToken from emulator
+const fetchIdTokenForUid = async (uid: string): Promise<string> => {
+  const host = getAuthEmulatorHost();
+  const url = `http://${host}/identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=any`;
+
+  const customToken = await admin.auth().createCustomToken(uid);
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      token: customToken,
+      returnSecureToken: true,
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(
+      `Failed to get idToken from emulator: ${res.status} ${text}`,
+    );
+  }
+
+  const json = await res.json();
+  return json.idToken;
+};
+
+// function to setup test data
+export const setupTestData = async () => {
   const auth = admin.auth();
+  const usersRef = admin.firestore().collection("Users");
 
   for (const user of TEST_USERS) {
-    // call createUser
     try {
       await auth.createUser({
         uid: user.uid,
         email: user.email,
         displayName: user.displayName,
       });
-    } catch (error) {
-      console.log(`User ${user.uid} already exists or error occured:`, error);
+    } catch {
+      // ignore if exists
     }
 
-    // Save user data in Firestore
     await usersRef.doc(user.uid).set({
       email: user.email,
       displayName: user.displayName,
-      totpSecret: user.totpSecret,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      totp: {
+        secret: "dummySecret",
+        enabled: false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
     });
-
-    // create a complete CallableRequest-Object
-    const mockRequest = createMockCallableRequest(user, {
-      action: "register",
-      payload: user,
-    });
-
-    // call the Callable-Function
-    try {
-      const result = await wrapped(mockRequest);
-      console.log("Function call success:", result);
-    } catch (error) {
-      console.error("Error by function call:", error);
-    }
   }
 
-  // Project setups
-  const projectsRef = admin.firestore().collection("Projects");
-  await projectsRef.doc("testProject1").set({
+  await admin.firestore().collection("Projects").doc("testProject1").set({
     name: "Test Project 1",
     ownerId: TEST_USERS[0].uid,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
-  await projectsRef.doc("testProject2").set({
+  await admin.firestore().collection("Projects").doc("testProject2").set({
     name: "Test Project 2",
     ownerId: TEST_USERS[1].uid,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });
-
-  console.log("Test data successfully setup.");
 };
 
-// clear the test data
-const cleanupTestData = async () => {
+// Helper to get the TOTP secret for a user
+export const getTestTotpSecret = async (uid: string) => {
+  const doc = await admin.firestore().collection("Users").doc(uid).get();
+  return doc.data()?.totp?.secret ?? null;
+};
+
+export const cleanupTestData = async () => {
   const auth = admin.auth();
   const usersRef = admin.firestore().collection("Users");
   const projectsRef = admin.firestore().collection("Projects");
 
   const usersSnapshot = await usersRef.get();
-  const deleteUsers = usersSnapshot.docs.map((doc) => doc.ref.delete());
+  await Promise.all(usersSnapshot.docs.map((d) => d.ref.delete()));
 
   const projectsSnapshot = await projectsRef.get();
-  const deleteProjects = projectsSnapshot.docs.map((doc) => doc.ref.delete());
-
-  await Promise.all([...deleteUsers, ...deleteProjects]);
+  await Promise.all(projectsSnapshot.docs.map((d) => d.ref.delete()));
 
   for (const user of TEST_USERS) {
-    // call deleteUser
     try {
       await auth.deleteUser(user.uid);
-    } catch (error) {
-      console.log(`User ${user.uid} could not be deleted:`, error);
+    } catch {
+      // ignore
     }
   }
-
-  console.log("Test data successfully cleaned up.");
 };
 
-export {
-  TEST_USERS,
-  setupTestData,
-  cleanupTestData,
-  authValidator,
-  profileValidator,
-  projectsAndWorkValidator,
-  secureDelete,
+// Helper to get the idToken for a user
+export const getIdTokenForUser = async (uid: string): Promise<string> => {
+  return fetchIdTokenForUid(uid);
+};
+
+// Call a Gen2 HTTP function (or callable fallback).
+export const callFunction = async ({
+  functionName,
+  body,
+  idToken,
+  isCallable = false,
+}: {
+  functionName: string;
+  body: any;
+  idToken?: string;
+  isCallable?: boolean;
+}) => {
+  const url = `${FUNCTIONS_EMULATOR_ORIGIN}/${PROJECT_ID}/${REGION}/${functionName}`;
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (idToken) {
+    headers.Authorization = `Bearer ${idToken}`;
+  }
+
+  const payload = isCallable ? { data: body } : body;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload),
+  });
+
+  const text = await res.text();
+  let json;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    json = text;
+  }
+
+  return { status: res.status, body: json };
 };

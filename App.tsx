@@ -7,7 +7,7 @@
 /////////////////////////////////////////////////////////////////////////////
 
 import { Text, TouchableOpacity } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useContext } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
@@ -19,7 +19,6 @@ import {
   AntDesign,
 } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
-import { User, onAuthStateChanged } from "firebase/auth";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-gesture-handler";
@@ -29,12 +28,12 @@ import "text-encoding-polyfill"; //bugfix: for delete project with notes
 import { CopilotProvider } from "react-native-copilot";
 import { AccessibilityInfo } from "react-native";
 
+import MfaScreen from "./Screens/MfaScreen";
 import LoginScreen from "./Screens/LoginScreen";
 import HomeScreen from "./Screens/HomeScreen";
 import DetailsScreen from "./Screens/DetailsScreen";
 import WorkHoursScreen from "./Screens/WorkHoursScreen";
 import VacationScreen from "./Screens/VacationScreen";
-import { FIREBASE_AUTH } from "./firebaseConfig";
 import CustomDrawer from "./components/CustomDrawer";
 import CustomMenuBTN from "./components/CustomMenuBTN";
 import HeaderHelpComponent from "./components/HeaderHelpComp";
@@ -43,10 +42,10 @@ import CustomAlert from "./components/services/customAlert/CustomAlert";
 import { useAlertStore } from "./components/services/customAlert/alertStore";
 import { NotificationManager } from "./components/services/PushNotifications";
 import { useAccessibilityStore } from "./components/services/accessibility/accessibilityStore";
-import { AuthContext } from "./components/contexts/AuthContext";
+import { AuthProvider } from "./components/contexts/AuthContext";
 import { ServiceProvider } from "./components/contexts/ServiceContext";
 import { navigationRef } from "./navigation/NavigationRef";
-import { handleAuthStateChange } from "./validation/authHelper";
+import { AuthContext } from "./components/contexts/AuthContext";
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -181,7 +180,117 @@ const CustomDrawerLabel: React.FC<CustomDrawerLabelProps> = ({
 // disable splashscreen
 SplashScreen.preventAutoHideAsync();
 
-// App navigation Root with stack navigator
+// AppNavigator - reads Context for Routing
+const AppNavigator = () => {
+  const { stage, isTwoFAEnabled } = useContext(AuthContext);
+
+  useEffect(() => {
+    if (!navigationRef.isReady()) return;
+
+    switch (stage) {
+      case "authenticated":
+        navigationRef.reset({
+          index: 0,
+          routes: [
+            {
+              name: "Inside",
+              state: { index: 0, routes: [{ name: "Home" }] },
+            },
+          ],
+        });
+        break;
+
+      case "pendingMfa":
+        if (isTwoFAEnabled) {
+          navigationRef.reset({
+            index: 0,
+            routes: [{ name: "MfaScreen" }],
+          });
+        }
+        break;
+
+      default:
+        navigationRef.reset({ index: 0, routes: [{ name: "Login" }] });
+    }
+  }, [stage, isTwoFAEnabled]);
+
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        animationEnabled: false,
+        gestureEnabled: true,
+        gestureDirection: "horizontal",
+        transitionSpec: {
+          open: { animation: "timing", config: { duration: 300 } },
+          close: { animation: "timing", config: { duration: 300 } },
+        },
+        cardStyleInterpolator: ({ current, layouts }) => ({
+          cardStyle: {
+            transform: [
+              {
+                translateX: current.progress.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [layouts.screen.width, 0],
+                }),
+              },
+            ],
+          },
+        }),
+      }}
+    >
+      <Stack.Screen name="Login" component={LoginScreen as any} />
+      <Stack.Screen name="MfaScreen" component={MfaScreen as any} />
+      <Stack.Screen name="Inside" component={AppDrawerNavigator} />
+
+      {/* Details Screen bleibt unverändert */}
+      <Stack.Screen
+        name="Details"
+        component={DetailsScreen as any}
+        initialParams={{ projectId: "" }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          presentation: "modal",
+          animationTypeForReplace: "push",
+          headerRight: () => <HeaderHelpComponent navigation={navigation} />,
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={async () => {
+                const projectId = useStore.getState().getProjectId();
+                const isTracking = await useStore
+                  .getState()
+                  .getProjectTrackingState(projectId);
+
+                if (isTracking) {
+                  useAlertStore
+                    .getState()
+                    .showAlert(
+                      "Project is still running.",
+                      " You can't leave the app. Please stop the project first.",
+                    );
+                } else {
+                  navigation.goBack();
+                }
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Back"
+              accessibilityHint="Button to go back to the previous screen"
+              accessibilityState={{ expanded: true }}
+              style={{ marginLeft: 20 }}
+            >
+              <AntDesign name="doubleleft" size={28} color="white" />
+            </TouchableOpacity>
+          ),
+          headerStyle: { backgroundColor: "black" },
+          headerTintColor: "black",
+          headerTitleStyle: { fontSize: 24 },
+        })}
+      />
+    </Stack.Navigator>
+  );
+};
+
+// App - provites all providers
 const App = () => {
   // statusbar content color
   useEffect(() => {
@@ -202,7 +311,7 @@ const App = () => {
 
   // state to check if screen reader is enabled
   const setAccessibility = useAccessibilityStore(
-    (state) => state.setAccessibility
+    (state) => state.setAccessibility,
   );
   // hook to check if screen reader is enabled
   useEffect(() => {
@@ -216,7 +325,7 @@ const App = () => {
       "screenReaderChanged",
       (enabled) => {
         setAccessibility(enabled);
-      }
+      },
     );
 
     // cleanup
@@ -232,156 +341,29 @@ const App = () => {
     MPLUSLatin_Bold: require("./assets/fonts/MPLUSCodeLatin-Bold.ttf"),
   });
 
-  // state to navigate user between drawers
-  const [user, setUser] = useState<User | null>(null);
-
-  // hook to navigate use after login to an other screen
-  useEffect(() => {
-    const unsub = onAuthStateChanged(FIREBASE_AUTH, (u) => {
-      // delegate to handleAuthStateChange: (validation: authHelper.ts)
-      (async () => {
-        await handleAuthStateChange(u, setUser);
-      })();
-    });
-
-    return () => unsub();
-  }, []);
-
   // hook to handle the notification initialization
   useEffect(() => {
-    // console.log("NotificationManager initialized");
     NotificationManager.configureNotificationHandler();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ setUser }}>
+    <AuthProvider>
       <ServiceProvider>
         <SafeAreaProvider>
-          {/* <GestureHandlerRootView style={{ flex: 1 }}> //important to set the bottomsheetmodal in the app, not the drawer */}
           <GestureHandlerRootView style={{ flex: 1 }}>
             <BottomSheetModalProvider>
-              {/* navigation container */}
-              <NavigationContainer ref={navigationRef}>
+              <NavigationContainer
+                ref={navigationRef}
+                onReady={() => console.log("Navigation ready")}
+              >
                 <CustomAlert />
-                {fontsLoaded && (
-                  <Stack.Navigator
-                    screenOptions={{
-                      headerShown: false,
-                      animationEnabled: false, // importent to disable the default animation wich produces a header jump bug
-                      // This part is used to slide the stack from the right into the screen
-                      gestureEnabled: true,
-                      gestureDirection: "horizontal",
-                      transitionSpec: {
-                        open: {
-                          animation: "timing",
-                          config: { duration: 300 },
-                        },
-                        close: {
-                          animation: "timing",
-                          config: { duration: 300 },
-                        },
-                      },
-                      // function to slide the stack from the right into the screen
-                      cardStyleInterpolator: ({ current, layouts }) => {
-                        return {
-                          cardStyle: {
-                            transform: [
-                              {
-                                translateX: current.progress.interpolate({
-                                  inputRange: [0, 1],
-                                  outputRange: [layouts.screen.width, 0],
-                                }),
-                              },
-                            ],
-                          },
-                        };
-                      },
-                    }}
-                  >
-                    {/* Login navigation when user is logged in or logged out */}
-                    {user ? (
-                      // Inside Screen with drawer navigation
-                      <Stack.Screen
-                        name="Inside"
-                        component={AppDrawerNavigator}
-                        options={{ headerShown: false }}
-                      />
-                    ) : (
-                      // Login Screen
-                      <Stack.Screen
-                        name="Login"
-                        component={LoginScreen}
-                        options={{ headerShown: false }}
-                      />
-                    )}
-
-                    {/* Details Screen */}
-                    <Stack.Screen
-                      name="Details"
-                      component={DetailsScreen as any}
-                      initialParams={{
-                        projectId: "",
-                      }}
-                      // custom header config. for Details Screen
-                      options={({ navigation }) => ({
-                        headerShown: true,
-                        presentation: "modal", //card test
-                        animationTypeForReplace: "push",
-                        headerRight: () => (
-                          <HeaderHelpComponent navigation={navigation} />
-                        ),
-                        // Back button includes the if statement to check if the project is still running
-                        headerLeft: () => (
-                          <TouchableOpacity
-                            onPress={async () => {
-                              const projectId = useStore
-                                .getState()
-                                .getProjectId();
-                              const isTracking = await useStore
-                                .getState()
-                                .getProjectTrackingState(projectId);
-
-                              if (isTracking) {
-                                useAlertStore
-                                  .getState()
-                                  .showAlert(
-                                    "Project is still running.",
-                                    " You can't leave the app. Please stop the project first."
-                                  );
-                              } else {
-                                navigation.goBack();
-                              }
-                            }}
-                            accessibilityRole="button"
-                            accessibilityLabel="Back"
-                            accessibilityHint="Button to go back to the previous screen"
-                            accessibilityState={{ expanded: true }}
-                            style={{ marginLeft: 20 }}
-                          >
-                            <AntDesign
-                              name="doubleleft"
-                              size={28}
-                              color="white"
-                            />
-                          </TouchableOpacity>
-                        ),
-                        headerStyle: {
-                          backgroundColor: "black",
-                        },
-                        headerTintColor: "black",
-                        headerTitleStyle: {
-                          fontSize: 24,
-                        },
-                      })}
-                    />
-                  </Stack.Navigator>
-                )}
+                {fontsLoaded && <AppNavigator />}
               </NavigationContainer>
             </BottomSheetModalProvider>
           </GestureHandlerRootView>
         </SafeAreaProvider>
       </ServiceProvider>
-    </AuthContext.Provider>
+    </AuthProvider>
   );
 };
 

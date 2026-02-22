@@ -22,9 +22,7 @@ import {
   getAuth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signOut,
   Auth,
-  User,
 } from "firebase/auth";
 import { setDoc, doc, getDoc, serverTimestamp } from "firebase/firestore";
 import {
@@ -36,7 +34,7 @@ import { BlurView } from "expo-blur";
 
 import { NotificationManager } from "../components/services/PushNotifications";
 import { FIREBASE_APP, FIREBASE_FIRESTORE } from "../firebaseConfig";
-import { AuthContext } from "../components/contexts/AuthContext";
+import { AuthContext, AuthStage } from "../components/contexts/AuthContext";
 import { RootStackParamList } from "../navigation/RootStackParams";
 import AppLogo from "../components/AppLogo";
 import AnimatedText from "../components/AnimatedText";
@@ -44,11 +42,9 @@ import DismissKeyboard from "../components/DismissKeyboard";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import AuthForm from "../components/AuthForm";
-import TotpCodeModal from "../components/TotpCodeModal";
 import {
   LoginInputSchema,
   RegisterInputSchema,
-  TotpCodeSchema,
 } from "../validation/authSchemas";
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -67,12 +63,6 @@ const LoginScreen: React.FC = () => {
   // declaire the navigation to user get in after logein
   const navigation = useNavigation<RegisterScreenNavigationProp>();
 
-  const [totpModalVisible, setTotpModalVisible] = useState(false);
-  const [totpLoading, setTotpLoading] = useState(false);
-  const [pendingTotpSecret, setPendingTotpSecret] = useState<string | null>(
-    null
-  );
-
   // states for registry and login
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -83,9 +73,7 @@ const LoginScreen: React.FC = () => {
   // declaire the firebase authentication
   const auth: Auth = getAuth(FIREBASE_APP);
   // declaire the user context
-  const { setUser } = useContext(AuthContext);
-  // declaire the pending user state
-  const [pendingUser, setPendingUser] = useState<User | null>(null);
+  const { setUser, setStage } = useContext(AuthContext);
 
   // function to validate the inputs
   const validateLoginInputs = () => {
@@ -113,54 +101,33 @@ const LoginScreen: React.FC = () => {
   const handleLogin = async () => {
     if (!validateLoginInputs()) return;
     setLoading(true);
-
     try {
-      const response = await signInWithEmailAndPassword(
-        getAuth(FIREBASE_APP),
-        email,
-        password
-      );
-
-      const user = response.user;
-      setPendingUser(user);
+      const { user } = await signInWithEmailAndPassword(auth, email, password);
 
       const userRef = doc(FIREBASE_FIRESTORE, "Users", user.uid);
       const userSnap = await getDoc(userRef);
 
-      let userData: any = null;
+      let nextStage: AuthStage = "authenticated";
 
       if (userSnap.exists()) {
-        userData = userSnap.data();
+        const userData = userSnap.data();
 
         if (userData?.firstLogin === true) {
           await setDoc(userRef, { firstLogin: false }, { merge: true });
         }
-      }
 
-      if (!userData) {
-        setUser(user);
-        return;
-      }
-
-      // read TOTP flag
-      if (userData?.totpEnabled === true) {
-        const totpSecret = userData?.totpSecret ?? null;
-
-        if (!totpSecret) {
-          useAlertStore
-            .getState()
-            .showAlert("2FA Error", "TOTP not configured.");
-          await signOut(getAuth(FIREBASE_APP));
-          setPendingUser(null);
-          return;
+        if (userData?.totp?.enabled === true) {
+          nextStage = "pendingMfa";
         }
-
-        setPendingTotpSecret(totpSecret);
-        setTotpModalVisible(true);
-        return;
       }
 
+      // === Single state transition point ===
       setUser(user);
+      setStage(nextStage);
+
+      if (nextStage === "pendingMfa") {
+        navigation.navigate("MfaScreen" as never);
+      }
     } catch (error) {
       console.error(error);
       useAlertStore
@@ -168,56 +135,6 @@ const LoginScreen: React.FC = () => {
         .showAlert("Login failed", "Something went wrong, please try again!");
     } finally {
       setLoading(false);
-    }
-  };
-
-  //  function to handle TOTP submit
-  const handleTotpSubmit = async (code: string) => {
-    const codeParsed = TotpCodeSchema.safeParse(code);
-    if (!codeParsed.success) {
-      const msg = codeParsed.error.issues[0]?.message ?? "Invalid code";
-      useAlertStore.getState().showAlert("Wrong Code", msg);
-      return;
-    }
-
-    setTotpLoading(true);
-
-    try {
-      const finalUser = pendingUser ?? getAuth(FIREBASE_APP).currentUser;
-      if (!finalUser) {
-        await signOut(getAuth(FIREBASE_APP));
-        throw new Error("missing-user-after-totp");
-      }
-
-      setUser(finalUser);
-
-      setPendingTotpSecret(null);
-      setPendingUser(null);
-      setTotpModalVisible(false);
-    } catch (e) {
-      console.error("TOTP flow error:", e);
-      useAlertStore.getState().showAlert("Error", "Login failed.");
-      try {
-        await signOut(getAuth(FIREBASE_APP));
-      } catch {}
-      setPendingTotpSecret(null);
-      setPendingUser(null);
-      setTotpModalVisible(false);
-    } finally {
-      setTotpLoading(false);
-    }
-  };
-
-  // function to handle TOTP cancel
-  const handleTotpCancel = async () => {
-    try {
-      setTotpModalVisible(false);
-      setPendingTotpSecret(null);
-      // Security: signOut during TOTP cancel
-      await signOut(getAuth(FIREBASE_APP));
-    } catch (e) {
-      // ignore signOut errors, but log them for debugging
-      console.warn("signOut during TOTP cancel failed", e);
     }
   };
 
@@ -229,7 +146,7 @@ const LoginScreen: React.FC = () => {
       const response = await createUserWithEmailAndPassword(
         auth,
         email,
-        password
+        password,
       );
       const uid = response.user.uid;
       await createUserDocument(uid, {
@@ -246,6 +163,7 @@ const LoginScreen: React.FC = () => {
 
       // Navigation
       setUser(response.user);
+      setStage("authenticated");
     } catch (error) {
       console.error("Registration failed:", error);
       // alert notification toast
@@ -273,7 +191,7 @@ const LoginScreen: React.FC = () => {
           hasSeenVacationTour: userData.hasSeenVacationTour ?? false,
           hasSeenWorkHoursTour: userData.hasSeenWorkHoursTour ?? false,
         },
-        { merge: true } // usefull to prevent overwriting
+        { merge: true }, // usefull to prevent overwriting
       );
     } catch (error) {
       console.error("Error creating user document:", error);
@@ -283,7 +201,7 @@ const LoginScreen: React.FC = () => {
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
 
   return (
@@ -436,13 +354,6 @@ const LoginScreen: React.FC = () => {
           )}
         </View>
       </DismissKeyboard>
-      {/* TotpCodeModal will displayed after login in if 2FA is activated */}
-      <TotpCodeModal
-        visible={totpModalVisible}
-        loading={totpLoading}
-        onCancel={handleTotpCancel}
-        onSubmit={handleTotpSubmit}
-      />
     </AlertNotificationRoot>
   );
 };

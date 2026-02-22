@@ -17,6 +17,3 @@ import * as admin from "firebase-admin";
 if (!admin.apps.length) {
   admin.initializeApp({ projectId: "test-project" });
 }
-
-const firestore = admin.firestore();
-firestore.settings({ host: "localhost:8001", ssl: false });
