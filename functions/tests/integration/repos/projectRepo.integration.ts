@@ -1,9 +1,8 @@
-/////////////////////////////// projectRepo.integration.ts //////////////////////////////
+///////////////////////////// projectRepo.integration.ts /////////////////////////////
 
-// This file contains the integration tests for the ProjectRepo class,
-// which is used to interact with the Firestore database.
+// Integration tests for ProjectRepo against Firestore emulator
 
-/////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
 
 import * as admin from "firebase-admin";
 
@@ -13,26 +12,42 @@ import {
   UpdateProjectInput,
 } from "../../../src/repos/projectRepo";
 
-/////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+
+const projectRepo = new ProjectRepo();
+
+// Init admin with projectId (important for emulator)
+if (!admin.apps.length) {
+  admin.initializeApp({
+    projectId: process.env.GCLOUD_PROJECT || "test-project",
+  });
+}
+
+// Ensure Firestore emulator settings
+const ensureFirestoreEmulator = () => {
+  const host = process.env.FIRESTORE_EMULATOR_HOST;
+  if (!host) {
+    throw new Error(
+      "FIRESTORE_EMULATOR_HOST is not set. Run tests with `firebase emulators:exec`.",
+    );
+  }
+
+  admin.firestore().settings({
+    host: host.replace("http://", ""),
+    ssl: false,
+  });
+};
+
+ensureFirestoreEmulator();
 
 describe("ProjectRepo Integration Tests", () => {
-  let projectRepo: ProjectRepo;
   let testProjectId: string;
-
-  beforeAll(() => {
-    if (!admin.apps.length) {
-      admin.initializeApp({ projectId: "test-project" });
-    }
-
-    projectRepo = new ProjectRepo();
-  });
 
   beforeEach(() => {
     testProjectId = `test-project-${Date.now()}-${Math.random()}`;
   });
 
   afterEach(async () => {
-    // call deleteProject
     try {
       await admin
         .firestore()
@@ -40,43 +55,43 @@ describe("ProjectRepo Integration Tests", () => {
         .doc(testProjectId)
         .delete();
     } catch {
-      // ignore if not existing
+      // ignore
     }
   });
 
   it("should throw ProjectNotFoundError for non-existent project", async () => {
     const nonExistentId = "non-existent-project";
+
     await expect(
       projectRepo.updateProject(nonExistentId, {
         name: "Test",
         updatedAt: admin.firestore.Timestamp.now(),
-      })
+      } as UpdateProjectInput),
     ).rejects.toThrow(ProjectNotFoundError);
   });
 
   it("should create and update a project", async () => {
     const firestore = admin.firestore();
 
-    // CREATE: set initial doc directly over Repo(or Firestore)
     await firestore.collection("Projects").doc(testProjectId).set({
       name: "Initial Project",
       updatedAt: admin.firestore.Timestamp.now(),
-      isTracking: false, // initial
+      isTracking: false,
     });
 
-    // ACT: call updateProject
     const updateInput: UpdateProjectInput = {
       name: "Updated Project",
       updatedAt: admin.firestore.Timestamp.now(),
       isTracking: true,
     };
+
     await projectRepo.updateProject(testProjectId, updateInput);
 
-    // ASSERT
     const updatedDoc = await firestore
       .collection("Projects")
       .doc(testProjectId)
       .get();
+
     const data = updatedDoc.data();
 
     expect(data?.name).toBe("Updated Project");

@@ -10,7 +10,7 @@ jest.mock("../../../src/utils/rateLimit");
 import { AuthService } from "../../../src/services/authService";
 import { UserRepo } from "../../../src/repos/userRepo";
 import { rateLimit } from "../../../src/utils/rateLimit";
-import { verifyTOTP } from "../../../src/utils/totpUtils";
+import { verifyTotp } from "../../../src/security/totpCore";
 import { logEvent } from "../../../src/utils/logger";
 import {
   NotFoundError,
@@ -21,21 +21,23 @@ import {
 
 // mock dependencies
 jest.mock("../../../src/repos/userRepo");
-jest.mock("../../../src/utils/totpUtils");
 jest.mock("../../../src/utils/logger");
+jest.mock("../../../src/security/totpCore", () => ({
+  verifyTotp: jest.fn(),
+}));
 
 describe("AuthService Unit Tests", () => {
   // call mock dependencies
   let authService: AuthService;
   let mockUserRepo: jest.Mocked<UserRepo>;
   let mockRateLimit: jest.MockedFunction<typeof rateLimit>;
-  let mockVerifyTOTP: jest.MockedFunction<typeof verifyTOTP>;
+  let mockVerifyTOTP: jest.MockedFunction<typeof verifyTotp>;
   let mockLogEvent: jest.MockedFunction<typeof logEvent>;
 
   beforeEach(() => {
     mockUserRepo = new UserRepo() as jest.Mocked<UserRepo>;
     mockRateLimit = rateLimit as jest.MockedFunction<typeof rateLimit>;
-    mockVerifyTOTP = verifyTOTP as jest.MockedFunction<typeof verifyTOTP>;
+    mockVerifyTOTP = verifyTotp as jest.MockedFunction<typeof verifyTotp>;
     mockLogEvent = logEvent as jest.MockedFunction<typeof logEvent>;
 
     authService = new AuthService();
@@ -78,14 +80,14 @@ describe("AuthService Unit Tests", () => {
     it("should throw error for unknown action", async () => {
       // @ts-ignore
       await expect(
-        authService.loginOrRegister("delete" as any, "user123")
+        authService.loginOrRegister("delete" as any, "user123"),
       ).rejects.toThrow("Invalid action for loginOrRegister");
     });
 
     it("should throw error for empty action", async () => {
       // @ts-ignore
       await expect(authService.loginOrRegister("", "user123")).rejects.toThrow(
-        "Invalid action for loginOrRegister"
+        "Invalid action for loginOrRegister",
       );
     });
   });
@@ -140,14 +142,14 @@ describe("AuthService Unit Tests", () => {
       mockRateLimit.mockResolvedValue(undefined);
 
       await expect(authService.verifyTotp(uid, code)).rejects.toThrow(
-        new BusinessRuleError("TOTP not configured")
+        new BusinessRuleError("TOTP not configured"),
       );
 
       expect(mockRateLimit).toHaveBeenCalledWith(uid, "verifyTotp", 5, 60000);
       expect(mockLogEvent).not.toHaveBeenCalledWith(
         "verifyTotp",
         expect.any(String),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -158,7 +160,7 @@ describe("AuthService Unit Tests", () => {
       mockRateLimit.mockRejectedValue(new Error("Rate limit exceeded"));
 
       await expect(authService.verifyTotp(uid, code)).rejects.toThrow(
-        "Rate limit exceeded"
+        "Rate limit exceeded",
       );
 
       expect(mockRateLimit).toHaveBeenCalledWith(uid, "verifyTotp", 5, 60000);
@@ -169,12 +171,12 @@ describe("AuthService Unit Tests", () => {
       const code = "123456";
 
       mockUserRepo.getUserTOTPSecret.mockRejectedValue(
-        new NotFoundError("User")
+        new NotFoundError("User"),
       );
       mockRateLimit.mockResolvedValue(undefined);
 
       await expect(authService.verifyTotp(uid, code)).rejects.toThrow(
-        new NotFoundError("User")
+        new NotFoundError("User"),
       );
 
       expect(mockRateLimit).toHaveBeenCalledWith(uid, "verifyTotp", 5, 60000);
@@ -183,7 +185,7 @@ describe("AuthService Unit Tests", () => {
     it("should throw when uid is undefined", async () => {
       // @ts-ignore
       await expect(
-        authService.verifyTotp(undefined as any, "123456")
+        authService.verifyTotp(undefined as any, "123456"),
       ).rejects.toThrow();
     });
 

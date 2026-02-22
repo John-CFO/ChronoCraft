@@ -38,8 +38,8 @@ jest.mock("firebase-admin", () => {
     initializeApp: jest.fn(),
     apps: [],
     app: jest.fn(() => ({
-      firestore: mockFirestore,
-      auth: mockAuth,
+      firestore: mockFirestore(),
+      auth: mockAuth(),
     })),
     firestore: Object.assign(jest.fn(mockFirestore), {
       FieldValue: mockFieldValue,
@@ -52,14 +52,9 @@ jest.mock("firebase-admin", () => {
 });
 
 // Mock crypto module
-const mockTimingSafeEqual = jest.fn(() => true);
 jest.mock("crypto", () => ({
   ...jest.requireActual("crypto"),
-  timingSafeEqual: mockTimingSafeEqual,
-  createHmac: jest.fn(() => ({
-    update: jest.fn().mockReturnThis(),
-    digest: jest.fn(() => Buffer.from("mocked")),
-  })),
+  timingSafeEqual: jest.fn(() => true),
 }));
 
 // Jest Configuration
@@ -70,13 +65,13 @@ globalThis.mockRequest = <T = any>(
   data: T = {} as T,
   uid?: string,
   token?: DecodedIdToken,
-  headers: Record<string, string> = {}
-): Partial<CallableRequest<T>> => ({
+  headers: Record<string, string> = {},
+): CallableRequest<T> => ({
   data,
   auth: uid
     ? {
         uid,
-        token: token || ({ uid } as DecodedIdToken),
+        token: token || ({} as DecodedIdToken),
       }
     : undefined,
   rawRequest: {
@@ -104,8 +99,8 @@ declare global {
     data?: T,
     uid?: string,
     token?: import("firebase-admin/auth").DecodedIdToken,
-    headers?: Record<string, string>
-  ) => Partial<CallableRequest<T>>;
+    headers?: Record<string, string>,
+  ) => CallableRequest<T>;
 
   var mockResponse: () => {
     status: jest.Mock<any, any>;

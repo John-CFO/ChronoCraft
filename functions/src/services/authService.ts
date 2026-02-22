@@ -7,7 +7,7 @@
 
 import { UserRepo } from "../repos/userRepo";
 import { rateLimit } from "../utils/rateLimit";
-import { verifyTOTP } from "../utils/totpUtils";
+import { verifyTotp } from "../security/totpCore";
 import { logEvent } from "../utils/logger";
 import { BusinessRuleError } from "../errors/domain.errors";
 import { ValidationError } from "../errors/domain.errors";
@@ -37,11 +37,11 @@ export class AuthService {
     if (!secret) {
       throw new BusinessRuleError(
         "TOTP not configured",
-        "Please configure your TOTP."
+        "Please configure your TOTP.",
       );
     }
 
-    const valid = verifyTOTP(secret, code);
+    const valid = verifyTotp(secret, code);
     logEvent("verifyTotp", valid ? "info" : "warn", { uid, valid });
 
     return { valid };

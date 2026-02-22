@@ -1,42 +1,54 @@
-//////////////////////////////// index.ts ///////////////////////////////////////
+/////////////////////////////// index.ts /////////////////////////////
 
-// This file contains the implementation of the Firebase Cloud Functions
+// This file contains all cloud functions for the application
 
-/////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
 
+import { setGlobalOptions } from "firebase-functions/v2";
+import { onRequest, onCall } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
-import * as functions from "firebase-functions";
 
-/////////////////////////////////////////////////////////////////////////////////
+setGlobalOptions({
+  region: "us-central1",
+  maxInstances: 10,
+});
 
-// Firebase-Admin-initialization
 if (!admin.apps.length) {
   admin.initializeApp();
 }
 
+// HTTP handlers
 import { authValidator } from "./functions/authValidator.function";
 import { profileValidator } from "./functions/profileValidator.function";
 import { projectsAndWorkValidator } from "./functions/projectAndWorkValidator.function";
 import { secureDelete } from "./functions/secureDelete.function";
 
-//////////////////////////////////////////////////////////////////////////////////
+// TOTP handlers
+import {
+  checkTotpStatusHandler,
+  createTotpSecretHandler,
+  verifyTotpTokenHandler,
+  verifyTotpLoginHandler,
+} from "./functions/totp";
+import { disableTotpHandler } from "./functions/disableTotp.function";
 
-// Wrap each handler in a Firebase Cloud Function
-export const authValidatorFunction = functions.https.onRequest(authValidator);
+//////////////////////////////////////////////////////////////////////////////////////////
 
-export const profileValidatorFunction =
-  functions.https.onRequest(profileValidator);
-
-export const projectsAndWorkValidatorFunction = functions.https.onRequest(
-  projectsAndWorkValidator
-);
-
-export const secureDeleteFunction = functions.https.onRequest(secureDelete);
-
-// Export the raw handlers functions
-export {
-  authValidator,
-  profileValidator,
+// HTTP (REST) Functions
+export const authValidatorFunction = onRequest(authValidator);
+export const profileValidatorFunction = onRequest(profileValidator);
+export const projectsAndWorkValidatorFunction = onRequest(
   projectsAndWorkValidator,
-  secureDelete,
-};
+);
+export const secureDeleteFunction = onRequest(secureDelete);
+
+// Callable Functions
+export const checkTotpStatus = onCall({ cors: true }, checkTotpStatusHandler);
+
+export const disableTotp = onCall({ cors: true }, disableTotpHandler);
+
+export const createTotpSecret = onCall({ cors: true }, createTotpSecretHandler);
+
+export const verifyTotpToken = onCall({ cors: true }, verifyTotpTokenHandler);
+
+export const verifyTotpLogin = onCall({ cors: true }, verifyTotpLoginHandler);
