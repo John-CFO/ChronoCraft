@@ -19,6 +19,7 @@ jest.mock("../../../src/services/projectService", () => {
 
 /////////////////////////////////////////////////////////////////////////////////////
 
+import { CallableRequest } from "firebase-functions/v2/https";
 import { projectsAndWorkValidatorLogic } from "../../../src/functions/projectAndWorkValidator.logic";
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -30,20 +31,27 @@ describe("projectsAndWorkValidator", () => {
     mockSetHourlyRate.mockClear();
   });
 
-  const makeRequest = (data: any, auth?: { uid: string } | null) => ({
-    data,
-    auth,
-  });
+  // NOTE: This shape matches Firebase v5 CallableRequest
+  const makeRequest = (
+    data: any,
+    auth?: { uid: string } | null,
+  ): CallableRequest<any> => {
+    return {
+      data,
+      auth: auth ?? null,
+      rawRequest: {} as any,
+    } as CallableRequest<any>;
+  };
 
   it("rejects unauthenticated requests", async () => {
     await expect(
-      projectsAndWorkValidatorLogic(makeRequest({}, null))
+      projectsAndWorkValidatorLogic(makeRequest({}, null)),
     ).rejects.toThrow("Not logged in");
   });
 
   it("rejects missing action", async () => {
     await expect(
-      projectsAndWorkValidatorLogic(makeRequest({}, { uid: "u1" }))
+      projectsAndWorkValidatorLogic(makeRequest({}, { uid: "u1" })),
     ).rejects.toThrow("Missing action");
   });
 
@@ -53,14 +61,14 @@ describe("projectsAndWorkValidator", () => {
     const result = await projectsAndWorkValidatorLogic(
       makeRequest(
         { action: "updateProject", payload: { id: "p1", name: "New Name" } },
-        { uid: "u1" }
-      )
+        { uid: "u1" },
+      ),
     );
 
     expect(mockUpdateProject).toHaveBeenCalledWith(
       "p1",
       { id: "p1", name: "New Name" },
-      "u1"
+      "u1",
     );
     expect(result).toEqual({ success: true });
   });
@@ -71,8 +79,8 @@ describe("projectsAndWorkValidator", () => {
     const result = await projectsAndWorkValidatorLogic(
       makeRequest(
         { action: "setHourlyRate", payload: { projectId: "p1", rate: 50 } },
-        { uid: "u1" }
-      )
+        { uid: "u1" },
+      ),
     );
 
     expect(mockSetHourlyRate).toHaveBeenCalledWith("u1", "p1", {
@@ -85,8 +93,8 @@ describe("projectsAndWorkValidator", () => {
   it("rejects unknown action", async () => {
     await expect(
       projectsAndWorkValidatorLogic(
-        makeRequest({ action: "deleteAll" }, { uid: "u1" })
-      )
+        makeRequest({ action: "deleteAll" }, { uid: "u1" }),
+      ),
     ).rejects.toThrow("Unknown action");
   });
 });

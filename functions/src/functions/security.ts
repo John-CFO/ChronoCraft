@@ -4,30 +4,13 @@
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-import { https } from "firebase-functions/v2";
+import { onCall, CallableRequest } from "firebase-functions/v2/https";
 
 import { logEvent } from "../utils/logger";
 import { ValidationError, AuthenticationError } from "../errors/domain.errors";
 import { handleFunctionError } from "../errors/handleFunctionError";
 
 ////////////////////////////////////////////////////////////////////////////////////
-
-// Security headers configuration
-export interface SecurityHeaders {
-  "Content-Security-Policy"?: string;
-  "Strict-Transport-Security"?: string;
-  "X-Content-Type-Options"?: string;
-  "X-Frame-Options"?: string;
-  "X-XSS-Protection"?: string;
-}
-
-export const DEFAULT_SECURITY_HEADERS: SecurityHeaders = {
-  "Content-Security-Policy": "default-src 'self'",
-  "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
-  "X-Content-Type-Options": "nosniff",
-  "X-Frame-Options": "DENY",
-  "X-XSS-Protection": "1; mode=block",
-};
 
 // Input validation utilities
 export class InputValidator {
@@ -45,7 +28,7 @@ export class InputValidator {
     data: any,
     field: string,
     minLength?: number,
-    maxLength?: number
+    maxLength?: number,
   ): void {
     this.validateRequired(data, field);
 
@@ -56,13 +39,13 @@ export class InputValidator {
     // check if field is too short
     if (minLength !== undefined && data[field].length < minLength) {
       throw new ValidationError(
-        `Field '${field}' must be at least ${minLength} characters`
+        `Field '${field}' must be at least ${minLength} characters`,
       );
     }
     // check if field is too long
     if (maxLength !== undefined && data[field].length > maxLength) {
       throw new ValidationError(
-        `Field '${field}' must be at most ${maxLength} characters`
+        `Field '${field}' must be at most ${maxLength} characters`,
       );
     }
   }
@@ -74,16 +57,17 @@ export class InputValidator {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(data[field])) {
       throw new ValidationError(
-        `Field '${field}' must be a valid email address`
+        `Field '${field}' must be a valid email address`,
       );
     }
   }
 
+  // Validate number
   static validateNumber(
     data: any,
     field: string,
     min?: number,
-    max?: number
+    max?: number,
   ): void {
     this.validateRequired(data, field);
 
@@ -129,16 +113,15 @@ export class InputValidator {
 
 // Secure function wrapper
 export const secureFunction = (
-  handler: (request: https.CallableRequest) => Promise<any>,
+  handler: (request: CallableRequest) => Promise<any>,
   options?: {
     requireAuth?: boolean;
     rateLimit?: { action: string; maxAttempts: number; windowMs: number };
     validation?: (data: any) => void;
-    headers?: Record<string, string>;
-  }
+  },
 ) => {
   // Secure function call
-  return https.onCall(async (request: https.CallableRequest) => {
+  return onCall(async (request: CallableRequest) => {
     const startTime = Date.now();
     const functionName = handler.name || "anonymous";
 
@@ -155,7 +138,7 @@ export const secureFunction = (
           request.auth.uid,
           options.rateLimit.action,
           options.rateLimit.maxAttempts,
-          options.rateLimit.windowMs
+          options.rateLimit.windowMs,
         );
       }
 
@@ -182,12 +165,7 @@ export const secureFunction = (
         success: true,
       });
 
-      // Add security headers to response
-      const headers = { ...DEFAULT_SECURITY_HEADERS, ...options?.headers };
-      const response: any = result;
-      response.__headers = headers;
-
-      return response;
+      return result;
     } catch (error: any) {
       // Log error
       const duration = Date.now() - startTime;

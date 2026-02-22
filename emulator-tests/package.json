@@ -1,0 +1,19 @@
+{
+  "name": "emulator-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run --config vitest.config.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.10",
+    "firebase-admin": "^13.6.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.0",
+    "vitest": "^4.0.18"
+  },
+  "dependencies": {
+    "firebase": "^10.0.0",
+    "node-fetch": "^3.3.2"
+  }
+}

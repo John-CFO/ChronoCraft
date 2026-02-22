@@ -19,6 +19,7 @@ import React, {
   useCallback,
   useEffect,
   useState,
+  useContext,
 } from "react";
 import {
   DrawerContentComponentProps,
@@ -30,6 +31,7 @@ import { AntDesign } from "@expo/vector-icons";
 import Modal from "react-native-modal";
 import { getDoc, doc } from "firebase/firestore";
 
+import { AuthContext } from "../components/contexts/AuthContext";
 import EditProfileModal from "./EditProfileModal";
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import FAQBottomSheet from "./FAQBottomSheet";
@@ -50,14 +52,17 @@ interface CustomDrawerProps extends DrawerContentComponentProps {}
 const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
 
   // declare state for edit profile modal visibility
   const [profileModalVisible, setProfileModalVisible] = useState(false);
 
   // declare state for user data
-  const [user, setUser] = useState<MergedUser | null>(null);
+  const [user, setLocalUser] = useState<MergedUser | null>(null);
+
+  // declare the auth context
+  const { setUser, setStage } = useContext(AuthContext);
 
   // declare state for 2FA modal
   const [tfaModalVisible, setTfaModalVisible] = useState(false);
@@ -94,7 +99,9 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
       const userRef = doc(FIREBASE_FIRESTORE, "Users", currentUser.uid);
       const userDoc = await getDoc(userRef);
 
-      if (!userDoc.exists()) return;
+      if (!userDoc.exists()) {
+        return;
+      }
 
       const data = userDoc.data() || {};
 
@@ -105,7 +112,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         displayName: data.displayName ?? undefined,
         personalID: data.personalID ?? undefined,
         photoURL: data.photoURL ?? undefined,
-        totpEnabled: data.totpEnabled ?? false,
+        totpEnabled: data.totp?.enabled ?? false,
         hasSeenHomeTour: data.hasSeenHomeTour ?? false,
         hasSeenVacationTour: data.hasSeenVacationTour ?? false,
         hasSeenWorkHoursTour: data.hasSeenWorkHoursTour ?? false,
@@ -115,7 +122,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         createdAt: data.createdAt?.toDate?.() ?? undefined,
       };
 
-      setUser(mergedUser);
+      setLocalUser(mergedUser);
       setIsEnrolled(!!mergedUser.totpEnabled);
     } catch (error) {
       console.error("Error fetching user profile:", error);
@@ -199,14 +206,14 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         onSwipeComplete={closeTfaModal}
         style={{ justifyContent: "center", alignItems: "center" }}
       >
-        {user ? (
+        {FIREBASE_AUTH.currentUser ? (
           <TwoFactorModal
             onClose={closeTfaModal}
             isEnrolled={isEnrolled}
             setIsEnrolled={setIsEnrolled}
           />
         ) : (
-          <></>
+          <Text style={{ color: "white" }}>No user logged in</Text>
         )}
       </Modal>
 
@@ -363,9 +370,15 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityLabel="Logout"
-          onPress={() => {
-            FIREBASE_AUTH.signOut();
-            // console.log("User logged out");
+          onPress={async () => {
+            try {
+              await FIREBASE_AUTH.signOut(); // Firebase Logout
+
+              setUser(null); // update Context
+              setStage("loggedOut"); // return to login screen
+            } catch (error) {
+              console.error("Logout failed:", error);
+            }
           }}
         >
           <View

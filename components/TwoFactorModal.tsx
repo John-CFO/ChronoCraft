@@ -1,10 +1,9 @@
-//////////////////////////TwoFactorModal.tsx/////////////////////////////////////////
+////////////////////////// TwoFactorModal.tsx //////////////////////////////
 
-// This component is used to display the two-factor authentication modal
-// The user can enable or disable two-factor authentication, validate the token
-// and enter the TOTP code from the authenticator app
+// Two-Factor Authentication modal with TOTP via Cloud Functions
+// Handles enable/disable, QR code display, OTP input, confirm, skip
 
-/////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
 
 import React, { useEffect, useState, useRef } from "react";
 import {
@@ -18,64 +17,78 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import QRCode from "react-native-qrcode-svg";
 import { getAuth } from "firebase/auth";
-import { doc, getDoc, updateDoc, deleteField } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
+import { httpsCallable } from "firebase/functions";
 
-import { FIREBASE_APP, FIREBASE_FIRESTORE } from "../firebaseConfig";
+import {
+  FIREBASE_APP,
+  FIREBASE_FIRESTORE,
+  FIREBASE_FUNCTIONS,
+} from "../firebaseConfig";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import OTPInput from "./OTPInput";
 import DismissKeyboard from "../components/DismissKeyboard";
 import { useDotAnimation } from "../components/DotAnimation";
 
-///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
+// Props Interface
 interface Props {
   onClose: () => void;
   isEnrolled: boolean;
   setIsEnrolled: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////
+// Typen für die Responses
+interface CreateTotpSecretResponse {
+  otpAuthUrl: string;
+  enrollmentId: string;
+  message: string;
+}
+
+interface VerifyTotpTokenResponse {
+  valid: boolean;
+  message: string;
+}
+
+interface DisableTotpResponse {
+  success: boolean;
+  message?: string;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
 
 const TwoFactorModal: React.FC<Props> = ({
   onClose,
   isEnrolled,
   setIsEnrolled,
 }) => {
-  // decare authentication variables
+  // declarations
   const auth = getAuth(FIREBASE_APP);
   const user = auth.currentUser;
-  // state to handle the loading animation
   const [loading, setLoading] = useState(false);
-  // states for TOTP
-  const [secret, setSecret] = useState<string | null>(null);
   const [otpUrl, setOtpUrl] = useState<string | null>(null);
   const [tokenInput, setTokenInput] = useState("");
-  //state to initialize the component
   const [initialized, setInitialized] = useState(false);
+  const [enrollmentStarted, setEnrollmentStarted] = useState(false);
+  const [enrollmentId, setEnrollmentId] = useState<string | null>(null);
 
-  // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
-
-  // define the dot animation with a delay
-  const DOT_INTERVAL_MS = 500; // little faster looks fluenter
+  const DOT_INTERVAL_MS = 500;
   const dots = useDotAnimation(loading, DOT_INTERVAL_MS);
-  const MIN_ACTION_DURATION_MS = 3000;
-  // delay reference
+  const visibleDots = dots;
+
   const isMounted = useRef<boolean>(true);
-  // hook to manage the dot animation (delay)
+  // hook to check if component is mounted
   useEffect(() => {
     isMounted.current = true;
     return () => {
       isMounted.current = false;
     };
   }, []);
-  const wait = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
-  // visibleDots: if hook hasn't produced a value yet, show an immediate "." while loading
-  const visibleDots = dots;
-
-  // hook to check if the user is enrolled
+  // Hook to check if user is enrolled
   useEffect(() => {
     (async () => {
       if (!user) {
@@ -87,10 +100,7 @@ const TwoFactorModal: React.FC<Props> = ({
         const snap = await getDoc(userRef);
         if (snap.exists()) {
           const data = snap.data();
-          // minimal: check only if TOTPenabled exists
-          setIsEnrolled(!!data?.totpEnabled);
-          // don't set secret locally
-          setSecret(null);
+          setIsEnrolled(!!data?.totp?.enabled);
         }
       } catch (e) {
         console.error("Error loading TOTP enrollment", e);
@@ -101,96 +111,175 @@ const TwoFactorModal: React.FC<Props> = ({
     })();
   }, [user]);
 
-  // define state to show the secret
-  const [showSecret, setShowSecret] = useState(false);
-
-  // function to start TOTP enrollment
+  // Function to start TOTP enrollment using Cloud Functions
   const startEnroll = async () => {
     if (!user) return;
 
     setLoading(true);
     try {
-      // Info to user that TOTP is now handled by the backend
+      // CreateTOTP Secret Callable Function
+      const createTotpSecretFunction = httpsCallable<
+        {},
+        CreateTotpSecretResponse
+      >(FIREBASE_FUNCTIONS, "createTotpSecret");
+
+      const result = await createTotpSecretFunction();
+      const data = result.data;
+
+      // Set OTP URL for QR code display
+      if (data.otpAuthUrl) {
+        setOtpUrl(data.otpAuthUrl);
+        setEnrollmentId(data.enrollmentId);
+        setEnrollmentStarted(true);
+
+        // Show informational alert
+        InteractionManager.runAfterInteractions(() => {
+          useAlertStore
+            .getState()
+            .showAlert(
+              "TOTP Enrollment Started",
+              "Scan the QR code with your authenticator app.",
+              [
+                {
+                  text: "OK",
+                  style: "default",
+                },
+              ],
+            );
+        });
+      } else {
+        throw new Error("No OTP URL received from server");
+      }
+    } catch (error: any) {
+      console.error("startEnroll error", error);
+
+      let errorMessage =
+        error.message || "Cannot start TOTP enrollment. Please try again.";
+
+      // spezific error handling messages
+      if (error.code === "functions/not-found") {
+        errorMessage =
+          "Function not found. Please make sure the function is deployed.";
+      } else if (error.code === "functions/permission-denied") {
+        errorMessage = "Permission denied. Please log in again.";
+      }
+
       InteractionManager.runAfterInteractions(() => {
-        useAlertStore
-          .getState()
-          .showAlert(
-            "Enroll TOTP",
-            "TOTP enrollment is now handled by the backend. Please follow the instructions from the server."
-          );
-      });
-    } catch (e) {
-      console.error("startEnroll error", e);
-      InteractionManager.runAfterInteractions(() => {
-        useAlertStore
-          .getState()
-          .showAlert("Error", "Cannot start TOTP enrollment.");
+        useAlertStore.getState().showAlert("Error", errorMessage);
       });
     } finally {
       setLoading(false);
     }
   };
 
-  // function to confirm TOTP
+  // Function to confirm TOTP enrollment using Cloud Functions
   const confirmEnroll = async () => {
     if (!user) return;
+    if (tokenInput.length !== 6) {
+      useAlertStore
+        .getState()
+        .showAlert("Error", "Please enter a valid 6-digit code.");
+      return;
+    }
 
     setLoading(true);
     try {
-      // Backend should confirm TOTP
-      // Frontend gives only feedback
-      InteractionManager.runAfterInteractions(() => {
+      const id = enrollmentId;
+      if (!id) {
+        console.error("Enrollment ID missing");
+        return;
+      }
+
+      // Verify TOTP Token Callable Function
+      const verifyTotpTokenFunction = httpsCallable<
+        { token: string; enrollmentId: string },
+        VerifyTotpTokenResponse
+      >(FIREBASE_FUNCTIONS, "verifyTotpToken");
+
+      const result = await verifyTotpTokenFunction({
+        token: tokenInput,
+        enrollmentId: id,
+      });
+      const data = result.data;
+
+      if (data.valid) {
+        setIsEnrolled(true);
+        setOtpUrl(null);
+        setEnrollmentStarted(false);
+        setTokenInput("");
+        useAlertStore
+          .getState()
+          .showAlert("Success", "TOTP enabled successfully!");
+        onClose();
+      } else {
+        useAlertStore
+          .getState()
+          .showAlert("Error", data.message || "Invalid TOTP code");
+      }
+    } catch (error: any) {
+      console.error("confirmEnroll error", error);
+
+      let errorMessage = error.message || "Failed to verify TOTP";
+
+      // spezific error handling messages
+      if (error.code === "functions/invalid-argument") {
+        errorMessage =
+          "Invalid TOTP code. Please enter a valid 6-digit number.";
+      } else if (error.code === "functions/failed-precondition") {
+        errorMessage = "TOTP not initialized. Please activate TOTP first.";
+      }
+
+      useAlertStore.getState().showAlert("Error", errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to disable TOTP using Cloud Functions
+  const disableTotp = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const disableTotpFn = httpsCallable<{}, DisableTotpResponse>(
+        FIREBASE_FUNCTIONS,
+        "disableTotp",
+      );
+      const res = await disableTotpFn();
+      const data = res.data;
+
+      if (data.success) {
+        setIsEnrolled(false);
+        setOtpUrl(null);
+        setEnrollmentStarted(false);
+        setTokenInput("");
+
         useAlertStore
           .getState()
           .showAlert(
-            "TOTP Enrollment",
-            "Please confirm your TOTP via the backend service."
+            "2FA Deactivated",
+            data.message ||
+              "TOTP successfully disabled. You will need to set it up again to use it.",
           );
-      });
-    } catch (err) {
-      console.error("confirmEnroll error", err);
-    } finally {
-      setLoading(false);
-      setTokenInput("");
-      setOtpUrl(null);
-      onClose();
-    }
-  };
-
-  // function to disable TOTP
-  const disableTotp = async () => {
-    if (!user) return;
-
-    setLoading(true);
-    try {
-      const ref = doc(FIREBASE_FIRESTORE, "Users", user.uid);
-      await updateDoc(ref, {
-        totpEnabled: false,
-        totpSecret: deleteField(),
-        totpEncrypted: deleteField(),
-      });
-
-      // Eset success directly
-      setIsEnrolled(false);
+      } else {
+        throw new Error(data.message || "Disabling TOTP failed");
+      }
+    } catch (err: any) {
+      console.error("disableTotp error", err);
       useAlertStore
         .getState()
-        .showAlert("2FA deactivated", "TOTP successfully disabled.");
-    } catch (err) {
-      console.error("disableTotp error", err);
-      useAlertStore.getState().showAlert("Error", "Cannot disable TOTP.");
+        .showAlert("Error", err.message || "Cannot disable TOTP.");
     } finally {
       setLoading(false);
     }
   };
 
-  // function to get the accessibility mode
+  // function to handle the accessibility mode
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
 
   if (!initialized) {
     return (
-      // Loadingspinner between the modal changing
       <View
         style={{
           flex: 1,
@@ -260,12 +349,11 @@ const TwoFactorModal: React.FC<Props> = ({
             }}
           />
 
-          {/* information text */}
           {isEnrolled ? (
             <>
               <Text
                 accessibilityRole="text"
-                accessibilityLabel="The Authentication is currently enabled."
+                accessibilityLabel="Two-Factor Authentication is currently enabled."
                 style={{
                   textAlign: "center",
                   marginBottom: accessMode ? 20 : 10,
@@ -276,10 +364,10 @@ const TwoFactorModal: React.FC<Props> = ({
                     : "MPLUSLatin_ExtraLight",
                 }}
               >
-                The Authentication is currently enabled.
+                Two-Factor Authentication is currently enabled.
               </Text>
 
-              {/* DISABLE — exakt wie dein FAQ-Button */}
+              {/* DISABLE Button */}
               <TouchableOpacity
                 accessible={true}
                 accessibilityRole="button"
@@ -371,15 +459,15 @@ const TwoFactorModal: React.FC<Props> = ({
                 </LinearGradient>
               </TouchableOpacity>
 
-              {/* SKIP */}
+              {/* CLOSE */}
               <TouchableOpacity
                 accessible={true}
                 accessibilityRole="button"
-                accessibilityLabel="Skip"
+                accessibilityLabel="Close"
                 onPress={onClose}
                 style={{
                   width: screenWidth * 0.7,
-                  maxWidth: 400,
+                  maxWidth: 600,
                   borderRadius: 12,
                   overflow: "hidden",
                   borderWidth: 2,
@@ -395,26 +483,27 @@ const TwoFactorModal: React.FC<Props> = ({
                     paddingVertical: 6,
                     justifyContent: "center",
                     alignItems: "center",
+                    height: 45,
+                    maxWidth: 600,
                   }}
                 >
                   <Text
                     style={{
+                      marginBottom: 5,
                       fontFamily: "MPLUSLatin_Bold",
                       fontSize: 22,
                       color: "black",
-                      marginBottom: 5,
-                      paddingRight: 10,
+                      textAlign: "center",
                     }}
                   >
-                    SKIP
+                    CLOSE
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
             </>
           ) : (
             <>
-              {/* Activate modal */}
-              {!secret ? (
+              {!enrollmentStarted ? (
                 <>
                   <Text
                     accessibilityRole="text"
@@ -471,17 +560,58 @@ const TwoFactorModal: React.FC<Props> = ({
                           alignItems: "center",
                         }}
                       >
-                        <Text
-                          style={{
-                            marginBottom: 5,
-                            fontFamily: "MPLUSLatin_Bold",
-                            fontSize: 22,
-                            color: "white",
-                            textAlign: "center",
-                          }}
-                        >
-                          ACTIVATE
-                        </Text>
+                        {/* loading dots while activating */}
+                        {loading ? (
+                          <View
+                            style={{
+                              height: 45,
+                              width: "100%",
+                              flexDirection: "row",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              paddingHorizontal: 12,
+                              overflow: "hidden",
+                            }}
+                          >
+                            <Text
+                              style={{
+                                fontFamily: "MPLUSLatin_Bold",
+                                fontSize: 22,
+                                color: "white",
+                                textAlign: "center",
+                                flexShrink: 0,
+                              }}
+                            >
+                              Activating
+                            </Text>
+
+                            <Text
+                              style={{
+                                marginLeft: 2,
+                                fontFamily: "MPLUSLatin_Bold",
+                                fontSize: 18,
+                                color: "white",
+                                textAlign: "left",
+                                minWidth: 36,
+                                flexShrink: 0,
+                              }}
+                            >
+                              {visibleDots}
+                            </Text>
+                          </View>
+                        ) : (
+                          <Text
+                            style={{
+                              marginBottom: 5,
+                              fontFamily: "MPLUSLatin_Bold",
+                              fontSize: 22,
+                              color: "white",
+                              textAlign: "center",
+                            }}
+                          >
+                            ACTIVATE
+                          </Text>
+                        )}
                       </View>
                     </LinearGradient>
                   </TouchableOpacity>
@@ -538,51 +668,39 @@ const TwoFactorModal: React.FC<Props> = ({
                 </>
               ) : (
                 <>
-                  {/* QR */}
+                  {/* QR Code Display */}
                   {otpUrl && (
                     <View
                       accessible={true}
                       accessibilityLabel="QR Code for the Two Factor Authentication"
                       accessibilityRole="image"
                       style={{
-                        marginBottom: 8,
+                        marginBottom: 20,
                       }}
                     >
                       <QRCode value={otpUrl} size={220} />
                     </View>
                   )}
 
-                  {/* show secret */}
-                  <TouchableOpacity
-                    accessible={true}
-                    accessibilityRole="button"
-                    accessibilityLabel={
-                      showSecret ? "Hide secret text" : "Display secret text"
-                    }
-                    accessibilityHint="Display or hide manually entered secret key"
-                    onPress={async () => {
-                      setShowSecret(!showSecret);
+                  <Text
+                    style={{
+                      color: "white",
+                      textAlign: "center",
+                      marginBottom: 20,
+                      fontSize: 16,
+                      paddingHorizontal: 10,
                     }}
                   >
-                    <Text
-                      style={{
-                        fontFamily: "MPLUSLatin_Regular",
-                        color: "cyan",
-                        textAlign: "center",
-                        fontSize: accessMode ? 22 : 18,
-                        marginBottom: 10,
-                      }}
-                    >
-                      {showSecret ? secret : "Show secret"}
-                    </Text>
-                  </TouchableOpacity>
+                    Scan this QR code with your authenticator app (Google
+                    Authenticator, Authy, etc.)
+                  </Text>
 
                   <OTPInput
                     length={6}
                     onChangeCode={(code) => setTokenInput(code)}
                   />
 
-                  {/* CONFIRM — wie FAQ-Button (gleiche Struktur wie DISABLE) */}
+                  {/* CONFIRM Button */}
                   <TouchableOpacity
                     accessible={true}
                     accessibilityRole="button"
@@ -598,10 +716,16 @@ const TwoFactorModal: React.FC<Props> = ({
                       borderWidth: 2,
                       borderColor: "aqua",
                       marginBottom: 20,
+                      marginTop: 20,
                     }}
+                    disabled={tokenInput.length !== 6 || !enrollmentId}
                   >
                     <LinearGradient
-                      colors={["#00f7f7", "#005757"]}
+                      colors={
+                        tokenInput.length === 6
+                          ? ["#00f7f7", "#005757"]
+                          : ["#666666", "#333333"]
+                      }
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                       style={{
@@ -673,14 +797,14 @@ const TwoFactorModal: React.FC<Props> = ({
                     </LinearGradient>
                   </TouchableOpacity>
 
-                  {/* SKIP (reset) */}
+                  {/* CANCEL (reset) */}
                   <TouchableOpacity
                     accessible={true}
                     accessibilityRole="button"
-                    accessibilityLabel="Skip TOTP"
+                    accessibilityLabel="Cancel TOTP enrollment"
                     onPress={() => {
-                      setSecret(null);
                       setOtpUrl(null);
+                      setEnrollmentStarted(false);
                       setTokenInput("");
                     }}
                     style={{
@@ -714,7 +838,7 @@ const TwoFactorModal: React.FC<Props> = ({
                           textAlign: "center",
                         }}
                       >
-                        SKIP
+                        CANCEL
                       </Text>
                     </LinearGradient>
                   </TouchableOpacity>
