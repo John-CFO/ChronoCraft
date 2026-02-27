@@ -30,8 +30,11 @@ export class AuthService {
 
   // verifyTotp method
   async verifyTotp(uid: string, code: string) {
+    if (!uid) {
+      throw new ValidationError("UID is required");
+    }
     // rate limit the request
-    await rateLimit(uid, "verifyTotp", 5, 60_000);
+    await rateLimit.checkLimit(uid, "verifyTotp", 5, 60_000);
 
     const secret = await this.userRepo.getUserTOTPSecret(uid);
     if (!secret) {

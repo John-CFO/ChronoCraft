@@ -11,6 +11,8 @@ import * as Crypto from "crypto";
 
 import { firestore, auth, FieldValue, Timestamp } from "../firebaseAdmin";
 import { generateSecret, verifyTotp } from "../security/totpCore";
+import { rateLimit } from "../utils/rateLimit";
+import { RateLimitError } from "../errors/domain.errors";
 
 //////////////////////////////////////////////////////////////
 
@@ -134,7 +136,7 @@ export const createTotpSecretHandler = async (request: any) => {
 
       // generate new secret
       secret = generateSecret();
-
+      console.log(`Generated TOTP secret for user ${uid}: ${secret}`); // Log the generated secret for debugging (remove in production!)
       const encryptedSecret = encrypt(secret, rawKey);
       enrollmentId = Crypto.randomBytes(16).toString("hex"); // Random ID
       const expiresAt = Timestamp.fromMillis(Date.now() + 60 * 60 * 1000); // 1 Hour Expiration
@@ -299,16 +301,103 @@ export const verifyTotpLoginHandler = async (request: any) => {
   try {
     if (!request.auth)
       throw new HttpsError("unauthenticated", "Login required");
-    const { token } = request.data ?? {};
 
+    const { token, deviceId } = request.data ?? {};
     if (!token || token.length !== 6 || !/^\d+$/.test(token)) {
       throw new HttpsError("invalid-argument", "Invalid TOTP token");
     }
 
     const uid = request.auth.uid;
-    const rawKey = await TOTP_ENCRYPTION_KEY.value(); // get the key
+    const isDev = process.env.NODE_ENV !== "production";
+
+    // === RATE LIMIT CONFIG (per scope, dev-friendly) ===
+    const limits = {
+      uid: {
+        maxAttempts: Number(process.env.RL_UID_MAX_ATTEMPTS ?? (isDev ? 2 : 5)),
+        windowMs: Number(
+          process.env.RL_UID_WINDOW_MS ?? (isDev ? 5_000 : 60_000),
+        ),
+      },
+      ip: {
+        maxAttempts: Number(process.env.RL_IP_MAX_ATTEMPTS ?? (isDev ? 5 : 30)),
+        windowMs: Number(
+          process.env.RL_IP_WINDOW_MS ?? (isDev ? 5_000 : 600_000),
+        ),
+      },
+      device: {
+        knownMaxAttempts: Number(
+          process.env.RL_DEVICE_KNOWN_MAX ?? (isDev ? 5 : 10),
+        ),
+        unknownMaxAttempts: Number(
+          process.env.RL_DEVICE_UNKNOWN_MAX ?? (isDev ? 2 : 10),
+        ),
+        windowMs: Number(
+          process.env.RL_DEVICE_WINDOW_MS ?? (isDev ? 5_000 : 60_000),
+        ),
+      },
+    };
+
+    // --- MULTI-SCOPE RATE LIMIT ---
+    const rawHeaders = (request as any).rawRequest?.headers ?? {};
+    const forwarded =
+      rawHeaders["x-forwarded-for"] ||
+      rawHeaders["x-real-ip"] ||
+      rawHeaders["x-appengine-user-ip"];
+    const clientIp = forwarded ? String(forwarded).split(",")[0].trim() : null;
+
+    try {
+      // user-level
+      await rateLimit.checkLimit(
+        uid,
+        "verifyTotpLogin",
+        limits.uid.maxAttempts,
+        limits.uid.windowMs,
+      );
+
+      // ip-level
+      if (clientIp) {
+        await rateLimit.checkIP(
+          clientIp,
+          "verifyTotpLogin",
+          limits.ip.maxAttempts,
+          limits.ip.windowMs,
+        );
+      }
+
+      // device-level
+      if (deviceId) {
+        const userDevicesRef = firestore
+          .collection("Users")
+          .doc(uid)
+          .collection("devices")
+          .doc(deviceId);
+        const known = (await userDevicesRef.get()).exists;
+        await rateLimit.checkDevice(
+          deviceId,
+          "verifyTotpLogin",
+          known
+            ? limits.device.knownMaxAttempts
+            : limits.device.unknownMaxAttempts,
+          limits.device.windowMs,
+          { strict: !known },
+        );
+      }
+    } catch (err: any) {
+      if (err instanceof RateLimitError) {
+        return {
+          valid: false,
+          message: `Too many attempts. Try again in ${err.retryAfterSeconds}s`,
+          retryAfterSeconds: err.retryAfterSeconds,
+        };
+      }
+      throw err;
+    }
+
+    // --- MFA Verification ---
+    const rawKey = await TOTP_ENCRYPTION_KEY.value();
     const totpRef = firestore.collection(TOTP_COLLECTION).doc(uid);
     const totpSnap = await totpRef.get();
+
     if (!totpSnap.exists) {
       throw new HttpsError(
         "failed-precondition",
@@ -320,22 +409,25 @@ export const verifyTotpLoginHandler = async (request: any) => {
     if (!totpData.enabled) {
       throw new HttpsError("failed-precondition", "TOTP is disabled");
     }
+
     const decryptedSecret = decrypt(totpData.encryptedSecret, rawKey);
     const valid = verifyTotp(decryptedSecret, token);
 
     if (!valid) {
-      const userRef = firestore.collection("Users").doc(uid);
-      await userRef.set(
-        {
-          "totp.failedLoginAttempts": FieldValue.increment(1),
-          "totp.lastFailedLogin": FieldValue.serverTimestamp(),
-        },
-        { merge: true },
-      );
+      await firestore
+        .collection("Users")
+        .doc(uid)
+        .set(
+          {
+            "totp.failedLoginAttempts": FieldValue.increment(1),
+            "totp.lastFailedLogin": FieldValue.serverTimestamp(),
+          },
+          { merge: true },
+        );
       return { valid: false, message: "Invalid TOTP code" };
     }
 
-    // Success: Set custom claims
+    // --- SUCCESS ---
     await auth.setCustomUserClaims(uid, {
       mfa_verified: true,
       mfa_verified_at: Date.now(),
@@ -353,6 +445,7 @@ export const verifyTotpLoginHandler = async (request: any) => {
       );
       tx.update(totpRef, { lastVerified: FieldValue.serverTimestamp() });
     });
+
     return { valid: true, message: "TOTP verification successful" };
   } catch (error) {
     console.error("Error in verifyTotpLoginHandler:", error);

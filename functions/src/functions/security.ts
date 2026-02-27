@@ -5,12 +5,17 @@
 ////////////////////////////////////////////////////////////////////////////////////
 
 import { onCall, CallableRequest } from "firebase-functions/v2/https";
+import admin from "firebase-admin";
 
 import { logEvent } from "../utils/logger";
+import { rateLimit } from "../utils/rateLimit";
 import { ValidationError, AuthenticationError } from "../errors/domain.errors";
+import { RateLimitError } from "../errors/domain.errors";
 import { handleFunctionError } from "../errors/handleFunctionError";
 
 ////////////////////////////////////////////////////////////////////////////////////
+
+const db = admin.firestore();
 
 // Input validation utilities
 export class InputValidator {
@@ -120,43 +125,85 @@ export const secureFunction = (
     validation?: (data: any) => void;
   },
 ) => {
-  // Secure function call
   return onCall(async (request: CallableRequest) => {
     const startTime = Date.now();
     const functionName = handler.name || "anonymous";
 
     try {
-      // Authentication check
+      // Authentification
       if (options?.requireAuth && !request.auth) {
         throw new AuthenticationError();
       }
 
-      // Rate limiting
-      if (options?.rateLimit && request.auth?.uid) {
-        const { rateLimiter } = await import("../utils/rateLimit");
-        await rateLimiter.checkLimit(
-          request.auth.uid,
-          options.rateLimit.action,
-          options.rateLimit.maxAttempts,
-          options.rateLimit.windowMs,
-        );
-      }
-
-      // Input validation
+      // Input-Validation
       if (options?.validation) {
         options.validation(request.data);
       }
 
-      // Sanitize input
+      // Input sanitizing
       const sanitizedData = InputValidator.sanitizeObject(request.data || {});
 
-      // Execute handler
+      // --- Multi-Scope Rate Limiting ---
+      const rawHeaders = (request as any).rawRequest?.headers ?? {};
+      const forwarded =
+        rawHeaders["x-forwarded-for"] ||
+        rawHeaders["x-real-ip"] ||
+        rawHeaders["x-appengine-user-ip"];
+      const clientIp = forwarded
+        ? String(forwarded).split(",")[0].trim()
+        : null;
+
+      const deviceId = (request.data as any)?.deviceId ?? null;
+      const actionName = options?.rateLimit?.action ?? "default";
+
+      try {
+        // user-level (UID)
+        if (options?.rateLimit && request.auth?.uid) {
+          await rateLimit.checkLimit(
+            request.auth.uid,
+            actionName,
+            options.rateLimit.maxAttempts,
+            options.rateLimit.windowMs,
+          );
+        }
+
+        // ip-level (optional, permissiv, secures bot attacks even without auth)
+        if (clientIp) {
+          await rateLimit.checkIP(clientIp, actionName, 30, 10 * 60_000);
+        }
+
+        // device-level (harder if device is unknown, to prevent spoofing)
+        if (deviceId) {
+          const userDevicesRef = db
+            .collection("Users")
+            .doc(request.auth?.uid || "anon")
+            .collection("devices")
+            .doc(deviceId);
+          const known = (await userDevicesRef.get()).exists;
+          await rateLimit.checkDevice(
+            deviceId,
+            actionName,
+            known ? 10 : 2,
+            60_000,
+            { strict: !known },
+          );
+        }
+      } catch (e: any) {
+        if (e instanceof RateLimitError || e?.retryAfterSeconds) {
+          throw e; // throw RateLimitError directly to be handled in the error handler
+        }
+        logEvent("ratelimit-check-failed", "error", {
+          error: e?.message ?? String(e),
+        });
+      }
+
+      // call handler with sanitized data
       const result = await handler({
         ...request,
         data: sanitizedData,
       });
 
-      // Log success
+      // log success with duration and user info
       const duration = Date.now() - startTime;
       logEvent("Function execution completed", "info", {
         functionName,
@@ -167,7 +214,7 @@ export const secureFunction = (
 
       return result;
     } catch (error: any) {
-      // Log error
+      // log error with duration and user info
       const duration = Date.now() - startTime;
       logEvent("Function execution failed", "error", {
         functionName,
@@ -178,7 +225,7 @@ export const secureFunction = (
         stack: error.stack,
       });
 
-      // Error handling
+      // error handling: convert to standardized error response
       throw handleFunctionError(error);
     }
   });
