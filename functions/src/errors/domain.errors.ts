@@ -8,9 +8,9 @@ export class DomainError extends Error {
   // define the constructor method
   constructor(
     message: string,
-    public readonly code: string,
-    public readonly userMessage?: string,
-    public readonly details?: any
+    public code: string,
+    public userMessage?: string,
+    public readonly details?: any,
   ) {
     super(message);
     this.name = this.constructor.name;
@@ -37,7 +37,7 @@ export class ValidationError extends DomainError {
       message,
       "validation-error",
       "Invalid input. Please check your data.",
-      details
+      details,
     );
   }
 }
@@ -48,7 +48,7 @@ export class NotFoundError extends DomainError {
       `${resource} not found`,
       "not-found",
       `The requested ${resource} was not found.`,
-      details
+      details,
     );
   }
 }
@@ -59,7 +59,7 @@ export class PermissionError extends DomainError {
       `Permission denied for ${action}`,
       "permission-denied",
       "You do not have permission to perform this action.",
-      details
+      details,
     );
   }
 }
@@ -70,19 +70,27 @@ export class AuthenticationError extends DomainError {
       message,
       "authentication-error",
       "Please log in to continue.",
-      details
+      details,
     );
   }
 }
 
 export class RateLimitError extends DomainError {
-  constructor(details?: any) {
+  public retryAfterSeconds?: number;
+
+  constructor(details?: any, retryAfterSeconds?: number) {
     super(
       "Rate limit exceeded",
       "rate-limit-exceeded",
-      "Too many requests. Please try again later.",
-      details
+      retryAfterSeconds
+        ? `Too many requests. Try again in ${retryAfterSeconds} seconds.`
+        : "Too many requests. Please try again later.",
+      details,
     );
+
+    if (retryAfterSeconds) {
+      this.retryAfterSeconds = retryAfterSeconds;
+    }
   }
 }
 
@@ -92,7 +100,7 @@ export class BusinessRuleError extends DomainError {
       message,
       "business-rule-error",
       userMessage || "A business rule was violated.",
-      details
+      details,
     );
   }
 }
@@ -103,7 +111,7 @@ export class ConfigurationError extends DomainError {
       message,
       "configuration-error",
       "System configuration error.",
-      details
+      details,
     );
   }
 }
@@ -120,7 +128,7 @@ export class ExternalServiceError extends DomainError {
       `External service ${service} error`,
       "external-service-error",
       "An external service is temporarily unavailable.",
-      details
+      details,
     );
   }
 }
@@ -131,7 +139,7 @@ export class ConflictError extends DomainError {
       message,
       "conflict-error",
       "A conflict occurred with the current state.",
-      details
+      details,
     );
   }
 }
