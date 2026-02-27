@@ -101,23 +101,25 @@ const MfaScreen: React.FC = () => {
       console.error("verifyTotp error", e);
 
       let errorMessage = "Invalid authentication code.";
+
       if (e.code === "functions/failed-precondition") {
         errorMessage = e.message || "TOTP is not enabled for your account.";
       } else if (e.code === "functions/not-found") {
         errorMessage = "User not found. Please try logging in again.";
       } else if (e.code === "functions/unauthenticated") {
         errorMessage = "Session expired. Please log in again.";
-        useAlertStore
-          .getState()
-          .showAlert("Success", "Authentication successful.");
         setStage("loggedOut");
       } else if (e.code === "functions/invalid-argument") {
         errorMessage = e.message || "Invalid TOTP code format.";
+      } else if (e.code === "rate-limit-exceeded") {
+        // UX-Alert for RateLimit
+        const retry = e.retryAfterSeconds
+          ? ` Wait ${e.retryAfterSeconds}s.`
+          : "";
+        errorMessage = e.userMessage + retry;
       }
-      // Bei anderen Fehlern ggf. allgemeinen Alert anzeigen (optional)
-      if (!e.code) {
-        useAlertStore.getState().showAlert("Error", errorMessage);
-      }
+
+      useAlertStore.getState().showAlert("Error", errorMessage);
     } finally {
       setLoading(false);
       setTokenInput("");
