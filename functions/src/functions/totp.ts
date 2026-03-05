@@ -184,6 +184,24 @@ export const verifyTotpTokenHandler = async (request: any) => {
     }
 
     const uid = request.auth.uid;
+    // ----- RATE LIMIT START -----
+
+    const rawHeaders = (request as any).rawRequest?.headers ?? {};
+    const forwarded =
+      rawHeaders["x-forwarded-for"] ||
+      rawHeaders["x-real-ip"] ||
+      rawHeaders["x-appengine-user-ip"];
+
+    const clientIp = forwarded ? String(forwarded).split(",")[0].trim() : null;
+
+    await rateLimit.checkLimit(uid, "verifyTotpEnroll");
+
+    if (clientIp) {
+      await rateLimit.checkIP(clientIp, "verifyTotpEnroll");
+    }
+
+    // ----- RATE LIMIT END -----
+
     const rawKey = await TOTP_ENCRYPTION_KEY.value();
     const totpRef = firestore.collection(TOTP_COLLECTION).doc(uid);
     const userRef = firestore.collection("Users").doc(uid);

@@ -22,11 +22,24 @@ const COLLECTION = "RateLimits_v2"; // use new collection name to avoid clashing
 const BASE_PENALTY_MS = 60_000; // base penalty for first full-bucket (60s)
 const MAX_EXPONENT = 6; // cap exponent growth (2^6 = 64)
 
-function docIdFor(scope: Scope, id: string, action: string) {
+// Firestore reference helper
+function rateLimitRef(
+  db: FirebaseFirestore.Firestore,
+  scope: Scope,
+  id: string,
+  action: string,
+) {
   const safeId = id.replace(/[\/\s:.]/g, "_");
-  return `${scope}_${safeId}_${action}`;
+  return db
+    .collection(COLLECTION)
+    .doc(scope)
+    .collection("entries")
+    .doc(safeId)
+    .collection("actions")
+    .doc(action);
 }
 
+// Token refill rate per ms
 function refillRatePerMs(capacity: number, windowMs: number) {
   return capacity / windowMs;
 }
@@ -41,7 +54,14 @@ export class RateLimiter {
     maxAttempts: number = 5,
     windowMs: number = 60_000,
   ): Promise<void> {
-    return this.checkScope("uid", uid, action, maxAttempts, windowMs);
+    return this.checkScope(
+      uid, // uid
+      "uid", // scope
+      uid, // id
+      action, // action
+      maxAttempts, // capacity
+      windowMs, // windowMs
+    );
   }
 
   // New: IP-level
@@ -56,7 +76,14 @@ export class RateLimiter {
       logEvent("ip-missing", "warn", { action, ip });
       return;
     }
-    return this.checkScope("ip", ip, action, maxAttempts, windowMs);
+    return this.checkScope(
+      ip, // uid-Dummy (eigentlich id, nur um Signatur zu erfüllen)
+      "ip", // scope
+      ip, // id
+      action, // action
+      maxAttempts, // capacity
+      windowMs, // windowMs
+    );
   }
 
   // New: Device-level (deviceId provided by client)
@@ -70,15 +97,37 @@ export class RateLimiter {
     const cap = options?.strict
       ? Math.max(1, Math.floor(maxAttempts / 2))
       : maxAttempts;
-    return this.checkScope("device", deviceId, action, cap, windowMs);
+    return this.checkScope(
+      deviceId, // uid-Dummy
+      "device", // scope
+      deviceId, // id
+      action, // action
+      cap, // capacity
+      windowMs, // windowMs
+    );
   }
 
   // public helper to reset a limit (keeps compatibility)
-  async resetLimit(uid: string, action: string): Promise<void> {
-    const ref = this.db
-      .collection(COLLECTION)
-      .doc(docIdFor("uid", uid, action));
+  async resetLimit(
+    scope: Scope,
+    id: string,
+    action: string = "default",
+  ): Promise<void> {
+    const ref = rateLimitRef(this.db, scope, id, action);
     await ref.delete().catch(() => {});
+  }
+
+  // reset all limits for a user across all scopes (uid, ip, device)
+  async resetAllLimitsForUser(uid: string): Promise<void> {
+    const scopes: Scope[] = ["uid", "ip", "device"];
+    for (const scope of scopes) {
+      const userRef = this.db
+        .collection(COLLECTION)
+        .doc(scope)
+        .collection("entries")
+        .doc(uid);
+      await this.db.recursiveDelete(userRef).catch(() => {});
+    }
   }
 
   // get remaining attempts (per uid)
@@ -87,9 +136,7 @@ export class RateLimiter {
     action: string,
     maxAttempts: number = 5,
   ): Promise<number> {
-    const ref = this.db
-      .collection(COLLECTION)
-      .doc(docIdFor("uid", uid, action));
+    const ref = rateLimitRef(this.db, "uid", uid, action);
     const snap = await ref.get();
     if (!snap.exists) return maxAttempts;
     const data = snap.data() as any;
@@ -101,6 +148,7 @@ export class RateLimiter {
 
   // Core: scope-aware token-bucket with exponential penalty
   private async checkScope(
+    uid: string,
     scope: Scope,
     id: string,
     action: string,
@@ -112,7 +160,8 @@ export class RateLimiter {
       logEvent("ratelimit-no-id", "warn", { scope, action });
       return;
     }
-    const ref = this.db.collection(COLLECTION).doc(docIdFor(scope, id, action));
+    const ref = rateLimitRef(this.db, "uid", uid, action);
+
     const nowMs = Date.now();
     const refillPerMs = refillRatePerMs(capacity, windowMs);
 

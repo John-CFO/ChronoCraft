@@ -22,6 +22,7 @@ import { authValidator } from "./functions/authValidator.function";
 import { profileValidator } from "./functions/profileValidator.function";
 import { projectsAndWorkValidator } from "./functions/projectAndWorkValidator.function";
 import { secureDelete } from "./functions/secureDelete.function";
+import { deleteUserDataHandler } from "./functions/deleteUserData.function";
 
 // TOTP handlers
 import {
@@ -52,3 +53,5 @@ export const createTotpSecret = onCall({ cors: true }, createTotpSecretHandler);
 export const verifyTotpToken = onCall({ cors: true }, verifyTotpTokenHandler);
 
 export const verifyTotpLogin = onCall({ cors: true }, verifyTotpLoginHandler);
+
+export const deleteUserData = onCall({ cors: true }, deleteUserDataHandler);
