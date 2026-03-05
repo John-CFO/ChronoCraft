@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test:unit": "jest --config=jest.unit.config.js",
-    "test:integration": "jest --config=jest.integration.config.js",
+    "test:integration": "firebase emulators:exec --only functions,auth,firestore,storage \"jest --config=jest.integration.config.js\"",
     "test:integration:user": "jest tests/integration/repos/userRepo.integration.ts --config=jest.integration.config.js",
     "emulators": "firebase emulators:start --only firestore,auth --project=test-project"
   },

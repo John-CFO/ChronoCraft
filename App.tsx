@@ -46,6 +46,7 @@ import { AuthProvider } from "./components/contexts/AuthContext";
 import { ServiceProvider } from "./components/contexts/ServiceContext";
 import { navigationRef } from "./navigation/NavigationRef";
 import { AuthContext } from "./components/contexts/AuthContext";
+import { AuthStateListener } from "./onAuthStageChanges";
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -356,6 +357,7 @@ const App = () => {
                 ref={navigationRef}
                 onReady={() => console.log("Navigation ready")}
               >
+                <AuthStateListener />
                 <CustomAlert />
                 {fontsLoaded && <AppNavigator />}
               </NavigationContainer>
