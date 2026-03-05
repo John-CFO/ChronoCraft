@@ -1,0 +1,102 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /* =======================
+       Users
+    ======================= */
+    match /Users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // No User-Listening
+      allow create: if isOwner(userId);
+      allow update, delete: if false;
+
+      /* =======================
+         Services
+      ======================= */
+      match /Services/{serviceId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update, delete: if false;
+
+        /* =======================
+           Projects
+        ======================= */
+        match /Projects/{projectId} {
+
+          // Important: list without resource.data
+          allow list: if isOwner(userId);
+
+          allow get: if isOwner(userId)
+                     && resource.data.userId == request.auth.uid;
+
+          allow create: if isOwner(userId)
+                         && request.resource.data.userId == request.auth.uid;
+
+          allow update, delete: if isOwner(userId)
+                                 && resource.data.userId == request.auth.uid;
+
+          /* =======================
+             Notes (Subcollection)
+          ======================= */
+          match /Notes/{noteId} {
+
+            allow list: if isOwner(userId);
+
+            allow get: if isOwner(userId)
+                       && resource.data.userId == request.auth.uid;
+
+            allow create: if isOwner(userId)
+                           && request.resource.data.userId == request.auth.uid;
+
+            allow update, delete: if isOwner(userId)
+                                   && resource.data.userId == request.auth.uid;
+          }
+        }
+
+        /* =======================
+           WorkHours
+        ======================= */
+        match /WorkHours/{workHourId} {
+
+          allow list: if isOwner(userId);
+
+          allow get: if isOwner(userId)
+                     && resource.data.userId == request.auth.uid;
+
+          allow create: if isOwner(userId)
+                         && request.resource.data.userId == request.auth.uid;
+
+          allow update, delete: if isOwner(userId)
+                                 && resource.data.userId == request.auth.uid;
+        }
+
+        /* =======================
+           Vacations
+        ======================= */
+        match /Vacations/{vacationId} {
+
+          allow list: if isOwner(userId);
+
+          allow get: if isOwner(userId)
+                     && resource.data.userId == request.auth.uid;
+
+          allow create: if isOwner(userId)
+                         && request.resource.data.userId == request.auth.uid;
+
+          allow update, delete: if isOwner(userId)
+                                 && resource.data.userId == request.auth.uid;
+        }
+      }
+    }
+  }
+}

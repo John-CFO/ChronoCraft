@@ -24,14 +24,13 @@ import {
 } from "react-native";
 import Collapsible from "react-native-collapsible";
 import { LinearGradient } from "expo-linear-gradient";
-import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
-import { deleteObject, getStorage, ref as storageRef } from "firebase/storage";
-import { EmailAuthProvider, deleteUser } from "firebase/auth";
+import { EmailAuthProvider } from "firebase/auth";
 import { reauthenticateWithCredential } from "firebase/auth";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { ScrollView } from "react-native-gesture-handler";
+import { getFunctions, httpsCallable } from "firebase/functions";
 
-import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
+import { FIREBASE_AUTH } from "../firebaseConfig";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useDotAnimation } from "../components/DotAnimation";
 import { useAccessibilityStore } from "./services/accessibility/accessibilityStore";
@@ -60,7 +59,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
 
   // state for the password visibility
@@ -98,7 +97,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
     () => () => {
       if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
     },
-    []
+    [],
   );
 
   // ref for animation timeout
@@ -108,7 +107,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
       if (animationTimeoutRef.current)
         clearTimeout(animationTimeoutRef.current);
     },
-    []
+    [],
   );
 
   // function to delete account (returns boolean success flag)
@@ -118,7 +117,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
         .getState()
         .showAlert(
           "No Password",
-          "Please enter your password before deleting your account."
+          "Please enter your password before deleting your account.",
         );
       return false;
     }
@@ -144,95 +143,41 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
       // Reauthenticate user
       const credential = EmailAuthProvider.credential(
         currentUser.email ?? "",
-        password
+        password,
       );
       await reauthenticateWithCredential(currentUser, credential);
 
-      // Delete profile image (optional)
-      if (process.env.FIREBASE_STORAGE_ENABLED !== "false") {
-        try {
-          const st = getStorage();
-          const imgRef = storageRef(st, `profilePictures/${currentUser.uid}`);
-          await deleteObject(imgRef).catch((e) => {
-            if (e?.code && e.code !== "storage/object-not-found") {
-              useAlertStore
-                .getState()
-                .showAlert(
-                  "Warning",
-                  "Failed to delete profile image (ignored)."
-                );
-            }
-          });
-        } catch {
-          // ignore
-        }
-      }
-
-      // Delete services & nested docs without extra validation
-      const servicesSnap = await getDocs(
-        collection(FIREBASE_FIRESTORE, "Users", currentUser.uid, "Services")
-      );
-
-      for (const serviceDoc of servicesSnap.docs) {
-        try {
-          // Optional: defensive check
-          if (!serviceDoc.id) continue;
-
-          // delete service doc itself
-          await deleteDoc(serviceDoc.ref);
-        } catch {
-          useAlertStore
-            .getState()
-            .showAlert("Error", "Failed to remove service data.");
-          setLoading(false);
-          return false;
-        }
-      }
-
-      // Delete user document
-      try {
-        await deleteDoc(doc(FIREBASE_FIRESTORE, "Users", currentUser.uid));
-      } catch {
-        useAlertStore
-          .getState()
-          .showAlert("Error", "Failed to delete user document.");
-        setLoading(false);
-        return false;
-      }
-
-      // Delete auth user
-      try {
-        await deleteUser(currentUser);
-      } catch (e: any) {
-        useAlertStore
-          .getState()
-          .showAlert(
-            "Error",
-            `Failed to delete auth user. ${e?.message ?? ""}`
-          );
-        setLoading(false);
-        return false;
-      }
+      // Cloud Function to call deleteUserData
+      const functions = getFunctions();
+      const deleteUserData = httpsCallable(functions, "deleteUserData");
+      await deleteUserData({});
 
       useAlertStore
         .getState()
         .showAlert("Success", "Your account has been deleted.");
       closeFAQSheet();
       setLoading(false);
+
+      // got to login screen after a short delay to allow user to read the success message
+      try {
+        await FIREBASE_AUTH.signOut();
+      } catch (err) {
+        console.error("signOut failed:", err);
+      }
+
       return true;
     } catch (error: any) {
       useAlertStore
         .getState()
         .showAlert(
           "Error",
-          `There was an issue deleting your account. ${error?.code ?? ""} ${
-            error?.message ?? ""
-          }`
+          `There was an issue deleting your account. ${error?.code ?? ""} ${error?.message ?? ""}`,
         );
       setLoading(false);
       return false;
     }
   };
+
   // function to handle password visibility toggle
   const deleteAccountVisibility = () =>
     setPasswordVisibility(!passwordVisibility);
@@ -351,7 +296,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                 AccessibilityInfo.isScreenReaderEnabled().then((enabled) => {
                   if (enabled)
                     AccessibilityInfo.announceForAccessibility(
-                      willBeExpanded ? "Answer opened" : "Answer closed"
+                      willBeExpanded ? "Answer opened" : "Answer closed",
                     );
                 });
               }}
@@ -412,7 +357,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                 AccessibilityInfo.isScreenReaderEnabled().then((enabled) => {
                   if (enabled)
                     AccessibilityInfo.announceForAccessibility(
-                      willBeExpanded ? "Answer opened" : "Answer closed"
+                      willBeExpanded ? "Answer opened" : "Answer closed",
                     );
                 });
               }}
@@ -478,7 +423,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                 AccessibilityInfo.isScreenReaderEnabled().then((enabled) => {
                   if (enabled)
                     AccessibilityInfo.announceForAccessibility(
-                      willBeExpanded ? "Answer opened" : "Answer closed"
+                      willBeExpanded ? "Answer opened" : "Answer closed",
                     );
                 });
               }}
@@ -593,7 +538,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                             style: "destructive",
                             onPress: handleDeleteAccount, // placed here to garantee first the animation
                           },
-                        ]
+                        ],
                       )
                   }
                   style={{

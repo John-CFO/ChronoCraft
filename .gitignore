@@ -47,10 +47,12 @@ ios/
 # Firebase debug logs
 firebase-debug.log
 firebase-debug.*.log
+firestore-debug.log
+firestore-debug.*.log
 
 
 #rules-generator
 rules.config.json
 .zod-mapping.json
-firestore.rules
+
 

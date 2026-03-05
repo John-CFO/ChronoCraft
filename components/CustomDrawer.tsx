@@ -329,7 +329,6 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
           handleIndicatorStyle={{ backgroundColor: "#191919" }}
         >
           <FAQBottomSheet
-            navigation={undefined}
             closeModal={() => bottomSheetModalRef.current?.close()}
           />
         </BottomSheetModal>
