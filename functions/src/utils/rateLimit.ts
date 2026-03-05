@@ -77,7 +77,7 @@ export class RateLimiter {
       return;
     }
     return this.checkScope(
-      ip, // uid-Dummy (eigentlich id, nur um Signatur zu erfüllen)
+      ip, // uid-Dummy (we use IP as uid for IP scope to unify the logic)
       "ip", // scope
       ip, // id
       action, // action
