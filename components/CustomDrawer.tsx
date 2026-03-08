@@ -68,7 +68,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
   const [tfaModalVisible, setTfaModalVisible] = useState(false);
 
   // state for the 2FA Button
-  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [isEnrolled, setIsEnrolled] = useState<boolean | null>(null);
 
   // function to close 2FA modal
   const closeTfaModal = () => {
@@ -133,6 +133,32 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
   useEffect(() => {
     fetchUserProfile();
   }, []);
+
+  // Hook to check if user is enrolled
+  useEffect(() => {
+    const loadEnrollment = async () => {
+      const user = FIREBASE_AUTH.currentUser;
+      if (!user) {
+        setIsEnrolled(false);
+        return;
+      }
+
+      try {
+        const userRef = doc(FIREBASE_FIRESTORE, "Users", user.uid);
+        const snap = await getDoc(userRef);
+
+        if (snap.exists()) {
+          const data = snap.data();
+          setIsEnrolled(snap.exists() ? !!snap.data()?.totp?.enabled : false);
+        }
+      } catch (err) {
+        console.error("Error loading TOTP enrollment", err);
+        setIsEnrolled(false);
+      }
+    };
+
+    loadEnrollment();
+  }, [FIREBASE_AUTH.currentUser?.uid]);
 
   // function to close edit profile modal and update user profile
   const closeProfileModal = () => {
@@ -210,7 +236,8 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
           <TwoFactorModal
             onClose={closeTfaModal}
             isEnrolled={isEnrolled}
-            setIsEnrolled={setIsEnrolled}
+            onEnrolled={() => setIsEnrolled(true)}
+            onDisabled={() => setIsEnrolled(false)}
           />
         ) : (
           <Text style={{ color: "white" }}>No user logged in</Text>
@@ -314,6 +341,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
           <TFAButton
             onPress={() => setTfaModalVisible(true)}
             isEnrolled={isEnrolled}
+            disabled={isEnrolled === null}
           />
         </View>
 
