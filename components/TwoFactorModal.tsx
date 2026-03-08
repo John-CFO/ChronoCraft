@@ -38,7 +38,7 @@ interface Props {
   onDisabled?: () => void;
 }
 
-// Typen für die Responses
+// Types for Cloud Function responses
 interface CreateTotpSecretResponse {
   otpAuthUrl: string;
   enrollmentId: string;
