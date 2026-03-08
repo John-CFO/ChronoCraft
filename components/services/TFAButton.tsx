@@ -12,17 +12,24 @@ import { AntDesign } from "@expo/vector-icons";
 
 interface TFAButtonProps {
   onPress: () => void;
-  isEnrolled: boolean;
+  isEnrolled: boolean | null;
+  disabled?: boolean;
 }
 
 ////////////////////////////////////////////////////////////////////
 
-const TFAButton: React.FC<TFAButtonProps> = ({ onPress, isEnrolled }) => {
+const TFAButton: React.FC<TFAButtonProps> = ({
+  onPress,
+  isEnrolled,
+  disabled,
+}) => {
   return (
     <TouchableOpacity
       accessibilityRole="button"
       accessibilityLabel="Two Factor Authentication Settings"
       onPress={onPress}
+      disabled={!!disabled}
+      style={{ opacity: disabled ? 0.5 : 1 }}
     >
       <View
         style={{

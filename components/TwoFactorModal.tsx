@@ -17,14 +17,9 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import QRCode from "react-native-qrcode-svg";
 import { getAuth } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
 
-import {
-  FIREBASE_APP,
-  FIREBASE_FIRESTORE,
-  FIREBASE_FUNCTIONS,
-} from "../firebaseConfig";
+import { FIREBASE_APP, FIREBASE_FUNCTIONS } from "../firebaseConfig";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import OTPInput from "./OTPInput";
@@ -36,8 +31,11 @@ import { useDotAnimation } from "../components/DotAnimation";
 // Props Interface
 interface Props {
   onClose: () => void;
-  isEnrolled: boolean;
-  setIsEnrolled: React.Dispatch<React.SetStateAction<boolean>>;
+  isEnrolled: boolean | null;
+  setIsEnrolled?: React.Dispatch<React.SetStateAction<boolean>>;
+  //callbacks:
+  onEnrolled?: () => void;
+  onDisabled?: () => void;
 }
 
 // Typen für die Responses
@@ -63,6 +61,8 @@ const TwoFactorModal: React.FC<Props> = ({
   onClose,
   isEnrolled,
   setIsEnrolled,
+  onEnrolled,
+  onDisabled,
 }) => {
   // declarations
   const auth = getAuth(FIREBASE_APP);
@@ -70,9 +70,9 @@ const TwoFactorModal: React.FC<Props> = ({
   const [loading, setLoading] = useState(false);
   const [otpUrl, setOtpUrl] = useState<string | null>(null);
   const [tokenInput, setTokenInput] = useState("");
-  const [initialized, setInitialized] = useState(false);
   const [enrollmentStarted, setEnrollmentStarted] = useState(false);
   const [enrollmentId, setEnrollmentId] = useState<string | null>(null);
+  const freezeRef = useRef(false);
 
   const screenWidth = Dimensions.get("window").width;
   const DOT_INTERVAL_MS = 500;
@@ -87,29 +87,6 @@ const TwoFactorModal: React.FC<Props> = ({
       isMounted.current = false;
     };
   }, []);
-
-  // Hook to check if user is enrolled
-  useEffect(() => {
-    (async () => {
-      if (!user) {
-        setInitialized(true);
-        return;
-      }
-      try {
-        const userRef = doc(FIREBASE_FIRESTORE, "Users", user.uid);
-        const snap = await getDoc(userRef);
-        if (snap.exists()) {
-          const data = snap.data();
-          setIsEnrolled(!!data?.totp?.enabled);
-        }
-      } catch (e) {
-        console.error("Error loading TOTP enrollment", e);
-        setIsEnrolled(false);
-      } finally {
-        setInitialized(true);
-      }
-    })();
-  }, [user]);
 
   // Function to start TOTP enrollment using Cloud Functions
   const startEnroll = async () => {
@@ -203,14 +180,31 @@ const TwoFactorModal: React.FC<Props> = ({
       const data = result.data;
 
       if (data.valid) {
-        setIsEnrolled(true);
+        // **Freeze UI immediately**
+        freezeRef.current = true;
+
+        // reset local state
         setOtpUrl(null);
         setEnrollmentStarted(false);
         setTokenInput("");
-        useAlertStore
-          .getState()
-          .showAlert("Success", "TOTP enabled successfully!");
+        setLoading(false);
+
         onClose();
+
+        setTimeout(() => {
+          // update parent-state directly
+          if (typeof onEnrolled === "function") {
+            onEnrolled();
+          } else if (typeof setIsEnrolled === "function") {
+            setIsEnrolled(true);
+          }
+
+          useAlertStore
+            .getState()
+            .showAlert("Success", "TOTP enabled successfully!");
+        }, 0);
+
+        return;
       } else {
         useAlertStore
           .getState()
@@ -220,8 +214,6 @@ const TwoFactorModal: React.FC<Props> = ({
       console.error("confirmEnroll error", error);
 
       let errorMessage = error.message || "Failed to verify TOTP";
-
-      // spezific error handling messages
       if (error.code === "functions/invalid-argument") {
         errorMessage =
           "Invalid TOTP code. Please enter a valid 6-digit number.";
@@ -231,7 +223,7 @@ const TwoFactorModal: React.FC<Props> = ({
 
       useAlertStore.getState().showAlert("Error", errorMessage);
     } finally {
-      setLoading(false);
+      if (isMounted.current) setLoading(false);
     }
   };
 
@@ -248,18 +240,42 @@ const TwoFactorModal: React.FC<Props> = ({
       const data = res.data;
 
       if (data.success) {
-        setIsEnrolled(false);
+        // **Freeze UI immediately**
+        freezeRef.current = true;
+
+        // reset local state
         setOtpUrl(null);
         setEnrollmentStarted(false);
         setTokenInput("");
+        setLoading(false);
 
-        useAlertStore
-          .getState()
-          .showAlert(
-            "2FA Deactivated",
-            data.message ||
-              "TOTP successfully disabled. You will need to set it up again to use it.",
-          );
+        // update parent-state directly
+        if (typeof onDisabled === "function") {
+          onDisabled();
+        } else if (typeof setIsEnrolled === "function") {
+          setIsEnrolled(false);
+        }
+
+        // close modal and show alert after interactions to ensure smooth UI transition
+        setTimeout(() => {
+          try {
+            onClose();
+          } catch (e) {
+            console.error("onClose failed:", e);
+          }
+
+          useAlertStore
+            .getState()
+            .showAlert(
+              "2FA Deactivated",
+              data.message || "TOTP disabled successfully!",
+            );
+
+          // release UI freeze after alert is shown
+          freezeRef.current = false;
+        }, 0);
+
+        return;
       } else {
         throw new Error(data.message || "Disabling TOTP failed");
       }
@@ -269,7 +285,7 @@ const TwoFactorModal: React.FC<Props> = ({
         .getState()
         .showAlert("Error", err.message || "Cannot disable TOTP.");
     } finally {
-      setLoading(false);
+      if (isMounted.current) setLoading(false);
     }
   };
 
@@ -278,7 +294,8 @@ const TwoFactorModal: React.FC<Props> = ({
     (state) => state.accessibilityEnabled,
   );
 
-  if (!initialized) {
+  // Activity indicator with frozen UI when processing enable/disable actions to prevent multiple submissions and ensure smooth transitions
+  if (freezeRef.current) {
     return (
       <View
         style={{
