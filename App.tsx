@@ -27,6 +27,8 @@ import * as SplashScreen from "expo-splash-screen";
 import "text-encoding-polyfill"; //bugfix: for delete project with notes
 import { CopilotProvider } from "react-native-copilot";
 import { AccessibilityInfo } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { doc, getDoc } from "firebase/firestore";
 
 import MfaScreen from "./Screens/MfaScreen";
 import LoginScreen from "./Screens/LoginScreen";
@@ -47,6 +49,7 @@ import { ServiceProvider } from "./components/contexts/ServiceContext";
 import { navigationRef } from "./navigation/NavigationRef";
 import { AuthContext } from "./components/contexts/AuthContext";
 import { AuthStateListener } from "./onAuthStageChanges";
+import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "./firebaseConfig";
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -314,6 +317,7 @@ const App = () => {
   const setAccessibility = useAccessibilityStore(
     (state) => state.setAccessibility,
   );
+
   // hook to check if screen reader is enabled
   useEffect(() => {
     // initial check
@@ -334,6 +338,40 @@ const App = () => {
       subscription.remove();
     };
   }, []);
+
+  useEffect(() => {
+    const initAccessibilityMode = async () => {
+      // Load cached value first (offline render)
+      try {
+        const cached = await AsyncStorage.getItem("uiAccessibilityMode");
+        if (cached !== null) {
+          setAccessibility(cached === "true");
+        }
+      } catch (err) {
+        console.error("Error reading cached accessibility mode:", err);
+      }
+
+      // Load backend value if user exists
+      const user = FIREBASE_AUTH.currentUser;
+      if (user) {
+        try {
+          const snap = await getDoc(doc(FIREBASE_FIRESTORE, "Users", user.uid));
+          const backendValue = snap.data()?.settings?.uiAccessibilityMode;
+          if (backendValue !== undefined) {
+            setAccessibility(backendValue);
+            await AsyncStorage.setItem(
+              "uiAccessibilityMode",
+              backendValue.toString(),
+            );
+          }
+        } catch (err) {
+          console.error("Error loading accessibility from backend:", err);
+        }
+      }
+    };
+
+    initAccessibilityMode();
+  }, [setAccessibility]);
 
   // function for googe-fonts implemantation
   const [fontsLoaded] = useFonts({
