@@ -8,7 +8,7 @@ import { onCall, CallableRequest } from "firebase-functions/v2/https";
 import admin from "firebase-admin";
 
 import { logEvent } from "../utils/logger";
-import { rateLimit } from "../utils/rateLimit";
+import { rateLimit } from "../utils/rateLimitInstance";
 import { ValidationError, AuthenticationError } from "../errors/domain.errors";
 import { RateLimitError } from "../errors/domain.errors";
 import { handleFunctionError } from "../errors/handleFunctionError";

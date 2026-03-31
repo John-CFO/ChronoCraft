@@ -2,11 +2,13 @@
 
 // This file contains all cloud functions for the application
 
-///////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 
 import { setGlobalOptions } from "firebase-functions/v2";
-import { onRequest, onCall } from "firebase-functions/v2/https";
+import { onCall } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
+
+//////////////////////////////////////////////////////////////////////
 
 setGlobalOptions({
   region: "us-central1",
@@ -35,13 +37,11 @@ import { disableTotpHandler } from "./functions/disableTotp.function";
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-// HTTP (REST) Functions
-export const authValidatorFunction = onRequest(authValidator);
-export const profileValidatorFunction = onRequest(profileValidator);
-export const projectsAndWorkValidatorFunction = onRequest(
-  projectsAndWorkValidator,
-);
-export const secureDeleteFunction = onRequest(secureDelete);
+// Export all functions with clear naming for deployment and testing
+export const authValidatorFunction = authValidator;
+export const profileValidatorFunction = profileValidator;
+export const projectsAndWorkValidatorFunction = projectsAndWorkValidator;
+export const secureDeleteFunction = secureDelete;
 
 // Callable Functions
 export const checkTotpStatus = onCall({ cors: true }, checkTotpStatusHandler);

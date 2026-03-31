@@ -6,9 +6,11 @@
 ////////////////////////////////////////////////////////////////////////////////////
 
 import { Timestamp } from "firebase-admin/firestore";
+import { HttpsError } from "firebase-functions/v2/https";
 
 import { ProjectRepo, SetHourlyRateInput } from "../repos/projectRepo";
 import { logEvent } from "../utils/logger";
+import { ValidationError } from "../errors/domain.errors";
 
 ////////////////////////////////////////////////////////////////////////////////////
 
@@ -18,20 +20,22 @@ export class ProjectService {
 
   // updateProject method
   async updateProject(projectId: string, data: any, userId: string) {
-    const projectData = await this.projectRepo.getProjectById(projectId);
-    // check if projectData is null
-    if (!projectData) {
-      throw new Error("Project not found");
+    if (typeof projectId !== "string" || projectId.trim().length === 0) {
+      throw new ValidationError("Invalid projectId");
     }
+
+    const projectData = await this.projectRepo.getProjectById(projectId);
+    const { projectId: _, ...updateData } = data;
     // check if userId is the same as projectData.userId
     if (projectData.userId !== userId) {
-      throw new Error("Not your project");
+      throw new HttpsError("permission-denied", "Not your project");
     }
     // update project data
     await this.projectRepo.updateProject(projectId, {
-      ...data,
+      ...updateData,
       updatedAt: Timestamp.now(),
     });
+
     logEvent("project updated", "info", { uid: userId, projectId });
     return { success: true };
   }

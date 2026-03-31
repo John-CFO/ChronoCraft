@@ -5,8 +5,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 // mock rateLimit first to avoid errors
-jest.mock("../../../src/utils/rateLimit");
-jest.mock("../../../src/utils/rateLimit");
+jest.mock("../../../src/utils/rateLimitInstance");
 jest.mock("../../../src/repos/userRepo");
 jest.mock("../../../src/utils/logger");
 jest.mock("../../../src/security/totpCore", () => ({
@@ -22,7 +21,7 @@ jest.mock("firebase-admin", () => ({
 
 import { AuthService } from "../../../src/services/authService";
 import { UserRepo } from "../../../src/repos/userRepo";
-import { rateLimit } from "../../../src/utils/rateLimit";
+import { rateLimit } from "../../../src/utils/rateLimitInstance";
 import { verifyTotp } from "../../../src/security/totpCore";
 import { logEvent } from "../../../src/utils/logger";
 import {
@@ -48,7 +47,9 @@ describe("AuthService Unit Tests", () => {
     // verifyTotp: Only 6-digit numeric codes are valid
     mockVerifyTotp = verifyTotp as jest.MockedFunction<typeof verifyTotp>;
     mockVerifyTotp.mockImplementation((secret, code) => {
-      return typeof code === "string" && /^\d{6}$/.test(code);
+      return {
+        valid: typeof code === "string" && /^\d{6}$/.test(code),
+      };
     });
 
     mockLogEvent = logEvent as jest.MockedFunction<typeof logEvent>;
@@ -115,7 +116,7 @@ describe("AuthService Unit Tests", () => {
       jest
         .spyOn(UserRepo.prototype, "getUserTOTPSecret")
         .mockResolvedValueOnce(secret);
-      mockVerifyTotp.mockReturnValueOnce(true);
+      mockVerifyTotp.mockReturnValueOnce({ valid: true });
 
       const spyCheckLimit = jest.spyOn(rateLimit, "checkLimit");
 
@@ -139,7 +140,7 @@ describe("AuthService Unit Tests", () => {
       jest
         .spyOn(UserRepo.prototype, "getUserTOTPSecret")
         .mockResolvedValueOnce(secret);
-      mockVerifyTotp.mockReturnValueOnce(false);
+      mockVerifyTotp.mockReturnValueOnce({ valid: false });
 
       const result = await authService.verifyTotp(uid, code);
 

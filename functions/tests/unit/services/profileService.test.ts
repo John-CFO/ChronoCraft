@@ -53,20 +53,16 @@ describe("ProfileService Unit Tests", () => {
       expect(result).toEqual({ success: true });
     });
 
-    it("should handle empty update data", async () => {
+    it("should reject empty update data", async () => {
       const uid = "user123";
       const updateData = {};
 
-      mockUserRepo.updateUser.mockResolvedValue(undefined);
+      await expect(
+        profileService.updateProfile(uid, updateData),
+      ).rejects.toThrow("Nothing to update.");
 
-      const result = await profileService.updateProfile(uid, updateData);
-
-      expect(mockUserRepo.updateUser).toHaveBeenCalledWith(uid, updateData);
-      expect(mockLogEvent).toHaveBeenCalledWith("profile updated", "info", {
-        uid,
-        updatedFields: [],
-      });
-      expect(result).toEqual({ success: true });
+      expect(mockUserRepo.updateUser).not.toHaveBeenCalled();
+      expect(mockLogEvent).not.toHaveBeenCalled();
     });
 
     it("should throw when update fails", async () => {
@@ -76,7 +72,7 @@ describe("ProfileService Unit Tests", () => {
       mockUserRepo.updateUser.mockRejectedValue(new Error("Database error"));
 
       await expect(
-        profileService.updateProfile(uid, updateData)
+        profileService.updateProfile(uid, updateData),
       ).rejects.toThrow("Database error");
     });
 
@@ -105,7 +101,7 @@ describe("ProfileService Unit Tests", () => {
         const updateData = { displayName: "New Name" };
         // @ts-ignore
         await expect(
-          profileService.updateProfile(undefined as any, updateData)
+          profileService.updateProfile(undefined as any, updateData),
         ).rejects.toThrow();
       });
 
@@ -113,14 +109,14 @@ describe("ProfileService Unit Tests", () => {
         const updateData = { displayName: "New Name" };
         // @ts-ignore
         await expect(
-          profileService.updateProfile(null as any, updateData)
+          profileService.updateProfile(null as any, updateData),
         ).rejects.toThrow();
       });
 
       it("should throw if uid is empty string", async () => {
         const updateData = { displayName: "New Name" };
         await expect(
-          profileService.updateProfile("", updateData)
+          profileService.updateProfile("", updateData),
         ).rejects.toThrow();
       });
 
@@ -128,7 +124,7 @@ describe("ProfileService Unit Tests", () => {
         const updateData = { displayName: "New Name" };
         const invalidUid = "user!@#";
         await expect(
-          profileService.updateProfile(invalidUid, updateData)
+          profileService.updateProfile(invalidUid, updateData),
         ).rejects.toThrow();
       });
     });

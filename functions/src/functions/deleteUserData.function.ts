@@ -36,7 +36,6 @@ export const deleteUserDataHandler = async (request: any) => {
       const mfaSnap = await mfaRef.get();
       if (mfaSnap.exists) {
         await mfaRef.delete();
-        console.log(`Deleted mfa_totp/${uid}`);
       }
     } catch (err) {
       console.error("Failed deleting mfa_totp:", err);

@@ -1,267 +1,258 @@
 ///////////////////////////////// rateLimit.ts //////////////////////////////////
 
-// This file contains the implementation of the RateLimiter class,
-// which is used to enforce rate limits on API requests.
-// There are used inside the cloud functions in the application.
-// Several scopes are supported (per user, per IP, per device) with exponential backoff penalties.
-
-/////////////////////////////////////////////////////////////////////////////////
-
-import admin from "firebase-admin";
 import { Timestamp } from "firebase-admin/firestore";
 import { logEvent } from "./logger";
 import { RateLimitError } from "../errors/domain.errors";
+import { RateLimitStore } from "./rateLimitStore";
 
-if (!admin.apps.length) {
-  admin.initializeApp();
+// ---------- Clock abstraction ----------
+export interface Clock {
+  now(): number;
 }
 
-type Scope = "uid" | "ip" | "device";
-
-const COLLECTION = "RateLimits_v2"; // use new collection name to avoid clashing with old docs
-const BASE_PENALTY_MS = 60_000; // base penalty for first full-bucket (60s)
-const MAX_EXPONENT = 6; // cap exponent growth (2^6 = 64)
-
-// Firestore reference helper
-function rateLimitRef(
-  db: FirebaseFirestore.Firestore,
-  scope: Scope,
-  id: string,
-  action: string,
-) {
-  const safeId = id.replace(/[\/\s:.]/g, "_");
-  return db
-    .collection(COLLECTION)
-    .doc(scope)
-    .collection("entries")
-    .doc(safeId)
-    .collection("actions")
-    .doc(action);
+export class RealClock implements Clock {
+  now(): number {
+    return Date.now();
+  }
 }
 
-// Token refill rate per ms
-function refillRatePerMs(capacity: number, windowMs: number) {
-  return capacity / windowMs;
+// ---------- Scope & constants ----------
+export type Scope = "uid" | "ip" | "device";
+
+const BASE_PENALTY_MS = 60_000; // 60 seconds
+const MAX_EXPONENT = 6; // 2^6 = 64x base
+
+// ---------- Pure helpers ----------
+export function refillTokens(
+  tokens: number,
+  lastRefill: number,
+  now: number,
+  rate: number,
+  capacity: number,
+): { tokens: number; lastRefill: number } {
+  if (now <= lastRefill) return { tokens, lastRefill };
+  const elapsed = now - lastRefill;
+  const added = Math.floor(elapsed * rate);
+  if (added === 0) return { tokens, lastRefill };
+
+  const newTokens = Math.min(capacity, tokens + added);
+  const timeForAdded = added / rate;
+  return {
+    tokens: newTokens,
+    lastRefill: lastRefill + Math.floor(timeForAdded),
+  };
 }
 
+export function calculatePenalty(failCount: number): number {
+  const exponent = Math.min(failCount - 1, MAX_EXPONENT);
+  return BASE_PENALTY_MS * Math.pow(2, exponent);
+}
+
+// ---------- Main RateLimiter ----------
 export class RateLimiter {
-  private db = admin.firestore();
+  private store: RateLimitStore;
+  private clock: Clock;
 
-  // Backwards-compatible method signature
+  constructor(store: RateLimitStore, clock?: Clock) {
+    this.store = store;
+    this.clock = clock || new RealClock();
+  }
+
+  // ----- Public API -----
   async checkLimit(
     uid: string,
     action: string,
-    maxAttempts: number = 5,
-    windowMs: number = 60_000,
-  ): Promise<void> {
-    return this.checkScope(
-      uid, // uid
-      "uid", // scope
-      uid, // id
-      action, // action
-      maxAttempts, // capacity
-      windowMs, // windowMs
-    );
+    maxAttempts = 5,
+    windowMs = 60_000,
+  ) {
+    return this.checkScope("uid", uid, action, maxAttempts, windowMs);
   }
 
-  // New: IP-level
   async checkIP(
     ip: string,
     action: string,
-    maxAttempts: number = 30,
-    windowMs: number = 10 * 60_000,
-  ): Promise<void> {
+    maxAttempts = 30,
+    windowMs = 10 * 60_000,
+  ) {
     if (!ip) {
-      // If we can't determine IP, be permissive (but log)
       logEvent("ip-missing", "warn", { action, ip });
       return;
     }
-    return this.checkScope(
-      ip, // uid-Dummy (we use IP as uid for IP scope to unify the logic)
-      "ip", // scope
-      ip, // id
-      action, // action
-      maxAttempts, // capacity
-      windowMs, // windowMs
-    );
+    return this.checkScope("ip", ip, action, maxAttempts, windowMs);
   }
 
-  // New: Device-level (deviceId provided by client)
   async checkDevice(
     deviceId: string,
     action: string,
-    maxAttempts: number = 10,
-    windowMs: number = 60_000,
+    maxAttempts = 10,
+    windowMs = 60_000,
     options?: { strict?: boolean },
-  ): Promise<void> {
+  ) {
     const cap = options?.strict
       ? Math.max(1, Math.floor(maxAttempts / 2))
       : maxAttempts;
-    return this.checkScope(
-      deviceId, // uid-Dummy
-      "device", // scope
-      deviceId, // id
-      action, // action
-      cap, // capacity
-      windowMs, // windowMs
-    );
+    return this.checkScope("device", deviceId, action, cap, windowMs);
   }
 
-  // public helper to reset a limit (keeps compatibility)
-  async resetLimit(
-    scope: Scope,
-    id: string,
-    action: string = "default",
-  ): Promise<void> {
-    const ref = rateLimitRef(this.db, scope, id, action);
-    await ref.delete().catch(() => {});
+  async resetLimit(scope: Scope, id: string, action = "default") {
+    await this.store.deleteActionDoc(scope, id, action).catch(() => {});
   }
 
-  // reset all limits for a user across all scopes (uid, ip, device)
-  async resetAllLimitsForUser(uid: string): Promise<void> {
+  async resetAllLimitsForUser(uid: string) {
     const scopes: Scope[] = ["uid", "ip", "device"];
     for (const scope of scopes) {
-      const userRef = this.db
-        .collection(COLLECTION)
-        .doc(scope)
-        .collection("entries")
-        .doc(uid);
-      await this.db.recursiveDelete(userRef).catch(() => {});
+      await this.store.recursiveDelete(scope, uid).catch(() => {});
     }
   }
 
-  // get remaining attempts (per uid)
   async getRemainingAttempts(
-    uid: string,
+    id: string,
     action: string,
-    maxAttempts: number = 5,
+    maxAttempts = 5,
+    scope: Scope = "uid",
   ): Promise<number> {
-    const ref = rateLimitRef(this.db, "uid", uid, action);
-    const snap = await ref.get();
-    if (!snap.exists) return maxAttempts;
-    const data = snap.data() as any;
-    const now = Date.now();
-    const resetAt = data.resetAt?.toMillis?.() ?? 0;
-    if (now >= resetAt) return maxAttempts;
-    return Math.max(0, maxAttempts - (data.count ?? 0));
+    const data = await this.store.getActionDoc(scope, id, action);
+    const now = this.clock.now();
+
+    if (!data) return maxAttempts;
+
+    const blockedUntil = data.blockedUntil?.toMillis?.() ?? 0;
+    if (blockedUntil > now) return 0;
+
+    const capacity = data.capacity ?? maxAttempts;
+    const rate = data.refillRatePerMs ?? capacity / (data.windowMs ?? 60_000);
+    const tokens = data.tokens ?? capacity;
+    const lastRefill = data.lastRefill?.toMillis?.() ?? now;
+
+    const { tokens: available } = refillTokens(
+      tokens,
+      lastRefill,
+      now,
+      rate,
+      capacity,
+    );
+    return Math.max(0, Math.floor(available));
   }
 
-  // Core: scope-aware token-bucket with exponential penalty
+  // ----- Core logic -----
   private async checkScope(
-    uid: string,
     scope: Scope,
     id: string,
     action: string,
     capacity: number,
     windowMs: number,
-  ): Promise<void> {
+  ) {
     if (!id) {
-      // defensive: if there's no identifier, allow but log
       logEvent("ratelimit-no-id", "warn", { scope, action });
       return;
     }
-    const ref = rateLimitRef(this.db, "uid", uid, action);
 
-    const nowMs = Date.now();
-    const refillPerMs = refillRatePerMs(capacity, windowMs);
+    const now = this.clock.now();
+    const rate = capacity / windowMs;
+    const ref = this.store.getRef(scope, id, action);
 
     try {
-      await this.db.runTransaction(async (tx) => {
+      await this.store.runTransaction(async (tx) => {
         const snap = await tx.get(ref);
+
         if (!snap.exists) {
-          // initialize doc and consume one token
           const doc = {
             tokens: capacity - 1,
             capacity,
-            refillRatePerMs: refillPerMs,
-            lastRefill: Timestamp.fromMillis(nowMs),
-            resetAt: Timestamp.fromMillis(nowMs + windowMs),
+            refillRatePerMs: rate,
+            windowMs,
+            lastRefill: Timestamp.fromMillis(now),
+            resetAt: Timestamp.fromMillis(now + windowMs),
             failCount: 0,
             blockedUntil: null,
-            count: 1, // legacy compatible counter
           };
-          tx.set(ref, doc);
+
+          await tx.set(ref, doc);
           return;
         }
 
-        const data = snap.data() as any;
-        const lastRefillMs = data.lastRefill?.toMillis?.() ?? nowMs;
-        const blockedUntilMs = data.blockedUntil?.toMillis?.() ?? 0;
+        const data = snap.data()!;
+        const lastRefill = data.lastRefill?.toMillis?.() ?? now;
+        const blockedUntil = data.blockedUntil?.toMillis?.() ?? 0;
+        const failCount = data.failCount ?? 0;
 
-        if (blockedUntilMs && blockedUntilMs > nowMs) {
-          const retryAfter = Math.ceil((blockedUntilMs - nowMs) / 1000);
-          // carry minimal metadata in the RateLimitError
-          throw new RateLimitError(null, retryAfter);
+        const storedTokens = data.tokens ?? capacity;
+        const storedCapacity = data.capacity ?? capacity;
+        const storedRate = data.refillRatePerMs ?? rate;
+
+        if (blockedUntil > now) {
+          const retryAfter = Math.ceil((blockedUntil - now) / 1000);
+
+          logEvent("ratelimit-triggered", "info", {
+            scope,
+            id: "[redacted]",
+            action,
+            retryAfter,
+            reason: "blocked",
+          });
+
+          throw new RateLimitError(undefined, retryAfter);
         }
 
-        // refill tokens
-        const elapsed = Math.max(0, nowMs - lastRefillMs);
-        const available = Math.min(
-          data.capacity ?? capacity,
-          (data.tokens ?? capacity) +
-            elapsed * (data.refillRatePerMs ?? refillPerMs),
+        const { tokens: available, lastRefill: newLastRefill } = refillTokens(
+          storedTokens,
+          lastRefill,
+          now,
+          storedRate,
+          storedCapacity,
         );
 
         if (available >= 1) {
-          // consume one and update
-          const newTokens = available - 1;
-          tx.update(ref, {
-            tokens: newTokens,
-            lastRefill: Timestamp.fromMillis(nowMs),
-            resetAt: Timestamp.fromMillis(nowMs + windowMs),
+          await tx.update(ref, {
+            tokens: available - 1,
+            lastRefill: Timestamp.fromMillis(newLastRefill),
+            resetAt: Timestamp.fromMillis(now + windowMs),
             failCount: 0,
             blockedUntil: null,
-            count: (data.count ?? 0) + 1,
-            lastAttempt: Timestamp.fromMillis(nowMs),
           });
           return;
         }
 
-        // no tokens available -> apply penalty/backoff
-        const prevFail = data.failCount ?? 0;
-        const newFail = prevFail + 1;
-        const exponent = Math.min(newFail - 1, MAX_EXPONENT);
-        const penaltyMs = BASE_PENALTY_MS * Math.pow(2, exponent); // exponential backoff
-        const blockedUntil = Timestamp.fromMillis(nowMs + penaltyMs);
+        const newFailCount = failCount + 1;
+        const penaltyMs = calculatePenalty(newFailCount);
 
-        tx.update(ref, {
-          failCount: newFail,
-          blockedUntil,
-          lastRefill: Timestamp.fromMillis(nowMs),
-          lastAttempt: Timestamp.fromMillis(nowMs),
+        await tx.update(ref, {
+          failCount: newFailCount,
+          blockedUntil: Timestamp.fromMillis(now + penaltyMs),
+          lastRefill: Timestamp.fromMillis(now),
         });
 
         const retryAfter = Math.ceil(penaltyMs / 1000);
-        const rl = new RateLimitError(
+
+        logEvent("ratelimit-triggered", "info", {
+          scope,
+          id: "[redacted]",
+          action,
+          retryAfter,
+          reason: "throttled",
+        });
+
+        throw new RateLimitError(
           `Too many attempts. Retry after ${retryAfter}s`,
+          retryAfter,
         );
-        (rl as any).retryAfterSeconds = retryAfter;
-        throw rl;
       });
     } catch (err: any) {
       if (err instanceof RateLimitError) throw err;
-      // transaction failure => log and allow request (fail open),
-      // but keep caller aware via logs
+
       logEvent("ratelimit-transaction-failure", "error", {
         scope,
-        id,
+        id: "[redacted]",
         action,
-        error: err instanceof Error ? err.message : String(err),
+        error: err.message ?? String(err),
       });
 
-      // Fail strategy based on scope
       if (scope === "uid") {
-        // Fail-closed: block request if we cannot verify rate limit
         throw new RateLimitError(
           "Rate limit verification failed. Please try again later.",
         );
       }
-
       // IP & device: fail-open
-      return;
     }
   }
 }
-
-// singleton
-export const rateLimit = new RateLimiter();

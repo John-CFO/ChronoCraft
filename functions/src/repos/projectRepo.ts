@@ -6,6 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 import * as admin from "firebase-admin";
+import { HttpsError } from "firebase-functions/v2/https";
 
 //////////////////////////////////////////////////////////////////////
 
@@ -135,7 +136,7 @@ export class ProjectRepo {
         : this.db.collection(collection).doc(docId);
     }
 
-    if (!ref) throw new Error("Invalid path");
+    if (!ref) throw new HttpsError("invalid-argument", "Invalid path");
 
     for (const subId of subcollectionIds) {
       const subcollection = ref.collection(subId);

@@ -64,6 +64,17 @@ export class PermissionError extends DomainError {
   }
 }
 
+export class FailedPreconditionError extends DomainError {
+  constructor(message: string, details?: any) {
+    super(
+      message,
+      "failed-precondition",
+      "The operation cannot be performed in the current state.",
+      details,
+    );
+  }
+}
+
 export class AuthenticationError extends DomainError {
   constructor(message: string = "Authentication required", details?: any) {
     super(

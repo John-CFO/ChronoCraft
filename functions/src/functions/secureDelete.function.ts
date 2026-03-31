@@ -23,9 +23,15 @@ export const secureDelete = onCall(async (request) => {
       throw new HttpsError("unauthenticated", "Not logged in");
     }
 
-    // Data validation
+    // Data-Validation
     if (!data) {
       throw new ValidationError("Missing data");
+    }
+    if (!data.userId) {
+      throw new ValidationError("Missing userId");
+    }
+    if (!data.serviceId) {
+      throw new ValidationError("Missing serviceId");
     }
 
     if (uid !== data.userId) {

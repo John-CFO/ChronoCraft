@@ -1,20 +1,22 @@
 module.exports = {
+  rootDir: ".",
   preset: "ts-jest",
   testEnvironment: "node",
-  globals: {
-    "ts-jest": {
-      tsconfig: "tsconfig.test.json",
-    },
-  },
-  testMatch: [
-    "**/tests/**/*.unit.ts",
-    "**/tests/**/*.test.ts",
-    "**/tests/**/*.spec.ts",
-  ],
+  testMatch: ["<rootDir>/tests/unit/**/*.ts"],
+  testPathIgnorePatterns: ["\\.e2e\\.test\\.ts$", "\\.integration\\.ts$"],
   setupFilesAfterEnv: ["<rootDir>/tests/unit.setup.ts"],
   moduleNameMapper: {
     "^src/(.*)$": "<rootDir>/src/$1",
     "^@/(.*)$": "<rootDir>/src/$1",
     "^@utils/(.*)$": "<rootDir>/src/utils/$1",
   },
+  transform: {
+    "^.+\\.ts$": [
+      "ts-jest",
+      {
+        tsconfig: "tsconfig.test.json",
+      },
+    ],
+  },
+  verbose: true,
 };

@@ -172,25 +172,38 @@ export function hotp(secret: string, counter: number, digits = 6): string {
  * TOTP verification (RFC 6238).
  *
  * - Time step: 30 seconds
- * - Uses HOTP internally with time-based counter
+ * - Uses HOTP internally with a time-based counter
  * - Allows configurable ±window steps (default = 1)
  *
- * NOTE:
- * This function does NOT implement rate limiting or
- * constant-time comparison.
- * Those protections must be enforced externally.
+ * Returns:
+ * - valid: whether the token is valid within the allowed window
+ * - matchedStep: the exact counter (time step) that matched the token
+ *
+ * IMPORTANT:
+ * - matchedStep MUST be used by the caller to implement replay protection
+ *   (e.g. by storing the last used step and rejecting reused or older steps)
+ *
+ * Security Notes:
+ * - This function does NOT implement rate limiting
+ * - This function does NOT enforce replay protection
+ * - This function does NOT perform constant-time comparison
+ *
+ * These protections MUST be implemented by the caller.
  */
 export function verifyTotp(
   secret: string,
   token: string,
   window = 1,
   now: number = Date.now(),
-): boolean {
+): { valid: boolean; matchedStep?: number } {
   const counter = Math.floor(now / 1000 / 30);
 
   for (let i = -window; i <= window; i++) {
-    if (hotp(secret, counter + i) === token) return true;
+    const step = counter + i;
+    if (hotp(secret, step) === token) {
+      return { valid: true, matchedStep: step };
+    }
   }
 
-  return false;
+  return { valid: false };
 }
