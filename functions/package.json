@@ -5,6 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "test:e2e": "jest --config=jest.e2e.config.js tests/e2e --runInBand",
     "test:unit": "jest --config=jest.unit.config.js",
     "test:integration": "firebase emulators:exec --only functions,auth,firestore,storage \"jest --config=jest.integration.config.js\"",
     "test:integration:user": "jest tests/integration/repos/userRepo.integration.ts --config=jest.integration.config.js",

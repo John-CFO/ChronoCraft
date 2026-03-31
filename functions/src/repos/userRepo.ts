@@ -27,7 +27,14 @@ export class UserRepo {
 
   // updateUser method to update a user
   async updateUser(uid: string, data: any) {
-    await this.usersRef.doc(uid).update(data);
+    const ref = this.usersRef.doc(uid);
+    const snap = await ref.get();
+
+    if (!snap.exists) {
+      throw new NotFoundError("User", { uid });
+    }
+
+    await ref.update(data);
   }
 
   // getUserTOTPSecret method to retrieve a user's TOTP secret

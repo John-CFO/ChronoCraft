@@ -6,7 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 import { UserRepo } from "../repos/userRepo";
-import { rateLimit } from "../utils/rateLimit";
+import { rateLimit } from "../utils/rateLimitInstance";
 import { verifyTotp } from "../security/totpCore";
 import { logEvent } from "../utils/logger";
 import { BusinessRuleError } from "../errors/domain.errors";
@@ -44,7 +44,7 @@ export class AuthService {
       );
     }
 
-    const valid = verifyTotp(secret, code);
+    const { valid } = verifyTotp(secret, code);
     logEvent("verifyTotp", valid ? "info" : "warn", { uid, valid });
 
     return { valid };

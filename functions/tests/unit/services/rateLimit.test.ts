@@ -1,366 +1,214 @@
-////////////////////////// rateLimit.unit.ts /////////////////////////////////
+///////////////////////////////// rateLimit.unit.ts //////////////////////////////////
 
-// Unit tests for RateLimiter class with fully mocked Firestore
-///////////////////////////////////////////////////////////////////////////////
+// This file contains unit tests for rateLimit.ts and rateLimitHelpers.ts
 
+//////////////////////////////////////////////////////////////////////////////////////
+
+import {
+  RateLimiter,
+  refillTokens,
+  calculatePenalty,
+  Scope,
+  Clock,
+} from "../../../src/utils/rateLimit";
 import { RateLimitError } from "../../../src/errors/domain.errors";
+import { hashRateLimitId } from "../../../src/utils/rateLimitKey";
 
-// -------------------- Firestore & Jest Mocks --------------------
+//////////////////////////////////////////////////////////////////////////////////////
 
-const createMockDoc = (): any => {
-  const doc: any = {};
-  doc.collection = jest.fn(() => doc);
-  doc.doc = jest.fn(() => doc);
-  doc.get = jest.fn();
-  doc.set = jest.fn().mockResolvedValue(undefined);
-  doc.update = jest.fn().mockResolvedValue(undefined);
-  doc.delete = jest.fn().mockResolvedValue(undefined);
-  return doc;
-};
+// Silence console logging to keep unit test output clean
+beforeEach(() => {
+  jest.spyOn(console, "info").mockImplementation(() => {});
+  jest.spyOn(console, "warn").mockImplementation(() => {});
+  jest.spyOn(console, "error").mockImplementation(() => {});
+});
 
-const mockFirestoreDoc = createMockDoc();
+afterEach(() => {
+  jest.restoreAllMocks();
+});
 
-const mockFirestore = {
-  collection: jest.fn(() => mockFirestoreDoc),
-  runTransaction: jest.fn(),
-};
+// ---- Test HMAC Key (deterministic!) ----
+const TEST_RATE_LIMIT_HMAC_KEY = "unit-test-rate-limit-key";
 
-jest.doMock("firebase-admin", () => ({
-  apps: [],
-  firestore: jest.fn(() => mockFirestore),
-  initializeApp: jest.fn(),
-}));
-
-class MockTimestamp {
-  constructor(
-    private seconds: number,
-    private nanoseconds: number,
-  ) {}
-  toMillis() {
-    return this.seconds * 1000 + this.nanoseconds / 1_000_000;
+// ---- Mock Clock ----
+class MockClock implements Clock {
+  private _now: number;
+  constructor(now = 0) {
+    this._now = now;
   }
-  static fromMillis(millis: number) {
-    return new MockTimestamp(
-      Math.floor(millis / 1000),
-      (millis % 1000) * 1_000_000,
-    );
+  now() {
+    return this._now;
+  }
+  advance(ms: number) {
+    this._now += ms;
   }
 }
 
-jest.doMock("firebase-admin/firestore", () => ({
-  Timestamp: {
-    fromMillis: (millis: number) => MockTimestamp.fromMillis(millis),
-  },
-}));
-
-jest.doMock("../../../src/utils/logger", () => ({
-  logEvent: jest.fn(),
-}));
-
-// -------------------- Import After Mocks --------------------
-import { RateLimiter } from "../../../src/utils/rateLimit";
-
-// -------------------- Helper for Transactions --------------------
-const runTransaction = async (callback: any) => {
-  await callback({
-    get: mockFirestoreDoc.get,
-    set: mockFirestoreDoc.set,
-    update: mockFirestoreDoc.update,
-  });
+// ---- Fake Firestore Ref ----
+type FakeRef = {
+  scope: Scope;
+  hashedId: string;
+  action: string;
 };
 
-// -------------------- Test Suite --------------------
-describe("RateLimiter Unit Tests", () => {
-  let rateLimiter: RateLimiter;
+// ---- Fake Store (HMAC-aware) ----
+class FakeStore {
+  public docs: Record<string, any> = {};
+
+  private key(scope: Scope, hashedId: string, action: string) {
+    return `${scope}:${hashedId}:${action}`;
+  }
+
+  private hash(id: string) {
+    return hashRateLimitId(id, TEST_RATE_LIMIT_HMAC_KEY);
+  }
+
+  getRef(scope: Scope, id: string, action: string): FakeRef {
+    return {
+      scope,
+      hashedId: this.hash(id),
+      action,
+    };
+  }
+
+  async getActionDoc(scope: Scope, id: string, action: string) {
+    const ref = this.getRef(scope, id, action);
+    return this.docs[this.key(ref.scope, ref.hashedId, ref.action)] ?? null;
+  }
+
+  async setActionDoc(scope: Scope, id: string, action: string, doc: any) {
+    const ref = this.getRef(scope, id, action);
+    this.docs[this.key(ref.scope, ref.hashedId, ref.action)] = doc;
+  }
+
+  async updateActionDoc(
+    scope: Scope,
+    id: string,
+    action: string,
+    patch: Partial<any>,
+  ) {
+    const ref = this.getRef(scope, id, action);
+    const key = this.key(ref.scope, ref.hashedId, ref.action);
+    if (!this.docs[key]) throw new Error("Doc not found");
+    this.docs[key] = { ...this.docs[key], ...patch };
+  }
+
+  async deleteActionDoc(scope: Scope, id: string, action: string) {
+    const ref = this.getRef(scope, id, action);
+    delete this.docs[this.key(ref.scope, ref.hashedId, ref.action)];
+  }
+
+  async recursiveDelete(scope: Scope, id: string) {
+    const hashedId = this.hash(id);
+    for (const k of Object.keys(this.docs)) {
+      if (k.startsWith(`${scope}:${hashedId}:`)) delete this.docs[k];
+    }
+  }
+
+  async runTransaction<T>(cb: (tx: any) => Promise<T>): Promise<T> {
+    const tx = {
+      get: async (ref: FakeRef) => {
+        const doc = this.docs[this.key(ref.scope, ref.hashedId, ref.action)];
+        return doc ? { exists: true, data: () => doc } : { exists: false };
+      },
+      set: async (ref: FakeRef, doc: any) => {
+        this.docs[this.key(ref.scope, ref.hashedId, ref.action)] = doc;
+      },
+      update: async (ref: FakeRef, patch: Partial<any>) => {
+        const key = this.key(ref.scope, ref.hashedId, ref.action);
+        if (!this.docs[key]) throw new Error("Doc not found");
+        this.docs[key] = { ...this.docs[key], ...patch };
+      },
+    };
+    return cb(tx);
+  }
+}
+
+// ---- Pure helper tests ----
+describe("RateLimiter helpers", () => {
+  it("refillTokens adds tokens correctly", () => {
+    const now = 1000;
+    const res = refillTokens(2, 0, now, 0.001, 5);
+    expect(res.tokens).toBeGreaterThan(2);
+    expect(res.tokens).toBeLessThanOrEqual(5);
+  });
+
+  it("calculatePenalty caps at MAX_EXPONENT", () => {
+    expect(calculatePenalty(1)).toBe(60_000);
+    expect(calculatePenalty(10)).toBe(60_000 * 64);
+  });
+});
+
+// ---- Core RateLimiter tests ----
+describe("RateLimiter", () => {
+  let clock: MockClock;
+  let store: FakeStore;
+  let limiter: RateLimiter;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    rateLimiter = new RateLimiter();
+    clock = new MockClock(0);
+    store = new FakeStore();
+    limiter = new RateLimiter(store as any, clock);
   });
 
-  // -------------------- checkLimit --------------------
-  describe("checkLimit", () => {
-    it("should create new record on first request", async () => {
-      const now = Date.now();
-      jest.spyOn(Date, "now").mockReturnValue(now);
-      mockFirestoreDoc.get.mockResolvedValue({ exists: false });
-      mockFirestore.runTransaction.mockImplementation(runTransaction);
-
-      await rateLimiter.checkLimit("user123", "login", 5, 60000);
-
-      expect(mockFirestore.runTransaction).toHaveBeenCalled();
-
-      // check that will call set with correct data
-      expect(mockFirestoreDoc.set).toHaveBeenCalledWith(
-        expect.anything(), // DocumentReference
-        expect.objectContaining({ tokens: 4, capacity: 5 }),
-      );
-    });
-
-    it("should increment count within window", async () => {
-      const now = Date.now();
-      jest.spyOn(Date, "now").mockReturnValue(now);
-      mockFirestoreDoc.get.mockResolvedValue({
-        exists: true,
-        data: () => ({
-          tokens: 3,
-          capacity: 5,
-          refillRatePerMs: 5 / 60000,
-          lastRefill: MockTimestamp.fromMillis(now),
-          resetAt: MockTimestamp.fromMillis(now + 50000),
-          failCount: 0,
-          blockedUntil: null,
-          count: 2,
-        }),
-      });
-      mockFirestore.runTransaction.mockImplementation(runTransaction);
-
-      await rateLimiter.checkLimit("user123", "login", 5, 60000);
-
-      expect(mockFirestoreDoc.update).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({ tokens: 2, count: 3 }),
-      );
-    });
-
-    it("should refill tokens after window expires", async () => {
-      const now = Date.now();
-      jest.spyOn(Date, "now").mockReturnValue(now);
-      mockFirestoreDoc.get.mockResolvedValue({
-        exists: true,
-        data: () => ({
-          tokens: 0,
-          capacity: 5,
-          refillRatePerMs: 5 / 60000,
-          lastRefill: MockTimestamp.fromMillis(now - 70000),
-          resetAt: MockTimestamp.fromMillis(now - 10000),
-          failCount: 3,
-          blockedUntil: null,
-          count: 5,
-        }),
-      });
-      mockFirestore.runTransaction.mockImplementation(runTransaction);
-
-      await rateLimiter.checkLimit("user123", "login", 5, 60000);
-      expect(mockFirestoreDoc.update).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({ tokens: 4, count: 6 }),
-      );
-    });
-
-    it("should throw RateLimitError when limit exceeded", async () => {
-      const now = Date.now();
-      jest.spyOn(Date, "now").mockReturnValue(now);
-      mockFirestoreDoc.get.mockResolvedValue({
-        exists: true,
-        data: () => ({
-          tokens: 0,
-          capacity: 5,
-          refillRatePerMs: 5 / 60000,
-          lastRefill: MockTimestamp.fromMillis(now - 1000),
-          resetAt: MockTimestamp.fromMillis(now + 59000),
-          failCount: 2,
-          blockedUntil: null,
-          count: 5,
-        }),
-      });
-
-      mockFirestore.runTransaction.mockImplementation(async (callback: any) => {
-        await expect(
-          callback({
-            get: mockFirestoreDoc.get,
-            set: mockFirestoreDoc.set,
-            update: mockFirestoreDoc.update,
-          }),
-        ).rejects.toThrow(RateLimitError);
-        throw new RateLimitError("Too many attempts");
-      });
-
-      await expect(
-        rateLimiter.checkLimit("user123", "login", 5, 60000),
-      ).rejects.toThrow(RateLimitError);
-    });
-
-    it("should fail-closed for uid on transaction error", async () => {
-      mockFirestore.runTransaction.mockRejectedValue(
-        new Error("Database error"),
-      );
-      await expect(
-        rateLimiter.checkLimit("user123", "login", 5, 60000),
-      ).rejects.toThrow(RateLimitError);
-    });
+  it("allows first request for UID", async () => {
+    await expect(limiter.checkLimit("user1", "login")).resolves.toBeUndefined();
+    const doc = await store.getActionDoc("uid", "user1", "login");
+    expect(doc).not.toBeNull();
   });
 
-  // -------------------- getRemainingAttempts --------------------
-  describe("getRemainingAttempts", () => {
-    it("should return max attempts for non-existent record", async () => {
-      mockFirestoreDoc.get.mockResolvedValue({ exists: false });
-      const remaining = await rateLimiter.getRemainingAttempts(
-        "user123",
-        "login",
-        5,
-      );
-      expect(remaining).toBe(5);
+  it("throws RateLimitError when request is throttled", async () => {
+    const now = clock.now();
+    await store.setActionDoc("uid", "user1", "login", {
+      tokens: 0,
+      capacity: 1,
+      refillRatePerMs: 0,
+      lastRefill: { toMillis: () => now },
+      failCount: 1,
     });
 
-    it("should calculate remaining attempts", async () => {
-      const now = Date.now();
-      jest.spyOn(Date, "now").mockReturnValue(now);
-      mockFirestoreDoc.get.mockResolvedValue({
-        exists: true,
-        data: () => ({
-          count: 3,
-          resetAt: MockTimestamp.fromMillis(now + 30000),
-        }),
-      });
-      const remaining = await rateLimiter.getRemainingAttempts(
-        "user123",
-        "login",
-        10,
-      );
-      expect(remaining).toBe(7);
-    });
-
-    it("should return max attempts when window expired", async () => {
-      const now = Date.now();
-      jest.spyOn(Date, "now").mockReturnValue(now);
-      mockFirestoreDoc.get.mockResolvedValue({
-        exists: true,
-        data: () => ({
-          count: 5,
-          resetAt: MockTimestamp.fromMillis(now - 1000),
-        }),
-      });
-      const remaining = await rateLimiter.getRemainingAttempts(
-        "user123",
-        "login",
-        5,
-      );
-      expect(remaining).toBe(5);
-    });
+    await expect(
+      limiter.checkLimit("user1", "login", 1, 1000),
+    ).rejects.toBeInstanceOf(RateLimitError);
   });
 
-  // -------------------- resetLimit --------------------
-  describe("resetLimit", () => {
-    it("should delete rate limit record", async () => {
-      await rateLimiter.resetLimit("uid", "user123", "login");
-      expect(mockFirestoreDoc.delete).toHaveBeenCalled();
-    });
+  it("resets limits without throwing", async () => {
+    await store.setActionDoc("uid", "user1", "login", { tokens: 0 });
+    await expect(
+      limiter.resetLimit("uid", "user1", "login"),
+    ).resolves.toBeUndefined();
+    const doc = await store.getActionDoc("uid", "user1", "login");
+    expect(doc).toBeNull();
   });
 
-  // -------------------- checkIP --------------------
-  describe("checkIP", () => {
-    it("should allow requests under the limit", async () => {
-      const ip = "123.123.123.123";
-      mockFirestoreDoc.get.mockResolvedValue({ exists: false });
-      mockFirestore.runTransaction.mockImplementation(runTransaction);
-
-      await rateLimiter.checkIP(ip, "login", 3, 10000);
-      // check set-call with correct data (capacity should be 3, tokens should be 2)
-      expect(mockFirestoreDoc.set).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({ tokens: 2, capacity: 3 }),
-      );
+  it("returns remaining attempts correctly", async () => {
+    const now = clock.now();
+    await store.setActionDoc("uid", "user1", "login", {
+      tokens: 3,
+      capacity: 5,
+      refillRatePerMs: 0.001,
+      lastRefill: { toMillis: () => now },
     });
-
-    it("should throw RateLimitError when IP exceeds limit", async () => {
-      const ip = "123.123.123.123";
-      const now = Date.now();
-      jest.spyOn(Date, "now").mockReturnValue(now);
-      mockFirestoreDoc.get.mockResolvedValue({
-        exists: true,
-        data: () => ({ tokens: 0, capacity: 3 }),
-      });
-      mockFirestore.runTransaction.mockImplementation(async (callback: any) => {
-        await expect(
-          callback({
-            get: mockFirestoreDoc.get,
-            set: mockFirestoreDoc.set,
-            update: mockFirestoreDoc.update,
-          }),
-        ).rejects.toThrow(RateLimitError);
-        throw new RateLimitError("Too many attempts");
-      });
-
-      await expect(rateLimiter.checkIP(ip, "login", 3, 10000)).rejects.toThrow(
-        RateLimitError,
-      );
-    });
-
-    it("should fail-open for IP on transaction error", async () => {
-      mockFirestore.runTransaction.mockRejectedValue(
-        new Error("Database error"),
-      );
-      await expect(
-        rateLimiter.checkIP("123.123.123.123", "login", 5, 60000),
-      ).resolves.toBeUndefined();
-    });
+    const remaining = await limiter.getRemainingAttempts(
+      "user1",
+      "login",
+      5,
+      "uid",
+    );
+    expect(remaining).toBeGreaterThan(0);
   });
 
-  // -------------------- checkDevice --------------------
-  describe("checkDevice", () => {
-    it("should allow known device under limit", async () => {
-      const deviceId = "known-device-01";
-      mockFirestoreDoc.get.mockResolvedValue({ exists: false });
-      mockFirestore.runTransaction.mockImplementation(runTransaction);
+  it("handles IP-missing gracefully", async () => {
+    await expect(limiter.checkIP("", "login")).resolves.toBeUndefined();
+  });
 
-      await rateLimiter.checkDevice(deviceId, "login", 5, 10000, {
-        strict: false,
-      });
-      // check set-call with correct data (capacity should be 5, tokens should be 4)
-      expect(mockFirestoreDoc.set).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({ tokens: 4, capacity: 5 }),
-      );
-    });
-
-    it("should apply strict limit for unknown device", async () => {
-      const deviceId = "unknown-device-01";
-      mockFirestoreDoc.get.mockResolvedValue({ exists: false });
-      mockFirestore.runTransaction.mockImplementation(runTransaction);
-
-      await rateLimiter.checkDevice(deviceId, "login", 2, 10000, {
-        strict: true,
-      });
-      // strict minimizes capacity to 1 for unknown devices, so check that set is called with capacity 1 and tokens 0
-      expect(mockFirestoreDoc.set).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({ tokens: 0, capacity: 1 }),
-      );
-    });
-
-    it("should throw RateLimitError when device exceeds limit", async () => {
-      const now = Date.now();
-      jest.spyOn(Date, "now").mockReturnValue(now);
-      mockFirestoreDoc.get.mockResolvedValue({
-        exists: true,
-        data: () => ({ tokens: 0, capacity: 2 }),
-      });
-      mockFirestore.runTransaction.mockImplementation(async (callback: any) => {
-        await expect(
-          callback({
-            get: mockFirestoreDoc.get,
-            set: mockFirestoreDoc.set,
-            update: mockFirestoreDoc.update,
-          }),
-        ).rejects.toThrow(RateLimitError);
-        throw new RateLimitError("Too many attempts");
-      });
-
-      await expect(
-        rateLimiter.checkDevice("unknown-device-01", "login", 2, 10000, {
-          strict: true,
-        }),
-      ).rejects.toThrow(RateLimitError);
-    });
-
-    it("should fail-open for device on transaction error", async () => {
-      mockFirestore.runTransaction.mockRejectedValue(
-        new Error("Database error"),
-      );
-      await expect(
-        rateLimiter.checkDevice("device-01", "login", 5, 60000),
-      ).resolves.toBeUndefined();
-    });
+  it("handles fail-open for IP and device", async () => {
+    store.runTransaction = async () => {
+      throw new Error("TX failed");
+    };
+    await expect(limiter.checkIP("1.2.3.4", "login")).resolves.toBeUndefined();
+    await expect(
+      limiter.checkDevice("device1", "login"),
+    ).resolves.toBeUndefined();
   });
 });

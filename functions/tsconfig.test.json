@@ -6,7 +6,7 @@
     "esModuleInterop": true,
     "module": "commonjs",
     "target": "ES2020",
-    "isolatedModules": true,
+    "isolatedModules": false,
     "moduleResolution": "node",
 
     // IMPORTANT: baseUrl and paths for absolute Imports

@@ -1,7 +1,7 @@
 module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
-  testMatch: ["**/tests/**/*.integration.ts"],
+  testMatch: ["<rootDir>/tests/**/*.integration.ts"],
   setupFilesAfterEnv: ["<rootDir>/tests/integration.setup.ts"],
   transform: {
     "^.+\\.ts$": [
@@ -12,5 +12,6 @@ module.exports = {
       },
     ],
   },
+  verbose: true,
   testTimeout: 60000,
 };

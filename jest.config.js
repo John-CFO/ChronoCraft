@@ -16,4 +16,9 @@ module.exports = {
   moduleNameMapper: {
     "^.*firebaseConfig$": "<rootDir>/__mocks__/firebaseConfig.ts",
   },
+  testPathIgnorePatterns: [
+    "/node_modules/",
+    "/emulator-tests/",
+    "<rootDir>/functions/",
+  ],
 };

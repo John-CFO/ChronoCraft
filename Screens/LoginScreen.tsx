@@ -112,10 +112,6 @@ const LoginScreen: React.FC = () => {
       if (userSnap.exists()) {
         const userData = userSnap.data();
 
-        if (userData?.firstLogin === true) {
-          await setDoc(userRef, { firstLogin: false }, { merge: true });
-        }
-
         if (userData?.totp?.enabled === true) {
           nextStage = "pendingMfa";
         }

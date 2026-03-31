@@ -8,6 +8,7 @@ import { CallableRequest, HttpsError } from "firebase-functions/v2/https";
 
 import { ProjectService } from "../services/projectService";
 import { handleFunctionError } from "../errors/handleFunctionError";
+import { ValidationError } from "../errors/domain.errors";
 
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -30,14 +31,52 @@ export async function projectsAndWorkValidatorLogic(
     }
 
     if (action === "updateProject") {
-      return await projectService.updateProject(payload.id, payload, uid);
+      if (
+        typeof payload !== "object" ||
+        payload === null ||
+        Array.isArray(payload)
+      ) {
+        throw new ValidationError("payload must be an object");
+      }
+
+      if (
+        typeof payload.projectId !== "string" ||
+        payload.projectId.trim().length === 0
+      ) {
+        throw new ValidationError("projectId must be a non-empty string");
+      }
+
+      return await projectService.updateProject(
+        payload.projectId,
+        payload,
+        uid,
+      );
     }
 
     if (action === "setHourlyRate") {
+      if (
+        typeof payload !== "object" ||
+        payload === null ||
+        Array.isArray(payload)
+      ) {
+        throw new ValidationError("payload must be an object");
+      }
+
+      if (
+        typeof payload.projectId !== "string" ||
+        payload.projectId.trim().length === 0
+      ) {
+        throw new ValidationError("projectId must be a non-empty string");
+      }
+
+      if (typeof payload.rate !== "number") {
+        throw new ValidationError("rate must be a number");
+      }
+
       return await projectService.setHourlyRate(
         uid,
         payload.projectId,
-        payload,
+        payload.rate,
       );
     }
 
