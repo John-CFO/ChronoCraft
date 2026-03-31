@@ -7,12 +7,13 @@
 
 import * as admin from "firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { HttpsError } from "firebase-functions/v2/https";
 
 //////////////////////////////////////////////////////////////////////////////////
 
 export const disableTotpHandler = async (req: any) => {
   const uid = req.auth?.uid;
-  if (!uid) throw new Error("Unauthenticated");
+  if (!uid) throw new HttpsError("unauthenticated", "Unauthenticated");
 
   const db = admin.firestore();
   const userRef = db.collection("Users").doc(uid);

@@ -21,25 +21,27 @@ export interface LogEntry {
   metadata?: Record<string, unknown>;
 }
 
+export interface Logger {
+  logEvent(
+    message: string,
+    level?: "info" | "warn" | "error",
+    metadata?: Record<string, unknown>,
+  ): void;
+}
+
 /////////////////////////////////////////////////////////////////////////////////
 
 export function logEvent(
   message: string,
   level: "info" | "warn" | "error" = "info",
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ) {
-  // define LogEntry
   const logEntry: LogEntry = {
     message,
     level,
     timestamp: new Date().toISOString(),
-    ...metadata,
+    metadata,
   };
-
-  // More data like IP address if available
-  if (metadata?.ip) {
-    logEntry.metadata = { ...logEntry.metadata, ip: metadata.ip };
-  }
 
   // Cases for different log levels
   switch (level) {
@@ -54,3 +56,7 @@ export function logEvent(
       break;
   }
 }
+
+export const defaultLogger: Logger = {
+  logEvent,
+};
