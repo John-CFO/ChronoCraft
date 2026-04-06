@@ -10,10 +10,9 @@ import { useService } from "../components/contexts/ServiceContext";
 
 type Note = {
   id: string;
-  title?: string;
-  content?: string;
-  createdAt?: any;
-  updatedAt?: any;
+  uid: string;
+  comment: string;
+  createdAt: Date;
 };
 
 //////////////////////////////////////////////////////////////
@@ -56,16 +55,22 @@ export const useNotes = (projectId: string) => {
             serviceId,
             "Projects",
             projectId,
-            "Notes"
-          )
+            "Notes",
+          ),
         );
 
         const notesSnapshot = await getDocs(notesQuery);
 
-        const notes: Note[] = notesSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        const notes: Note[] = notesSnapshot.docs.map((doc) => {
+          const data = doc.data();
+
+          return {
+            id: doc.id,
+            uid: data.uid,
+            comment: data.comment,
+            createdAt: data.createdAt?.toDate?.() ?? new Date(),
+          };
+        });
 
         setNotes(notes);
       } catch (e) {

@@ -5,56 +5,80 @@
 ////////////////////////////////////////////////////////////////////////////////////
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import * as SecureStore from "expo-secure-store";
-import { nanoid } from "nanoid/non-secure";
+import { collection, getDocs, addDoc } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
+import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../../firebaseConfig";
 
-////////////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////////////
 
 interface ServiceContextType {
   serviceId: string | null;
-  initService: () => Promise<void>;
+  loading: boolean;
 }
 
-////////////////////////////////////////////////////////////////////////////////////
+// ////////////////////////////////////////////////////////////////////////////////////
 
+// Create the context
 const ServiceContext = createContext<ServiceContextType | undefined>(undefined);
 
+// Create the provider
 export const ServiceProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  // declare state
   const [serviceId, setServiceId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // initialize the service
-  const initService = async () => {
-    // get the serviceId from secure store
-    let storedServiceId = await SecureStore.getItemAsync("serviceId");
-    // conditionally set the serviceId
-    if (!storedServiceId) {
-      storedServiceId = nanoid();
-      await SecureStore.setItemAsync("serviceId", storedServiceId);
-    }
-    setServiceId(storedServiceId);
-  };
-
-  // hook to initialize the service
   useEffect(() => {
-    initService();
+    const unsubscribe = onAuthStateChanged(FIREBASE_AUTH, async (user) => {
+      if (!user) {
+        setServiceId(null);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const servicesRef = collection(
+          FIREBASE_FIRESTORE,
+          "Users",
+          user.uid,
+          "Services",
+        );
+
+        const snapshot = await getDocs(servicesRef);
+
+        if (snapshot.empty) {
+          const newServiceRef = await addDoc(servicesRef, {
+            createdAt: new Date(),
+          });
+
+          setServiceId(newServiceRef.id);
+        } else {
+          setServiceId(snapshot.docs[0].id);
+        }
+      } catch (err) {
+        console.error("Service init failed", err);
+        setServiceId(null);
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    return unsubscribe;
   }, []);
 
   return (
-    <ServiceContext.Provider value={{ serviceId, initService }}>
+    <ServiceContext.Provider value={{ serviceId, loading }}>
       {children}
     </ServiceContext.Provider>
   );
 };
 
-// export the useService hook
 export const useService = () => {
-  // get the context
   const context = useContext(ServiceContext);
-  // error if not in context
-  if (!context)
+  if (!context) {
     throw new Error("useService must be used within ServiceProvider");
+  }
   return context;
 };

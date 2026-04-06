@@ -14,17 +14,16 @@ import { getAuth } from "firebase/auth";
 
 import { updateProjectData } from "../components/FirestoreService";
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
-import { useService } from "../components/contexts/ServiceContext";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export interface ProjectState {
   id: string;
+  uid: string;
   name: string;
   timer: number;
   isTracking: boolean;
   startTime: Date | null;
-  pauseTime: Date | null;
   hourlyRate: number;
   elapsedTime: number;
   totalEarnings: number;
@@ -38,6 +37,7 @@ export interface ProjectState {
 }
 
 export interface TimeTrackingState {
+  currentUser: any;
   setTimerAndEarnings: any;
   set: any;
   projects: { [key: string]: ProjectState };
@@ -46,25 +46,32 @@ export interface TimeTrackingState {
   appState: string;
   isInitialized: boolean;
   isTracking: boolean;
+  serviceId: string;
   calculateEarnings: (projectId: string | number) => void;
   setProjectId: (projectId: string) => void;
-  startTimer: (projectId: string) => void;
-  stopTimer: (projectId: string) => void;
-  pauseTimer: (projectId: string) => void;
+  startTimer(
+    projectId: string,
+    serviceId: string,
+    options?: { silent?: boolean },
+  ): Promise<void>;
+  stopTimer: (projectId: string, serviceId: string) => Promise<void>;
   updateTimer: (projectId: string, time: number) => void;
   setHourlyRate: (projectId: string, rate: number) => void;
   setTotalEarnings: (projectId: string, earnings: number) => void;
-  resetAll: (projectId: string) => void;
+  resetAll: (projectId: string, serviceId: string) => Promise<void>;
   getProjectState: (projectId: string) => ProjectState | undefined;
   setRateInput: (rate: string) => void;
   setAppState: (state: string) => void;
   setIsInitialized: (value: boolean) => void;
   setIsTracking: (value: boolean) => void;
-  getProjectTrackingState(projectId: string | null): unknown;
+  getProjectTrackingState(
+    projectId: string,
+    serviceId: string,
+  ): Promise<boolean>;
   getProjectId: () => string | null;
   setProjectData: (
     projectId: string,
-    projectData: Partial<ProjectState>
+    projectData: Partial<ProjectState>,
   ) => void;
   setProjectTime: (field: keyof ProjectState, value: any) => void;
   setLastStartTime: (projectId: string, time: Date | null) => void;
@@ -81,6 +88,8 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
   lastStartTime: null,
   originalStartTime: null,
   endTime: null,
+  serviceId: "",
+  currentUser: null,
   set,
   // options to handle AppState
   rateInput: "", // globale RateInput
@@ -279,7 +288,11 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
   },
 
   // function to start the timer and inform the user when a project is already being tracked
-  startTimer: async (projectId: string, { silent = false } = {}) => {
+  startTimer: async (
+    projectId: string,
+    serviceId: string,
+    { silent = false } = {},
+  ) => {
     const state = get();
     const project = state.projects[projectId];
 
@@ -311,7 +324,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
     }));
 
     try {
-      await updateProjectData(projectId, {
+      await updateProjectData(projectId, serviceId, {
         originalStartTime: updatedOriginalStartTime,
         startTime: now,
         lastStartTime: updatedLastStartTime,
@@ -324,7 +337,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
   },
 
   // function to stop the timer and calculate the elapsed time
-  stopTimer: async (projectId: string) => {
+  stopTimer: async (projectId: string, serviceId: string) => {
     const state = get(); // call current state
     const project = state.projects[projectId];
 
@@ -337,7 +350,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
     // check if start time is set
     if (!project.startTime) {
       console.warn(
-        "startTime is not set. Cannot stop timer. Please start the timer first."
+        "startTime is not set. Cannot stop timer. Please start the timer first.",
       );
       return;
     }
@@ -350,13 +363,13 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
 
     // calculate elapsed time after the last startTime was set
     const elapsedTime = Math.round(
-      (new Date().getTime() - startTime.getTime()) / 1000
+      (new Date().getTime() - startTime.getTime()) / 1000,
     ); // in secunds
     // calculate final elapsed time based on project.timer if it is set
     const finalElapsedTime = Math.round(project.timer || 0);
     // calculate earnings based on finalElapsedTime and hourly rate
     const earnings = parseFloat(
-      ((finalElapsedTime / 3600) * project.hourlyRate).toFixed(2)
+      ((finalElapsedTime / 3600) * project.hourlyRate).toFixed(2),
     );
 
     // update UI
@@ -379,7 +392,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
 
     try {
       // update firestore
-      await updateProjectData(projectId, {
+      await updateProjectData(projectId, serviceId, {
         isTracking: false,
         timer: finalElapsedTime, // round the timer
         endTime: new Date(),
@@ -395,35 +408,6 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
     } catch (error) {
       console.error("Error updating Firestore in stopTimer:", error);
     }
-  },
-
-  // function to pause the timer and calculate the elapsed time
-  pauseTimer: (projectId) => {
-    set((state) => {
-      const project = state.projects[projectId];
-
-      if (!project.startTime) {
-        console.warn("startTime is not set. Cannot pause timer.");
-        return state;
-      }
-
-      // calculate elapsed time after the last startTime was set
-      const elapsedTime =
-        (new Date().getTime() - project.startTime.getTime()) / 1000;
-
-      return {
-        projects: {
-          ...state.projects,
-          [projectId]: {
-            ...project,
-            isTracking: false,
-            timer: elapsedTime,
-            endTime: new Date(),
-            startTime: null, // set startTime to null to indicate that the timer is paused
-          },
-        },
-      };
-    });
   },
 
   // statefunction to update the timer in the TimeTrackerCard
@@ -475,7 +459,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
   setTimerAndEarnings: (
     projectId: string,
     timer: number,
-    totalEarnings: number
+    totalEarnings: number,
   ) =>
     set((state) => {
       // console.log(
@@ -502,17 +486,9 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
     }),
 
   // function to get the project tracking state in the TimeTrackerCard using snapshot from firebase
-  getProjectTrackingState: async (projectId: string) => {
-    const { serviceId } = useService();
-    if (!serviceId) return;
-    const user = getAuth().currentUser; // gets the current user from firebase
-    if (!user) {
-      console.error("User is not authenticated.");
-      return false;
-    }
-    if (!projectId) {
-      return false;
-    }
+  getProjectTrackingState: async (projectId: string, serviceId: string) => {
+    const user = getAuth().currentUser; // get the current user from firebase
+    if (!user || !projectId || !serviceId) return false;
 
     try {
       const docRef = doc(
@@ -522,17 +498,16 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
         "Services",
         serviceId,
         "Projects",
-        projectId
+        projectId,
       );
+
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
-        const projectData = docSnap.data();
-        return projectData.isTracking || false;
-      } else {
-        console.error("Error fetching project data:", docSnap);
-        return false;
+        return docSnap.data().isTracking || false;
       }
+
+      return false;
     } catch (error) {
       console.error("Error fetching project data:", error);
       return false;
@@ -540,7 +515,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
   },
 
   // statefunction to reset all properties of a project
-  resetAll: async (projectId) => {
+  resetAll: async (projectId: string, serviceId: string) => {
     set((state) => {
       const project = state.projects[projectId];
 
@@ -556,7 +531,6 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
             ...project, // hold all existing properties of the project
             isTracking: false,
             startTime: null,
-            pauseTime: null,
             endTime: null,
             hourlyRate: 0,
             elapsedTime: 0,
@@ -572,10 +546,9 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
 
     // reset firestore properties
     try {
-      await updateProjectData(projectId, {
+      await updateProjectData(projectId, serviceId, {
         isTracking: false,
         startTime: null,
-        pauseTime: null,
         endTime: null,
         hourlyRate: 0,
         elapsedTime: 0,

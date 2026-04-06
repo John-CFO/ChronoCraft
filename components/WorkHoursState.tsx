@@ -10,7 +10,6 @@ import { getAuth } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
-import { useService } from "../components/contexts/ServiceContext";
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -30,8 +29,8 @@ interface WorkHoursStateProps {
   selectedBar: any[];
   lastUpdatedDate?: string | null;
 
-  saveState: () => Promise<void>;
-  loadState: () => Promise<void>;
+  saveState: (serviceId: string) => Promise<void>;
+  loadState: (serviceId: string) => Promise<void>;
   setDocExists: (value: boolean) => void;
   setUserTimeZone: (timeZone: string) => void;
   setWorkData: (data: any[]) => void;
@@ -62,8 +61,7 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
   selectedBar: [],
 
   // load state from firestore
-  loadState: async () => {
-    const { serviceId } = useService();
+  loadState: async (serviceId: string) => {
     if (!serviceId) return;
     const user = getAuth().currentUser;
     if (!user) {
@@ -80,7 +78,7 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
         "Services",
         serviceId,
         "WorkHours",
-        today
+        today,
       );
 
       const docSnap = await getDoc(docRef);
@@ -104,8 +102,7 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
   },
 
   // save state to firestore
-  saveState: async () => {
-    const { serviceId } = useService();
+  saveState: async (serviceId: string) => {
     if (!serviceId) return;
     const user = getAuth().currentUser;
     if (!user) {
@@ -132,7 +129,7 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
         "Services",
         serviceId,
         "WorkHours",
-        state.currentDocId || today
+        state.currentDocId || today,
       );
 
       await setDoc(docRef, stateToSave);

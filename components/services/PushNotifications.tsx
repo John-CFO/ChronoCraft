@@ -35,7 +35,6 @@ export class NotificationManager {
         const { status: newStatus } =
           await Notifications.requestPermissionsAsync(); // request permission
         if (newStatus !== "granted") {
-          console.log("Push-Notification permission not granted.");
           return null; // if permission is not granted return null
         }
       }
@@ -64,7 +63,6 @@ export class NotificationManager {
     try {
       const userRef = doc(FIREBASE_FIRESTORE, "Users", userId); // ref for the user document
       await setDoc(userRef, { pushToken }, { merge: true }); // save the push token (merge:true prevents overwriting)
-      console.log("Push token successfully saved.");
     } catch (error) {
       console.error("Error saving push token:", error);
     }
@@ -74,7 +72,7 @@ export class NotificationManager {
   static async scheduleNotification(
     title: string,
     body: string,
-    trigger: Notifications.NotificationTriggerInput
+    trigger: Notifications.NotificationTriggerInput,
   ) {
     try {
       await Notifications.scheduleNotificationAsync({
@@ -98,7 +96,7 @@ export class NotificationManager {
     await this.scheduleNotification(
       "Welcome to ChronoCraft! ⏱️",
       "We're glad you’ve joined. Let’s track time like a pro.",
-      trigger
+      trigger,
     );
   }
 
@@ -107,7 +105,7 @@ export class NotificationManager {
     title: string,
     body: string,
     vacationDate: Date,
-    token: string
+    token: string,
   ) {
     const trigger: Notifications.NotificationTriggerInput = {
       date: vacationDate, // send notification on the vacation date (1 day, 3 days or 7 days before)

@@ -24,9 +24,8 @@ import React, {
   useMemo,
 } from "react";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
-import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import * as Animatable from "react-native-animatable";
-import { doc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -90,15 +89,25 @@ function formatTime(seconds: number, showMs = false): string {
 const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   // initialize the routing
   const route = useRoute<TimeTrackerRouteProp>();
+
+  if (!route?.params?.projectId) {
+    console.error("[TT] Missing projectId in route.params");
+    return null;
+  }
+
   const { projectId } = route.params;
   const { serviceId } = useService();
+
+  if (!serviceId) {
+    console.error(`[TT:${projectId}] Missing serviceId`);
+  }
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
 
   useEffect(() => {
@@ -106,11 +115,6 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
     const unsub = useStore.subscribe((state) => {
       const p = state.projects[projectId];
       if (p !== prev) {
-        // console.log(`[DBG_PROJ:${projectId}] project object changed`, {
-        //   prev,
-        //   next: p,
-        //   stack: new Error().stack?.split("\n").slice(2, 6),
-        // });
         prev = p;
       }
     });
@@ -121,7 +125,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   const lastStartTime = useStore((s) => s.projects[projectId]?.lastStartTime);
   const endTime = useStore((s) => s.projects[projectId]?.endTime);
   const originalStartTime = useStore(
-    (s) => s.projects[projectId]?.originalStartTime
+    (s) => s.projects[projectId]?.originalStartTime,
   );
 
   // project state(getProjectState is used to get the project UI state if app is started)
@@ -130,7 +134,6 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
     isTracking: false,
     lastStartTime: null,
     originalStartTime: null,
-    pauseTime: null,
     endTime: null,
     hourlyRate: 0,
     totalEarnings: 0,
@@ -141,8 +144,10 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   const isTracking = useStore((state) => state.projects[projectId]?.isTracking);
   const appState = useStore((state) => state.appState);
   const hourlyRate = useStore(
-    (state) => state.projects[projectId]?.hourlyRate || 0
+    (state) => state.projects[projectId]?.hourlyRate || 0,
   );
+
+  const isRunning = isTracking;
 
   // validated + passthrough actions (AppSec-relevant actions via validated store)
   const {
@@ -165,7 +170,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
   // state only for the UI
   const [displayTime, setDisplayTime] = useState<number>(
-    projectState?.timer || 0
+    projectState?.timer || 0,
   );
 
   // formattedTime function using useMemo to get a bether performance with preventing unnecessary re-renders
@@ -180,15 +185,20 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
   // hook to fetch project data from firestore when navigate from home screen to details screen
   const fetchProjectData = useCallback(async () => {
-    if (!serviceId) return;
-    // console.log("Fetching project data started");
+    console.log("Fetching project data started");
     const user = getAuth().currentUser;
+
     if (!user) {
-      console.error("User is not authenticated.");
+      console.error(`[TT:${projectId}] AUTH NULL -> skip fetch`);
+      return;
+    }
+    if (!serviceId) {
+      console.error(`[TT:${projectId}] serviceId missing -> skip fetch`);
       return;
     }
 
     try {
+      console.trace(`[TT:${projectId}] fetchProjectData CALL`);
       const docRef = doc(
         FIREBASE_FIRESTORE,
         "Users",
@@ -196,32 +206,65 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
         "Services",
         serviceId,
         "Projects",
-        projectId
+        projectId,
       );
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
         const projectData = docSnap.data();
-        const formattedData = {
-          ...projectData,
-          isTracking: projectData.isTracking ?? false,
-          originalStartTime: projectData.originalStartTime
-            ? projectData.originalStartTime.toDate()
-            : null,
-          endTime: projectData.endTime ? projectData.endTime.toDate() : null,
-          lastStartTime: projectData.lastStartTime
-            ? projectData.lastStartTime.toDate()
-            : null,
+        const toDate = (v: any) => {
+          if (!v) return null;
+          if (typeof v.toDate === "function") return v.toDate();
+          return v;
         };
+
+        const formattedData = {
+          id: projectId,
+          uid: user.uid,
+
+          projectName: projectData.name ?? "",
+          name: projectData.name ?? "",
+
+          isTracking: projectData.isTracking ?? false,
+          isRestoring: false,
+
+          hourlyRate: projectData.hourlyRate ?? 0,
+          timer: projectData.timer ?? 0,
+          elapsedTime: projectData.elapsedTime ?? projectData.timer ?? 0,
+          totalEarnings: projectData.totalEarnings ?? 0,
+
+          maxWorkHours: projectData.maxWorkHours ?? 0,
+          startTimeTimestamp: projectData.startTime ?? null,
+
+          startTime: toDate(projectData.startTime),
+          endTime: toDate(projectData.endTime),
+          originalStartTime: toDate(projectData.originalStartTime),
+          lastStartTime: toDate(projectData.lastStartTime),
+        };
+        console.trace(
+          `[TT:${projectId}] setProjectData BEFORE CALL`,
+          formattedData,
+        );
+
+        console.log("ZOD INPUT DEBUG", {
+          projectId,
+          uid: formattedData.uid,
+          projectDataUid: projectData.uid,
+          storeUid: getAuth().currentUser?.uid,
+        });
+
+        console.log("VALIDATION PAYLOAD", {
+          projectId,
+          projectData: formattedData,
+          uid: formattedData.uid,
+        });
 
         try {
           // heavy validation (Zod) — Firestore → store
           setProjectData(projectId, formattedData as ProjectState);
         } catch (err) {
-          console.error(
-            `[TT:${projectId}] setProjectData validation failed on fetch:`,
-            err
-          );
+          console.error(`[TT:${projectId}] fetch crash`, err);
+          console.trace();
         }
       } else {
         console.error(`[TT:${projectId}] Project data not found in Firestore`);
@@ -229,7 +272,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
     } catch (error) {
       console.error(`[TT:${projectId}] Firestore fetch failed:`, error);
     }
-  }, [projectId, setProjectData]);
+  }, [projectId, serviceId, setProjectData]);
 
   // hook to update the hourly rate using the ref
   const hourlyRateRef = useRef(hourlyRate);
@@ -285,15 +328,28 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
     if (wholeSecond !== lastWholeSecondRef.current) {
       const earnings = computeEarnings(wholeSecond, hourlyRateRef.current);
+      console.trace(`[TT:${projectId}] setTimerAndEarnings BEFORE`, {
+        projectId,
+        wholeSecond,
+        earnings,
+        typeofProjectId: typeof projectId,
+        typeofWhole: typeof wholeSecond,
+        typeofEarnings: typeof earnings,
+      });
       try {
         // use the LIGHT version here (very cheap checks only)
         setTimerAndEarningsLight(projectId, wholeSecond, earnings);
       } catch (err) {
-        // hot path must not crash UI — log + continue
-        console.error(
-          `[TT:${projectId}] setTimerAndEarningsLight failed:`,
-          err
-        );
+        console.error(`[TT:${projectId}] HOT PATH CRASH`, {
+          err,
+          projectId,
+          wholeSecond,
+          earnings,
+          typeofProjectId: typeof projectId,
+          typeofWhole: typeof wholeSecond,
+          typeofEarnings: typeof earnings,
+        });
+        console.trace();
       }
       lastWholeSecondRef.current = wholeSecond;
     }
@@ -320,7 +376,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
             if (!Number.isFinite(bgEnter)) {
               console.warn(
                 `[TT:${projectId}] invalid bgTime in AsyncStorage:`,
-                storedBgTime
+                storedBgTime,
               );
               // clean up obviously bad value
               try {
@@ -331,7 +387,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
               if (!Number.isFinite(elapsedSeconds) || elapsedSeconds < 0) {
                 console.warn(
                   `[TT:${projectId}] computed invalid elapsedSeconds:`,
-                  elapsedSeconds
+                  elapsedSeconds,
                 );
                 // do not apply resume when nonsense
               } else {
@@ -343,13 +399,13 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
                 if (wholeNew < 0 || wholeNew > MAX_SECONDS) {
                   console.warn(
                     `[TT:${projectId}] implausible resumed timer:`,
-                    wholeNew
+                    wholeNew,
                   );
                   // choose to clamp or ignore — here: ignore resume and keep previous values
                 } else {
                   const earnings = computeEarnings(
                     wholeNew,
-                    hourlyRateRef.current
+                    hourlyRateRef.current,
                   );
                   try {
                     // LIGHT validation + write — cheap checks only (hot-path)
@@ -357,7 +413,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
                   } catch (err) {
                     console.error(
                       `[TT:${projectId}] bg resume setTimerAndEarningsLight failed:`,
-                      err
+                      err,
                     );
                   }
 
@@ -388,14 +444,14 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
           if (isTrackingRef.current) {
             await AsyncStorage.setItem(
               `bgTime_${projectId}`,
-              new Date().toISOString()
+              new Date().toISOString(),
             );
           }
         }
       } catch (err) {
         console.error(
           `[TimeTrackerCard:${projectId}] handleAppStateChange failed:`,
-          err
+          err,
         );
       } finally {
         setAppState(nextAppState);
@@ -404,7 +460,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
     const subscription: any = AppState.addEventListener(
       "change",
-      handleAppStateChange
+      handleAppStateChange,
     );
 
     return () => {
@@ -443,7 +499,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
           if (!Number.isFinite(parsedTime) || parsedTime < 0) {
             console.warn(
               `[TT:${projectId}] invalid persistedTimer value:`,
-              savedTime
+              savedTime,
             );
             // cleanup bad persisted value and fallback to 0
             try {
@@ -460,7 +516,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
             if (whole < 0 || whole > MAX_SECONDS) {
               console.warn(
                 `[TT:${projectId}] implausible persisted timer:`,
-                whole
+                whole,
               );
               try {
                 await AsyncStorage.removeItem(`persistedTimer_${projectId}`);
@@ -478,7 +534,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
               } catch (err) {
                 console.error(
                   `[TT:${projectId}] persisted timer failed heavy validation:`,
-                  err
+                  err,
                 );
                 // clear corrupted persisted value and fallback
                 try {
@@ -507,11 +563,11 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
         await Promise.all([
           AsyncStorage.setItem(
             `persistedTimer_${projectId}`,
-            accumulatedTimeRef.current.toString()
+            String(accumulatedTimeRef.current ?? 0),
           ),
           AsyncStorage.setItem(
             `isTracking_${projectId}`,
-            isTrackingRef.current.toString()
+            String(isTrackingRef.current ?? false),
           ),
         ]);
       };
@@ -525,103 +581,74 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
     };
   }, [projectId, appState]);
 
-  // hook to update the project data
-  const updateProjectData = useCallback(
-    async (data: Partial<ProjectState>) => {
-      if (!serviceId) return;
-      const user = getAuth().currentUser;
-      if (!user) {
-        console.error("User is not authenticated.");
-        return;
-      }
-
-      try {
-        const projectRef = doc(
-          FIREBASE_FIRESTORE,
-          "Users",
-          user.uid,
-          "Services",
-          serviceId,
-          "Projects",
-          projectId
-        );
-
-        // convert Date-Objects to Firestore Timestamp
-        const convertedData: Record<string, any> = {};
-        Object.entries(data).forEach(([key, value]) => {
-          if (value instanceof Date) {
-            convertedData[key] = Timestamp.fromDate(value);
-          } else {
-            convertedData[key] = value;
-          }
-        });
-
-        await updateDoc(projectRef, convertedData);
-        // console.log("Project data updated in Firestore", convertedData);
-      } catch (error) {
-        console.error("Error updating project data:", error);
-      }
-    },
-    [projectId, serviceId]
-  );
-
   // function to start the timer
   const handleStart = async () => {
+    console.trace(`[TT:${projectId}] START pressed`);
+
     const currentlyTracking =
-      useStore.getState().projects[projectId]?.isTracking;
-    // check if currently tracking
+      useStore.getState().projects?.[projectId]?.isTracking;
+
+    if (!serviceId) {
+      console.error(`[TT:${projectId}] Missing serviceId in handleStart`);
+      return;
+    }
+
     if (currentlyTracking || isTrackingRef.current) {
       console.log(`[TT:${projectId}] start skipped - already tracking`);
       return;
     }
 
-    await startTimer(projectId);
-    isTrackingRef.current = true;
-    startAnimation();
-
-    // persist the start time
     try {
-      await updateProjectData({
-        startTime: new Date(),
-        isTracking: true,
-      } as Partial<ProjectState>);
+      await startTimer(projectId, serviceId);
+
+      isTrackingRef.current = true;
+      startAnimation();
     } catch (err) {
-      console.error(
-        `[TT:${projectId}] updateProjectData failed on start:`,
-        err
-      );
-    }
-  };
-
-  // function to pause the timer
-  const handlePause = async () => {
-    if (isTrackingRef.current) {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = null;
-      }
-
-      stopTimer(projectId);
-      isTrackingRef.current = false;
-
-      await updateProjectData({
-        isTracking: false,
-        pauseTime: new Date(),
-      } as Partial<ProjectState>);
+      console.error(`[TT:${projectId}] start crash`, err);
+      console.trace();
     }
   };
 
   // function to stop the timer
   const handleStop = async () => {
-    if (isTrackingRef.current) {
-      handlePause();
+    console.trace(`[TT:${projectId}] STOP pressed`);
+
+    if (!isTrackingRef.current) return;
+
+    if (!serviceId) {
+      console.error(`[TT:${projectId}] Missing serviceId in handleStop`);
+      return;
+    }
+
+    try {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
+
+      await stopTimer(projectId, serviceId);
+      isTrackingRef.current = false;
+    } catch (err) {
+      console.error(`[TT:${projectId}] stop crash`, err);
+      console.trace();
     }
   };
 
   // function to reset the timer
   const [resetting, setResetting] = useState(false);
   const handleReset = async () => {
+    console.trace(`[TT:${projectId}] RESET pressed`);
     const project = useStore.getState().projects[projectId];
+
+    if (!serviceId) {
+      console.error(`[TT:${projectId}] Missing serviceId in handleReset`);
+      return;
+    }
+    if (!project) {
+      console.error(`[TT:${projectId}] Missing project in handleReset`);
+      return;
+    }
+
     // confirm reset
     if (project.isTracking) {
       // alert to inform the user what he has to do before pressing the reset button
@@ -630,7 +657,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
         .showAlert(
           "Attention!",
           "Please stop the project first before resetting it.",
-          [{ text: "OK", style: "default" }]
+          [{ text: "OK", style: "default" }],
         );
       return;
     }
@@ -650,15 +677,23 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
             text: "Reset",
             style: "destructive",
             onPress: async () => {
-              await resetAll(projectId);
-              accumulatedTimeRef.current = 0;
-              setDisplayTime(0);
-              await AsyncStorage.removeItem(`persistedTimer_${projectId}`);
-              await AsyncStorage.removeItem(`isTracking_${projectId}`);
-              await AsyncStorage.removeItem(`timerState_${projectId}`);
+              try {
+                setResetting(true);
+                await resetAll(projectId, serviceId);
+                accumulatedTimeRef.current = 0;
+                setDisplayTime(0);
+                await AsyncStorage.removeItem(`persistedTimer_${projectId}`);
+                await AsyncStorage.removeItem(`isTracking_${projectId}`);
+                await AsyncStorage.removeItem(`timerState_${projectId}`);
+              } catch (err) {
+                console.error(`[TT:${projectId}] reset crash`, err);
+                console.trace();
+              } finally {
+                setResetting(false);
+              }
             },
           },
-        ]
+        ],
       );
   };
 
@@ -682,7 +717,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
         {/* Time Tracker Card */}
         <CopilotWalkthroughView
           style={{
-            height: 600,
+            height: 650,
             marginBottom: 20,
             backgroundColor: "#191919",
             borderWidth: 1,
@@ -744,35 +779,66 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
               backgroundColor: "#191919",
             }}
           >
+            {/* Start Button | Stop Button */}
             <TouchableOpacity
-              accessible={true}
-              accessibilityRole="button"
-              accessibilityLabel={"Pause the project"}
-              accessibilityHint="Press to pause the project"
-              onPress={handlePause}
+              onPress={isRunning ? handleStop : handleStart}
+              activeOpacity={0.8}
+              style={{
+                width: 140,
+                height: 140,
+                borderRadius: 70,
+                justifyContent: "center",
+                alignItems: "center",
+
+                // dynamic background
+                backgroundColor: isRunning ? "#3a0d0d" : "#003333",
+
+                // visuel feedback
+                borderWidth: 2,
+                borderColor: isRunning ? "#ff4d4d" : "aqua",
+
+                // depth
+                shadowColor: isRunning ? "#ff4d4d" : "#00ffff",
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.6,
+                shadowRadius: 10,
+                elevation: 8,
+              }}
             >
-              <FontAwesome6 name="pause" size={65} color="lightgrey" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              accessible={true}
-              accessibilityRole="button"
-              accessibilityLabel={"Start the project"}
-              accessibilityHint="Press to start the project"
-              onPress={handleStart}
-              disabled={isTracking}
-            >
-              <Animatable.View animation="pulse" iterationCount="infinite">
-                <FontAwesome5 name="play" size={85} color="lightgrey" />
-              </Animatable.View>
-            </TouchableOpacity>
-            <TouchableOpacity
-              accessible={true}
-              accessibilityRole="button"
-              accessibilityLabel={"Stop the project"}
-              accessibilityHint="Press to stop the project"
-              onPress={handleStop}
-            >
-              <FontAwesome5 name="stop" size={52} color="lightgrey" />
+              {/* Inner Circle for depth */}
+              <View
+                style={{
+                  width: 110,
+                  height: 110,
+                  borderRadius: 55,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "#111",
+                }}
+              >
+                {isRunning ? (
+                  <Animatable.View
+                    animation="pulse"
+                    iterationCount="infinite"
+                    duration={1200}
+                  >
+                    <FontAwesome5 name="stop" size={70} color="#ff4d4d" />
+                  </Animatable.View>
+                ) : (
+                  <Animatable.View
+                    animation="pulse"
+                    iterationCount="infinite"
+                    duration={1200}
+                  >
+                    <FontAwesome5
+                      name="play"
+                      size={70}
+                      color="aqua"
+                      style={{ transform: [{ translateX: +6 }] }}
+                    />
+                  </Animatable.View>
+                )}
+              </View>
             </TouchableOpacity>
           </View>
 

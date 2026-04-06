@@ -45,7 +45,10 @@ import { useAlertStore } from "./components/services/customAlert/alertStore";
 import { NotificationManager } from "./components/services/PushNotifications";
 import { useAccessibilityStore } from "./components/services/accessibility/accessibilityStore";
 import { AuthProvider } from "./components/contexts/AuthContext";
-import { ServiceProvider } from "./components/contexts/ServiceContext";
+import {
+  ServiceProvider,
+  useService,
+} from "./components/contexts/ServiceContext";
 import { navigationRef } from "./navigation/NavigationRef";
 import { AuthContext } from "./components/contexts/AuthContext";
 import { AuthStateListener } from "./onAuthStageChanges";
@@ -187,6 +190,7 @@ SplashScreen.preventAutoHideAsync();
 // AppNavigator - reads Context for Routing
 const AppNavigator = () => {
   const { stage, isTwoFAEnabled } = useContext(AuthContext);
+  const { serviceId } = useService();
 
   useEffect(() => {
     if (!navigationRef.isReady()) return;
@@ -260,19 +264,31 @@ const AppNavigator = () => {
           headerLeft: () => (
             <TouchableOpacity
               onPress={async () => {
-                const projectId = useStore.getState().getProjectId();
-                const isTracking = await useStore
-                  .getState()
-                  .getProjectTrackingState(projectId);
+                try {
+                  const projectId = useStore.getState().getProjectId();
 
-                if (isTracking) {
-                  useAlertStore
+                  if (!projectId || !serviceId) {
+                    console.warn("[BACK] no projectId");
+                    navigation.goBack();
+                    return;
+                  }
+
+                  const isTracking = await useStore
                     .getState()
-                    .showAlert(
-                      "Project is still running.",
-                      " You can't leave the app. Please stop the project first.",
-                    );
-                } else {
+                    .getProjectTrackingState(projectId, serviceId);
+
+                  if (isTracking) {
+                    useAlertStore
+                      .getState()
+                      .showAlert(
+                        "Project is still running.",
+                        "You can't leave the app. Please stop the project first.",
+                      );
+                  } else {
+                    navigation.goBack();
+                  }
+                } catch (err) {
+                  console.error("[BACK ERROR]", err);
                   navigation.goBack();
                 }
               }}

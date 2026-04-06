@@ -32,7 +32,7 @@ export const MarkedDateEntrySchema = z
  */
 export const MarkedDatesSchema = z.record(
   z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  MarkedDateEntrySchema
+  MarkedDateEntrySchema,
 );
 
 /**
@@ -52,14 +52,17 @@ export type VacationInput = z.infer<typeof VacationInputSchema>;
 
 // Schema for Firestore-stored Vacation document
 const timestampToDateRequired = z.preprocess((val) => {
-  if (val == null) return undefined; // empty Value fails later
-  if ((val as any)?.toDate && typeof (val as any).toDate === "function")
+  if (val == null) return undefined;
+
+  if ((val as any)?.toDate && typeof (val as any).toDate === "function") {
     return (val as any).toDate();
+  }
+
   if (val instanceof Date) return val;
   if (typeof val === "number") return new Date(val);
   // All others: *not* set to undefined, rather return, to safeParse fails
   return val;
-}, z.date());
+}, z.date().optional());
 
 export const FirestoreVacationSchema = z.object({
   id: z.string().optional(),
