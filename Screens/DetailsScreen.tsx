@@ -47,14 +47,25 @@ const DetailsScreen: React.FC = () => {
   // declare the route params
   const route = useRoute<DetailsScreenRouteProp>();
 
+  // use routing to get serviceId
+  const { serviceId } = useStore();
+  // use routing to get projectId
+  const { projectId } = route.params || {};
+
+  useEffect(() => {
+    if (projectId) setProjectId(projectId);
+    return () => {
+      console.log("[DetailsScreen] UNMOUNT");
+    };
+  }, [projectId]);
+
   // declare the copilot offset
   const offset = useCopilotOffset();
 
   // declare Firebase Auth
   const auth: Auth = getAuth(FIREBASE_APP);
 
-  // use routing to get projectId
-  const { projectId } = route.params || {};
+  if (!projectId) return null;
 
   // get the current project id from the store
   const { setProjectId, isTracking } = useStore();
@@ -121,7 +132,7 @@ const DetailsScreen: React.FC = () => {
         }
       };
       fetchTourStatus();
-    }, [auth.currentUser?.uid])
+    }, [auth.currentUser?.uid]),
   );
 
   // hook to control the copilot tour card + animation timing to get visibility
@@ -232,7 +243,7 @@ const DetailsScreen: React.FC = () => {
                 {/* Progress Card */}
                 <ProgressCard
                   projectId={projectId}
-                  serviceId="AczkjyWoOxdPAIRVxjy3"
+                  serviceId={serviceId}
                   maxHoursFromDB={maxHoursFromDB}
                 />
               </ErrorBoundary>

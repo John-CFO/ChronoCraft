@@ -55,7 +55,7 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
 
     // initialize the accessibility store
     const accessMode = useAccessibilityStore(
-      (state) => state.accessibilityEnabled
+      (state) => state.accessibilityEnabled,
     );
 
     // get the project data from the store
@@ -125,7 +125,7 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
             "Services",
             serviceId,
             "Projects",
-            projectId
+            projectId,
           );
 
           const projectSnap = await getDoc(projectRef);
@@ -135,7 +135,7 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
           }
 
           const projectData = projectSnap.data();
-          if (projectData.uid !== user.uid) {
+          if (projectData.userId !== user.uid) {
             Alert.alert("Error", "Not authorized");
             return;
           }
@@ -149,7 +149,7 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
           Alert.alert("Failed to save. Try again.");
         }
       }, 500),
-      [projectId, setProjectData, onSaveSuccess, serviceId]
+      [projectId, setProjectData, onSaveSuccess, serviceId],
     );
 
     // function to save the maxWorkHours
@@ -216,7 +216,7 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
         NotificationManager.scheduleNotification(
           "Target reached 🎯",
           "You reached your Deathline target!",
-          { seconds: 5 }
+          { seconds: 5 },
         );
       }
 
@@ -242,7 +242,7 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
               duration: 200,
               useNativeDriver: true,
             }),
-          ])
+          ]),
           // { iterations: 10 } // repeat the animation 10 times if it is active
         );
 
@@ -286,7 +286,7 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
             accessibilityLabel={
               maxWorkHours > 0 && timer > 0
                 ? `Deadline tracker. ${(displayProgress * 100).toFixed(
-                    1
+                    1,
                   )} percent of your maximum work time used. Your deadline is ${maxWorkHours} hours.`
                 : `Deadline tracker. No deadline set.`
             }
@@ -342,7 +342,7 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
             <TextInput
               accessible={true}
               accessibilityLabel="Enter your maximum allowed work hours"
-              placeholder="(e.g. 5)"
+              placeholder="(e.g. 5 hours)"
               placeholderTextColor={accessMode ? "white" : "grey"}
               value={inputMaxWorkHours}
               keyboardType="numeric"
@@ -488,7 +488,7 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
               <Text
                 accessible={true}
                 accessibilityLabel={`${(displayProgress * 100).toFixed(
-                  1
+                  1,
                 )} percent of your maximum work time used`}
                 style={{
                   color: "white",
@@ -562,7 +562,7 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
         </CopilotStep>
       </View>
     );
-  }
+  },
 );
 
 export default ProgressCard;

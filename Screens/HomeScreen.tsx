@@ -37,6 +37,7 @@ import {
   deleteDoc,
   addDoc,
   getDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 import { getAuth, Auth } from "firebase/auth";
 import { LinearGradient } from "expo-linear-gradient";
@@ -68,6 +69,7 @@ import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { useDotAnimation } from "../components/DotAnimation";
 import { sanitizeTitle } from "../components/InputSanitizers";
 import SortModal from "../components/SortModal";
+import { normalizeCreatedAt } from "../components/helper/normalizeCreatedAt.helper";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -81,7 +83,7 @@ type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 interface Project {
   id: string;
   name: string;
-  createdAt: Date;
+  createdAt: Date | null;
   [key: string]: any;
 }
 
@@ -107,7 +109,7 @@ const HomeScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   // state to handle if the user can read the projects
-  const [canReadProjects, setCanReadProjects] = useState(false);
+  const [canReadProjects, setCanReadProjects] = useState<boolean | null>(null);
 
   // states to control the loading screen
   const [minTimePassed, setMinTimePassed] = useState(false);
@@ -123,7 +125,7 @@ const HomeScreen: React.FC = () => {
   const auth: Auth = getAuth(FIREBASE_APP);
 
   // declare the service id
-  const { serviceId } = useService();
+  const { serviceId, loading: serviceLoading } = useService();
 
   // initialize the project id globally to reset all components in the details screen
   const { setProjectId } = useStore();
@@ -151,11 +153,17 @@ const HomeScreen: React.FC = () => {
   // function to sort the projects
   const sortedProjects = React.useMemo(() => {
     return [...projects].sort((a, b) => {
+      const aDate = normalizeCreatedAt(a.createdAt);
+      const bDate = normalizeCreatedAt(b.createdAt);
+
+      const aTime = aDate ? aDate.getTime() : 0;
+      const bTime = bDate ? bDate.getTime() : 0;
+
       switch (sortOrder) {
         case "DATE_DESC":
-          return b.createdAt.getTime() - a.createdAt.getTime();
+          return bTime - aTime;
         case "DATE_ASC":
-          return a.createdAt.getTime() - b.createdAt.getTime();
+          return aTime - bTime;
         case "NAME_ASC":
           return a.name.localeCompare(b.name);
         case "NAME_DESC":
@@ -199,120 +207,173 @@ const HomeScreen: React.FC = () => {
 
   // Gatecheck to check if the user can read the projects
   useEffect(() => {
-    if (!serviceId) return;
-    const checkCanReadProjects = async () => {
+    if (serviceLoading) return;
+    if (!serviceId) {
+      setCanReadProjects(false);
+      return;
+    }
+
+    let active = true;
+
+    const check = async () => {
       const user = FIREBASE_AUTH.currentUser;
+
       if (!user) {
-        setCanReadProjects(false);
-        setIsLoading(false);
+        if (active) setCanReadProjects(false);
         return;
       }
+
+      if (active) setCanReadProjects(null);
+
       try {
         const serviceRef = doc(
           FIREBASE_FIRESTORE,
           "Users",
           user.uid,
           "Services",
-          serviceId
+          serviceId,
         );
 
-        const serviceSnap = await getDoc(serviceRef);
-        if (!serviceSnap.exists()) {
-          setCanReadProjects(true);
-        } else {
-          setCanReadProjects(true);
-        }
-      } catch {
-        // expected on first entry
-        setCanReadProjects(false);
-      } finally {
-        setIsLoading(false);
+        const snap = await getDoc(serviceRef);
+
+        if (!active) return;
+
+        setCanReadProjects(snap.exists());
+      } catch (err) {
+        if (active) setCanReadProjects(false);
       }
     };
 
-    checkCanReadProjects();
-  }, [serviceId]);
+    check();
+
+    return () => {
+      active = false;
+    };
+  }, [serviceId, serviceLoading]);
 
   // function to load data from firestore
   useEffect(() => {
-    let cancelled = false;
-    setIsLoading(true);
+    if (serviceLoading) return;
+    if (canReadProjects === null) return;
+
+    let active = true;
 
     const fetchProjects = async () => {
-      if (!canReadProjects || !serviceId) {
-        setIsLoading(false);
-        return;
-      }
       const user = FIREBASE_AUTH.currentUser;
-      if (!user) {
-        setIsLoading(false);
+
+      if (!serviceId || !user) {
+        if (active) setIsLoading(false);
         return;
       }
 
-      const projectsCollection = collection(
-        FIREBASE_FIRESTORE,
-        "Users",
-        user.uid,
-        "Services",
-        serviceId,
-        "Projects"
-      );
+      if (canReadProjects === false) {
+        if (active) setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
 
       try {
+        const projectsCollection = collection(
+          FIREBASE_FIRESTORE,
+          "Users",
+          user.uid,
+          "Services",
+          serviceId,
+          "Projects",
+        );
+
         const snapshot = await getDocs(projectsCollection);
 
-        // mapping projectsData
-        const projectsData = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data().createdAt ?? new Date(),
-        }));
+        if (!active) return;
 
-        setProjects(projectsData as any);
+        setProjects(
+          snapshot.docs.map((doc) => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              ...data,
+              name: data.name ?? "",
+              createdAt: normalizeCreatedAt(data.createdAt),
+            };
+          }),
+        );
       } catch (err) {
         console.error("Error fetching projects", err);
       } finally {
-        setIsLoading(false);
+        if (active) setIsLoading(false);
       }
     };
 
     fetchProjects();
+
     return () => {
-      cancelled = true;
+      active = false;
     };
-  }, [canReadProjects, refresh, serviceId]);
+  }, [serviceId, serviceLoading, canReadProjects, refresh]);
 
   // function to add projects
   const handleAddProject = async () => {
-    if (!serviceId) return;
-    if (!newProjectName.trim()) {
+    const user = FIREBASE_AUTH.currentUser;
+    if (!user?.uid) return;
+
+    if (!user) {
+      useAlertStore.getState().showAlert("Error", "User not authenticated.");
+      return;
+    }
+
+    if (!serviceId) {
+      useAlertStore
+        .getState()
+        .showAlert(
+          "Error",
+          "serviceId is missing. ServiceContext is not ready.",
+        );
+      return;
+    }
+
+    const trimmedName = newProjectName.trim();
+    if (!trimmedName.trim()) {
       useAlertStore
         .getState()
         .showAlert("Sorry", "Add a project title first to continue.");
       return;
     }
 
-    if (newProjectName.length > 100) {
+    if (trimmedName.length > 100) {
       useAlertStore.getState().showAlert("Error", "Project name too long");
       return;
     }
 
     try {
-      const user = FIREBASE_AUTH.currentUser;
-      if (!user) return;
-
-      const db = FIREBASE_FIRESTORE;
       const projectsCollection = collection(
-        db,
+        FIREBASE_FIRESTORE,
         "Users",
         user.uid,
         "Services",
         serviceId,
-        "Projects"
+        "Projects",
       );
 
       const projectToAdd = {
-        uid: user.uid,
+        userId: user.uid,
+        name: trimmedName,
+        createdAt: serverTimestamp(),
+        timer: 0,
+        elapsedTime: 0,
+        hourlyRate: 0,
+        totalEarnings: 0,
+        isTracking: false,
+        startTime: null,
+        endTime: null,
+        lastStartTime: null,
+        originalStartTime: null,
+      };
+
+      const newProjectRef = await addDoc(projectsCollection, projectToAdd);
+
+      const projectForState = {
+        userId: user.uid,
         name: newProjectName,
         createdAt: new Date(),
         timer: 0,
@@ -321,23 +382,19 @@ const HomeScreen: React.FC = () => {
         totalEarnings: 0,
         isTracking: false,
         startTime: null,
-        pauseTime: null,
         endTime: null,
         lastStartTime: null,
         originalStartTime: null,
+        id: newProjectRef.id,
       };
-
-      const newProjectRef = await addDoc(projectsCollection, projectToAdd);
-
-      setProjects((prev) => [
-        ...prev,
-        { id: newProjectRef.id, ...projectToAdd },
-      ]);
+      setProjects((prev) => [...prev, projectForState]);
       setNewProjectName("");
       setRefresh((r) => !r);
       Keyboard.dismiss();
+      console.log("serviceId:", serviceId);
     } catch (error) {
       console.error("Error adding project", error);
+      useAlertStore.getState().showAlert("Error", "Could not add project.");
     }
   };
 
@@ -375,24 +432,27 @@ const HomeScreen: React.FC = () => {
                     .showAlert("Error", "User not authenticated.");
                   return;
                 }
-
+                if (!serviceId) {
+                  console.error("Missing serviceId");
+                  return;
+                }
                 const db = FIREBASE_FIRESTORE;
                 const noteCollection = collection(
                   db,
                   "Users",
                   user.uid,
                   "Services",
-                  "AczkjyWoOxdPAIRVxjy3",
+                  serviceId,
                   "Projects",
                   projectId,
-                  "Notes"
+                  "Notes",
                 );
                 // snapshot to delete notes
                 const notesSnapshot = await getDocs(noteCollection);
 
                 // wait for all note deletions to finish before deleting the project
                 await Promise.all(
-                  notesSnapshot.docs.map((doc) => deleteDoc(doc.ref))
+                  notesSnapshot.docs.map((doc) => deleteDoc(doc.ref)),
                 );
                 // now delete the project
                 const projectDocRef = doc(
@@ -400,9 +460,9 @@ const HomeScreen: React.FC = () => {
                   "Users",
                   user.uid,
                   "Services",
-                  "AczkjyWoOxdPAIRVxjy3",
+                  serviceId,
                   "Projects",
-                  projectId
+                  projectId,
                 );
                 await deleteDoc(projectDocRef);
 
@@ -415,7 +475,7 @@ const HomeScreen: React.FC = () => {
               }
             },
           },
-        ]
+        ],
       );
   };
 
@@ -650,7 +710,7 @@ const HomeScreen: React.FC = () => {
   useFocusEffect(
     useCallback(() => {
       fetchTourStatus();
-    }, [])
+    }, []),
   );
 
   // delay the setting of showTourCard
@@ -670,7 +730,7 @@ const HomeScreen: React.FC = () => {
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
   // console.log("accessMode in LoginScreen:", accessMode);
 
@@ -852,7 +912,7 @@ const HomeScreen: React.FC = () => {
                     keyExtractor={(item) => item.id}
                     onScroll={Animated.event(
                       [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                      { useNativeDriver: true }
+                      { useNativeDriver: true },
                     )}
                     scrollEventThrottle={16}
                     renderItem={renderItem}

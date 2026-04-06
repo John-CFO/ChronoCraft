@@ -69,7 +69,7 @@ const WorkTimeTracker = () => {
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
   // console.log("accessMode in LoginScreen:", accessMode);
 
@@ -102,8 +102,9 @@ const WorkTimeTracker = () => {
 
   // hook to load state
   useEffect(() => {
-    loadState();
-  }, []);
+    if (!serviceId) return;
+    loadState(serviceId);
+  }, [serviceId]);
 
   // track currentDocId for the persistent mechanism by tracking the current day
   const currentDocIdRef = useRef(currentDocId);
@@ -127,7 +128,7 @@ const WorkTimeTracker = () => {
           "Services",
           serviceId,
           "WorkHours",
-          today
+          today,
         );
         const docSnapshot = await getDoc(docRef);
         if (docSnapshot.exists()) {
@@ -145,7 +146,7 @@ const WorkTimeTracker = () => {
           .getState()
           .showAlert(
             "Error",
-            "An error occurred while fetching the data. Please try again."
+            "An error occurred while fetching the data. Please try again.",
           );
       }
     };
@@ -235,7 +236,7 @@ const WorkTimeTracker = () => {
           const newValue = newElapsed > elapsedTime ? newElapsed : elapsedTime;
           setElapsedTime(newValue);
           setAccumulatedDuration((prev) =>
-            newElapsed > prev ? newElapsed : prev
+            newElapsed > prev ? newElapsed : prev,
           );
           // set the workflow starttime new
           setStartWorkTime(new Date());
@@ -251,7 +252,7 @@ const WorkTimeTracker = () => {
     // subscribe to app state changes
     const subscription = AppState.addEventListener(
       "change",
-      handleAppStateChange
+      handleAppStateChange,
     );
     // clear the event listener when the component unmounts
     return () => {
@@ -281,7 +282,7 @@ const WorkTimeTracker = () => {
         "Services",
         serviceId,
         "WorkHours",
-        workDay
+        workDay,
       );
 
       const docSnap = await getDoc(workRef);
@@ -349,7 +350,7 @@ const WorkTimeTracker = () => {
           "Services",
           serviceId,
           "WorkHours",
-          docIdToUse
+          docIdToUse,
         );
 
         const dataToWrite = {
@@ -358,7 +359,7 @@ const WorkTimeTracker = () => {
           elapsedTime: roundedDuration,
           overHours: Math.max(
             roundedDuration - parseFloat(expectedHours || "0"),
-            0
+            0,
           ),
           userId,
           workDay: docIdToUse,
@@ -372,7 +373,7 @@ const WorkTimeTracker = () => {
       setElapsedTime(roundedDuration);
       setStartWorkTime(null);
       setRefreshTrigger((prev) => prev + 1);
-      loadState();
+      loadState(serviceId);
     } catch (error) {
       console.error("Error in handleStopWork", error);
       useAlertStore.getState().showAlert("Error", "Failed to stop tracking");
@@ -391,8 +392,8 @@ const WorkTimeTracker = () => {
           user.uid,
           "Services",
           serviceId,
-          "WorkHours"
-        )
+          "WorkHours",
+        ),
       );
 
       return snapshot.docs.map((doc) => {
@@ -432,8 +433,8 @@ const WorkTimeTracker = () => {
             user.uid,
             "Services",
             serviceId,
-            "WorkHours"
-          )
+            "WorkHours",
+          ),
         );
 
         const formattedData = snapshot.docs
@@ -557,13 +558,13 @@ const WorkTimeTracker = () => {
             "Services",
             serviceId,
             "WorkHours",
-            docIdToCheck
+            docIdToCheck,
           );
           const docSnap = await getDoc(workRef);
           const data = docSnap.exists() ? docSnap.data() : null;
           if (!data) {
             console.warn(
-              "Saved running session exists but no firestore doc -> not auto-resuming."
+              "Saved running session exists but no firestore doc -> not auto-resuming.",
             );
             await AsyncStorage.removeItem("workTimeTrackerState");
             return;

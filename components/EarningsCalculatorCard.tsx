@@ -60,7 +60,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
 
   // constants for validation
@@ -70,10 +70,10 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
   // global state
   const { setHourlyRate } = useStore();
   const hourlyRate = useStore(
-    (state) => state.projects[projectId]?.hourlyRate || 0
+    (state) => state.projects[projectId]?.hourlyRate || 0,
   );
   const totalEarnings = useStore(
-    (state) => state.projects[projectId]?.totalEarnings || 0
+    (state) => state.projects[projectId]?.totalEarnings || 0,
   );
 
   // initialize local hourly rate to save the state when user navigates away from the screen
@@ -94,19 +94,13 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
         "Services",
         serviceId,
         "Projects",
-        projectId
+        projectId,
       );
 
       const docSnap = await getDoc(docRef);
       if (!docSnap.exists()) return;
 
       const data = docSnap.data();
-
-      // authorization check
-      if (data.uid !== user.uid) {
-        console.error("User not authorized to access this project");
-        return;
-      }
 
       // hourlyRate: validate client input
       let hourlyRate = 0;
@@ -181,13 +175,18 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
         .getState()
         .showAlert(
           "Invalid Rate",
-          `Hourly rate must be between ${MIN_HOURLY_RATE} and ${MAX_HOURLY_RATE}`
+          `Hourly rate must be between ${MIN_HOURLY_RATE} and ${MAX_HOURLY_RATE}`,
         );
       return;
     }
     setSaving(true);
     try {
-      await updateProjectData(projectId, { hourlyRate: rate });
+      if (!serviceId) {
+        console.error("Missing serviceId");
+        return;
+      }
+
+      await updateProjectData(projectId, serviceId, { hourlyRate: rate });
       setHourlyRate(projectId, rate);
       setRateInput("");
     } catch (error) {
@@ -209,7 +208,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
         <CopilotWalkthroughView
           accessible={true}
           accessibilityLabel={`Earnings calculator. Total earnings ${Number(
-            totalEarnings || 0
+            totalEarnings || 0,
           ).toFixed(2)} dollars. Your hourly rate is ${
             hourlyRate || "not set yet"
           }.`}
@@ -242,7 +241,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
           <View
             accessible={true}
             accessibilityLabel={`Total earnings ${Number(
-              totalEarnings || 0
+              totalEarnings || 0,
             ).toFixed(2)} dollars`}
             style={{
               width: "80%",

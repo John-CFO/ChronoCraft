@@ -2,7 +2,6 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Check, if authenticated user is owner
     function isOwner(userId) {
       return request.auth != null && request.auth.uid == userId;
     }
@@ -11,50 +10,46 @@ service cloud.firestore {
        Users
     ======================= */
     match /Users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false; // No User-Listing
-      allow create: if isOwner(userId);
-      allow update, delete: if false;
+
+      allow read, create, update: if isOwner(userId);
+      allow list, delete: if false;
 
       /* =======================
          Services
       ======================= */
       match /Services/{serviceId} {
-        allow get: if isOwner(userId);
-        allow list: if isOwner(userId);
-        allow create: if isOwner(userId);
+
+        allow read, create: if isOwner(userId);
         allow update, delete: if false;
 
         /* =======================
            Projects
         ======================= */
         match /Projects/{projectId} {
-          allow list: if isOwner(userId);
-          allow get, create, update, delete: if isOwner(userId);
+
+          allow read, create, update: if isOwner(userId);
+          allow delete: if isOwner(userId);
 
           /* =======================
-             Notes (Subcollection)
+             Notes
           ======================= */
           match /Notes/{noteId} {
-            allow list: if isOwner(userId);
-            allow get, create, update, delete: if isOwner(userId);
+            allow read, create, update, delete: if isOwner(userId);
           }
+        }
 
-          /* =======================
-             WorkHours (Subcollection)
-          ======================= */
-          match /WorkHours/{workHourId} {
-            allow list: if isOwner(userId);
-            allow get, create, update, delete: if isOwner(userId);
-          }
+        /* =======================
+           WorkHours (Service-level)
+        ======================= */
+        match /WorkHours/{workHourId} {
+          allow read, create, update, delete: if isOwner(userId);
+        }
 
-          /* =======================
-             Vacations (Subcollection)
-          ======================= */
-          match /Vacations/{vacationId} {
-            allow list: if isOwner(userId);
-            allow get, create, update, delete: if isOwner(userId);
-          }
+        /* =======================
+           Vacations (Service-level)
+        ======================= */
+        match /Vacations/{vacationId} {
+          allow read, create, update, delete: if isOwner(userId);
         }
       }
     }

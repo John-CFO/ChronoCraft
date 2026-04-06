@@ -8,7 +8,7 @@
     "outDir": "lib",
     "strict": true,
     "esModuleInterop": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "types": ["@react-native-async-storage/async-storage", "node", "jest"],
     "paths": {

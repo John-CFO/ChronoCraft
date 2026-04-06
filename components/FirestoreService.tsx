@@ -10,14 +10,16 @@
 import { doc, updateDoc } from "firebase/firestore";
 
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
-import { useService } from "../components/contexts/ServiceContext";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 // Update a project's document for the current authenticated user.
 // Returns true on success, false on failure (auth or Firestore error).
-export const updateProjectData = async (projectId: string, data: any) => {
-  const { serviceId } = useService();
+export const updateProjectData = async (
+  projectId: string,
+  serviceId: string,
+  data: any,
+) => {
   if (!serviceId) return false;
 
   const user = FIREBASE_AUTH?.currentUser;
@@ -39,7 +41,7 @@ export const updateProjectData = async (projectId: string, data: any) => {
       "Services",
       serviceId,
       "Projects",
-      projectId
+      projectId,
     );
     await updateDoc(projectDocRef, updatePayload);
     return true;
