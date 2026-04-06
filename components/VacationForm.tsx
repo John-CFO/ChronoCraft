@@ -59,13 +59,14 @@ const VacationForm = () => {
           acc[date] = rest; // delete `customStyles` property
           return acc;
         },
-        {} as Record<string, any>
+        {} as Record<string, any>,
       );
 
       // derive startDate defensively (first sorted key)
       const startDate = Object.keys(filteredMarkedDates).sort()[0];
 
       const input = {
+        uid: user.uid,
         startDate,
         markedDates: filteredMarkedDates,
       };
@@ -74,14 +75,14 @@ const VacationForm = () => {
       if (!parsed.success) {
         console.error(
           "Vacation input validation failed:",
-          parsed.error.format()
+          parsed.error.format(),
         );
         useAlertStore
           .getState()
           .showAlert(
             "Invalid Input",
             "Vacation data is invalid. Please retry.",
-            [{ text: "OK" }]
+            [{ text: "OK" }],
           );
         return;
       }
@@ -93,7 +94,7 @@ const VacationForm = () => {
         user.uid,
         "Services",
         serviceId,
-        "Vacations"
+        "Vacations",
       );
 
       await addDoc(vacationsCollection, {

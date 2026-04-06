@@ -156,7 +156,6 @@ const LoginScreen: React.FC = () => {
         await NotificationManager.savePushTokenToDatabase(uid, token);
         await NotificationManager.sendWelcomeNotification(token);
       }
-
       // Navigation
       setUser(response.user);
       setStage("authenticated");

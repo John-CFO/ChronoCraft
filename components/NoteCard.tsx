@@ -38,7 +38,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
 
   // function to handle note deletion in firestore
@@ -65,15 +65,6 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
                 return;
               }
 
-              // minimal authorization check
-              if (note.uid !== user.uid) {
-                console.error("User not authorized to delete this note");
-                useAlertStore
-                  .getState()
-                  .showAlert("Error", "Not authorized to delete this note");
-                return;
-              }
-
               try {
                 const noteDocRef = doc(
                   FIREBASE_FIRESTORE,
@@ -84,7 +75,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
                   "Projects",
                   projectId,
                   "Notes",
-                  note.id
+                  note.id,
                 );
                 await deleteDoc(noteDocRef);
                 onDelete(note.id);
@@ -97,7 +88,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
             },
             style: "destructive",
           },
-        ]
+        ],
       );
   };
 

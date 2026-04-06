@@ -23,7 +23,7 @@ const NoteList: React.FC<{ projectId: string }> = ({ projectId }) => {
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
 
   // loaduing and error conditions

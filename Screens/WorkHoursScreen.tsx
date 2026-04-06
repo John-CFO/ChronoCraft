@@ -13,7 +13,6 @@ import { CopilotProvider } from "react-native-copilot";
 import { getDoc } from "firebase/firestore";
 
 import { FIREBASE_APP, FIREBASE_FIRESTORE } from "../firebaseConfig";
-import WorkHoursState from "../components/WorkHoursState";
 import WorkHoursInput from "../components/WorkHoursInput";
 import WorkTimeTracker from "../components/WorkTimeTracker";
 import WorkHoursChart from "../components/WorkHoursChart";
@@ -37,9 +36,6 @@ type WorkHoursScreenRouteProps = {
 const WorkHoursScreen: React.FC<WorkHoursScreenRouteProps> = () => {
   // initialize the copilot offset
   const offset = useCopilotOffset();
-
-  // initialize WorkHoursState
-  const {} = WorkHoursState();
 
   // initialize Firebase Auth
   const auth: Auth = getAuth(FIREBASE_APP);
@@ -81,7 +77,7 @@ const WorkHoursScreen: React.FC<WorkHoursScreenRouteProps> = () => {
       };
 
       fetchTourStatus();
-    }, [])
+    }, []),
   );
 
   // delay the setting of showTourCard

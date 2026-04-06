@@ -29,6 +29,7 @@ import { useDotAnimation } from "../components/DotAnimation";
 import { sanitizeComment } from "./InputSanitizers";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import { NoteInputSchema } from "../validation/noteSchemas";
+import { useService } from "./contexts/ServiceContext";
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -49,7 +50,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
   // hook to announce accessibility
   useEffect(() => {
     AccessibilityInfo.announceForAccessibility(
-      "Note Modal opened. Please write your comment and press send."
+      "Note Modal opened. Please write your comment and press send.",
     );
   }, []);
 
@@ -79,12 +80,15 @@ const NoteModal: React.FC<NoteModalProps> = ({
   // function to handle comment submission
   const [saving, setSaving] = useState(false);
 
+  // get the service ID
+  const { serviceId } = useService();
+
   // function to handle comment submission
   const handleSubmitComment = async (
     projectId: string,
     comment: string,
     userId: string,
-    serviceId: string
+    serviceId: string,
   ) => {
     // Initial client-side validation
     if (!comment.trim()) {
@@ -92,7 +96,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
         .getState()
         .showAlert(
           "Sorry",
-          "Please write a comment first before pressing send."
+          "Please write a comment first before pressing send.",
         );
       return;
     }
@@ -117,16 +121,6 @@ const NoteModal: React.FC<NoteModalProps> = ({
         return;
       }
 
-      // validate the service ID
-      const VALID_SERVICE_IDS = ["AczkjyWoOxdPAIRVxjy3"];
-      if (!VALID_SERVICE_IDS.includes(serviceId)) {
-        console.error("Invalid service ID:", serviceId);
-        useAlertStore
-          .getState()
-          .showAlert("Error", "Invalid service configuration");
-        return;
-      }
-
       // authentication and authorization
       const user = FIREBASE_AUTH.currentUser;
       if (!user || user.uid !== userId) {
@@ -138,7 +132,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
       // check if project exists
       const projectRef = doc(
         FIREBASE_FIRESTORE,
-        `Users/${userId}/Services/${serviceId}/Projects/${projectId}`
+        `Users/${userId}/Services/${serviceId}/Projects/${projectId}`,
       );
 
       const projectSnapshot = await getDoc(projectRef);
@@ -151,11 +145,11 @@ const NoteModal: React.FC<NoteModalProps> = ({
       // write firestore
       const projectNotesRef = collection(
         FIREBASE_FIRESTORE,
-        `Users/${userId}/Services/${serviceId}/Projects/${projectId}/Notes`
+        `Users/${userId}/Services/${serviceId}/Projects/${projectId}/Notes`,
       );
 
       await addDoc(projectNotesRef, {
-        uid: user.uid,
+        userId: user.uid,
         comment: sanitizedComment, // use sanatized comment
         createdAt: serverTimestamp(),
       });
@@ -178,7 +172,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
 
   return (
@@ -267,14 +261,12 @@ const NoteModal: React.FC<NoteModalProps> = ({
             accessibilityLabel={saving ? "Updating profile" : "Save note"}
             accessibilityHint="Saves the note to the project"
             accessibilityState={{ busy: saving }}
-            onPress={() =>
-              handleSubmitComment(
-                projectId,
-                comment,
-                FIREBASE_AUTH.currentUser?.uid as string,
-                "AczkjyWoOxdPAIRVxjy3"
-              )
-            }
+            onPress={() => {
+              const user = FIREBASE_AUTH.currentUser;
+              if (!user || !serviceId) return;
+
+              handleSubmitComment(projectId, comment, user.uid, serviceId);
+            }}
             style={{
               width: screenWidth * 0.7, // use 70% of the screen width
               maxWidth: 400,

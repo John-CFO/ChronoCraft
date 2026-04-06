@@ -32,16 +32,8 @@ export const AsyncStorageWorkTrackerSchema = z
   .object({
     isWorking: z.boolean(),
     startWorkTime: isoDateStringSchema.nullable().optional(),
-    elapsedTime: z
-      .number()
-      .min(0)
-      .max(864000) // Max 1 Day in seconds
-      .refine((t) => Number.isInteger(t), "Must be whole number"),
-    accumulatedDuration: z
-      .number()
-      .min(0)
-      .max(31536000) // Max 10 Years in seconds
-      .refine((t) => Number.isInteger(t), "Must be whole number"),
+    elapsedTime: z.number().min(0).max(864000), // Max 1 Day in seconds
+    accumulatedDuration: z.number().min(0).max(31536000), // Max 10 Years in seconds
     currentDocId: z
       .string()
       .refine(isValidAsyncStorageDocId, "Invalid document ID")
