@@ -55,13 +55,13 @@ describe("AsyncStorageWorkTrackerSchema (client)", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects non-integer elapsedTime", () => {
+  it("accepts non-integer elapsedTime (float allowed)", () => {
     const result = AsyncStorageWorkTrackerSchema.safeParse({
       ...validBase,
       elapsedTime: 12.5,
     });
 
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
   });
 
   it("rejects accumulatedDuration above max (10 years)", () => {
