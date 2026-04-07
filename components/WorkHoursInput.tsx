@@ -48,7 +48,7 @@ const WorkHoursInput = () => {
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
   // console.log("accessMode in LoginScreen:", accessMode);
 
@@ -78,7 +78,7 @@ const WorkHoursInput = () => {
           "Services",
           serviceId,
           "WorkHours",
-          workDay
+          workDay,
         );
 
         const docSnap = await getDoc(docRef);
@@ -116,7 +116,7 @@ const WorkHoursInput = () => {
     docRef: any,
     duration: number,
     newExpected: number,
-    existingData?: any
+    existingData?: any,
   ) => {
     // console.log("[DEBUG recalc] called with", {
     //   duration,
@@ -169,7 +169,7 @@ const WorkHoursInput = () => {
             ],
           }),
         },
-        { merge: true }
+        { merge: true },
       );
       const verifySnap = await getDoc(docRef);
       // console.log("[DEBUG recalc] verify doc:", {
@@ -183,6 +183,15 @@ const WorkHoursInput = () => {
     }
   };
 
+  // helper function to parse hours to HH:MM
+  const formatHoursToHHMM = (hours: number) => {
+    const totalMinutes = Math.round(hours * 60);
+    const hh = Math.floor(totalMinutes / 60);
+    const mm = totalMinutes % 60;
+
+    return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+  };
+
   // function to save the expected hours
   const [saving, setSaving] = useState(false);
   const handleSaveMinHours = async () => {
@@ -194,7 +203,7 @@ const WorkHoursInput = () => {
         .showAlert(
           "Invalid Input",
           "Please enter a valid number greater than 0.",
-          [{ text: "OK", style: "default" }]
+          [{ text: "OK", style: "default" }],
         );
       return;
     }
@@ -216,7 +225,7 @@ const WorkHoursInput = () => {
         "Services",
         serviceId,
         "WorkHours",
-        workDay
+        workDay,
       );
 
       const existingSnap = await getDoc(docRef);
@@ -224,29 +233,27 @@ const WorkHoursInput = () => {
       const prevExpected = Number(existingData.expectedHours) || 0;
       const duration = Number(existingData.duration) || 0;
 
+      const displayDuration = formatHoursToHHMM(duration);
+
       if (prevExpected !== hours && duration > 0) {
         if (isWorking) {
           useAlertStore
             .getState()
             .showAlert(
               "Tracker is running",
-              `You have already ${duration.toFixed(
-                2
-              )}h tracked. While tracker is running, the expected hours can't be changed.`,
-              [{ text: "OK", style: "default" }]
+              `You have already ${displayDuration} tracked. While tracker is running, the expected hours can't be changed.`,
+              [{ text: "OK", style: "default" }],
             );
           setSaving(false);
           return;
         }
 
-        // Confirmation if tracker is not running
+        // Confirmation when user needs to change expected hours
         useAlertStore
           .getState()
           .showAlert(
             "Change Expected Hours",
-            `You have already ${duration.toFixed(
-              2
-            )}h tracked. Changing expected hours will not affect tracked time. Continue?`,
+            `You have already ${displayDuration} tracked. Changing expected hours will not affect tracked time. Continue?`,
             [
               {
                 text: "Cancel",
@@ -276,14 +283,14 @@ const WorkHoursInput = () => {
                       .showAlert(
                         "Error",
                         "Error updating data. Please try again.",
-                        [{ text: "OK", style: "default" }]
+                        [{ text: "OK", style: "default" }],
                       );
                   } finally {
                     setSaving(false);
                   }
                 },
               },
-            ]
+            ],
           );
         return; // Important: exit here because onPress is async
       }
@@ -292,7 +299,7 @@ const WorkHoursInput = () => {
       await setDoc(
         docRef,
         { ...existingData, expectedHours: hours, workDay, userId },
-        { merge: true }
+        { merge: true },
       );
       setCurrentDocId(docRef.id);
       setExpectedHours(hours.toString());
@@ -306,12 +313,13 @@ const WorkHoursInput = () => {
         .showAlert(
           "Error",
           "During the saving process an error occurred. Please try again.",
-          [{ text: "OK", style: "default" }]
+          [{ text: "OK", style: "default" }],
         );
     } finally {
       setSaving(false);
     }
   };
+
   return (
     <>
       {/* DetailsScreen copilot tour step 2 */}
