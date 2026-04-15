@@ -12,9 +12,36 @@ import { RateLimiter } from "./rateLimit";
 
 //////////////////////////////////////////////////////////////////////////////////
 
-const store = new FirestoreRateLimitStore(
-  admin.firestore(),
-  process.env.RATE_LIMIT_HMAC_KEY,
-);
+const isRateLimitDisabled = process.env.RATE_LIMIT_DISABLED === "true";
 
-export const rateLimit = new RateLimiter(store);
+const disabledRateLimiter = {
+  checkLimit: async () => {},
+  checkIP: async () => {},
+  checkDevice: async () => {},
+  resetLimit: async () => {},
+  resetAllLimitsForUser: async () => {},
+  getRemainingAttempts: async () => 0,
+} as unknown as RateLimiter;
+
+function createRateLimiter(): RateLimiter {
+  if (isRateLimitDisabled) {
+    return disabledRateLimiter;
+  }
+
+  const store = new FirestoreRateLimitStore(
+    admin.firestore(),
+    process.env.RATE_LIMIT_HMAC_KEY,
+  );
+
+  return new RateLimiter(store);
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+
+// Hybrid export solution to manage the export trade off between functions and tests
+const rateLimitInstance = createRateLimiter();
+export function getRateLimit(): RateLimiter {
+  return createRateLimiter(); // for tests
+}
+
+export const rateLimit = rateLimitInstance;

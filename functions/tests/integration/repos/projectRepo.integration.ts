@@ -4,8 +4,7 @@
 
 //////////////////////////////////////////////////////////////////////////////////////
 
-import * as admin from "firebase-admin";
-
+import { admin } from "../../../tests/firebaseAdminTest";
 import {
   ProjectRepo,
   ProjectNotFoundError,
@@ -15,13 +14,6 @@ import {
 ///////////////////////////////////////////////////////////////////////////////////////
 
 const projectRepo = new ProjectRepo();
-
-// Init admin with projectId (important for emulator)
-if (!admin.apps.length) {
-  admin.initializeApp({
-    projectId: process.env.GCLOUD_PROJECT || "test-project",
-  });
-}
 
 // Ensure Firestore emulator settings
 const ensureFirestoreEmulator = () => {

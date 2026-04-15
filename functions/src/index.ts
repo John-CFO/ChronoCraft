@@ -15,8 +15,27 @@ setGlobalOptions({
   maxInstances: 10,
 });
 
+type FirebaseConfig = {
+  storageBucket?: string;
+};
+
+function parseFirebaseConfig(): FirebaseConfig {
+  try {
+    return JSON.parse(process.env.FIREBASE_CONFIG ?? "{}") as FirebaseConfig;
+  } catch {
+    return {};
+  }
+}
+
 if (!admin.apps.length) {
-  admin.initializeApp();
+  const firebaseConfig = parseFirebaseConfig();
+  const appOptions: admin.AppOptions = {};
+
+  if (firebaseConfig.storageBucket) {
+    appOptions.storageBucket = firebaseConfig.storageBucket;
+  }
+
+  admin.initializeApp(appOptions);
 }
 
 // HTTP handlers
@@ -25,6 +44,7 @@ import { profileValidator } from "./functions/profileValidator.function";
 import { projectsAndWorkValidator } from "./functions/projectAndWorkValidator.function";
 import { secureDelete } from "./functions/secureDelete.function";
 import { deleteUserDataHandler } from "./functions/deleteUserData.function";
+import { requestPasswordReset } from "./functions/requestPasswordReset.function";
 
 // TOTP handlers
 import {
@@ -55,3 +75,8 @@ export const verifyTotpToken = onCall({ cors: true }, verifyTotpTokenHandler);
 export const verifyTotpLogin = onCall({ cors: true }, verifyTotpLoginHandler);
 
 export const deleteUserData = onCall({ cors: true }, deleteUserDataHandler);
+
+export const requestPasswordResetFunction = onCall(
+  { cors: true },
+  requestPasswordReset,
+);

@@ -13,11 +13,11 @@ import {
   TouchableOpacity,
   Dimensions,
 } from "react-native";
-import { sendPasswordResetEmail } from "firebase/auth";
 import { LinearGradient } from "expo-linear-gradient";
 import Modal from "react-native-modal";
 
-import { FIREBASE_AUTH } from "../firebaseConfig";
+import { httpsCallable } from "firebase/functions";
+import { FIREBASE_FUNCTIONS } from "../firebaseConfig";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useDotAnimation } from "../components/DotAnimation";
 import { useAccessibilityStore } from "./services/accessibility/accessibilityStore";
@@ -67,39 +67,40 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
     }
     // try to send the password reset email, if it was successful show an alert with instructions
     try {
-      await sendPasswordResetEmail(FIREBASE_AUTH, normalized);
+      const requestReset = httpsCallable(
+        FIREBASE_FUNCTIONS,
+        "requestPasswordResetFunction",
+      );
+
+      await requestReset({ email: normalized });
+
       useAlertStore
         .getState()
         .showAlert(
           "Email sent",
-          "If an account exists for that email, you will receive instructions to reset your password."
+          "If an account exists for that email, you will receive instructions to reset your password.",
         );
-      onClose(); // close the modal
-      // start cooldown (e.g. 60s)
+
+      onClose();
+
+      // cooldown for 1 minute
       setCooldown(60);
       const t = setInterval(
         () => setCooldown((c) => (c && c > 0 ? c - 1 : null)),
-        1000
+        1000,
       );
+
       setTimeout(() => {
         clearInterval(t);
         setCooldown(null);
       }, 60000);
     } catch (err: any) {
-      // map known errors, otherwise generic
-      const code = err?.code ?? "";
-      if (code === "auth/invalid-email") {
-        useAlertStore
-          .getState()
-          .showAlert("Error", "Please enter a valid email address.");
-      } else {
-        useAlertStore
-          .getState()
-          .showAlert(
-            "Error",
-            "If an account exists for that email, you will receive instructions to reset your password."
-          );
-      }
+      useAlertStore
+        .getState()
+        .showAlert(
+          "Error",
+          "If an account exists for that email, you will receive instructions to reset your password.",
+        );
     } finally {
       sendingRef.current = false;
       setSending(false);
@@ -112,7 +113,7 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
 
   return (

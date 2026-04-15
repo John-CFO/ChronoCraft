@@ -1,6 +1,7 @@
 /////////////////////// deleteUserData.function.ts //////////////////////
 
-// This file contains the cloud function for deleting user data
+// This file contains the implementation of the deleteUserDataHandler function,
+// which is used to delete user data from the application.
 
 ///////////////////////////////////////////////////////////////////////
 
@@ -9,61 +10,70 @@ import { HttpsError } from "firebase-functions/v2/https";
 
 ///////////////////////////////////////////////////////////////////////
 
+type FirebaseConfig = {
+  storageBucket?: string;
+};
+
+///////////////////////////////////////////////////////////////////////
+
+function parseFirebaseConfig(): FirebaseConfig {
+  try {
+    return JSON.parse(process.env.FIREBASE_CONFIG ?? "{}") as FirebaseConfig;
+  } catch {
+    return {};
+  }
+}
+
+function getStorageBucketName(): string {
+  const firebaseConfig = parseFirebaseConfig();
+
+  const bucket =
+    firebaseConfig.storageBucket ??
+    process.env.FUNCTIONS_STORAGE_BUCKET ??
+    process.env.STORAGE_BUCKET;
+
+  if (!bucket) {
+    throw new HttpsError("internal", "Missing storage bucket configuration");
+  }
+
+  return bucket;
+}
+
+function deleteStorageObjects(uid: string) {
+  const bucket = admin.storage().bucket(getStorageBucketName());
+
+  return Promise.all([
+    bucket.deleteFiles({ prefix: `profilePictures/${uid}/` }).catch(() => {}),
+    bucket.file(`profilePictures/${uid}`).delete({ ignoreNotFound: true }),
+  ]);
+}
+
 export const deleteUserDataHandler = async (request: any) => {
   const uid = request.auth?.uid;
+
   if (!uid) {
     throw new HttpsError("unauthenticated", "Not logged in");
   }
 
   const db = admin.firestore();
-  const BUCKET_NAME = "chrono-craft-worktime-manager.appspot.com";
-  const bucket = admin.storage().bucket(BUCKET_NAME);
 
   try {
-    // Ensure user exists in Auth
     await admin.auth().getUser(uid);
 
-    // Storage: delete folder + single file
-    await bucket.deleteFiles({ prefix: `profilePictures/${uid}/` });
-    await bucket
-      .file(`profilePictures/${uid}`)
-      .delete({ ignoreNotFound: true });
+    await deleteStorageObjects(uid);
 
-    // Root collections that contain per-user docs with id == uid
-    // Delete simple root docs with id == uid
     try {
       const mfaRef = db.collection("mfa_totp").doc(uid);
-      const mfaSnap = await mfaRef.get();
-      if (mfaSnap.exists) {
+      if ((await mfaRef.get()).exists) {
         await mfaRef.delete();
       }
-    } catch (err) {
-      console.error("Failed deleting mfa_totp:", err);
+    } catch {}
+
+    const userRef = db.collection("Users").doc(uid);
+    if ((await userRef.get()).exists) {
+      await db.recursiveDelete(userRef);
     }
 
-    // Delete RateLimits_v2 docs with prefix uid_<uid>_
-    try {
-      const scopes: ("uid" | "ip" | "device")[] = ["uid", "ip", "device"];
-      for (const scope of scopes) {
-        const userRateLimitsRef = db
-          .collection("RateLimits_v2")
-          .doc(scope)
-          .collection("entries")
-          .doc(uid); // safeId = uid
-
-        await db.recursiveDelete(userRateLimitsRef);
-      }
-    } catch (err) {
-      console.error("Failed deleting RateLimits_v2 docs for user:", err);
-    }
-
-    // Recursive delete of Users/{uid}
-    const userDocRef = db.collection("Users").doc(uid);
-    if ((await userDocRef.get()).exists) {
-      await db.recursiveDelete(userDocRef);
-    }
-
-    // Delete Auth user last
     await admin.auth().deleteUser(uid);
 
     return { success: true };
