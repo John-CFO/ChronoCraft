@@ -391,7 +391,6 @@ const HomeScreen: React.FC = () => {
       setNewProjectName("");
       setRefresh((r) => !r);
       Keyboard.dismiss();
-      console.log("serviceId:", serviceId);
     } catch (error) {
       console.error("Error adding project", error);
       useAlertStore.getState().showAlert("Error", "Could not add project.");

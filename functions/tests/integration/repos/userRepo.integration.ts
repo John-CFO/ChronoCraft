@@ -4,19 +4,11 @@
 
 //////////////////////////////////////////////////////////////////////////////////////
 
-import * as admin from "firebase-admin";
-
+import { admin } from "../../../tests/firebaseAdminTest";
 import { UserRepo } from "../../../src/repos/userRepo";
 import { NotFoundError } from "../../../src/errors/domain.errors";
 
 ///////////////////////////////////////////////////////////////////////////////////////
-
-// Init admin with projectId (important for emulator)
-if (!admin.apps.length) {
-  admin.initializeApp({
-    projectId: process.env.GCLOUD_PROJECT || "test-project",
-  });
-}
 
 // Ensure emulator settings
 const ensureFirestoreEmulatorForUserTests = () => {

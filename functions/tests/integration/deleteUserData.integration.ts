@@ -4,30 +4,28 @@
 
 ///////////////////////////////////////////////////////////////////////
 
-import * as admin from "firebase-admin";
-import { CallableRequest } from "firebase-functions/v2/https";
-
-import { deleteUserDataHandler } from "../../src/functions/deleteUserData.function";
-
-///////////////////////////////////////////////////////////////////////
-
 // constants for test setup
 const PROJECT_ID = "chrono-craft-worktime-manager";
 const BUCKET_NAME = `${PROJECT_ID}.appspot.com`;
 
-// init admin with test config
-if (!admin.apps.length) {
-  admin.initializeApp({
-    projectId: PROJECT_ID,
-    storageBucket: BUCKET_NAME,
-  });
-}
+process.env.FIREBASE_CONFIG = JSON.stringify({
+  storageBucket: BUCKET_NAME,
+});
+process.env.FUNCTIONS_STORAGE_BUCKET = BUCKET_NAME;
+
+import { CallableRequest } from "firebase-functions/v2/https";
+
+import { admin } from "../../tests/firebaseAdminTest";
+import { deleteUserDataHandler } from "../../src/functions/deleteUserData.function";
+
+///////////////////////////////////////////////////////////////////////
 
 describe("deleteUserData Integration Test", () => {
   const uid = `test-user-${Date.now()}`;
   const db = admin.firestore();
   const bucket = admin.storage().bucket(BUCKET_NAME);
   const auth = admin.auth();
+  const avatarPath = `profilePictures/${uid}/avatar.png`;
 
   beforeAll(async () => {
     await auth.createUser({
@@ -40,9 +38,7 @@ describe("deleteUserData Integration Test", () => {
       .collection("mfa_totp")
       .doc(uid)
       .set({ type: "totp", enabled: true });
-    await bucket
-      .file(`profilePictures/${uid}/avatar.png`)
-      .save("dummy content");
+    await bucket.file(avatarPath).save("dummy content");
   });
 
   afterAll(async () => {
@@ -56,12 +52,14 @@ describe("deleteUserData Integration Test", () => {
       await db.collection("mfa_totp").doc(uid).delete();
     } catch {}
     try {
-      await bucket.file(`profilePictures/${uid}/avatar.png`).delete();
+      await bucket.file(avatarPath).delete();
     } catch {}
   });
 
   it("should delete all user data", async () => {
-    const req = { auth: { uid }, data: {} } as CallableRequest;
+    const req = {
+      auth: { uid },
+    } as CallableRequest;
     const result = await deleteUserDataHandler(req);
     expect(result).toEqual({ success: true });
 
@@ -75,9 +73,7 @@ describe("deleteUserData Integration Test", () => {
     );
 
     // delete files with prefix should result in empty array
-    const [files] = await bucket.getFiles({
-      prefix: `profilePictures/${uid}/`,
-    });
-    expect(files.length).toBe(0);
+    const [exists] = await bucket.file(avatarPath).exists();
+    expect(exists).toBe(false);
   });
 });
