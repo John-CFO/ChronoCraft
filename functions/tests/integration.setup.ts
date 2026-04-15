@@ -1,6 +1,6 @@
 //////////////////////// integration.setup.ts /////////////////////////////////////
 
-// This file contains the setup for the integration tests.
+// Setup for integration tests (Firebase emulators + controlled test environment)
 
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -8,6 +8,7 @@ import * as admin from "firebase-admin";
 
 ///////////////////////////////////////////////////////////////////////////////////
 
+// Emulator configuration
 if (!process.env.FIRESTORE_EMULATOR_HOST) {
   process.env.FIRESTORE_EMULATOR_HOST = "localhost:8001";
 }
@@ -19,6 +20,11 @@ if (!process.env.FIREBASE_STORAGE_EMULATOR_HOST) {
 }
 process.env.GCLOUD_PROJECT = "test-project";
 
+process.env.NODE_ENV = "test";
+process.env.RATE_LIMIT_DISABLED = "true";
+process.env.RATE_LIMIT_HMAC_KEY = "test-hmac-key";
+
+// Firebase Admin init (idempotent)
 if (!admin.apps.length) {
   admin.initializeApp({ projectId: "test-project" });
 }

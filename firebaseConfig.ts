@@ -52,14 +52,14 @@ const storage = getStorage(firebaseApp);
 const functions: Functions = getFunctions(firebaseApp, "us-central1");
 
 // Dev mode - connect to emulators
-if (__DEV__) {
-  const host = "10.0.2.2";
+// if (__DEV__) {
+//   const host = "10.0.2.2";
 
-  connectFirestoreEmulator(firestore, host, 8001);
-  connectFunctionsEmulator(functions, host, 4001);
-  connectAuthEmulator(auth, `http://${host}:5001/`);
-  console.log("🔥 Connected to Firebase Emulators");
-}
+//   connectFirestoreEmulator(firestore, host, 8001);
+//   connectFunctionsEmulator(functions, host, 4001);
+//   connectAuthEmulator(auth, `http://${host}:5001/`);
+//   console.log("🔥 Connected to Firebase Emulators");
+// }
 
 export {
   firebaseApp as FIREBASE_APP,
