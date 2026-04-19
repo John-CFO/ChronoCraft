@@ -12,6 +12,7 @@ import { InputValidator } from "./security";
 import { handleFunctionError } from "../errors/handleFunctionError";
 import { logEvent } from "../utils/logger";
 import { sendPasswordResetEmail } from "../services/emailService";
+import { buildRateLimitContext } from "../utils/rateLimitContext";
 
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -19,48 +20,99 @@ export const requestPasswordResetHandler = async (request: CallableRequest) => {
   const rateLimit = getRateLimit();
 
   try {
-    logEvent("RESET_START", "info");
-
     const email = request.data?.email;
 
+    // 1. INPUT VALIDATION (deny early)
     InputValidator.validateRequired(request.data, "email");
     InputValidator.validateString(request.data, "email");
 
     const normalizedEmail = String(email).trim().toLowerCase();
 
-    logEvent("STEP_1_VALIDATED", "info", { normalizedEmail });
+    // 2. CONTEXT (SAFE NORMALIZATION)
+    const ctx = buildRateLimitContext(request, normalizedEmail);
 
-    await rateLimit.checkLimit(
-      normalizedEmail,
-      "auth.passwordReset",
-      3,
-      10 * 60_000,
+    // 3. GLOBAL RATE LIMIT
+    await rateLimit.check(
+      "password_reset",
+      "auth.password_reset.global",
+      {
+        uid: "global",
+        ip: "global",
+        deviceId: "global",
+      },
+      {
+        maxAttempts: 100,
+        windowMs: 10 * 60_000,
+      },
     );
 
-    const ip =
-      request.rawRequest.headers["x-forwarded-for"] ||
-      request.rawRequest.socket?.remoteAddress ||
-      "";
+    // 4. USER RATE LIMIT (EMAIL-BASED)
+    await rateLimit.check(
+      "password_reset",
+      "auth.password_reset.user",
+      {
+        uid: ctx.uid,
+        ip: "none",
+        deviceId: "none",
+      },
+      {
+        maxAttempts: 3,
+        windowMs: 10 * 60_000,
+      },
+    );
 
-    logEvent("STEP_3_IP_RESOLVED", "info", { ip });
+    await rateLimit.check(
+      "password_reset",
+      "auth.password_reset.user.hour",
+      {
+        uid: ctx.uid,
+        ip: "none",
+        deviceId: "none",
+      },
+      {
+        maxAttempts: 10,
+        windowMs: 60 * 60_000,
+      },
+    );
 
-    if (typeof ip === "string" && ip.length > 0) {
-      await rateLimit.checkIP(ip, "auth.passwordReset", 10, 10 * 60_000);
-      logEvent("STEP_4_IP_OK", "info");
-    }
+    // 5. IP RATE LIMIT
+    await rateLimit.check(
+      "password_reset",
+      "auth.password_reset.ip",
+      {
+        uid: "none",
+        ip: ctx.ip,
+        deviceId: "none",
+      },
+      {
+        maxAttempts: 10,
+        windowMs: 10 * 60_000,
+      },
+    );
 
-    await logEvent(`Password reset requested for ${normalizedEmail}`, "info", {
-      email: normalizedEmail,
-      ip,
+    await rateLimit.check(
+      "password_reset",
+      "auth.password_reset.ip.hour",
+      {
+        uid: "none",
+        ip: ctx.ip,
+        deviceId: "none",
+      },
+      {
+        maxAttempts: 50,
+        windowMs: 60 * 60_000,
+      },
+    );
+
+    // 6. LOGGING
+    logEvent("PASSWORD_RESET_REQUESTED", "info", {
+      ip: ctx.ip,
+      email: ctx.uid,
     });
 
+    // 7. BUSINESS LOGIC
     const link = await auth.generatePasswordResetLink(normalizedEmail);
-
-    logEvent("STEP_5_LINK_CREATED", "info", { link: !!link });
-
     await sendPasswordResetEmail(normalizedEmail, link);
-
-    logEvent("STEP_6_EMAIL_SENT", "info");
 
     return {
       success: true,

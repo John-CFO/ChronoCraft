@@ -20,8 +20,7 @@ jest.mock("../../../src/firebaseAdmin", () => ({
 
 jest.mock("../../../src/utils/rateLimitInstance", () => {
   const mockRateLimit = {
-    checkLimit: jest.fn(),
-    checkIP: jest.fn(),
+    check: jest.fn(),
   };
 
   return {
@@ -60,8 +59,7 @@ describe("requestPasswordResetHandler (unit)", () => {
 
     const result = await requestPasswordResetHandler(request);
 
-    expect(mockRateLimit.checkLimit).toHaveBeenCalled();
-    expect(mockRateLimit.checkIP).toHaveBeenCalled();
+    expect(mockRateLimit.check).toHaveBeenCalled();
 
     expect(auth.generatePasswordResetLink).toHaveBeenCalledWith(
       "test@example.com",

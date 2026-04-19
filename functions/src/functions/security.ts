@@ -37,17 +37,14 @@ export class InputValidator {
   ): void {
     this.validateRequired(data, field);
 
-    // check if field is a string
     if (typeof data[field] !== "string") {
       throw new ValidationError(`Field '${field}' must be a string`);
     }
-    // check if field is too short
     if (minLength !== undefined && data[field].length < minLength) {
       throw new ValidationError(
         `Field '${field}' must be at least ${minLength} characters`,
       );
     }
-    // check if field is too long
     if (maxLength !== undefined && data[field].length > maxLength) {
       throw new ValidationError(
         `Field '${field}' must be at most ${maxLength} characters`,
@@ -55,7 +52,6 @@ export class InputValidator {
     }
   }
 
-  // Validate and sanatize email
   static validateEmail(data: any, field: string): void {
     this.validateString(data, field);
 
@@ -67,7 +63,6 @@ export class InputValidator {
     }
   }
 
-  // Validate number
   static validateNumber(
     data: any,
     field: string,
@@ -77,37 +72,27 @@ export class InputValidator {
     this.validateRequired(data, field);
 
     const value = Number(data[field]);
-    // check if field is not a number
     if (isNaN(value)) {
       throw new ValidationError(`Field '${field}' must be a number`);
     }
-    // check if field is too small
     if (min !== undefined && value < min) {
       throw new ValidationError(`Field '${field}' must be at least ${min}`);
     }
-    // check if field is too big
     if (max !== undefined && value > max) {
       throw new ValidationError(`Field '${field}' must be at most ${max}`);
     }
   }
 
-  // Sanitize string input
   static sanitizeString(input: string): string {
-    // Remove potentially dangerous characters
-    return input
-      .replace(/[<>]/g, "") // Remove < and >
-      .trim();
+    return input.replace(/[<>]/g, "").trim();
   }
 
-  // Sanitize object input
   static sanitizeObject<T extends Record<string, any>>(obj: T): T {
     const sanitized = { ...obj };
 
     for (const key in sanitized) {
       const value = sanitized[key];
-      // Check if value is a string
       if (typeof value === "string") {
-        // Sanitize only string fields
         sanitized[key] = this.sanitizeString(value) as T[typeof key];
       }
     }
@@ -130,25 +115,26 @@ export const secureFunction = (
     const functionName = handler.name || "anonymous";
 
     try {
-      // Authentification
+      // Auth
       if (options?.requireAuth && !request.auth) {
         throw new AuthenticationError();
       }
 
-      // Input-Validation
+      // Validation
       if (options?.validation) {
         options.validation(request.data);
       }
 
-      // Input sanitizing
+      // Sanitizing
       const sanitizedData = InputValidator.sanitizeObject(request.data || {});
 
-      // --- Multi-Scope Rate Limiting ---
+      // ---------------- RATE LIMIT (NEW MODEL) ----------------
       const rawHeaders = (request as any).rawRequest?.headers ?? {};
       const forwarded =
         rawHeaders["x-forwarded-for"] ||
         rawHeaders["x-real-ip"] ||
         rawHeaders["x-appengine-user-ip"];
+
       const clientIp = forwarded
         ? String(forwarded).split(",")[0].trim()
         : null;
@@ -156,55 +142,40 @@ export const secureFunction = (
       const deviceId = (request.data as any)?.deviceId ?? null;
       const actionName = options?.rateLimit?.action ?? "default";
 
-      try {
-        // user-level (UID)
-        if (options?.rateLimit && request.auth?.uid) {
-          await rateLimit.checkLimit(
-            request.auth.uid,
+      if (options?.rateLimit) {
+        try {
+          await rateLimit.check(
+            "security",
             actionName,
-            options.rateLimit.maxAttempts,
-            options.rateLimit.windowMs,
+            {
+              uid: request.auth?.uid || "anon",
+              ip: clientIp || "unknown",
+              deviceId: deviceId || "unknown",
+            },
+            {
+              maxAttempts: options.rateLimit.maxAttempts,
+              windowMs: options.rateLimit.windowMs,
+            },
           );
-        }
+        } catch (e: any) {
+          if (e instanceof RateLimitError || e?.retryAfterSeconds) {
+            throw e;
+          }
 
-        // ip-level (optional, permissiv, secures bot attacks even without auth)
-        if (clientIp) {
-          await rateLimit.checkIP(clientIp, actionName, 30, 10 * 60_000);
+          logEvent("ratelimit-check-failed", "error", {
+            error: e?.message ?? String(e),
+          });
         }
-
-        // device-level (harder if device is unknown, to prevent spoofing)
-        if (deviceId) {
-          const userDevicesRef = db
-            .collection("Users")
-            .doc(request.auth?.uid || "anon")
-            .collection("devices")
-            .doc(deviceId);
-          const known = (await userDevicesRef.get()).exists;
-          await rateLimit.checkDevice(
-            deviceId,
-            actionName,
-            known ? 10 : 2,
-            60_000,
-            { strict: !known },
-          );
-        }
-      } catch (e: any) {
-        if (e instanceof RateLimitError || e?.retryAfterSeconds) {
-          throw e; // throw RateLimitError directly to be handled in the error handler
-        }
-        logEvent("ratelimit-check-failed", "error", {
-          error: e?.message ?? String(e),
-        });
       }
 
-      // call handler with sanitized data
+      // Execute handler
       const result = await handler({
         ...request,
         data: sanitizedData,
       });
 
-      // log success with duration and user info
       const duration = Date.now() - startTime;
+
       logEvent("Function execution completed", "info", {
         functionName,
         uid: request.auth?.uid,
@@ -214,8 +185,8 @@ export const secureFunction = (
 
       return result;
     } catch (error: any) {
-      // log error with duration and user info
       const duration = Date.now() - startTime;
+
       logEvent("Function execution failed", "error", {
         functionName,
         uid: request.auth?.uid,
@@ -225,7 +196,6 @@ export const secureFunction = (
         stack: error.stack,
       });
 
-      // error handling: convert to standardized error response
       throw handleFunctionError(error);
     }
   });
