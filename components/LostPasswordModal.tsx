@@ -95,11 +95,23 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
         setCooldown(null);
       }, 60000);
     } catch (err: any) {
+      const code = err?.code;
+      //rate-limit error message
+      if (code === "functions/resource-exhausted") {
+        useAlertStore
+          .getState()
+          .showAlert(
+            "Too many attempts",
+            "Please wait a minute before trying again.",
+          );
+        return;
+      }
+
       useAlertStore
         .getState()
         .showAlert(
           "Error",
-          "If an account exists for that email, you will receive instructions to reset your password.",
+          "Something went wrong. Please try again later. If the problem persists, contact support.",
         );
     } finally {
       sendingRef.current = false;

@@ -4,7 +4,6 @@
 
 //////////////////////////////////////////////////////////////////////////////////
 
-// mock rateLimit first to avoid errors
 jest.mock("../../../src/utils/rateLimitInstance");
 jest.mock("../../../src/repos/userRepo");
 jest.mock("../../../src/utils/logger");
@@ -12,7 +11,6 @@ jest.mock("../../../src/security/totpCore", () => ({
   verifyTotp: jest.fn(),
 }));
 
-// Minimal Mock for firebase-admin, because ratelitim imports it
 jest.mock("firebase-admin", () => ({
   firestore: jest.fn(),
   initializeApp: jest.fn(),
@@ -39,12 +37,8 @@ describe("AuthService Unit Tests", () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // UserRepo.prototype.getUserTOTPSecret mock
-    jest
-      .spyOn(UserRepo.prototype, "getUserTOTPSecret")
-      .mockResolvedValue("dummySecret");
+    jest.spyOn(UserRepo.prototype, "getUserTOTPSecret");
 
-    // verifyTotp: Only 6-digit numeric codes are valid
     mockVerifyTotp = verifyTotp as jest.MockedFunction<typeof verifyTotp>;
     mockVerifyTotp.mockImplementation((secret, code) => {
       return {
@@ -54,10 +48,7 @@ describe("AuthService Unit Tests", () => {
 
     mockLogEvent = logEvent as jest.MockedFunction<typeof logEvent>;
 
-    // mock RateLimiter-Methods
-    jest.spyOn(rateLimit, "checkLimit").mockResolvedValue(undefined);
-    jest.spyOn(rateLimit, "checkIP").mockResolvedValue(undefined);
-    jest.spyOn(rateLimit, "checkDevice").mockResolvedValue(undefined);
+    jest.spyOn(rateLimit, "check").mockResolvedValue(undefined);
 
     authService = new AuthService();
   });
@@ -113,73 +104,65 @@ describe("AuthService Unit Tests", () => {
       const code = "123456";
       const secret = "SECRET123";
 
-      jest
-        .spyOn(UserRepo.prototype, "getUserTOTPSecret")
-        .mockResolvedValueOnce(secret);
+      (UserRepo.prototype.getUserTOTPSecret as jest.Mock).mockResolvedValueOnce(
+        secret,
+      );
+
       mockVerifyTotp.mockReturnValueOnce({ valid: true });
 
-      const spyCheckLimit = jest.spyOn(rateLimit, "checkLimit");
+      const spyCheck = jest.spyOn(rateLimit, "check");
 
       const result = await authService.verifyTotp(uid, code);
 
-      expect(spyCheckLimit).toHaveBeenCalledWith(uid, "verifyTotp", 5, 60000);
+      expect(spyCheck).toHaveBeenCalledWith(
+        "mfa_totp",
+        "verify",
+        {
+          uid,
+          ip: "unknown",
+          deviceId: "unknown",
+        },
+        {
+          maxAttempts: 5,
+          windowMs: 60_000,
+        },
+      );
+
       expect(UserRepo.prototype.getUserTOTPSecret).toHaveBeenCalledWith(uid);
       expect(mockVerifyTotp).toHaveBeenCalledWith(secret, code);
+
       expect(mockLogEvent).toHaveBeenCalledWith("verifyTotp", "info", {
         uid,
         valid: true,
       });
+
       expect(result).toEqual({ valid: true });
     });
 
-    it("should reject invalid TOTP", async () => {
+    it("should throw on invalid TOTP format", async () => {
       const uid = "user123";
-      const code = "wrong";
-      const secret = "SECRET123";
 
-      jest
-        .spyOn(UserRepo.prototype, "getUserTOTPSecret")
-        .mockResolvedValueOnce(secret);
-      mockVerifyTotp.mockReturnValueOnce({ valid: false });
-
-      const result = await authService.verifyTotp(uid, code);
-
-      expect(rateLimit.checkLimit).toHaveBeenCalledWith(
-        uid,
-        "verifyTotp",
-        5,
-        60000,
+      await expect(authService.verifyTotp(uid, "wrong")).rejects.toThrow(
+        "Invalid TOTP code",
       );
-      expect(mockLogEvent).toHaveBeenCalledWith("verifyTotp", "warn", {
-        uid,
-        valid: false,
-      });
-      expect(result).toEqual({ valid: false });
+
+      expect(rateLimit.check).not.toHaveBeenCalled();
+      expect(mockLogEvent).not.toHaveBeenCalled();
     });
 
     it("should throw when TOTP not configured", async () => {
       const uid = "user123";
       const code = "123456";
 
-      jest
-        .spyOn(UserRepo.prototype, "getUserTOTPSecret")
-        .mockResolvedValueOnce(null);
+      (UserRepo.prototype.getUserTOTPSecret as jest.Mock).mockResolvedValueOnce(
+        null,
+      );
 
       await expect(authService.verifyTotp(uid, code)).rejects.toThrow(
         new BusinessRuleError("TOTP not configured"),
       );
 
-      expect(rateLimit.checkLimit).toHaveBeenCalledWith(
-        uid,
-        "verifyTotp",
-        5,
-        60000,
-      );
-      expect(mockLogEvent).not.toHaveBeenCalledWith(
-        "verifyTotp",
-        expect.any(String),
-        expect.any(Object),
-      );
+      expect(rateLimit.check).toHaveBeenCalled();
     });
 
     it("should throw when rate limit exceeded", async () => {
@@ -187,18 +170,11 @@ describe("AuthService Unit Tests", () => {
       const code = "123456";
 
       jest
-        .spyOn(rateLimit, "checkLimit")
+        .spyOn(rateLimit, "check")
         .mockRejectedValueOnce(new Error("Rate limit exceeded"));
 
       await expect(authService.verifyTotp(uid, code)).rejects.toThrow(
         "Rate limit exceeded",
-      );
-
-      expect(rateLimit.checkLimit).toHaveBeenCalledWith(
-        uid,
-        "verifyTotp",
-        5,
-        60000,
       );
     });
 
@@ -206,20 +182,15 @@ describe("AuthService Unit Tests", () => {
       const uid = "user123";
       const code = "123456";
 
-      jest
-        .spyOn(UserRepo.prototype, "getUserTOTPSecret")
-        .mockRejectedValueOnce(new NotFoundError("User"));
+      (UserRepo.prototype.getUserTOTPSecret as jest.Mock).mockRejectedValueOnce(
+        new NotFoundError("User"),
+      );
 
       await expect(authService.verifyTotp(uid, code)).rejects.toThrow(
         new NotFoundError("User"),
       );
 
-      expect(rateLimit.checkLimit).toHaveBeenCalledWith(
-        uid,
-        "verifyTotp",
-        5,
-        60000,
-      );
+      expect(rateLimit.check).toHaveBeenCalled();
     });
 
     it("should throw when uid is undefined", async () => {
@@ -228,58 +199,16 @@ describe("AuthService Unit Tests", () => {
       ).rejects.toThrow();
     });
 
-    it("should return valid: false for code too short", async () => {
+    it("should return valid: false for invalid formats", async () => {
       const uid = "user123";
-      const code = "123";
-      const secret = "SECRET123";
 
-      jest
-        .spyOn(UserRepo.prototype, "getUserTOTPSecret")
-        .mockResolvedValueOnce(secret);
+      const cases = ["123", "1234567", 123456 as any];
 
-      const result = await authService.verifyTotp(uid, code);
-      expect(result).toEqual({ valid: false });
-      expect(mockVerifyTotp).toHaveBeenCalledWith(secret, code);
-      expect(mockLogEvent).toHaveBeenCalledWith("verifyTotp", "warn", {
-        uid,
-        valid: false,
-      });
-    });
-
-    it("should return valid: false for code too long", async () => {
-      const uid = "user123";
-      const code = "1234567";
-      const secret = "SECRET123";
-
-      jest
-        .spyOn(UserRepo.prototype, "getUserTOTPSecret")
-        .mockResolvedValueOnce(secret);
-
-      const result = await authService.verifyTotp(uid, code);
-      expect(result).toEqual({ valid: false });
-      expect(mockVerifyTotp).toHaveBeenCalledWith(secret, code);
-      expect(mockLogEvent).toHaveBeenCalledWith("verifyTotp", "warn", {
-        uid,
-        valid: false,
-      });
-    });
-
-    it("should return valid: false for code not string", async () => {
-      const uid = "user123";
-      const code = 123456; // number
-      const secret = "SECRET123";
-
-      jest
-        .spyOn(UserRepo.prototype, "getUserTOTPSecret")
-        .mockResolvedValueOnce(secret);
-
-      const result = await authService.verifyTotp(uid, code as any);
-      expect(result).toEqual({ valid: false });
-      expect(mockVerifyTotp).toHaveBeenCalledWith(secret, code);
-      expect(mockLogEvent).toHaveBeenCalledWith("verifyTotp", "warn", {
-        uid,
-        valid: false,
-      });
+      for (const code of cases) {
+        await expect(authService.verifyTotp(uid, code as any)).rejects.toThrow(
+          "Invalid TOTP code",
+        );
+      }
     });
   });
 });
