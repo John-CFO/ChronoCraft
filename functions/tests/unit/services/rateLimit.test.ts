@@ -1,22 +1,48 @@
-///////////////////////////////// rateLimit.unit.ts //////////////////////////////////
+/////////////////////////////// rateLimit.test.ts //////////////////////////////////
 
-// This file contains unit tests for rateLimit.ts and rateLimitHelpers.ts
+// Updated for new unified RateLimiter API (patched)
 
 //////////////////////////////////////////////////////////////////////////////////////
+
+// ---- mock firebase-admin BEFORE imports ----
+jest.mock("firebase-admin", () => {
+  return {
+    apps: [],
+    initializeApp: jest.fn(),
+    firestore: () => ({
+      runTransaction: async (cb: any) => {
+        const tx = {
+          get: async (ref: any) => {
+            const doc = ref.__store[ref.key];
+            return doc ? { exists: true, data: () => doc } : { exists: false };
+          },
+          set: async (ref: any, data: any) => {
+            ref.__store[ref.key] = data;
+          },
+          update: async (ref: any, patch: any) => {
+            if (!ref.__store[ref.key]) throw new Error("Doc not found");
+            ref.__store[ref.key] = {
+              ...ref.__store[ref.key],
+              ...patch,
+            };
+          },
+        };
+        return cb(tx);
+      },
+    }),
+  };
+});
 
 import {
   RateLimiter,
   refillTokens,
   calculatePenalty,
-  Scope,
   Clock,
 } from "../../../src/utils/rateLimit";
 import { RateLimitError } from "../../../src/errors/domain.errors";
-import { hashRateLimitId } from "../../../src/utils/rateLimitKey";
 
 //////////////////////////////////////////////////////////////////////////////////////
 
-// Silence console logging to keep unit test output clean
 beforeEach(() => {
   jest.spyOn(console, "info").mockImplementation(() => {});
   jest.spyOn(console, "warn").mockImplementation(() => {});
@@ -26,9 +52,6 @@ beforeEach(() => {
 afterEach(() => {
   jest.restoreAllMocks();
 });
-
-// ---- Test HMAC Key (deterministic!) ----
-const TEST_RATE_LIMIT_HMAC_KEY = "unit-test-rate-limit-key";
 
 // ---- Mock Clock ----
 class MockClock implements Clock {
@@ -44,87 +67,63 @@ class MockClock implements Clock {
   }
 }
 
-// ---- Fake Firestore Ref ----
-type FakeRef = {
-  scope: Scope;
-  hashedId: string;
-  action: string;
-};
-
-// ---- Fake Store (HMAC-aware) ----
+// ---- Fake Store ----
 class FakeStore {
   public docs: Record<string, any> = {};
 
-  private key(scope: Scope, hashedId: string, action: string) {
-    return `${scope}:${hashedId}:${action}`;
-  }
-
-  private hash(id: string) {
-    return hashRateLimitId(id, TEST_RATE_LIMIT_HMAC_KEY);
-  }
-
-  getRef(scope: Scope, id: string, action: string): FakeRef {
-    return {
-      scope,
-      hashedId: this.hash(id),
-      action,
-    };
-  }
-
-  async getActionDoc(scope: Scope, id: string, action: string) {
-    const ref = this.getRef(scope, id, action);
-    return this.docs[this.key(ref.scope, ref.hashedId, ref.action)] ?? null;
-  }
-
-  async setActionDoc(scope: Scope, id: string, action: string, doc: any) {
-    const ref = this.getRef(scope, id, action);
-    this.docs[this.key(ref.scope, ref.hashedId, ref.action)] = doc;
-  }
-
-  async updateActionDoc(
-    scope: Scope,
-    id: string,
+  private key(
+    useCase: string,
+    ip: string,
+    device: string,
     action: string,
-    patch: Partial<any>,
+    uid: string,
   ) {
-    const ref = this.getRef(scope, id, action);
-    const key = this.key(ref.scope, ref.hashedId, ref.action);
-    if (!this.docs[key]) throw new Error("Doc not found");
-    this.docs[key] = { ...this.docs[key], ...patch };
+    return `${useCase}:${ip}:${device}:${action}:${uid}`;
   }
 
-  async deleteActionDoc(scope: Scope, id: string, action: string) {
-    const ref = this.getRef(scope, id, action);
-    delete this.docs[this.key(ref.scope, ref.hashedId, ref.action)];
+  getRef(
+    useCase: string,
+    ip: string,
+    device: string,
+    action: string,
+    uid: string,
+  ) {
+    return {
+      key: this.key(useCase, ip, device, action, uid),
+      __store: this.docs,
+    } as any;
   }
 
-  async recursiveDelete(scope: Scope, id: string) {
-    const hashedId = this.hash(id);
-    for (const k of Object.keys(this.docs)) {
-      if (k.startsWith(`${scope}:${hashedId}:`)) delete this.docs[k];
-    }
+  async getActionDoc(
+    useCase: string,
+    ip: string,
+    device: string,
+    action: string,
+    uid: string,
+  ) {
+    return this.docs[this.key(useCase, ip, device, action, uid)] ?? null;
   }
 
-  async runTransaction<T>(cb: (tx: any) => Promise<T>): Promise<T> {
-    const tx = {
-      get: async (ref: FakeRef) => {
-        const doc = this.docs[this.key(ref.scope, ref.hashedId, ref.action)];
-        return doc ? { exists: true, data: () => doc } : { exists: false };
-      },
-      set: async (ref: FakeRef, doc: any) => {
-        this.docs[this.key(ref.scope, ref.hashedId, ref.action)] = doc;
-      },
-      update: async (ref: FakeRef, patch: Partial<any>) => {
-        const key = this.key(ref.scope, ref.hashedId, ref.action);
-        if (!this.docs[key]) throw new Error("Doc not found");
-        this.docs[key] = { ...this.docs[key], ...patch };
-      },
-    };
-    return cb(tx);
+  async setActionDoc(
+    useCase: string,
+    ip: string,
+    device: string,
+    action: string,
+    uid: string,
+    doc: any,
+  ) {
+    this.docs[this.key(useCase, ip, device, action, uid)] = doc;
   }
 }
 
-// ---- Pure helper tests ----
+// ---- Context ----
+const ctx = {
+  uid: "user1",
+  ip: "1.2.3.4",
+  deviceId: "device1",
+};
+
+// ---- Helper tests ----
 describe("RateLimiter helpers", () => {
   it("refillTokens adds tokens correctly", () => {
     const now = 1000;
@@ -133,13 +132,13 @@ describe("RateLimiter helpers", () => {
     expect(res.tokens).toBeLessThanOrEqual(5);
   });
 
-  it("calculatePenalty caps at MAX_EXPONENT", () => {
+  it("calculatePenalty caps correctly", () => {
     expect(calculatePenalty(1)).toBe(60_000);
     expect(calculatePenalty(10)).toBe(60_000 * 64);
   });
 });
 
-// ---- Core RateLimiter tests ----
+// ---- Core tests ----
 describe("RateLimiter", () => {
   let clock: MockClock;
   let store: FakeStore;
@@ -151,64 +150,80 @@ describe("RateLimiter", () => {
     limiter = new RateLimiter(store as any, clock);
   });
 
-  it("allows first request for UID", async () => {
-    await expect(limiter.checkLimit("user1", "login")).resolves.toBeUndefined();
-    const doc = await store.getActionDoc("uid", "user1", "login");
-    expect(doc).not.toBeNull();
+  it("allows first request", async () => {
+    await expect(
+      limiter.check("mfa_totp", "login", ctx, {
+        maxAttempts: 5,
+        windowMs: 60_000,
+      }),
+    ).resolves.toBeUndefined();
   });
 
-  it("throws RateLimitError when request is throttled", async () => {
+  it("throttles when no tokens left", async () => {
     const now = clock.now();
-    await store.setActionDoc("uid", "user1", "login", {
-      tokens: 0,
-      capacity: 1,
-      refillRatePerMs: 0,
-      lastRefill: { toMillis: () => now },
-      failCount: 1,
-    });
+
+    await store.setActionDoc(
+      "mfa_totp",
+      ctx.ip,
+      ctx.deviceId,
+      "login",
+      ctx.uid,
+      {
+        tokens: 0,
+        capacity: 1,
+        refillRatePerMs: 0,
+        lastRefill: { toMillis: () => now },
+        failCount: 1,
+      },
+    );
 
     await expect(
-      limiter.checkLimit("user1", "login", 1, 1000),
+      limiter.check("mfa_totp", "login", ctx, {
+        maxAttempts: 1,
+        windowMs: 1000,
+      }),
     ).rejects.toBeInstanceOf(RateLimitError);
   });
 
-  it("resets limits without throwing", async () => {
-    await store.setActionDoc("uid", "user1", "login", { tokens: 0 });
-    await expect(
-      limiter.resetLimit("uid", "user1", "login"),
-    ).resolves.toBeUndefined();
-    const doc = await store.getActionDoc("uid", "user1", "login");
-    expect(doc).toBeNull();
-  });
-
-  it("returns remaining attempts correctly", async () => {
+  it("returns remaining attempts", async () => {
     const now = clock.now();
-    await store.setActionDoc("uid", "user1", "login", {
-      tokens: 3,
-      capacity: 5,
-      refillRatePerMs: 0.001,
-      lastRefill: { toMillis: () => now },
-    });
-    const remaining = await limiter.getRemainingAttempts(
-      "user1",
+
+    await store.setActionDoc(
+      "mfa_totp",
+      ctx.ip,
+      ctx.deviceId,
       "login",
-      5,
-      "uid",
+      ctx.uid,
+      {
+        tokens: 3,
+        capacity: 5,
+        refillRatePerMs: 0.001,
+        lastRefill: { toMillis: () => now },
+      },
     );
+
+    const remaining = await limiter.getRemainingAttempts(
+      "mfa_totp",
+      "login",
+      ctx,
+      5,
+    );
+
     expect(remaining).toBeGreaterThan(0);
   });
 
-  it("handles IP-missing gracefully", async () => {
-    await expect(limiter.checkIP("", "login")).resolves.toBeUndefined();
-  });
+  it("fails closed on transaction error", async () => {
+    const admin = require("firebase-admin");
 
-  it("handles fail-open for IP and device", async () => {
-    store.runTransaction = async () => {
-      throw new Error("TX failed");
-    };
-    await expect(limiter.checkIP("1.2.3.4", "login")).resolves.toBeUndefined();
+    admin.firestore = () => ({
+      runTransaction: jest.fn().mockRejectedValueOnce(new Error("TX failed")),
+    });
+
     await expect(
-      limiter.checkDevice("device1", "login"),
-    ).resolves.toBeUndefined();
+      limiter.check("mfa_totp", "login", ctx, {
+        maxAttempts: 5,
+        windowMs: 60_000,
+      }),
+    ).rejects.toBeInstanceOf(RateLimitError);
   });
 });

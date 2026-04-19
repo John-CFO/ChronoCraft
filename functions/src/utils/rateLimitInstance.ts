@@ -14,15 +14,17 @@ import { RateLimiter } from "./rateLimit";
 
 const isRateLimitDisabled = process.env.RATE_LIMIT_DISABLED === "true";
 
+if (process.env.NODE_ENV !== "test" && isRateLimitDisabled) {
+  throw new Error("RATE_LIMIT_DISABLED must not be enabled outside test");
+}
+
+// Disabled stub (must exactly match the RateLimiter shape)
 const disabledRateLimiter = {
-  checkLimit: async () => {},
-  checkIP: async () => {},
-  checkDevice: async () => {},
-  resetLimit: async () => {},
-  resetAllLimitsForUser: async () => {},
+  check: async () => {},
   getRemainingAttempts: async () => 0,
 } as unknown as RateLimiter;
 
+// Factory
 function createRateLimiter(): RateLimiter {
   if (isRateLimitDisabled) {
     return disabledRateLimiter;
@@ -36,12 +38,10 @@ function createRateLimiter(): RateLimiter {
   return new RateLimiter(store);
 }
 
-//////////////////////////////////////////////////////////////////////////////////
+// Singleton (runtime use)
+export const rateLimit = createRateLimiter();
 
-// Hybrid export solution to manage the export trade off between functions and tests
-const rateLimitInstance = createRateLimiter();
+// Test-safe factory (no shared state)
 export function getRateLimit(): RateLimiter {
-  return createRateLimiter(); // for tests
+  return createRateLimiter();
 }
-
-export const rateLimit = rateLimitInstance;

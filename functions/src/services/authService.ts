@@ -9,18 +9,14 @@ import { UserRepo } from "../repos/userRepo";
 import { rateLimit } from "../utils/rateLimitInstance";
 import { verifyTotp } from "../security/totpCore";
 import { logEvent } from "../utils/logger";
-import { BusinessRuleError } from "../errors/domain.errors";
-import { ValidationError } from "../errors/domain.errors";
+import { BusinessRuleError, ValidationError } from "../errors/domain.errors";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class AuthService {
-  // use UserRepo inside AuthService
   private userRepo = new UserRepo();
 
-  // loginOrRegister method
   async loginOrRegister(action: "login" | "register", uid?: string) {
-    // check if action is valid
     if (!["login", "register"].includes(action)) {
       throw new ValidationError("Invalid action for loginOrRegister");
     }
@@ -28,13 +24,29 @@ export class AuthService {
     return { success: true };
   }
 
-  // verifyTotp method
   async verifyTotp(uid: string, code: string) {
     if (!uid) {
       throw new ValidationError("UID is required");
     }
-    // rate limit the request
-    await rateLimit.checkLimit(uid, "verifyTotp", 5, 60_000);
+
+    if (!code || code.length !== 6 || !/^\d+$/.test(code)) {
+      throw new ValidationError("Invalid TOTP code");
+    }
+
+    // --- RATE LIMIT (new unified API) ---
+    await rateLimit.check(
+      "mfa_totp",
+      "verify",
+      {
+        uid,
+        ip: "unknown",
+        deviceId: "unknown",
+      },
+      {
+        maxAttempts: 5,
+        windowMs: 60_000,
+      },
+    );
 
     const secret = await this.userRepo.getUserTOTPSecret(uid);
     if (!secret) {

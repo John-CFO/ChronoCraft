@@ -207,11 +207,12 @@ export const verifyTotpTokenHandler = async (request: any) => {
 
     const clientIp = forwarded ? String(forwarded).split(",")[0].trim() : null;
 
-    await rateLimit.checkLimit(uid, "verifyTotpEnroll");
-
-    if (clientIp) {
-      await rateLimit.checkIP(clientIp, "verifyTotpEnroll");
-    }
+    const ACTION = "mfa_totp_enroll";
+    await rateLimit.check("mfa_totp", ACTION, {
+      uid,
+      ip: clientIp ?? "",
+      deviceId: "",
+    });
 
     const rawKey = await TOTP_ENCRYPTION_KEY.value();
     const totpRef = firestore.collection(TOTP_COLLECTION).doc(uid);
@@ -294,9 +295,9 @@ export const verifyTotpTokenHandler = async (request: any) => {
 
       const decryptedSecret = decrypt(pendingData.encryptedSecret, rawKey);
 
-      const valid = verifyTotp(decryptedSecret, token);
+      const verification = verifyTotp(decryptedSecret, token);
 
-      if (!valid) {
+      if (verification?.valid !== true) {
         tx.update(pendingRef, {
           failedAttempts: FieldValue.increment(1),
           lastFailedAttempt: FieldValue.serverTimestamp(),
@@ -389,41 +390,21 @@ export const verifyTotpLoginHandler = async (request: any) => {
     const clientIp = forwarded ? String(forwarded).split(",")[0].trim() : null;
 
     try {
-      await rateLimit.checkLimit(
-        uid,
-        "verifyTotpLogin",
-        limits.uid.maxAttempts,
-        limits.uid.windowMs,
+      const ACTION = "mfa_totp_login";
+
+      await rateLimit.check(
+        "mfa_totp",
+        ACTION,
+        {
+          uid,
+          ip: clientIp ?? "",
+          deviceId: deviceId ?? "",
+        },
+        {
+          maxAttempts: limits.uid.maxAttempts,
+          windowMs: limits.uid.windowMs,
+        },
       );
-
-      if (clientIp) {
-        await rateLimit.checkIP(
-          clientIp,
-          "verifyTotpLogin",
-          limits.ip.maxAttempts,
-          limits.ip.windowMs,
-        );
-      }
-
-      if (deviceId) {
-        const userDevicesRef = firestore
-          .collection("Users")
-          .doc(uid)
-          .collection("devices")
-          .doc(deviceId);
-
-        const known = (await userDevicesRef.get()).exists;
-
-        await rateLimit.checkDevice(
-          deviceId,
-          "verifyTotpLogin",
-          known
-            ? limits.device.knownMaxAttempts
-            : limits.device.unknownMaxAttempts,
-          limits.device.windowMs,
-          { strict: !known },
-        );
-      }
     } catch (err: any) {
       if (err instanceof RateLimitError) {
         return {
@@ -463,7 +444,7 @@ export const verifyTotpLoginHandler = async (request: any) => {
     const decryptedSecret = decrypt(totpData.encryptedSecret, rawKey);
     const verification = verifyTotp(decryptedSecret, token);
 
-    if (!verification.valid) {
+    if (verification?.valid !== true) {
       await firestore
         .collection("Users")
         .doc(uid)
@@ -493,7 +474,7 @@ export const verifyTotpLoginHandler = async (request: any) => {
 
       // Replay Protection
       if (lastUsedStep >= matchedStep) {
-        return { valid: false, message: "TOTP already used" };
+        throw new ConflictError("TOTP already used");
       }
 
       const userRef = firestore.collection("Users").doc(uid);

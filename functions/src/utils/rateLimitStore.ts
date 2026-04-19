@@ -8,111 +8,146 @@
 import {
   Firestore,
   DocumentReference,
-  DocumentSnapshot,
+  Transaction,
 } from "firebase-admin/firestore";
+import * as Crypto from "crypto";
 
-import { hashRateLimitId } from "./rateLimitKey";
+//////////////////////////////////////////////////////////////////////////////////
 
-/////////////////////////////////////////////////////////////////////////////////
-
-// Interface definitions
+// RateLimitStore Contract
 export interface RateLimitStore {
-  getActionDoc(scope: string, id: string, action: string): Promise<any | null>;
-  getRef(scope: string, id: string, action: string): DocumentReference;
+  getRef(
+    useCase: string,
+    ip: string,
+    device: string,
+    action: string,
+    uid: string,
+  ): DocumentReference;
+
+  getActionDoc(
+    useCase: string,
+    ip: string,
+    device: string,
+    action: string,
+    uid: string,
+  ): Promise<any | null>;
+
   setActionDoc(
-    scope: string,
-    id: string,
+    useCase: string,
+    ip: string,
+    device: string,
     action: string,
+    uid: string,
     data: any,
   ): Promise<void>;
+
   updateActionDoc(
-    scope: string,
-    id: string,
+    useCase: string,
+    ip: string,
+    device: string,
     action: string,
+    uid: string,
     data: any,
   ): Promise<void>;
-  deleteActionDoc(scope: string, id: string, action: string): Promise<void>;
-  recursiveDelete(scope: string, id: string): Promise<void>;
-  runTransaction<T>(cb: (tx: TransactionWrapper) => Promise<T>): Promise<T>;
+
+  deleteActionDoc(
+    useCase: string,
+    ip: string,
+    device: string,
+    action: string,
+    uid: string,
+  ): Promise<void>;
+
+  runTransaction<T>(cb: (tx: Transaction) => Promise<T>): Promise<T>;
 }
 
-export interface TransactionWrapper {
-  get(ref: DocumentReference): Promise<DocumentSnapshot>;
-  set(ref: DocumentReference, data: any): Promise<void>;
-  update(ref: DocumentReference, data: Partial<any>): Promise<void>;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
+// Firestore Implementation
 export class FirestoreRateLimitStore implements RateLimitStore {
   constructor(
     private db: Firestore,
     private readonly hmacKey?: string,
   ) {}
 
-  private requireHmacKey(): string {
-    if (!this.hmacKey) {
-      throw new Error("Missing RATE_LIMIT_HMAC_KEY");
-    }
-    return this.hmacKey;
+  // ---------- hashing ----------
+  private hash(value: string): string {
+    if (!this.hmacKey) throw new Error("Missing RATE_LIMIT_HMAC_KEY");
+
+    return Crypto.createHmac("sha256", this.hmacKey)
+      .update(value)
+      .digest("base64url");
   }
 
-  private resolveHashedId(id: string): string {
-    return hashRateLimitId(id, this.requireHmacKey());
-  }
+  // ---------- path ----------
+  getRef(
+    useCase: string,
+    ip: string,
+    device: string,
+    action: string,
+    uid: string,
+  ) {
+    const ipHash = this.hash(ip);
+    const deviceHash = this.hash(device);
 
-  getRef(scope: string, id: string, action: string) {
-    const hashedId = this.resolveHashedId(id);
     return this.db
-      .collection("RateLimits")
-      .doc(scope)
-      .collection(hashedId)
-      .doc(action);
+      .collection("security")
+      .doc("rateLimits")
+      .collection(useCase)
+      .doc(ipHash)
+      .collection(deviceHash)
+      .doc("action")
+      .collection(action)
+      .doc(uid);
   }
 
-  async getActionDoc(scope: string, id: string, action: string) {
-    const snap = await this.getRef(scope, id, action).get();
+  // ---------- transaction ----------
+  async runTransaction<T>(cb: (tx: Transaction) => Promise<T>): Promise<T> {
+    return this.db.runTransaction(async (tx) => {
+      return cb(tx);
+    });
+  }
+
+  // ---------- read ----------
+  async getActionDoc(
+    useCase: string,
+    ip: string,
+    device: string,
+    action: string,
+    uid: string,
+  ) {
+    const snap = await this.getRef(useCase, ip, device, action, uid).get();
     return snap.exists ? snap.data() : null;
   }
 
-  async setActionDoc(scope: string, id: string, action: string, data: any) {
-    await this.getRef(scope, id, action).set(data);
+  // ---------- write ----------
+  async setActionDoc(
+    useCase: string,
+    ip: string,
+    device: string,
+    action: string,
+    uid: string,
+    data: any,
+  ) {
+    await this.getRef(useCase, ip, device, action, uid).set(data);
   }
 
-  async updateActionDoc(scope: string, id: string, action: string, data: any) {
-    await this.getRef(scope, id, action).update(data);
+  async updateActionDoc(
+    useCase: string,
+    ip: string,
+    device: string,
+    action: string,
+    uid: string,
+    data: any,
+  ) {
+    await this.getRef(useCase, ip, device, action, uid).update(data);
   }
 
-  async deleteActionDoc(scope: string, id: string, action: string) {
-    await this.getRef(scope, id, action).delete();
-  }
-
-  async recursiveDelete(scope: string, id: string) {
-    const hashedId = this.resolveHashedId(id);
-    const ref = this.db
-      .collection("RateLimits")
-      .doc(scope)
-      .collection(hashedId);
-    await this.db.recursiveDelete(ref);
-  }
-
-  async runTransaction<T>(
-    cb: (tx: TransactionWrapper) => Promise<T>,
-  ): Promise<T> {
-    return this.db.runTransaction(async (tx): Promise<T> => {
-      const wrapper: TransactionWrapper = {
-        get: async (ref: DocumentReference) => {
-          return tx.get(ref);
-        },
-        set: async (ref: DocumentReference, data: any) => {
-          await tx.set(ref, data);
-        },
-        update: async (ref: DocumentReference, data: Partial<any>) => {
-          await tx.update(ref, data);
-        },
-      };
-
-      return cb(wrapper);
-    });
+  async deleteActionDoc(
+    useCase: string,
+    ip: string,
+    device: string,
+    action: string,
+    uid: string,
+  ) {
+    await this.getRef(useCase, ip, device, action, uid).delete();
   }
 }
