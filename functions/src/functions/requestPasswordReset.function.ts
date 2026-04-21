@@ -1,9 +1,10 @@
-/////////////////////// requestPasswordReset.function.ts /////////////////////////////
+//////////////////////// requestPasswordReset.function.ts /////////////////////////////
 
 // This file contains the handler function for the requestPasswordReset function
 
 /////////////////////////////////////////////////////////////////////////////////////
 
+import { createHash } from "crypto";
 import { CallableRequest } from "firebase-functions/v2/https";
 
 import { auth } from "../firebaseAdmin";
@@ -16,6 +17,10 @@ import { buildRateLimitContext } from "../utils/rateLimitContext";
 
 /////////////////////////////////////////////////////////////////////////////////////
 
+function hashEmail(normalizedEmail: string): string {
+  return createHash("sha256").update(normalizedEmail, "utf8").digest("hex");
+}
+
 export const requestPasswordResetHandler = async (request: CallableRequest) => {
   const rateLimit = getRateLimit();
 
@@ -27,9 +32,15 @@ export const requestPasswordResetHandler = async (request: CallableRequest) => {
     InputValidator.validateString(request.data, "email");
 
     const normalizedEmail = String(email).trim().toLowerCase();
+    const emailHash = hashEmail(normalizedEmail);
 
     // 2. CONTEXT (SAFE NORMALIZATION)
     const ctx = buildRateLimitContext(request, normalizedEmail);
+    const userAgent = request.rawRequest?.headers?.["user-agent"];
+    const safeUserAgent =
+      typeof userAgent === "string" && userAgent.trim().length > 0
+        ? userAgent.trim()
+        : undefined;
 
     // 3. GLOBAL RATE LIMIT
     await rateLimit.check(
@@ -107,7 +118,8 @@ export const requestPasswordResetHandler = async (request: CallableRequest) => {
     // 6. LOGGING
     logEvent("PASSWORD_RESET_REQUESTED", "info", {
       ip: ctx.ip,
-      email: ctx.uid,
+      emailHash,
+      ...(safeUserAgent ? { userAgent: safeUserAgent } : {}),
     });
 
     // 7. BUSINESS LOGIC

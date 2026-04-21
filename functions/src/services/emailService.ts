@@ -51,7 +51,6 @@ function getFromAddress(): string {
 // function to send a password reset email
 export async function sendPasswordResetEmail(to: string, link: string) {
   const resend = getResendClient();
-
   const from = getFromAddress();
   const result = await resend.emails.send({
     from,
@@ -59,6 +58,8 @@ export async function sendPasswordResetEmail(to: string, link: string) {
     subject: "Reset your password",
     html: `
       <p>You requested a password reset.</p>
+      <p>Use the most recent email if you requested multiple resets.</p>
+      <p>Older links may no longer work.</p>
       <p><a href="${link}">Click here to reset your password</a></p>
       <p>If you didn’t request this, you can ignore this email.</p>
     `,
