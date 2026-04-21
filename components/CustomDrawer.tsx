@@ -39,8 +39,8 @@ import { MergedUser } from "./types/CustomUser";
 import RestartTourButton from "./../components/services/copilotTour/RestartTourButton";
 import AccessibilityToggleButton from "./services/accessibility/AccessibilityToggleButton";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
-import TFAButton from "./services/TFAButton";
-import TwoFactorModal from "./TwoFactorModal";
+import MFAButton from "./services/MFAButton";
+import MultiFactorModal from "./MultiFactorModal";
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -65,14 +65,14 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
   const { setUser, setStage } = useContext(AuthContext);
 
   // declare state for 2FA modal
-  const [tfaModalVisible, setTfaModalVisible] = useState(false);
+  const [mfaModalVisible, setMfaModalVisible] = useState(false);
 
   // state for the 2FA Button
   const [isEnrolled, setIsEnrolled] = useState<boolean | null>(null);
 
   // function to close 2FA modal
   const closeTfaModal = () => {
-    setTfaModalVisible(false);
+    setMfaModalVisible(false);
   };
 
   // BottomSheetModal settings
@@ -225,7 +225,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
       <Modal
         accessibilityViewIsModal
         accessibilityLabel="Two Factor Authentication Modal"
-        isVisible={tfaModalVisible}
+        isVisible={mfaModalVisible}
         backdropColor="black"
         onBackdropPress={closeTfaModal}
         swipeDirection={["up", "down"]}
@@ -233,7 +233,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         style={{ justifyContent: "center", alignItems: "center" }}
       >
         {FIREBASE_AUTH.currentUser ? (
-          <TwoFactorModal
+          <MultiFactorModal
             onClose={closeTfaModal}
             isEnrolled={isEnrolled}
             onEnrolled={() => setIsEnrolled(true)}
@@ -338,8 +338,8 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         >
           <RestartTourButton userId={user?.uid || ""} />
           <AccessibilityToggleButton />
-          <TFAButton
-            onPress={() => setTfaModalVisible(true)}
+          <MFAButton
+            onPress={() => setMfaModalVisible(true)}
             isEnrolled={isEnrolled}
             disabled={isEnrolled === null}
           />

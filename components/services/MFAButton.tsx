@@ -10,7 +10,7 @@ import { AntDesign } from "@expo/vector-icons";
 
 ////////////////////////////////////////////////////////////////////
 
-interface TFAButtonProps {
+interface MFAButtonProps {
   onPress: () => void;
   isEnrolled: boolean | null;
   disabled?: boolean;
@@ -18,7 +18,7 @@ interface TFAButtonProps {
 
 ////////////////////////////////////////////////////////////////////
 
-const TFAButton: React.FC<TFAButtonProps> = ({
+const MFAButton: React.FC<MFAButtonProps> = ({
   onPress,
   isEnrolled,
   disabled,
@@ -26,7 +26,7 @@ const TFAButton: React.FC<TFAButtonProps> = ({
   return (
     <TouchableOpacity
       accessibilityRole="button"
-      accessibilityLabel="Two Factor Authentication Settings"
+      accessibilityLabel="Multi Factor Authentication Settings"
       onPress={onPress}
       disabled={!!disabled}
       style={{ opacity: disabled ? 0.5 : 1 }}
@@ -52,11 +52,11 @@ const TFAButton: React.FC<TFAButtonProps> = ({
             fontSize: 22,
           }}
         >
-          {`2FA Settings ${isEnrolled ? "On" : "Off"}`}
+          {`MFA Settings ${isEnrolled ? "On" : "Off"}`}
         </Text>
       </View>
     </TouchableOpacity>
   );
 };
 
-export default TFAButton;
+export default MFAButton;

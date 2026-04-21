@@ -189,7 +189,7 @@ SplashScreen.preventAutoHideAsync();
 
 // AppNavigator - reads Context for Routing
 const AppNavigator = () => {
-  const { stage, isTwoFAEnabled } = useContext(AuthContext);
+  const { stage, isMFAEnabled } = useContext(AuthContext);
   const { serviceId } = useService();
 
   useEffect(() => {
@@ -209,7 +209,7 @@ const AppNavigator = () => {
         break;
 
       case "pendingMfa":
-        if (isTwoFAEnabled) {
+        if (isMFAEnabled) {
           navigationRef.reset({
             index: 0,
             routes: [{ name: "MfaScreen" }],
@@ -220,7 +220,7 @@ const AppNavigator = () => {
       default:
         navigationRef.reset({ index: 0, routes: [{ name: "Login" }] });
     }
-  }, [stage, isTwoFAEnabled]);
+  }, [stage, isMFAEnabled]);
 
   return (
     <Stack.Navigator
