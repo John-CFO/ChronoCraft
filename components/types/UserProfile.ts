@@ -15,7 +15,7 @@
 /////////////////////////////////////////////////////////
 
 export interface UserProfile {
-  uid?: string; // brauchst du sowieso überall
+  uid?: string;
   personalID?: string | null;
   email?: string | null;
   firstLogin?: boolean;

@@ -5,7 +5,6 @@
 ////////////////////////////////////////////////////////////////////////////////////
 
 import { onCall, CallableRequest } from "firebase-functions/v2/https";
-import admin from "firebase-admin";
 
 import { logEvent } from "../utils/logger";
 import { rateLimit } from "../utils/rateLimitInstance";
@@ -14,8 +13,6 @@ import { RateLimitError } from "../errors/domain.errors";
 import { handleFunctionError } from "../errors/handleFunctionError";
 
 ////////////////////////////////////////////////////////////////////////////////////
-
-const db = admin.firestore();
 
 // Input validation utilities
 export class InputValidator {

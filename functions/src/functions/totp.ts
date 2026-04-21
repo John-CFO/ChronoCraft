@@ -123,14 +123,13 @@ export const createTotpSecretHandler = async (request: any) => {
     }
 
     const rawKey = await TOTP_ENCRYPTION_KEY.value();
-
+    // Firestore requires a composite index for this query (uid + range filter on expiresAt)
     const pendingQuery = await firestore
       .collection(PENDING_COLLECTION)
       .where("uid", "==", uid)
       .where("expiresAt", ">", new Date())
       .limit(1)
       .get();
-
     let enrollmentId: string;
     let secret: string;
     let createdNew = false;
@@ -148,7 +147,7 @@ export const createTotpSecretHandler = async (request: any) => {
       }
 
       secret = generateSecret();
-
+      console.log(secret);
       const encryptedSecret = encrypt(secret, rawKey);
       enrollmentId = Crypto.randomBytes(16).toString("hex");
 

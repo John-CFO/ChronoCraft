@@ -254,17 +254,62 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
                 maxWidth: 400,
               }}
             >
-              <Text
+              <View
                 style={{
-                  color: "white",
-                  fontSize: 22,
-                  fontFamily: "MPLUSLatin_Bold",
-                  marginBottom: 5,
-                  marginRight: 9,
+                  height: 50,
+                  width: 200,
+                  justifyContent: "center",
+                  alignItems: "center",
                 }}
               >
-                {sending ? "Sending..." : "Send Reset Link"}
-              </Text>
+                {sending ? (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        marginLeft: 100,
+                        marginBottom: 5,
+                        fontFamily: "MPLUSLatin_Bold",
+                        fontSize: 22,
+                        color: "white",
+                        textAlign: "center",
+                        width: 100,
+                      }}
+                    >
+                      Sending
+                    </Text>
+                    <Text
+                      style={{
+                        marginBottom: 5,
+                        fontFamily: "MPLUSLatin_Bold",
+                        fontSize: 22,
+                        color: "white",
+                        width: 100,
+                        textAlign: "left",
+                      }}
+                    >
+                      {dots}
+                    </Text>
+                  </View>
+                ) : (
+                  <Text
+                    style={{
+                      marginBottom: 5,
+                      fontFamily: "MPLUSLatin_Bold",
+                      fontSize: 22,
+                      color: "white",
+                      textAlign: "center",
+                    }}
+                  >
+                    Send Reset Link
+                  </Text>
+                )}
+              </View>
             </LinearGradient>
           </TouchableOpacity>
 

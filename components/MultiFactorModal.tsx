@@ -1,6 +1,6 @@
-////////////////////////// TwoFactorModal.tsx //////////////////////////////
+////////////////////////// MultiFactorModal.tsx //////////////////////////////
 
-// Two-Factor Authentication modal with TOTP via Cloud Functions
+// Multi-Factor Authentication modal with TOTP via Cloud Functions
 // Handles enable/disable, QR code display, OTP input, confirm, skip
 
 ////////////////////////////////////////////////////////////////////////////
@@ -25,6 +25,7 @@ import { useAccessibilityStore } from "../components/services/accessibility/acce
 import OTPInput from "./OTPInput";
 import DismissKeyboard from "../components/DismissKeyboard";
 import { useDotAnimation } from "../components/DotAnimation";
+import { ensureAuthReady } from "../services/ensureAuthToken";
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -57,7 +58,7 @@ interface DisableTotpResponse {
 
 /////////////////////////////////////////////////////////////////////////////////
 
-const TwoFactorModal: React.FC<Props> = ({
+const MultiFactorModal: React.FC<Props> = ({
   onClose,
   isEnrolled,
   setIsEnrolled,
@@ -90,8 +91,8 @@ const TwoFactorModal: React.FC<Props> = ({
 
   // Function to start TOTP enrollment using Cloud Functions
   const startEnroll = async () => {
+    const user = await ensureAuthReady();
     if (!user) return;
-
     setLoading(true);
     try {
       // CreateTOTP Secret Callable Function
@@ -100,6 +101,7 @@ const TwoFactorModal: React.FC<Props> = ({
         CreateTotpSecretResponse
       >(FIREBASE_FUNCTIONS, "createTotpSecret");
 
+      // Call the function
       const result = await createTotpSecretFunction();
       const data = result.data;
 
@@ -201,7 +203,10 @@ const TwoFactorModal: React.FC<Props> = ({
 
           useAlertStore
             .getState()
-            .showAlert("Success", "TOTP enabled successfully!");
+            .showAlert(
+              "Success",
+              "Multi-factor-authentication enabled successfully!",
+            );
         }, 0);
 
         return;
@@ -267,8 +272,8 @@ const TwoFactorModal: React.FC<Props> = ({
           useAlertStore
             .getState()
             .showAlert(
-              "2FA Deactivated",
-              data.message || "TOTP disabled successfully!",
+              "Multi-factor-authentication deactivated",
+              data.message || "MFA disabled successfully!",
             );
 
           // release UI freeze after alert is shown
@@ -277,13 +282,13 @@ const TwoFactorModal: React.FC<Props> = ({
 
         return;
       } else {
-        throw new Error(data.message || "Disabling TOTP failed");
+        throw new Error(data.message || "Disabling MFA failed");
       }
     } catch (err: any) {
       console.error("disableTotp error", err);
       useAlertStore
         .getState()
-        .showAlert("Error", err.message || "Cannot disable TOTP.");
+        .showAlert("Error", err.message || "Cannot disable MFA.");
     } finally {
       if (isMounted.current) setLoading(false);
     }
@@ -315,7 +320,7 @@ const TwoFactorModal: React.FC<Props> = ({
       <View
         accessibilityViewIsModal={true}
         accessible={true}
-        accessibilityLabel="Two-Factor-Authentication Dialog"
+        accessibilityLabel="Multi-Factor-Authentication Dialog"
         style={{
           flex: 1,
           justifyContent: "center",
@@ -348,7 +353,7 @@ const TwoFactorModal: React.FC<Props> = ({
               marginBottom: 11,
             }}
           >
-            Two Factor Authentication
+            Multi Factor Authentication
           </Text>
 
           <View
@@ -370,7 +375,7 @@ const TwoFactorModal: React.FC<Props> = ({
             <>
               <Text
                 accessibilityRole="text"
-                accessibilityLabel="Two-Factor Authentication is currently enabled."
+                accessibilityLabel="Multi-factor-authentication is currently enabled."
                 style={{
                   textAlign: "center",
                   marginBottom: accessMode ? 20 : 10,
@@ -381,15 +386,15 @@ const TwoFactorModal: React.FC<Props> = ({
                     : "MPLUSLatin_ExtraLight",
                 }}
               >
-                Two-Factor Authentication is currently enabled.
+                Multi-Factor Authentication is currently enabled.
               </Text>
 
               {/* DISABLE Button */}
               <TouchableOpacity
                 accessible={true}
                 accessibilityRole="button"
-                accessibilityLabel="Disable Two Factor"
-                accessibilityHint="Disables two factor authentication"
+                accessibilityLabel="Disable Multi Factor"
+                accessibilityHint="Disables multi factor authentication"
                 accessibilityState={{ busy: loading }}
                 onPress={disableTotp}
                 style={{
@@ -544,8 +549,8 @@ const TwoFactorModal: React.FC<Props> = ({
                   <TouchableOpacity
                     accessible={true}
                     accessibilityRole="button"
-                    accessibilityLabel="Activate Two Factor"
-                    accessibilityHint="Activates two factor authentication"
+                    accessibilityLabel="Activate Multi Factor"
+                    accessibilityHint="Activates multi factor authentication"
                     accessibilityState={{ busy: loading }}
                     onPress={startEnroll}
                     style={{
@@ -689,7 +694,7 @@ const TwoFactorModal: React.FC<Props> = ({
                   {otpUrl && (
                     <View
                       accessible={true}
-                      accessibilityLabel="QR Code for the Two Factor Authentication"
+                      accessibilityLabel="QR Code for the Multi Factor Authentication"
                       accessibilityRole="image"
                       style={{
                         marginBottom: 20,
@@ -869,4 +874,4 @@ const TwoFactorModal: React.FC<Props> = ({
   );
 };
 
-export default TwoFactorModal;
+export default MultiFactorModal;
