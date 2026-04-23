@@ -37,12 +37,18 @@ function getFromAddress(): string {
 
   const normalized = from.trim();
 
-  if (
-    !normalized.includes("@") ||
-    normalized.includes("\n") ||
-    normalized.includes("\r")
-  ) {
+  if (normalized.includes("\n") || normalized.includes("\r")) {
     throw new ConfigurationError("Invalid RESEND_FROM_EMAIL");
+  }
+
+  // enforce valid email format OR "Name <email>"
+  const isSimpleEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized);
+  const isNamedEmail = /^.+<[^@\s]+@[^@\s]+\.[^@\s]+>$/.test(normalized);
+
+  if (!isSimpleEmail && !isNamedEmail) {
+    throw new ConfigurationError(
+      "RESEND_FROM_EMAIL must be 'email@domain' or 'Name <email@domain>'",
+    );
   }
 
   return normalized;
