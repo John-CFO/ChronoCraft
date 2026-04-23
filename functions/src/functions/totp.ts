@@ -147,7 +147,7 @@ export const createTotpSecretHandler = async (request: any) => {
       }
 
       secret = generateSecret();
-      console.log(secret);
+
       const encryptedSecret = encrypt(secret, rawKey);
       enrollmentId = Crypto.randomBytes(16).toString("hex");
 
