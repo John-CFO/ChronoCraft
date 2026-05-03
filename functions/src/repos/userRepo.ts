@@ -5,7 +5,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-import * as admin from "firebase-admin";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
 
 import { NotFoundError } from "../errors/domain.errors";
 
@@ -13,8 +13,30 @@ import { NotFoundError } from "../errors/domain.errors";
 
 export class UserRepo {
   // Constructor: Dependency Injection with default value to allow testing without mock admin
-  constructor(private db = admin.firestore()) {}
+  constructor(private db = getFirestore()) {}
   private usersRef = this.db.collection("Users");
+
+  // createUser method to create a new user
+  async createUserIfNotExists(uid: string, data: Record<string, unknown>) {
+    const ref = this.usersRef.doc(uid);
+
+    await this.db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+
+      if (!snap.exists) {
+        tx.set(ref, {
+          ...data,
+          createdAt: FieldValue.serverTimestamp(),
+          hasSeenHomeTour: false,
+          hasSeenDetailsTour: false,
+          hasSeenVacationTour: false,
+          hasSeenWorkHoursTour: false,
+        });
+      }
+    });
+
+    return { success: true };
+  }
 
   // getUser method to retrieve a user
   async getUser(uid: string) {

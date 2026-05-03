@@ -10,7 +10,6 @@
     "moduleResolution": "node",
 
     // IMPORTANT: baseUrl and paths for absolute Imports
-    "baseUrl": ".",
     "paths": {
       "src/*": ["src/*"],
       "@/*": ["src/*"], // Optional for @/ Alias

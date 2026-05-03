@@ -60,8 +60,10 @@ export const deleteUserDataHandler = async (request: any) => {
   try {
     await admin.auth().getUser(uid);
 
+    // ---------- storage cleanup ----------
     await deleteStorageObjects(uid);
 
+    // ---------- mfa cleanup ----------
     try {
       const mfaRef = db.collection("mfa_totp").doc(uid);
       if ((await mfaRef.get()).exists) {
@@ -69,11 +71,13 @@ export const deleteUserDataHandler = async (request: any) => {
       }
     } catch {}
 
+    // ---------- user data cleanup ----------
     const userRef = db.collection("Users").doc(uid);
     if ((await userRef.get()).exists) {
       await db.recursiveDelete(userRef);
     }
 
+    // ---------- auth delete LAST ----------
     await admin.auth().deleteUser(uid);
 
     return { success: true };

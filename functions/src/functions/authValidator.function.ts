@@ -14,7 +14,7 @@ import { verifyTotpLoginHandler } from "./totp";
 //////////////////////////////////////////////////////////////////////////////////
 
 // Pure handler function
-const authValidatorHandler = async (request: CallableRequest) => {
+export const authValidatorHandler = async (request: CallableRequest) => {
   const { action, payload } = request.data ?? {};
   const uid = request.auth?.uid;
   const authService = new AuthService();
@@ -26,7 +26,7 @@ const authValidatorHandler = async (request: CallableRequest) => {
     return authService.loginOrRegister(action, uid);
   }
 
-  if (action === "verifyTotp") {
+  if (action === "verifyTotpLogin") {
     if (!uid) throw new HttpsError("unauthenticated", "Not logged in");
     InputValidator.validateRequired(request.data, "payload");
     InputValidator.validateString(request.data, "payload", 6, 6);
@@ -48,38 +48,17 @@ export const authValidator = secureFunction(authValidatorHandler, {
   validation: (data) => {
     if (
       !data ||
-      !["login", "register", "verifyTotp", "getUserProfile"].includes(
+      !["login", "register", "verifyTotpLogin", "getUserProfile"].includes(
         data.action,
       )
     ) {
       throw new HttpsError("invalid-argument", "Invalid action");
     }
-  },
-});
 
-///////////////////////////////////////////////////////////////////////////////
-
-// Separate callable for authenticated TOTP verification
-const verifyTotpHandler = async (request: CallableRequest) => {
-  const { code } = request.data ?? {};
-  const uid = request.auth?.uid;
-
-  if (!uid) {
-    throw new HttpsError("unauthenticated", "Not logged in");
-  }
-
-  InputValidator.validateRequired(request.data, "code");
-  InputValidator.validateString(request.data, "code", 6, 6);
-
-  const authService = new AuthService();
-  return authService.verifyTotp(uid, code);
-};
-
-export const verifyTotp = secureFunction(verifyTotpHandler, {
-  requireAuth: true,
-  rateLimit: {
-    action: "verifyTotp",
-    maxAttempts: 5,
-    windowMs: 60_000,
+    if (data.action === "login" || data.action === "register") {
+      if (!data.action) {
+        throw new HttpsError("invalid-argument", "Missing action");
+      }
+    }
   },
 });

@@ -6,7 +6,7 @@ module.exports = {
   transform: {
     "^.+\\.ts$": [
       "ts-jest",
-      { tsconfig: "tsconfig.test.json", isolatedModules: false },
+      { tsconfig: "<rootDir>/tsconfig.test.json", isolatedModules: false },
     ],
   },
   verbose: true,

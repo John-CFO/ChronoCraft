@@ -40,6 +40,7 @@ if (!admin.apps.length) {
 
 // HTTP handlers
 import { authValidator } from "./functions/authValidator.function";
+import { registerPushToken } from "./functions/registerPushToken.function";
 import { profileValidator } from "./functions/profileValidator.function";
 import { projectsAndWorkValidator } from "./functions/projectAndWorkValidator.function";
 import { secureDelete } from "./functions/secureDelete.function";
@@ -79,4 +80,9 @@ export const deleteUserData = onCall({ cors: true }, deleteUserDataHandler);
 export const requestPasswordResetFunction = onCall(
   { cors: true },
   requestPasswordReset,
+);
+
+export const registerPushTokenFunction = onCall(
+  { cors: true },
+  registerPushToken,
 );
