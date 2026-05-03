@@ -37,7 +37,10 @@ describe("AuthService Unit Tests", () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    jest.spyOn(UserRepo.prototype, "getUserTOTPSecret");
+    jest.spyOn(UserRepo.prototype, "getUser").mockResolvedValue({
+      exists: true,
+      data: () => ({ uid: "user123" }),
+    } as any);
 
     mockVerifyTotp = verifyTotp as jest.MockedFunction<typeof verifyTotp>;
     mockVerifyTotp.mockImplementation((secret, code) => {
@@ -63,7 +66,7 @@ describe("AuthService Unit Tests", () => {
       expect(mockLogEvent).toHaveBeenCalledWith("auth login", "info", {
         uid: "user123",
       });
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ nextStage: "authenticated" });
     });
 
     it("should log event and return success for register", async () => {
@@ -71,15 +74,19 @@ describe("AuthService Unit Tests", () => {
       expect(mockLogEvent).toHaveBeenCalledWith("auth register", "info", {
         uid: "user123",
       });
-      expect(result).toEqual({ success: true });
+      expect(result).toEqual({ nextStage: "authenticated" });
     });
 
     it("should handle undefined uid", async () => {
-      const result = await authService.loginOrRegister("login", undefined);
-      expect(mockLogEvent).toHaveBeenCalledWith("auth login", "info", {
-        uid: undefined,
+      await expect(
+        authService.loginOrRegister("login", undefined),
+      ).rejects.toThrow("UID required");
+
+      await expect(
+        authService.loginOrRegister("login", undefined),
+      ).rejects.toMatchObject({
+        message: "UID required",
       });
-      expect(result).toEqual({ success: true });
     });
 
     it("should throw error for unknown action", async () => {

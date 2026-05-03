@@ -20,8 +20,25 @@ export class AuthService {
     if (!["login", "register"].includes(action)) {
       throw new ValidationError("Invalid action for loginOrRegister");
     }
+    if (!uid) {
+      throw new ValidationError("UID required");
+    }
+
+    if (action === "register") {
+      await this.userRepo.createUserIfNotExists(uid, {
+        createdVia: "auth",
+      });
+    }
+
     logEvent(`auth ${action}`, "info", { uid });
-    return { success: true };
+
+    const userDoc = await this.userRepo.getUser(uid).catch(() => null);
+    const data = userDoc?.data();
+
+    const nextStage =
+      data?.totp?.enabled === true ? "pendingMfa" : "authenticated";
+
+    return { nextStage };
   }
 
   async verifyTotp(uid: string, code: string) {

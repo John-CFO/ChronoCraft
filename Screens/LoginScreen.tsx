@@ -24,7 +24,7 @@ import {
   createUserWithEmailAndPassword,
   Auth,
 } from "firebase/auth";
-import { setDoc, doc, getDoc, serverTimestamp } from "firebase/firestore";
+import { getFunctions, httpsCallable } from "firebase/functions";
 import {
   ALERT_TYPE,
   Toast,
@@ -33,7 +33,7 @@ import {
 import { BlurView } from "expo-blur";
 
 import { NotificationManager } from "../components/services/PushNotifications";
-import { FIREBASE_APP, FIREBASE_FIRESTORE } from "../firebaseConfig";
+import { FIREBASE_APP } from "../firebaseConfig";
 import { AuthContext, AuthStage } from "../components/contexts/AuthContext";
 import { RootStackParamList } from "../navigation/RootStackParams";
 import AppLogo from "../components/AppLogo";
@@ -62,6 +62,12 @@ const LoginScreen: React.FC = () => {
 
   // declaire the navigation to user get in after logein
   const navigation = useNavigation<RegisterScreenNavigationProp>();
+
+  // use getFunctions to create a new user
+  const functions = getFunctions();
+
+  // use httpsCallable to validate the user
+  const authValidator = httpsCallable(functions, "authValidatorFunction");
 
   // states for registry and login
   const [email, setEmail] = useState("");
@@ -103,19 +109,8 @@ const LoginScreen: React.FC = () => {
     setLoading(true);
     try {
       const { user } = await signInWithEmailAndPassword(auth, email, password);
-
-      const userRef = doc(FIREBASE_FIRESTORE, "Users", user.uid);
-      const userSnap = await getDoc(userRef);
-
-      let nextStage: AuthStage = "authenticated";
-
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-
-        if (userData?.totp?.enabled === true) {
-          nextStage = "pendingMfa";
-        }
-      }
+      const result = await authValidator({ action: "login" });
+      const { nextStage } = result.data as { nextStage: AuthStage };
 
       // === Single state transition point ===
       setUser(user);
@@ -144,21 +139,30 @@ const LoginScreen: React.FC = () => {
         email,
         password,
       );
-      const uid = response.user.uid;
-      await createUserDocument(uid, {
-        email: email,
-        firstLogin: true,
-      });
+      const result = await authValidator({ action: "register" });
+      const { nextStage } = result.data as { nextStage: AuthStage };
+      // Navigation
+      setUser(response.user);
+      setStage(nextStage);
 
       // initialize push notifications
       const token = await NotificationManager.registerForPushNotifications();
+      // optional side effect AFTER state transition
       if (token) {
-        await NotificationManager.savePushTokenToDatabase(uid, token);
-        await NotificationManager.sendWelcomeNotification(token);
+        try {
+          const registerPushToken = httpsCallable(
+            functions,
+            "registerPushTokenFunction",
+          );
+          await registerPushToken({ token });
+        } catch (e) {
+          console.warn("[PushToken] ignored failure", e);
+        }
       }
-      // Navigation
-      setUser(response.user);
-      setStage("authenticated");
+
+      if (nextStage === "pendingMfa") {
+        navigation.navigate("MfaScreen" as never);
+      }
     } catch (error) {
       console.error("Registration failed:", error);
       // alert notification toast
@@ -169,28 +173,6 @@ const LoginScreen: React.FC = () => {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  // function to create user document in firestore
-  const createUserDocument = async (userId: string, userData: any) => {
-    try {
-      const userRef = doc(FIREBASE_FIRESTORE, "Users", userId);
-      await setDoc(
-        userRef,
-        {
-          ...userData,
-          createdAt: serverTimestamp(),
-          hasSeenHomeTour: userData.hasSeenHomeTour ?? false,
-          hasSeenDetailsTour: userData.hasSeenDetailsTour ?? false,
-          hasSeenVacationTour: userData.hasSeenVacationTour ?? false,
-          hasSeenWorkHoursTour: userData.hasSeenWorkHoursTour ?? false,
-        },
-        { merge: true }, // usefull to prevent overwriting
-      );
-    } catch (error) {
-      console.error("Error creating user document:", error);
-      throw error;
     }
   };
 

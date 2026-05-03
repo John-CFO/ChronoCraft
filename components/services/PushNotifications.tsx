@@ -4,8 +4,6 @@
 
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
-import { doc, setDoc } from "firebase/firestore";
-import { FIREBASE_FIRESTORE } from "../../firebaseConfig";
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -58,16 +56,6 @@ export class NotificationManager {
     }
   }
 
-  // save the push token to the firestore and also merge the push token with the user-ID
-  static async savePushTokenToDatabase(userId: string, pushToken: string) {
-    try {
-      const userRef = doc(FIREBASE_FIRESTORE, "Users", userId); // ref for the user document
-      await setDoc(userRef, { pushToken }, { merge: true }); // save the push token (merge:true prevents overwriting)
-    } catch (error) {
-      console.error("Error saving push token:", error);
-    }
-  }
-
   // plane a notification
   static async scheduleNotification(
     title: string,
@@ -85,19 +73,6 @@ export class NotificationManager {
     } catch (error) {
       console.error("Error scheduling notification:", error);
     }
-  }
-
-  // send a welcome notification after registration
-  static async sendWelcomeNotification(token: string) {
-    const trigger: Notifications.NotificationTriggerInput = {
-      seconds: 1, // send notification immediately
-    };
-
-    await this.scheduleNotification(
-      "Welcome to ChronoCraft! ⏱️",
-      "We're glad you’ve joined. Let’s track time like a pro.",
-      trigger,
-    );
   }
 
   // plan a notification for a vacation
