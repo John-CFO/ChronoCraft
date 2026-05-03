@@ -24,7 +24,14 @@ export async function totpEnrollAndVerify(uid: string) {
   const createBody = unwrapBody(createRes.body);
   const { otpAuthUrl, enrollmentId } = createBody;
 
-  if (!otpAuthUrl || !enrollmentId) throw new Error("TOTP Enrollment failed");
+  if (!otpAuthUrl || !enrollmentId) {
+    return {
+      otpAuthUrl: null,
+      enrollmentId: null,
+      token: null,
+      verifyBody: { valid: false },
+    };
+  }
 
   // parse secret from otpAuthUrl (format: ...?secret=(BASE32)
   const secretMatch = /[?&]secret=([^&]+)/i.exec(otpAuthUrl);
