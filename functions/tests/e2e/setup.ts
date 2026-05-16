@@ -148,17 +148,19 @@ beforeAll(async () => {
       });
     }
 
-    await db.collection("Projects").doc("testProject1").set({
-      name: "Test Project 1",
-      userId: TEST_USERS[0].uid,
-      createdAt: new Date(),
-    });
+    await db
+      .collection("Users")
+      .doc(TEST_USERS[0].uid)
+      .collection("Services")
+      .doc("test-service")
+      .set({ name: "Test Service" });
 
-    await db.collection("Projects").doc("testProject2").set({
-      name: "Test Project 2",
-      userId: TEST_USERS[1].uid,
-      createdAt: new Date(),
-    });
+    await db
+      .collection("Users")
+      .doc(TEST_USERS[1].uid)
+      .collection("Services")
+      .doc("test-service")
+      .set({ name: "Test Service" });
   });
 });
 

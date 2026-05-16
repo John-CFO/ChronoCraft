@@ -29,19 +29,45 @@ jest.mock("../../../src/utils/rateLimitInstance", () => {
   };
 });
 
+const mockRequest = {
+  rawRequest: {
+    headers: {
+      "x-forwarded-for": "127.0.0.1",
+    },
+    socket: {},
+  },
+};
+
+const buildRequest = (data: { email?: string }) =>
+  ({
+    ...mockRequest,
+    data,
+  }) as any;
+
 // dependencies
 const { getRateLimit } = require("../../../src/utils/rateLimitInstance");
+const { RateLimitError } = require("../../../src/errors/domain.errors");
 const mockRateLimit = getRateLimit();
 
 jest.mock("../../../src/services/emailService", () => ({
   sendPasswordResetEmail: jest.fn(),
 }));
 
+jest.mock("../../../src/utils/logger", () => ({
+  logEvent: jest.fn(),
+}));
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 describe("requestPasswordResetHandler (unit)", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
+
+    (auth.generatePasswordResetLink as jest.Mock).mockResolvedValue(undefined);
+
+    (sendPasswordResetEmail as jest.Mock).mockResolvedValue(undefined);
+
+    mockRateLimit.check.mockResolvedValue(undefined);
   });
 
   it("should run full password reset flow", async () => {
@@ -49,15 +75,11 @@ describe("requestPasswordResetHandler (unit)", () => {
       "https://reset.link",
     );
 
-    const request = {
-      data: { email: "test@example.com" },
-      rawRequest: {
-        headers: { "x-forwarded-for": "127.0.0.1" },
-        socket: {},
-      },
-    } as any;
-
-    const result = await requestPasswordResetHandler(request);
+    const result = await requestPasswordResetHandler(
+      buildRequest({
+        email: "test@example.com",
+      }),
+    );
 
     expect(mockRateLimit.check).toHaveBeenCalled();
 
@@ -71,5 +93,41 @@ describe("requestPasswordResetHandler (unit)", () => {
     );
 
     expect(result.success).toBe(true);
+  });
+
+  it("should handle email service failure", async () => {
+    (auth.generatePasswordResetLink as jest.Mock).mockResolvedValue(
+      "https://reset.link",
+    );
+
+    (sendPasswordResetEmail as jest.Mock).mockRejectedValue(
+      new Error("email failed"),
+    );
+
+    await expect(
+      requestPasswordResetHandler(
+        buildRequest({
+          email: "test@example.com",
+        }),
+      ),
+    ).rejects.toThrow("Internal server error.");
+  });
+
+  it("should fail when rate limit rejects", async () => {
+    mockRateLimit.check.mockRejectedValueOnce(new RateLimitError());
+
+    await expect(
+      requestPasswordResetHandler(
+        buildRequest({
+          email: "test@example.com",
+        }),
+      ),
+    ).rejects.toThrow("Too many requests. Please try again later.");
+  });
+
+  it("should throw on missing email", async () => {
+    await expect(requestPasswordResetHandler(buildRequest({}))).rejects.toThrow(
+      "Invalid input. Please check your data.",
+    );
   });
 });

@@ -55,10 +55,10 @@ describe("ProjectRepo Integration Tests", () => {
     const nonExistentId = "non-existent-project";
 
     await expect(
-      projectRepo.updateProject(nonExistentId, {
+      projectRepo.updateProject("test-user", nonExistentId, {
         name: "Test",
         updatedAt: admin.firestore.Timestamp.now(),
-      } as UpdateProjectInput),
+      }),
     ).rejects.toThrow(ProjectNotFoundError);
   });
 
@@ -66,9 +66,14 @@ describe("ProjectRepo Integration Tests", () => {
     const firestore = admin.firestore();
 
     await firestore.collection("Projects").doc(testProjectId).set({
+      id: testProjectId,
+      userId: "test-user",
+      serviceId: "test-service",
       name: "Initial Project",
-      updatedAt: admin.firestore.Timestamp.now(),
+      status: "active",
       isTracking: false,
+      createdAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now(),
     });
 
     const updateInput: UpdateProjectInput = {
@@ -77,7 +82,7 @@ describe("ProjectRepo Integration Tests", () => {
       isTracking: true,
     };
 
-    await projectRepo.updateProject(testProjectId, updateInput);
+    await projectRepo.updateProject("test-user", testProjectId, updateInput);
 
     const updatedDoc = await firestore
       .collection("Projects")
