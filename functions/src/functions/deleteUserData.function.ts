@@ -1,20 +1,20 @@
-/////////////////////// deleteUserData.function.ts //////////////////////
+//////////////////////// deleteUserData.function.ts ////////////////////////
 
 // This file contains the implementation of the deleteUserDataHandler function,
 // which is used to delete user data from the application.
 
-///////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
 
 import * as admin from "firebase-admin";
 import { HttpsError } from "firebase-functions/v2/https";
 
-///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 
 type FirebaseConfig = {
   storageBucket?: string;
 };
 
-///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 
 function parseFirebaseConfig(): FirebaseConfig {
   try {
@@ -39,50 +39,67 @@ function getStorageBucketName(): string {
   return bucket;
 }
 
-function deleteStorageObjects(uid: string) {
+async function deleteStorageObjects(uid: string) {
   const bucket = admin.storage().bucket(getStorageBucketName());
 
-  return Promise.all([
-    bucket.deleteFiles({ prefix: `profilePictures/${uid}/` }).catch(() => {}),
-    bucket.file(`profilePictures/${uid}`).delete({ ignoreNotFound: true }),
+  await Promise.all([
+    bucket.deleteFiles({
+      prefix: `profilePictures/${uid}/`,
+      force: true,
+    }),
+    bucket.file(`profilePictures/${uid}`).delete({
+      ignoreNotFound: true,
+    }),
   ]);
 }
+
+///////////////////////////////////////////////////////////////////////////
 
 export const deleteUserDataHandler = async (request: any) => {
   const uid = request.auth?.uid;
 
-  if (!uid) {
+  if (!uid || typeof uid !== "string") {
     throw new HttpsError("unauthenticated", "Not logged in");
   }
 
   const db = admin.firestore();
 
+  const userRef = db.collection("Users").doc(uid);
+  const mfaRef = db.collection("mfa_totp").doc(uid);
+  const deletionLockRef = db.collection("deletionLocks").doc(uid);
+
   try {
-    await admin.auth().getUser(uid);
+    await db.runTransaction(async (tx) => {
+      const lockSnap = await tx.get(deletionLockRef);
 
-    // ---------- storage cleanup ----------
-    await deleteStorageObjects(uid);
-
-    // ---------- mfa cleanup ----------
-    try {
-      const mfaRef = db.collection("mfa_totp").doc(uid);
-      if ((await mfaRef.get()).exists) {
-        await mfaRef.delete();
+      if (!lockSnap.exists) {
+        tx.set(deletionLockRef, {
+          startedAt: admin.firestore.FieldValue.serverTimestamp(),
+          uid,
+        });
       }
-    } catch {}
+    });
 
-    // ---------- user data cleanup ----------
-    const userRef = db.collection("Users").doc(uid);
-    if ((await userRef.get()).exists) {
-      await db.recursiveDelete(userRef);
+    await deleteStorageObjects(uid).catch(() => {});
+
+    await mfaRef.delete().catch(() => {});
+
+    await db.recursiveDelete(userRef).catch(() => {});
+
+    try {
+      await admin.auth().deleteUser(uid);
+    } catch (error: any) {
+      if (error?.code !== "auth/user-not-found") {
+        throw error;
+      }
     }
 
-    // ---------- auth delete LAST ----------
-    await admin.auth().deleteUser(uid);
+    await deletionLockRef.delete().catch(() => {});
 
     return { success: true };
   } catch (error) {
     console.error("Error deleting user data:", error);
+
     throw new HttpsError("internal", "User deletion failed");
   }
 };

@@ -45,20 +45,20 @@ export const authValidatorHandler = async (request: CallableRequest) => {
 // Callable export (Gen-2)
 export const authValidator = secureFunction(authValidatorHandler, {
   requireAuth: true, // everything except login/register/verifyTotp needs Auth
-  validation: (data) => {
-    if (
-      !data ||
-      !["login", "register", "verifyTotpLogin", "getUserProfile"].includes(
-        data.action,
-      )
-    ) {
+  validation: (data: unknown) => {
+    if (!data || typeof data !== "object") {
       throw new HttpsError("invalid-argument", "Invalid action");
     }
 
-    if (data.action === "login" || data.action === "register") {
-      if (!data.action) {
-        throw new HttpsError("invalid-argument", "Missing action");
-      }
+    const d = data as { action?: string };
+
+    if (
+      !d.action ||
+      !["login", "register", "verifyTotpLogin", "getUserProfile"].includes(
+        d.action,
+      )
+    ) {
+      throw new HttpsError("invalid-argument", "Invalid action");
     }
   },
 });

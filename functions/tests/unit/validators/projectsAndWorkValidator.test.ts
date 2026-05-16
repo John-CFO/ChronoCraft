@@ -10,9 +10,9 @@ const mockSetHourlyRate = jest.fn();
 
 jest.mock("../../../src/services/projectService", () => {
   return {
-    ProjectService: jest.fn(() => ({
-      updateProject: mockUpdateProject,
-      setHourlyRate: mockSetHourlyRate,
+    ProjectService: jest.fn().mockImplementation(() => ({
+      updateProject: (...args: any[]) => mockUpdateProject(...args),
+      setHourlyRate: (...args: any[]) => mockSetHourlyRate(...args),
     })),
   };
 });
@@ -62,17 +62,21 @@ describe("projectsAndWorkValidator", () => {
       makeRequest(
         {
           action: "updateProject",
-          payload: { projectId: "p1", name: "New Name" },
+          payload: {
+            projectId: "p1",
+            serviceId: "s1",
+            name: "New Name",
+          },
         },
         { uid: "u1" },
       ),
     );
 
-    expect(mockUpdateProject).toHaveBeenCalledWith(
-      "p1",
-      { projectId: "p1", name: "New Name" },
-      "u1",
-    );
+    expect(mockUpdateProject).toHaveBeenCalledWith("u1", "s1", "p1", {
+      projectId: "p1",
+      serviceId: "s1",
+      name: "New Name",
+    });
     expect(result).toEqual({ success: true });
   });
 

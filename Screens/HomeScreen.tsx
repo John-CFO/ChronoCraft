@@ -30,15 +30,7 @@ import {
 } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import Modal from "react-native-modal";
-import {
-  collection,
-  getDocs,
-  doc,
-  deleteDoc,
-  addDoc,
-  getDoc,
-  serverTimestamp,
-} from "firebase/firestore";
+import { getDocs, doc, getDoc, collection } from "firebase/firestore";
 import { getAuth, Auth } from "firebase/auth";
 import { LinearGradient } from "expo-linear-gradient";
 import { AntDesign } from "@expo/vector-icons";
@@ -71,6 +63,7 @@ import { sanitizeTitle } from "../components/InputSanitizers";
 import SortModal from "../components/SortModal";
 import { normalizeCreatedAt } from "../components/helper/normalizeCreatedAt.helper";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+import { projectsAndWorkValidatorCallable } from "../firebase/functions";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 type HomeScreenRouteProp = RouteProp<
@@ -94,6 +87,15 @@ const WalkthroughTouchableOpacity = walkthroughable(TouchableOpacity);
 
 // definition of the walkthroughable component to handle the copilot with (View)
 const CopilotView = walkthroughable(View);
+
+// function to unwrap the body
+const unwrapBody = (body: any): any => {
+  if (body && typeof body === "object" && "result" in body) {
+    return body.result;
+  }
+
+  return body;
+};
 
 const HomeScreen: React.FC = () => {
   // initialize the copilot offset
@@ -274,29 +276,83 @@ const HomeScreen: React.FC = () => {
       setIsLoading(true);
 
       try {
-        const projectsCollection = collection(
-          FIREBASE_FIRESTORE,
-          "Users",
-          user.uid,
-          "Services",
-          serviceId,
-          "Projects",
-        );
+        const res = await projectsAndWorkValidatorCallable({
+          action: "getProjects",
+          payload: {
+            serviceId,
+          },
+        });
 
-        const snapshot = await getDocs(projectsCollection);
+        const body = unwrapBody(res.data);
+
+        const projects = body?.projects ?? [];
+
+        setProjects(
+          projects.map((project: any) => ({
+            id: project.id,
+            name: project.name ?? "",
+            createdAt: normalizeCreatedAt(project.createdAt),
+            userId: project.userId,
+            status: project.status,
+            isTracking: project.isTracking,
+            hourlyRate: project.hourlyRate,
+          })),
+        );
+      } catch (err) {
+        console.error("Error fetching projects", err);
+      } finally {
+        if (active) setIsLoading(false);
+      }
+    };
+
+    fetchProjects();
+
+    return () => {
+      active = false;
+    };
+  }, [serviceId, serviceLoading, canReadProjects, refresh]);
+
+  // function to load data from firestore
+  useEffect(() => {
+    if (serviceLoading) return;
+    if (canReadProjects === null) return;
+
+    let active = true;
+
+    const fetchProjects = async () => {
+      const user = FIREBASE_AUTH.currentUser;
+
+      if (!serviceId || !user) {
+        if (active) setIsLoading(false);
+        return;
+      }
+
+      if (canReadProjects === false) {
+        if (active) setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+
+      try {
+        const res = await projectsAndWorkValidatorCallable({
+          action: "getProjects",
+          payload: {
+            serviceId,
+          },
+        });
+
+        const body = unwrapBody(res.data);
 
         if (!active) return;
 
         setProjects(
-          snapshot.docs.map((doc) => {
-            const data = doc.data();
-            return {
-              id: doc.id,
-              ...data,
-              name: data.name ?? "",
-              createdAt: normalizeCreatedAt(data.createdAt),
-            };
-          }),
+          (body?.projects ?? []).map((project: any) => ({
+            id: project.id,
+            ...project,
+            name: project.name ?? "",
+            createdAt: normalizeCreatedAt(project.createdAt),
+          })),
         );
       } catch (err) {
         console.error("Error fetching projects", err);
@@ -315,12 +371,8 @@ const HomeScreen: React.FC = () => {
   // function to add projects
   const handleAddProject = async () => {
     const user = FIREBASE_AUTH.currentUser;
-    if (!user?.uid) return;
 
-    if (!user) {
-      useAlertStore.getState().showAlert("Error", "User not authenticated.");
-      return;
-    }
+    if (!user?.uid) return;
 
     if (!serviceId) {
       useAlertStore
@@ -333,7 +385,8 @@ const HomeScreen: React.FC = () => {
     }
 
     const trimmedName = newProjectName.trim();
-    if (!trimmedName.trim()) {
+
+    if (!trimmedName) {
       useAlertStore
         .getState()
         .showAlert("Sorry", "Add a project title first to continue.");
@@ -346,35 +399,20 @@ const HomeScreen: React.FC = () => {
     }
 
     try {
-      const projectsCollection = collection(
-        FIREBASE_FIRESTORE,
-        "Users",
-        user.uid,
-        "Services",
-        serviceId,
-        "Projects",
-      );
+      const res = await projectsAndWorkValidatorCallable({
+        action: "createProject",
+        payload: {
+          name: trimmedName,
+          serviceId,
+        },
+      });
 
-      const projectToAdd = {
-        userId: user.uid,
-        name: trimmedName,
-        createdAt: serverTimestamp(),
-        timer: 0,
-        elapsedTime: 0,
-        hourlyRate: 0,
-        totalEarnings: 0,
-        isTracking: false,
-        startTime: null,
-        endTime: null,
-        lastStartTime: null,
-        originalStartTime: null,
-      };
-
-      const newProjectRef = await addDoc(projectsCollection, projectToAdd);
+      const data = unwrapBody(res.data);
 
       const projectForState = {
+        id: data.projectId,
         userId: user.uid,
-        name: newProjectName,
+        name: trimmedName,
         createdAt: new Date(),
         timer: 0,
         elapsedTime: 0,
@@ -385,8 +423,8 @@ const HomeScreen: React.FC = () => {
         endTime: null,
         lastStartTime: null,
         originalStartTime: null,
-        id: newProjectRef.id,
       };
+
       setProjects((prev) => [...prev, projectForState]);
       setNewProjectName("");
       setRefresh((r) => !r);
@@ -399,17 +437,14 @@ const HomeScreen: React.FC = () => {
 
   // function to delete projects
   const handleDeleteProject = async (projectId: string) => {
-    // alert to inform user what he has to do first before pressing the delete button
     useAlertStore
       .getState()
-
       .showAlert(
         "Attention!",
         "Do you really want to delete the project? If you delete the project, all notes will be deleted as well.",
         [
           {
             text: "Cancel",
-            onPress: () => console.log("Project deletion canceled"),
             style: "cancel",
           },
           {
@@ -417,60 +452,29 @@ const HomeScreen: React.FC = () => {
             style: "destructive",
             onPress: async () => {
               try {
-                // use ref to animate deleting
+                const user = FIREBASE_AUTH.currentUser;
+
+                if (!user?.uid || !serviceId) return;
+
                 const ref = animationRefs.current[projectId];
+
                 if (ref) {
                   await ref.zoomOut(300);
                 }
 
-                // check if user is authenticated
-                const user = FIREBASE_AUTH.currentUser;
-                if (!user) {
-                  useAlertStore
-                    .getState()
-                    .showAlert("Error", "User not authenticated.");
-                  return;
-                }
-                if (!serviceId) {
-                  console.error("Missing serviceId");
-                  return;
-                }
-                const db = FIREBASE_FIRESTORE;
-                const noteCollection = collection(
-                  db,
-                  "Users",
-                  user.uid,
-                  "Services",
-                  serviceId,
-                  "Projects",
-                  projectId,
-                  "Notes",
-                );
-                // snapshot to delete notes
-                const notesSnapshot = await getDocs(noteCollection);
+                await projectsAndWorkValidatorCallable({
+                  action: "deleteProject",
+                  payload: {
+                    projectId,
+                    serviceId,
+                  },
+                });
 
-                // wait for all note deletions to finish before deleting the project
-                await Promise.all(
-                  notesSnapshot.docs.map((doc) => deleteDoc(doc.ref)),
-                );
-                // now delete the project
-                const projectDocRef = doc(
-                  db,
-                  "Users",
-                  user.uid,
-                  "Services",
-                  serviceId,
-                  "Projects",
-                  projectId,
-                );
-                await deleteDoc(projectDocRef);
-
-                // remove project from state
                 setProjects((prev) => prev.filter((p) => p.id !== projectId));
-                // optional: refresh the list
+
                 setRefresh((prev) => !prev);
               } catch (err) {
-                console.error("Delete project or notes failed", err);
+                console.error("Delete project failed", err);
               }
             },
           },

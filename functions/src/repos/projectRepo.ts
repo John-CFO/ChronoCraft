@@ -7,6 +7,9 @@
 
 import * as admin from "firebase-admin";
 import { HttpsError } from "firebase-functions/v2/https";
+import { Timestamp } from "firebase-admin/firestore";
+
+import { DomainError, AuthorizationError } from "../errors/domain.errors";
 
 //////////////////////////////////////////////////////////////////////
 
@@ -34,10 +37,10 @@ export interface SetHourlyRateInput {
   updatedAt: FirebaseFirestore.Timestamp;
 }
 
-// Domain Errors
-export class ProjectNotFoundError extends Error {
+export class ProjectNotFoundError extends DomainError {
   constructor(projectId: string) {
-    super(`Project not found: ${projectId}`);
+    super("not-found", `Project not found: ${projectId}`, "Project not found");
+
     this.name = "ProjectNotFoundError";
   }
 }
@@ -49,8 +52,10 @@ export class ProjectRepo {
   private readonly earningsRef = this.db.collection("Earnings");
 
   // Reads
-  async getProjectById(projectId: string): Promise<Project> {
-    const snap = await this.projectsRef.doc(projectId).get();
+  async getProject(projectId: string): Promise<Project> {
+    const ref = this.db.collection("Projects").doc(projectId);
+
+    const snap = await ref.get();
 
     if (!snap.exists) {
       throw new ProjectNotFoundError(projectId);
@@ -59,23 +64,106 @@ export class ProjectRepo {
     return this.mapProject(snap);
   }
 
+  async getProjects(userId: string, serviceId: string) {
+    const snapshot = await this.db
+      .collection("Users")
+      .doc(userId)
+      .collection("Services")
+      .doc(serviceId)
+      .collection("Projects")
+      .get();
+
+    return {
+      projects: snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })),
+    };
+  }
+
+  async deleteProject(ownerId: string, projectId: string): Promise<void> {
+    const projectRef = this.db.collection("Projects").doc(projectId);
+
+    await this.db.runTransaction(async (tx) => {
+      const snap = await tx.get(projectRef);
+
+      if (!snap.exists) {
+        throw new ProjectNotFoundError(projectId);
+      }
+
+      const data = snap.data();
+
+      if (!data) {
+        throw new ProjectNotFoundError(projectId);
+      }
+
+      if (data.userId !== ownerId) {
+        throw new AuthorizationError("Not your project");
+      }
+
+      tx.delete(projectRef);
+    });
+  }
+
   // Writes
+  async createProject(userId: string, name: string, serviceId: string) {
+    const ref = this.db.collection("Projects").doc();
+
+    const data = {
+      id: ref.id,
+      userId,
+      name,
+      serviceId,
+      status: "active",
+      isTracking: false,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    };
+
+    await ref.set(data);
+
+    return {
+      projectId: ref.id,
+      serviceId,
+      userId,
+    };
+  }
+
   async updateProject(
+    ownerId: string,
     projectId: string,
     input: UpdateProjectInput,
   ): Promise<void> {
-    const ref = this.projectsRef.doc(projectId);
+    const ref = this.db.collection("Projects").doc(projectId);
 
-    // Explicit existing check (Domain logic)
-    const snap = await ref.get();
+    await this.db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
 
-    if (!snap.exists) {
-      throw new ProjectNotFoundError(projectId);
-    }
+      if (!snap.exists) {
+        throw new ProjectNotFoundError(projectId);
+      }
 
-    // Pure update (Infrastructur)
-    const updateData = this.mapUpdateInput(input);
-    await ref.update(updateData);
+      const data = snap.data();
+
+      if (!data) {
+        throw new ProjectNotFoundError(projectId);
+      }
+
+      if (data.userId !== ownerId) {
+        console.error("AUTH ERROR INSTANCE:", {
+          instance:
+            new AuthorizationError("Not your project") instanceof
+            AuthorizationError,
+        });
+
+        throw new AuthorizationError("Not your project");
+      }
+
+      tx.update(ref, {
+        ...this.mapUpdateInput(input),
+        updatedAt: admin.firestore.Timestamp.now(),
+      });
+    });
   }
 
   // Hourly Rate

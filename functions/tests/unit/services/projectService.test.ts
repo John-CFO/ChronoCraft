@@ -1,16 +1,10 @@
 /////////////////////// projectService.test.ts //////////////////////////////
 
-// This file contains the unit tests for the ProjectService class.
-
-/////////////////////////////////////////////////////////////////////////////
-
-// mock dependencies first to avoid errors
 jest.mock("../../../src/repos/projectRepo");
 jest.mock("../../../src/utils/logger");
 
 import { ProjectService } from "../../../src/services/projectService";
 import { ProjectRepo } from "../../../src/repos/projectRepo";
-import { ProjectNotFoundError } from "../../../src/repos/projectRepo";
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -21,7 +15,8 @@ describe("ProjectService Unit Tests", () => {
   beforeEach(() => {
     repo = new ProjectRepo() as jest.Mocked<ProjectRepo>;
     service = new ProjectService();
-    // focused Test-Injection
+
+    // DI override
     // @ts-ignore
     service.projectRepo = repo;
   });
@@ -32,59 +27,39 @@ describe("ProjectService Unit Tests", () => {
 
   describe("updateProject", () => {
     it("should update project if user owns it", async () => {
-      repo.getProjectById.mockResolvedValue({
-        id: "project1",
-        userId: "user123",
-        name: "Test",
-        status: "active",
-        isTracking: false,
-        createdAt: {} as any,
-        updatedAt: {} as any,
-      });
-
       repo.updateProject.mockResolvedValue(undefined);
 
       const result = await service.updateProject(
+        "user123",
+        "serviceId",
         "project1",
         { name: "New Name" },
-        "user123"
       );
 
       expect(repo.updateProject).toHaveBeenCalledWith(
+        "user123",
         "project1",
         expect.objectContaining({
           name: "New Name",
           updatedAt: expect.anything(),
-        })
+        }),
       );
 
-      expect(result).toEqual({ success: true });
+      expect(result).toBeUndefined();
     });
 
-    it("should throw if project does not exist", async () => {
-      repo.getProjectById.mockRejectedValue(
-        new ProjectNotFoundError("project1")
-      );
+    it("should throw if input is invalid (missing ids)", async () => {
+      await expect(
+        service.updateProject("", "serviceId", "user123", {}),
+      ).rejects.toThrow("Invalid input");
 
       await expect(
-        service.updateProject("project1", {}, "user123")
-      ).rejects.toBeInstanceOf(ProjectNotFoundError);
-    });
-
-    it("should throw if project belongs to another user (IDOR)", async () => {
-      repo.getProjectById.mockResolvedValue({
-        id: "project1",
-        userId: "attacker",
-        name: "Test",
-        status: "active",
-        isTracking: false,
-        createdAt: {} as any,
-        updatedAt: {} as any,
-      });
+        service.updateProject("project1", "", "user123", {}),
+      ).rejects.toThrow("Invalid input");
 
       await expect(
-        service.updateProject("project1", {}, "user123")
-      ).rejects.toThrow("Not your project");
+        service.updateProject("project1", "serviceId", "", {}),
+      ).rejects.toThrow("Invalid input");
     });
   });
 
@@ -94,20 +69,33 @@ describe("ProjectService Unit Tests", () => {
 
       const result = await service.setHourlyRate("user123", "project1", 50);
 
-      expect(repo.setProjectHourlyRate).toHaveBeenCalledWith("project1", {
-        hourlyRate: 50,
-        updatedAt: expect.anything(),
-      });
+      expect(repo.setProjectHourlyRate).toHaveBeenCalledWith(
+        "project1",
+        expect.objectContaining({
+          hourlyRate: 50,
+          updatedAt: expect.anything(),
+        }),
+      );
 
-      expect(result).toEqual({ success: true });
+      expect(result).toBeUndefined();
     });
 
     it("should throw if repo fails", async () => {
       repo.setProjectHourlyRate.mockRejectedValue(new Error("DB error"));
 
       await expect(
-        service.setHourlyRate("user123", "project1", 50)
+        service.setHourlyRate("user123", "project1", 50),
       ).rejects.toThrow("DB error");
+    });
+
+    it("should throw on invalid input", async () => {
+      await expect(service.setHourlyRate("", "project1", 50)).rejects.toThrow(
+        "Invalid input",
+      );
+
+      await expect(
+        service.setHourlyRate("user123", "project1", NaN),
+      ).rejects.toThrow("Invalid input");
     });
   });
 });

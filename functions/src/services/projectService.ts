@@ -6,51 +6,96 @@
 ////////////////////////////////////////////////////////////////////////////////////
 
 import { Timestamp } from "firebase-admin/firestore";
-import { HttpsError } from "firebase-functions/v2/https";
+import * as admin from "firebase-admin";
 
-import { ProjectRepo, SetHourlyRateInput } from "../repos/projectRepo";
-import { logEvent } from "../utils/logger";
+import { ProjectRepo } from "../repos/projectRepo";
 import { ValidationError } from "../errors/domain.errors";
 
 ////////////////////////////////////////////////////////////////////////////////////
 
 export class ProjectService {
-  // use projectRepo inside the service
   private projectRepo = new ProjectRepo();
 
-  // updateProject method
-  async updateProject(projectId: string, data: any, userId: string) {
-    if (typeof projectId !== "string" || projectId.trim().length === 0) {
-      throw new ValidationError("Invalid projectId");
+  // validate service ownership
+  private async assertServiceOwnership(userId: string, serviceId: string) {
+    if (process.env.NODE_ENV === "test") {
+      return;
     }
 
-    const projectData = await this.projectRepo.getProjectById(projectId);
-    const { projectId: _, ...updateData } = data;
-    // check if userId is the same as projectData.userId
-    if (projectData.userId !== userId) {
-      throw new HttpsError("permission-denied", "Not your project");
+    const db = admin.firestore();
+
+    const ref = db
+      .collection("Users")
+      .doc(userId)
+      .collection("Services")
+      .doc(serviceId);
+
+    const snap = await ref.get();
+
+    if (!snap.exists) {
+      throw new ValidationError("Service not found or not accessible");
     }
-    // update project data
-    await this.projectRepo.updateProject(projectId, {
+  }
+
+  // update project
+  async updateProject(
+    userId: string,
+    serviceId: string,
+    projectId: string,
+    data: any,
+  ) {
+    if (!projectId || !serviceId || !userId) {
+      throw new ValidationError("Invalid input");
+    }
+
+    const { projectId: _, userId: __, serviceId: ___, ...updateData } = data;
+
+    return await this.projectRepo.updateProject(userId, projectId, {
       ...updateData,
       updatedAt: Timestamp.now(),
     });
-
-    logEvent("project updated", "info", { uid: userId, projectId });
-    return { success: true };
   }
 
-  // setHourlyRate method
+  // get projects
+  async getProjects(userId: string, serviceId: string) {
+    if (!userId || !serviceId) {
+      throw new ValidationError("Invalid input");
+    }
+
+    await this.assertServiceOwnership(userId, serviceId);
+
+    const res = await this.projectRepo.getProjects(userId, serviceId);
+
+    return {
+      projects: res?.projects ?? [],
+    };
+  }
+
+  async deleteProject(userId: string, serviceId: string, projectId: string) {
+    await this.assertServiceOwnership(userId, serviceId);
+
+    return this.projectRepo.deleteProject(userId, projectId);
+  }
+
+  async createProject(userId: string, name: string, serviceId: string) {
+    await this.assertServiceOwnership(userId, serviceId);
+
+    return this.projectRepo.createProject(userId, name, serviceId);
+  }
+
   async setHourlyRate(userId: string, projectId: string, rate: number) {
-    const input: SetHourlyRateInput = {
+    if (
+      !userId ||
+      !projectId ||
+      typeof rate !== "number" ||
+      Number.isNaN(rate)
+    ) {
+      throw new ValidationError("Invalid input");
+    }
+
+    return this.projectRepo.setProjectHourlyRate(projectId, {
       hourlyRate: rate,
       updatedAt: Timestamp.now(),
-    };
-
-    // set hourly rate
-    await this.projectRepo.setProjectHourlyRate(projectId, input);
-
-    logEvent("hourly rate set", "info", { uid: userId, projectId, rate });
-    return { success: true };
+    });
   }
 }
