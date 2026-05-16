@@ -62,10 +62,10 @@ describe("Race Condition: rate limit block consistency", () => {
       },
     });
 
-    const success = results.filter((r) => r.success).length;
+    const allowed = results.filter((r) => r.success).length;
 
-    if (success > 3) {
-      throw new Error("Rate limit bypass detected under concurrency");
+    if (allowed > 3) {
+      throw new Error(`Rate limit bypass detected: ${allowed}`);
     }
   });
 });

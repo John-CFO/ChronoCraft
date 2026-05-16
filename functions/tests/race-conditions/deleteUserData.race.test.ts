@@ -47,15 +47,18 @@ describe("Race Condition: deleteUserData - parallel delete storm", () => {
       operation: async () => {
         try {
           return await deleteUserDataHandler(createAuthRequest(uid));
-        } catch {
-          return { success: true };
+        } catch (e) {
+          return {
+            success: false,
+            error: e,
+          };
         }
       },
     });
 
-    const failures = results.filter((r) => r.success === false);
+    const failures = results.filter((r) => !r.success);
 
-    expect(failures.length).toBe(0);
+    expect(failures).toHaveLength(0);
 
     const userDoc = await userRef(uid).get();
     const mfaDoc = await mfaRef(uid).get();
@@ -85,13 +88,16 @@ describe("Race Condition: deleteUserData - TOCTOU (update vs delete)", () => {
 
         try {
           return await deleteUserDataHandler(createAuthRequest(uid));
-        } catch {
-          return { success: true };
+        } catch (e) {
+          return {
+            success: false,
+            error: e,
+          };
         }
       },
     });
 
-    const failures = results.filter((r) => r.success === false);
+    const failures = results.filter((r) => !r.success);
 
     expect(failures.length).toBe(0);
 
@@ -115,13 +121,16 @@ describe("Race Condition: deleteUserData - auth vs firestore deletion ordering",
       operation: async () => {
         try {
           return await deleteUserDataHandler(createAuthRequest(uid));
-        } catch {
-          return { success: true };
+        } catch (e) {
+          return {
+            success: false,
+            error: e,
+          };
         }
       },
     });
 
-    const failures = results.filter((r) => r.success === false);
+    const failures = results.filter((r) => !r.success);
 
     expect(failures.length).toBe(0);
 

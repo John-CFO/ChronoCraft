@@ -27,7 +27,6 @@ export type RaceOptions<T> = {
 export type RaceContext = {
   index: number;
   tick: number;
-  sleep: (ms: number) => Promise<void>;
 };
 
 export type RaceScheduler = {
@@ -64,7 +63,6 @@ export async function runRace<T>({
     const ctx: RaceContext = {
       index,
       tick: sch.tick(),
-      sleep: (ms: number) => sleep(ms),
     };
 
     const delay = jitterMs > 0 ? sch.nextDelay(index) : 0;

@@ -70,9 +70,7 @@ describe("Race Condition: concurrent project updates", () => {
       },
     });
 
-    const failed = (results as RaceResult[]).filter(
-      (r) => !r.success && r.error?.code !== "aborted" && r.error?.code !== 10,
-    );
+    const failed = results.filter((r) => !r.success);
 
     if (failed.length > 0) {
       throw new Error("Concurrent project update failed");

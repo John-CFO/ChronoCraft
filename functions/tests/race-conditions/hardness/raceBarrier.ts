@@ -16,10 +16,13 @@ export class RaceBarrier {
     });
   }
 
+  private released = false;
+
   async waitForAll(): Promise<void> {
     this.readyCount++;
 
-    if (this.readyCount === this.participants) {
+    if (!this.released && this.readyCount >= this.participants) {
+      this.released = true;
       this.resolveStart();
     }
 
