@@ -1,18 +1,31 @@
-///////////////////////////////// security.ts //////////////////////////////////////
+/////////////////////////////// security.ts ////////////////////////////////
 
-// This file contains the security utilities for the cloud functions in the application
-
-////////////////////////////////////////////////////////////////////////////////////
-
-import { onCall, CallableRequest } from "firebase-functions/v2/https";
-
-import { logEvent } from "../utils/logger";
-import { rateLimit } from "../utils/rateLimitInstance";
-import { ValidationError, AuthenticationError } from "../errors/domain.errors";
-import { RateLimitError } from "../errors/domain.errors";
+import { ValidationError } from "../errors/domain.errors";
 import { handleFunctionError } from "../errors/handleFunctionError";
+import { secureCore } from "./secureCore";
 
-////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
+// CallableRequest ohne Firebase dependency
+export type CallableRequest = {
+  auth?: { uid?: string };
+  data?: any;
+  rawRequest?: any;
+};
+
+//////////////////////////////////////////////////////////////////////////////
+
+// Lazy Firebase import (verhindert Jest / build crashes)
+let onCall: any;
+
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  onCall = require("firebase-functions/v2/https").onCall;
+} catch {
+  onCall = (fn: any) => fn; // test / non-firebase environment
+}
+
+//////////////////////////////////////////////////////////////////////////////
 
 // Input validation utilities
 export class InputValidator {
@@ -98,102 +111,29 @@ export class InputValidator {
   }
 }
 
-// Secure function wrapper
-export const secureFunction = (
+//////////////////////////////////////////////////////////////////////////////
+
+// Pure wrapper (TESTABLE, NO Firebase)
+export const secureFunctionInternal = (
   handler: (request: CallableRequest) => Promise<any>,
   options?: {
     requireAuth?: boolean;
-    rateLimit?: { action: string; maxAttempts: number; windowMs: number };
+    rateLimit?: any;
     validation?: (data: any) => void;
   },
 ) => {
-  return onCall(async (request: CallableRequest) => {
-    const startTime = Date.now();
-    const functionName = handler.name || "anonymous";
-
+  return async (request: CallableRequest) => {
     try {
-      // Auth
-      if (options?.requireAuth && !request.auth) {
-        throw new AuthenticationError();
-      }
-
-      // Validation
-      if (options?.validation) {
-        options.validation(request.data);
-      }
-
-      // Sanitizing
-      const sanitizedData = InputValidator.sanitizeObject(request.data || {});
-
-      // ---------------- RATE LIMIT (NEW MODEL) ----------------
-      const rawHeaders = (request as any).rawRequest?.headers ?? {};
-      const forwarded =
-        rawHeaders["x-forwarded-for"] ||
-        rawHeaders["x-real-ip"] ||
-        rawHeaders["x-appengine-user-ip"];
-
-      const clientIp = forwarded
-        ? String(forwarded).split(",")[0].trim()
-        : null;
-
-      const deviceId = (request.data as any)?.deviceId ?? null;
-      const actionName = options?.rateLimit?.action ?? "default";
-
-      if (options?.rateLimit) {
-        try {
-          await rateLimit.check(
-            "security",
-            actionName,
-            {
-              uid: request.auth?.uid || "anon",
-              ip: clientIp || "unknown",
-              deviceId: deviceId || "unknown",
-            },
-            {
-              maxAttempts: options.rateLimit.maxAttempts,
-              windowMs: options.rateLimit.windowMs,
-            },
-          );
-        } catch (e: any) {
-          if (e instanceof RateLimitError || e?.retryAfterSeconds) {
-            throw e;
-          }
-
-          logEvent("ratelimit-check-failed", "error", {
-            error: e?.message ?? String(e),
-          });
-        }
-      }
-
-      // Execute handler
-      const result = await handler({
-        ...request,
-        data: sanitizedData,
-      });
-
-      const duration = Date.now() - startTime;
-
-      logEvent("Function execution completed", "info", {
-        functionName,
-        uid: request.auth?.uid,
-        duration,
-        success: true,
-      });
-
-      return result;
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-
-      logEvent("Function execution failed", "error", {
-        functionName,
-        uid: request.auth?.uid,
-        duration,
-        error: error.message,
-        errorCode: error.code,
-        stack: error.stack,
-      });
-
+      return await secureCore(request, handler, options);
+    } catch (error) {
       throw handleFunctionError(error);
     }
-  });
+  };
+};
+
+//////////////////////////////////////////////////////////////////////////////
+
+// Firebase entrypoint (RUNTIME ONLY)
+export const secureFunction = (handler: any, options?: any) => {
+  return onCall(secureFunctionInternal(handler, options));
 };

@@ -86,6 +86,12 @@ export class AuthenticationError extends DomainError {
   }
 }
 
+export class AuthorizationError extends DomainError {
+  constructor(message = "Not authorized") {
+    super(message, "permission-denied", "Not authorized");
+    this.name = "AuthorizationError";
+  }
+}
 export class RateLimitError extends DomainError {
   public retryAfterSeconds?: number;
 

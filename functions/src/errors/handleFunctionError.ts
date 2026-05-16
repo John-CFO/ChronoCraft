@@ -11,6 +11,7 @@ import { FirebaseFunctionErrorCode } from "./firebaseErrors";
 import { DomainError } from "./domain.errors";
 import { logEvent } from "../utils/logger";
 import { RateLimitError } from "../errors/domain.errors";
+import { AuthorizationError } from "./domain.errors";
 
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -32,13 +33,15 @@ export function handleFunctionError(
 
   // handle DomainError
   if (error instanceof DomainError) {
+    const firebaseErrorCode = mapDomainErrorToFirebase(error.code);
+
+    const level = firebaseErrorCode === "permission-denied" ? "warn" : "error";
+
     logEvent(
       `Domain error in ${functionName || "function"}: ${error.message}`,
-      error.code === "failed-precondition" ? "warn" : "error",
+      level,
       { code: error.code, stack: error?.stack },
     );
-
-    const firebaseErrorCode = mapDomainErrorToFirebase(error.code);
 
     return new HttpsError(
       firebaseErrorCode,
@@ -117,6 +120,8 @@ function mapDomainErrorToFirebase(
   const mapping: Record<string, FirebaseFunctionErrorCode> = {
     "not-found": "not-found",
     "permission-denied": "permission-denied",
+    "authorization-error": "permission-denied",
+    "ownership-error": "permission-denied",
     "validation-error": "invalid-argument",
     "rate-limit-exceeded": "resource-exhausted",
     "authentication-error": "unauthenticated",
@@ -127,6 +132,5 @@ function mapDomainErrorToFirebase(
     "database-error": "internal",
     "external-service-error": "unavailable",
   };
-
   return mapping[domainCode] || "internal";
 }

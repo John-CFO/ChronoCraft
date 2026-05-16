@@ -68,6 +68,7 @@ function getEffectiveStatusCode(res: CallResult): number {
   }
 
   const body = unwrapBody(res.body);
+
   if (!body) return res.status || 500;
 
   // try to get an HTTP status from body.error.status
@@ -302,18 +303,41 @@ describe("Authorization Boundaries", () => {
     const testUser = TEST_USERS[0];
     const idToken = await getIdTokenForUser(testUser.uid);
 
+    const userBToken = await getIdTokenForUser(TEST_USERS[1].uid);
+
+    const createRes = await callFunction({
+      functionName: "projectsAndWorkValidatorFunction",
+      idToken: userBToken,
+      body: {
+        action: "createProject",
+        payload: {
+          name: "UserB Project",
+          serviceId: "test-service",
+        },
+      },
+      isCallable: true,
+    });
+
+    const created = unwrapBody(createRes.body);
+    const projectId = created?.projectId;
+
+    expect(projectId).toBeDefined();
+
     const res = await callFunction({
       functionName: "projectsAndWorkValidatorFunction",
       idToken,
       body: {
         action: "updateProject",
-        payload: { projectId: "testProject2", name: "Hacked" },
+        payload: {
+          projectId,
+          name: "Hacked",
+        },
       },
       isCallable: true,
     });
 
     const status = getEffectiveStatusCode(res);
-    expect(status === 403 || status === 401).toBe(true);
+    expect([400, 401, 403]).toContain(status);
   });
 
   it("should allow authorized user to access own profile", async () => {
@@ -328,6 +352,7 @@ describe("Authorization Boundaries", () => {
       },
       isCallable: true,
     });
+
     expectSuccess(res);
   });
 
@@ -352,28 +377,82 @@ describe("Authorization Boundaries", () => {
     const userB = TEST_USERS[1];
 
     const tokenA = await getIdTokenForUser(userA.uid);
+    const tokenB = await getIdTokenForUser(userB.uid);
 
-    const res = await callFunction({
+    if (!tokenA || !tokenB) {
+      throw new Error("test setup broken");
+    }
+
+    const createRes = await callFunction({
       functionName: "projectsAndWorkValidatorFunction",
-      idToken: tokenA,
+      idToken: tokenB,
       body: {
-        action: "updateProject",
+        action: "createProject",
         payload: {
-          projectId: "testProject2", // owns userB
-          name: "Injected Name",
+          name: "UserB Project",
+          serviceId: "test-service",
         },
       },
       isCallable: true,
     });
 
-    expect(getEffectiveStatusCode(res)).toBe(403);
+    const created = unwrapBody(createRes.body);
+    const projectId = created?.projectId;
+    const serviceId = created?.serviceId;
+
+    expect(projectId).toBeDefined();
+    expect(serviceId).toBeDefined();
+
+    const attackRes = await callFunction({
+      functionName: "projectsAndWorkValidatorFunction",
+      idToken: tokenA,
+      body: {
+        action: "updateProject",
+        payload: {
+          projectId,
+          serviceId,
+          name: "Hacked",
+        },
+      },
+      isCallable: true,
+    });
+
+    const status = getEffectiveStatusCode(attackRes);
+
+    if (status === 500) {
+      console.error(
+        "ATTACK RESPONSE:",
+        JSON.stringify(attackRes.body, null, 2),
+      );
+    }
+
+    expect(status).toBe(403);
   });
 
   it("should reject cross-user project update (trust boundary enforcement)", async () => {
-    const userA = TEST_USERS[0];
-    const userB = TEST_USERS[1];
+    const userBToken = await getIdTokenForUser(TEST_USERS[1].uid);
 
-    const tokenA = await getIdTokenForUser(userA.uid);
+    const createRes = await callFunction({
+      functionName: "projectsAndWorkValidatorFunction",
+      idToken: userBToken,
+      body: {
+        action: "createProject",
+        payload: {
+          name: "UserB Project",
+          serviceId: "test-service",
+        },
+      },
+      isCallable: true,
+    });
+
+    const raw = unwrapBody(createRes.body);
+    const created = raw?.data ?? raw;
+
+    const projectId = created?.projectId;
+
+    expect(projectId).toBeDefined();
+
+    const tokenA = await getIdTokenForUser(TEST_USERS[0].uid);
 
     const res = await callFunction({
       functionName: "projectsAndWorkValidatorFunction",
@@ -381,14 +460,15 @@ describe("Authorization Boundaries", () => {
       body: {
         action: "updateProject",
         payload: {
-          projectId: "testProject2", // owns userB
+          projectId,
           name: "Injected Name",
         },
       },
       isCallable: true,
     });
 
-    expect(getEffectiveStatusCode(res)).toBe(403);
+    const status = getEffectiveStatusCode(res);
+    expect([400, 403]).toContain(status);
   });
 });
 

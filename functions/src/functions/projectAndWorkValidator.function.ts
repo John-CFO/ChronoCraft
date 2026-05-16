@@ -28,11 +28,6 @@ export const projectsAndWorkValidator = onCall(
       throw new ValidationError("Missing request data.");
     }
 
-    const result = await projectsAndWorkValidatorLogic(request);
-    if (!result) {
-      // if logic returns null, throw HttpsError
-      throw new HttpsError("internal", "No result from validator logic");
-    }
-    return result;
+    return await projectsAndWorkValidatorLogic(request);
   },
 );
