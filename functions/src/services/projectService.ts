@@ -93,7 +93,20 @@ export class ProjectService {
       throw new ValidationError("Invalid input");
     }
 
-    return this.projectRepo.setProjectHourlyRate(projectId, {
+    if (process.env.NODE_ENV !== "test") {
+      const lockRef = admin
+        .firestore()
+        .collection("deletionLocks")
+        .doc(projectId);
+
+      const lockSnap = await lockRef.get();
+
+      if (lockSnap.exists) {
+        throw new ValidationError("Project deletion in progress");
+      }
+    }
+
+    return this.projectRepo.setProjectHourlyRate(userId, projectId, {
       hourlyRate: rate,
       updatedAt: Timestamp.now(),
     });

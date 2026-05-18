@@ -81,28 +81,45 @@ export class ProjectRepo {
     };
   }
 
+  // Deletes
   async deleteProject(ownerId: string, projectId: string): Promise<void> {
-    const projectRef = this.db.collection("Projects").doc(projectId);
+    const projectRef = this.projectsRef.doc(projectId);
+    const earningsRef = this.earningsRef.doc(projectId);
+    const deletionLockRef = this.db.collection("deletionLocks").doc(projectId);
 
     await this.db.runTransaction(async (tx) => {
-      const snap = await tx.get(projectRef);
+      const projectSnap = await tx.get(projectRef);
+      const lockSnap = await tx.get(deletionLockRef);
 
-      if (!snap.exists) {
+      if (!projectSnap.exists) {
         throw new ProjectNotFoundError(projectId);
       }
 
-      const data = snap.data();
-
-      if (!data) {
-        throw new ProjectNotFoundError(projectId);
-      }
-
-      if (data.userId !== ownerId) {
+      if (projectSnap.data()?.userId !== ownerId) {
         throw new AuthorizationError("Not your project");
       }
 
+      if (lockSnap.exists) {
+        throw new HttpsError(
+          "failed-precondition",
+          "Deletion already in progress",
+        );
+      }
+
+      tx.set(deletionLockRef, {
+        startedAt: admin.firestore.FieldValue.serverTimestamp(),
+        uid: ownerId,
+      });
+
       tx.delete(projectRef);
+      tx.delete(earningsRef);
     });
+
+    await this.db
+      .collection("deletionLocks")
+      .doc(projectId)
+      .delete()
+      .catch(() => {});
   }
 
   // Writes
@@ -137,27 +154,7 @@ export class ProjectRepo {
     const ref = this.db.collection("Projects").doc(projectId);
 
     await this.db.runTransaction(async (tx) => {
-      const snap = await tx.get(ref);
-
-      if (!snap.exists) {
-        throw new ProjectNotFoundError(projectId);
-      }
-
-      const data = snap.data();
-
-      if (!data) {
-        throw new ProjectNotFoundError(projectId);
-      }
-
-      if (data.userId !== ownerId) {
-        console.error("AUTH ERROR INSTANCE:", {
-          instance:
-            new AuthorizationError("Not your project") instanceof
-            AuthorizationError,
-        });
-
-        throw new AuthorizationError("Not your project");
-      }
+      await this.ensureProjectOwnership(tx, ownerId, ref, projectId);
 
       tx.update(ref, {
         ...this.mapUpdateInput(input),
@@ -168,15 +165,78 @@ export class ProjectRepo {
 
   // Hourly Rate
   async setProjectHourlyRate(
+    ownerId: string,
     projectId: string,
     input: SetHourlyRateInput,
   ): Promise<void> {
-    await this.earningsRef.doc(projectId).set(input, { merge: true });
+    const projectRef = this.projectsRef.doc(projectId);
+    const earningsRef = this.earningsRef.doc(projectId);
+    const deletionLockRef = this.db.collection("deletionLocks").doc(projectId);
+
+    await this.db.runTransaction(async (tx) => {
+      const [projectSnap, lockSnap] = await Promise.all([
+        tx.get(projectRef),
+        tx.get(deletionLockRef),
+      ]);
+
+      if (!projectSnap.exists) {
+        throw new ProjectNotFoundError(projectId);
+      }
+
+      const data = projectSnap.data();
+
+      if (!data || data.userId !== ownerId) {
+        throw new AuthorizationError("Not your project");
+      }
+
+      if (lockSnap.exists) {
+        throw new HttpsError(
+          "failed-precondition",
+          "Project deletion in progress",
+        );
+      }
+
+      tx.set(earningsRef, input, { merge: true });
+    });
   }
 
   // Deletes
-  async deleteProjectEarnings(projectId: string): Promise<void> {
-    await this.earningsRef.doc(projectId).delete();
+  async deleteProjectEarnings(
+    ownerId: string,
+    projectId: string,
+  ): Promise<void> {
+    const projectRef = this.projectsRef.doc(projectId);
+    const earningsRef = this.earningsRef.doc(projectId);
+
+    await this.db.runTransaction(async (tx) => {
+      await this.ensureProjectOwnership(tx, ownerId, projectRef, projectId);
+
+      tx.delete(earningsRef);
+    });
+  }
+
+  // Ownership
+  private async ensureProjectOwnership(
+    tx: FirebaseFirestore.Transaction,
+    ownerId: string,
+    projectRef: FirebaseFirestore.DocumentReference,
+    projectId: string,
+  ): Promise<void> {
+    const snap = await tx.get(projectRef);
+
+    if (!snap.exists) {
+      throw new ProjectNotFoundError(projectId);
+    }
+
+    const data = snap.data();
+
+    if (!data) {
+      throw new ProjectNotFoundError(projectId);
+    }
+
+    if (data.userId !== ownerId) {
+      throw new AuthorizationError("Not your project");
+    }
   }
 
   // Mapping (Firestore → Domain)

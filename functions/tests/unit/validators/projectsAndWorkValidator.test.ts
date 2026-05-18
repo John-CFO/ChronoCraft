@@ -94,6 +94,39 @@ describe("projectsAndWorkValidator", () => {
     expect(result).toEqual({ success: true });
   });
 
+  it("propagates updateProject errors", async () => {
+    mockUpdateProject.mockRejectedValue(new Error("DB error"));
+
+    await expect(
+      projectsAndWorkValidatorLogic(
+        makeRequest(
+          {
+            action: "updateProject",
+            payload: {
+              projectId: "p1",
+              serviceId: "s1",
+              name: "New Name",
+            },
+          },
+          { uid: "u1" },
+        ),
+      ),
+    ).rejects.toThrow("Internal server error.");
+  });
+
+  it("propagates setHourlyRate errors", async () => {
+    mockSetHourlyRate.mockRejectedValue(new Error("DB error"));
+
+    await expect(
+      projectsAndWorkValidatorLogic(
+        makeRequest(
+          { action: "setHourlyRate", payload: { projectId: "p1", rate: 50 } },
+          { uid: "u1" },
+        ),
+      ),
+    ).rejects.toThrow("Internal server error.");
+  });
+
   it("rejects unknown action", async () => {
     await expect(
       projectsAndWorkValidatorLogic(
