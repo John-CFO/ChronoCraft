@@ -48,6 +48,16 @@ describe("ProjectService Unit Tests", () => {
       expect(result).toBeUndefined();
     });
 
+    it("propagates repo error on updateProject", async () => {
+      repo.updateProject.mockRejectedValue(new Error("DB error"));
+
+      await expect(
+        service.updateProject("user123", "serviceId", "project1", {
+          name: "New Name",
+        }),
+      ).rejects.toThrow("DB error");
+    });
+
     it("should throw if input is invalid (missing ids)", async () => {
       await expect(
         service.updateProject("", "serviceId", "user123", {}),
@@ -70,6 +80,7 @@ describe("ProjectService Unit Tests", () => {
       const result = await service.setHourlyRate("user123", "project1", 50);
 
       expect(repo.setProjectHourlyRate).toHaveBeenCalledWith(
+        "user123",
         "project1",
         expect.objectContaining({
           hourlyRate: 50,
@@ -78,6 +89,14 @@ describe("ProjectService Unit Tests", () => {
       );
 
       expect(result).toBeUndefined();
+    });
+
+    it("propagates repo error on setHourlyRate", async () => {
+      repo.setProjectHourlyRate.mockRejectedValue(new Error("DB error"));
+
+      await expect(
+        service.setHourlyRate("user123", "project1", 50),
+      ).rejects.toThrow("DB error");
     });
 
     it("should throw if repo fails", async () => {

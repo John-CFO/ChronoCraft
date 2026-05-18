@@ -70,13 +70,21 @@ export function decrypt(encryptedData: string, rawKey: string): string {
   const key = deriveEncryptionKey(rawKey);
   const parts = encryptedData.split(":");
   if (parts.length !== 3) throw new ValidationError("Corrupted TOTP secret");
+
   const iv = Buffer.from(parts[0], "hex");
   const authTag = Buffer.from(parts[1], "hex");
   const encryptedText = Buffer.from(parts[2], "hex");
+
   const decipher = Crypto.createDecipheriv("aes-256-gcm", key, iv);
   decipher.setAuthTag(authTag);
+
   const decrypted = decipher.update(encryptedText);
-  return Buffer.concat([decrypted, decipher.final()]).toString("utf8");
+
+  try {
+    return Buffer.concat([decrypted, decipher.final()]).toString("utf8");
+  } catch (e) {
+    throw new ValidationError("Corrupted TOTP secret");
+  }
 }
 
 // Handler

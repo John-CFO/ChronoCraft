@@ -61,6 +61,12 @@ export const deleteUserDataHandler = async (request: any) => {
   if (!uid || typeof uid !== "string") {
     throw new HttpsError("unauthenticated", "Not logged in");
   }
+  const userDocRef = admin.firestore().collection("Users").doc(uid);
+
+  const snap = await userDocRef.get();
+  if (!snap.exists) {
+    return { success: true };
+  }
 
   const db = admin.firestore();
 
@@ -72,12 +78,18 @@ export const deleteUserDataHandler = async (request: any) => {
     await db.runTransaction(async (tx) => {
       const lockSnap = await tx.get(deletionLockRef);
 
-      if (!lockSnap.exists) {
-        tx.set(deletionLockRef, {
-          startedAt: admin.firestore.FieldValue.serverTimestamp(),
-          uid,
-        });
+      if (lockSnap.exists) {
+        throw new HttpsError(
+          "failed-precondition",
+          "Deletion already in progress",
+        );
       }
+
+      tx.set(deletionLockRef, {
+        startedAt: admin.firestore.FieldValue.serverTimestamp(),
+        uid,
+        earningsLocked: true,
+      });
     });
 
     await deleteStorageObjects(uid).catch(() => {});
