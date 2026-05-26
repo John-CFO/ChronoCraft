@@ -21,11 +21,12 @@ import React, { useEffect, useState, useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { User, getAuth } from "firebase/auth";
 import * as ImagePicker from "expo-image-picker";
+import { doc, getDoc } from "firebase/firestore";
 
-import { FIREBASE_AUTH } from "../firebaseConfig";
+import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import DismissKeyboard from "../components/DismissKeyboard";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
-import { sanitizeName, sanitizePersonalID } from "./InputSanitizers";
+import { sanitizeName, sanitizePersonalNumber } from "./InputSanitizers";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import { handleSaveProfile } from "../components/utils/handleSaveProfile";
 
@@ -67,8 +68,10 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   }, []);
 
   // state declaration for the edit properties
-  const [newName, setNewName] = useState("");
-  const [newPersonalID, setNewPersonalID] = useState("");
+  const [newName, setNewName] = useState(user.displayName ?? "");
+  const [newPersonalNumber, setNewPersonalNumber] = useState(
+    (user as any)?.personalNumber ?? "",
+  );
   const [imageUri, setImageUri] = useState<string | null>(null);
 
   // screensize for dynamic size calculation
@@ -77,6 +80,26 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   if (!user) {
     return null;
   }
+
+  // get the personal number from the user firestore
+  useEffect(() => {
+    const loadProfile = async () => {
+      const ref = doc(FIREBASE_FIRESTORE, "Users", user.uid);
+      const snap = await getDoc(ref);
+
+      if (!snap.exists()) return;
+
+      const data = snap.data();
+
+      if (typeof data.personalNumber === "string") {
+        setNewPersonalNumber(data.personalNumber);
+      } else {
+        setNewPersonalNumber("");
+      }
+    };
+
+    loadProfile();
+  }, [user.uid]);
 
   // hook to request media library permissions on component mount
   useEffect(() => {
@@ -88,7 +111,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
           .getState()
           .showAlert(
             "Permission Error",
-            "Sorry, we need camera roll permissions to make this work!"
+            "Sorry, we need camera roll permissions to make this work!",
           );
       }
     };
@@ -126,7 +149,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     await handleSaveProfile({
       userId: currentUser.uid,
       newName,
-      newPersonalID,
+      newPersonalNumber: newPersonalNumber,
       imageUri,
       showAlert: useAlertStore.getState().showAlert,
       onClose,
@@ -136,7 +159,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
 
   return (
@@ -307,9 +330,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 accessibilityHint="Enter your personal ID"
                 placeholder="Personal-ID"
                 placeholderTextColor={accessMode ? "white" : "grey"}
-                value={newPersonalID}
+                value={newPersonalNumber}
                 onChangeText={(text) =>
-                  setNewPersonalID(sanitizePersonalID(text))
+                  setNewPersonalNumber(sanitizePersonalNumber(text))
                 }
                 keyboardType="numeric"
                 style={{

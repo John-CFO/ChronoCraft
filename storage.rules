@@ -1,4 +1,5 @@
 rules_version = '2';
+
 service firebase.storage {
   match /b/{bucket}/o {
 
@@ -6,8 +7,9 @@ service firebase.storage {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+    function isOwner(uid) {
+      return isSignedIn() &&
+        request.auth.uid == uid;
     }
 
     function isValidImage() {
@@ -19,13 +21,22 @@ service firebase.storage {
       request.resource.size < 5 * 1024 * 1024;
     }
 
-    match /profilePictures/{userId}/{fileName} {
+    // TEMP UPLOADS
+    match /profilePictures/{uid}/temp/{allPaths=**} {
 
-      allow read: if isOwner(userId);
+      allow write: if isOwner(uid)
+        && isValidImage();
 
-      allow write: if isOwner(userId) && isValidImage();
+      allow read: if false;
+    }
 
-      allow list: if false;
+    // FINAL PROFILE IMAGE
+    match /profilePictures/{uid}/current.jpg {
+
+      allow read: if true;
+
+      // only backend should overwrite current.jpg
+      allow write: if false;
     }
   }
 }

@@ -44,39 +44,39 @@ describe("FirestoreUserUpdateSchema (client)", () => {
     expect(result.success).toBe(false);
   });
 
-  it("accepts valid personalID", () => {
+  it("accepts valid personalNumber", () => {
     const result = FirestoreUserUpdateSchema.safeParse({
-      personalID: "User_123-ABC",
+      personalNumber: "User_123-ABC",
     });
 
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.personalID).toBe("User_123-ABC");
+      expect(result.data.personalNumber).toBe("User_123-ABC");
     }
   });
 
-  it("transforms empty personalID to undefined", () => {
+  it("transforms empty personalNumber to undefined", () => {
     const result = FirestoreUserUpdateSchema.safeParse({
-      personalID: "",
+      personalNumber: "",
     });
 
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.personalID).toBeUndefined();
+      expect(result.data.personalNumber).toBeUndefined();
     }
   });
 
-  it("rejects personalID with invalid characters", () => {
+  it("rejects personalNumber with invalid characters", () => {
     const result = FirestoreUserUpdateSchema.safeParse({
-      personalID: "invalid id!",
+      personalNumber: "invalid id!",
     });
 
     expect(result.success).toBe(false);
   });
 
-  it("rejects personalID shorter than 4 chars", () => {
+  it("rejects personalNumber shorter than 4 chars", () => {
     const result = FirestoreUserUpdateSchema.safeParse({
-      personalID: "abc",
+      personalNumber: "abc",
     });
 
     expect(result.success).toBe(false);

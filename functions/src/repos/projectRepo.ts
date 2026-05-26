@@ -10,6 +10,7 @@ import { HttpsError } from "firebase-functions/v2/https";
 import { Timestamp } from "firebase-admin/firestore";
 
 import { DomainError, AuthorizationError } from "../errors/domain.errors";
+import { logEvent } from "../utils/logger";
 
 //////////////////////////////////////////////////////////////////////
 
@@ -115,13 +116,16 @@ export class ProjectRepo {
       tx.delete(earningsRef);
     });
 
-    await this.db
-      .collection("deletionLocks")
-      .doc(projectId)
-      .delete()
-      .catch(() => {});
+    try {
+      await this.db.collection("deletionLocks").doc(projectId).delete();
+    } catch (err: any) {
+      logEvent("project-deletion-lock-cleanup-failed", "error", {
+        projectId,
+        ownerId,
+        error: err?.message ?? String(err),
+      });
+    }
   }
-
   // Writes
   async createProject(userId: string, name: string, serviceId: string) {
     const ref = this.db.collection("Projects").doc();
@@ -174,19 +178,12 @@ export class ProjectRepo {
     const deletionLockRef = this.db.collection("deletionLocks").doc(projectId);
 
     await this.db.runTransaction(async (tx) => {
-      const [projectSnap, lockSnap] = await Promise.all([
-        tx.get(projectRef),
-        tx.get(deletionLockRef),
-      ]);
+      const projectSnap = await tx.get(projectRef);
+
+      const lockSnap = await tx.get(deletionLockRef);
 
       if (!projectSnap.exists) {
         throw new ProjectNotFoundError(projectId);
-      }
-
-      const data = projectSnap.data();
-
-      if (!data || data.userId !== ownerId) {
-        throw new AuthorizationError("Not your project");
       }
 
       if (lockSnap.exists) {
@@ -194,6 +191,12 @@ export class ProjectRepo {
           "failed-precondition",
           "Project deletion in progress",
         );
+      }
+
+      const data = projectSnap.data();
+
+      if (!data || data.userId !== ownerId) {
+        throw new AuthorizationError("Not your project");
       }
 
       tx.set(earningsRef, input, { merge: true });

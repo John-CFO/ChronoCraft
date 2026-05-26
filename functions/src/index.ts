@@ -28,24 +28,35 @@ function parseFirebaseConfig(): FirebaseConfig {
 }
 
 if (!admin.apps.length) {
-  const firebaseConfig = parseFirebaseConfig();
-  const appOptions: admin.AppOptions = {};
-
-  if (firebaseConfig.storageBucket) {
-    appOptions.storageBucket = firebaseConfig.storageBucket;
+  // Für den Emulator den korrekten Bucket erzwingen
+  if (process.env.FUNCTIONS_EMULATOR === "true") {
+    admin.initializeApp({
+      storageBucket: "chrono-craft-worktime-manager.appspot.com",
+    });
+  } else {
+    // Produktiv: aus FIREBASE_CONFIG lesen (oder Fallback)
+    const firebaseConfig = parseFirebaseConfig();
+    const appOptions: admin.AppOptions = {};
+    if (firebaseConfig.storageBucket) {
+      appOptions.storageBucket = firebaseConfig.storageBucket;
+    }
+    admin.initializeApp(appOptions);
   }
-
-  admin.initializeApp(appOptions);
 }
 
 // HTTP handlers
 import { authValidator } from "./functions/authValidator.function";
 import { registerPushToken } from "./functions/registerPushToken.function";
-import { profileValidator } from "./functions/profileValidator.function";
 import { projectsAndWorkValidator } from "./functions/projectAndWorkValidator.function";
 import { secureDelete } from "./functions/secureDelete.function";
 import { deleteUserDataHandler } from "./functions/deleteUserData.function";
 import { requestPasswordReset } from "./functions/requestPasswordReset.function";
+
+// Profile handlers
+// import { profileValidator } from "./functions/profileValidator.function";
+import { profileUploadInit } from "./functions/profileUploadInit.function";
+import { profileFinalize } from "./functions/profileFinalize.function";
+import { profileCleanup } from "./functions/profileCleanup.function";
 
 // TOTP handlers
 import {
@@ -60,9 +71,12 @@ import { disableTotpHandler } from "./functions/disableTotp.function";
 
 // Export all functions with clear naming for deployment and testing
 export const authValidatorFunction = authValidator;
-export const profileValidatorFunction = profileValidator;
+// export const profileValidatorFunction = profileValidator;
 export const projectsAndWorkValidatorFunction = projectsAndWorkValidator;
 export const secureDeleteFunction = secureDelete;
+export const profileUploadInitFunction = profileUploadInit;
+export const profileFinalizeFunction = profileFinalize;
+export const profileCleanupFunction = profileCleanup;
 
 // Callable Functions
 export const checkTotpStatus = onCall({ cors: true }, checkTotpStatusHandler);

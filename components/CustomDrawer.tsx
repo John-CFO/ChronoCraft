@@ -30,10 +30,15 @@ import { Feather } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
 import Modal from "react-native-modal";
 import { getDoc, doc } from "firebase/firestore";
+import { getDownloadURL, ref } from "firebase/storage";
 
 import { AuthContext } from "../components/contexts/AuthContext";
 import EditProfileModal from "./EditProfileModal";
-import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
+import {
+  FIREBASE_AUTH,
+  FIREBASE_FIRESTORE,
+  FIREBASE_STORAGE,
+} from "../firebaseConfig";
 import FAQBottomSheet from "./FAQBottomSheet";
 import { MergedUser } from "./types/CustomUser";
 import RestartTourButton from "./../components/services/copilotTour/RestartTourButton";
@@ -60,6 +65,9 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
 
   // declare state for user data
   const [user, setLocalUser] = useState<MergedUser | null>(null);
+
+  //declare state for user profile image
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
 
   // declare the auth context
   const { setUser, setStage } = useContext(AuthContext);
@@ -110,7 +118,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         ...currentUser,
         uid: currentUser.uid,
         displayName: data.displayName ?? undefined,
-        personalID: data.personalID ?? undefined,
+        personalNumber: data.personalNumber ?? undefined,
         photoURL: data.photoURL ?? undefined,
         totpEnabled: data.totp?.enabled ?? false,
         hasSeenHomeTour: data.hasSeenHomeTour ?? false,
@@ -133,6 +141,28 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
   useEffect(() => {
     fetchUserProfile();
   }, []);
+
+  useEffect(() => {
+    const loadProfileImage = async () => {
+      if (!user?.photoURL) {
+        setProfileImageUrl(null);
+        return;
+      }
+
+      try {
+        const downloadUrl = await getDownloadURL(
+          ref(FIREBASE_STORAGE, user.photoURL),
+        );
+
+        setProfileImageUrl(downloadUrl);
+      } catch (error) {
+        console.error("Failed to load profile image:", error);
+        setProfileImageUrl(null);
+      }
+    };
+
+    loadProfileImage();
+  }, [user?.photoURL]);
 
   // Hook to check if user is enrolled
   useEffect(() => {
@@ -246,6 +276,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
 
       <ImageBackground>
         {/* user profile image */}
+
         <Image
           accessibilityRole="image"
           accessibilityLabel={
@@ -254,8 +285,8 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
               : "Default profile picture"
           }
           source={
-            user?.photoURL // render user image or default image
-              ? { uri: user.photoURL }
+            profileImageUrl // render user image or default image
+              ? { uri: profileImageUrl }
               : require("../assets/profile_avatar.png")
           }
           style={{
@@ -296,7 +327,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         >
           Personal-ID:{" "}
           <Text style={{ color: "white" }}>
-            {user?.personalID || "Unknown"}
+            {user?.personalNumber || "Unknown"}
           </Text>
         </Text>
       </View>

@@ -16,7 +16,7 @@
 
 export interface UserProfile {
   uid?: string;
-  personalID?: string | null;
+  personalNumber?: string | null;
   email?: string | null;
   firstLogin?: boolean;
   totpEnabled?: boolean;

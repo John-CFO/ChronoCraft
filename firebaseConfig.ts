@@ -16,6 +16,7 @@ import {
   Firestore,
   connectFirestoreEmulator,
 } from "firebase/firestore";
+import { connectStorageEmulator } from "firebase/storage";
 import {
   getFunctions,
   Functions,
@@ -58,6 +59,7 @@ const functions: Functions = getFunctions(firebaseApp, "us-central1");
 //   connectFirestoreEmulator(firestore, host, 8001);
 //   connectFunctionsEmulator(functions, host, 4001);
 //   connectAuthEmulator(auth, `http://${host}:5001/`);
+//   connectStorageEmulator(storage, host, 9199);
 //   console.log("🔥 Connected to Firebase Emulators");
 // }
 

@@ -4,6 +4,11 @@
 
 /////////////////////////////////////////////////////////////////////////////////
 
+// Emulator configuration to point to local emulator when running e2e tests
+process.env.FIREBASE_STORAGE_EMULATOR_HOST = "127.0.0.1:9199";
+
+/////////////////////////////////////////////////////////////////////////////////
+
 import * as admin from "firebase-admin";
 
 import {
@@ -19,22 +24,15 @@ import path from "path";
 jest.setTimeout(300000);
 
 /////////////////////////////////////////////////////////////////////////////////
-// Admin SDK Setup
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    projectId: process.env.GCLOUD_PROJECT || "chrono-craft-worktime-manager",
-  });
+// interface for test users
+export interface TestUser {
+  uid: string;
+  email: string;
+  displayName: string;
 }
 
-const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST;
-if (emulatorHost) {
-  const host = emulatorHost.replace("http://", "");
-  admin.firestore().settings({
-    host,
-    ssl: false,
-  });
-}
+/////////////////////////////////////////////////////////////////////////////////
 
 // Rate-limits lenient
 process.env.RL_UID_MAX_ATTEMPTS = process.env.RL_UID_MAX_ATTEMPTS ?? "1000";
@@ -54,6 +52,29 @@ export const PROJECT_ID =
   process.env.GCLOUD_PROJECT || "chrono-craft-worktime-manager";
 export const REGION = process.env.FUNCTIONS_REGION || "us-central1";
 
+// Admin SDK Setup
+if (!admin.apps.length) {
+  admin.initializeApp({
+    projectId: PROJECT_ID,
+    storageBucket: `${PROJECT_ID}.appspot.com`,
+  });
+}
+
+// ensure firestore points to emulator
+admin.firestore().settings({
+  host: "127.0.0.1:8001",
+  ssl: false,
+});
+
+const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST;
+if (emulatorHost) {
+  const host = emulatorHost.replace("http://", "");
+  admin.firestore().settings({
+    host,
+    ssl: false,
+  });
+}
+
 // function to reset rate limit state
 export const resetRateLimitState = async (_uid: string) => {
   const db = admin.firestore();
@@ -64,13 +85,6 @@ export const resetRateLimitState = async (_uid: string) => {
       .catch(() => {});
   }
 };
-
-// interface for test users
-export interface TestUser {
-  uid: string;
-  email: string;
-  displayName: string;
-}
 
 // declare test users
 export const TEST_USERS: TestUser[] = [

@@ -1,12 +1,19 @@
 //////////////////////// deleteUserData.race.test.ts ////////////////////////
 
+// This file contains race condition tests for the deleteUserData function
+
+//////////////////////////////////////////////////////////////////////////////
+
+import "./setup";
 import { deleteUserDataHandler } from "../../src/functions/deleteUserData.function";
 import { admin } from "../firebaseAdminTest";
 import { runRace } from "./hardness/raceRunner";
+import { randomUUID } from "crypto";
 
 /////////////////////////////////////////////////////////////////////////////
 
-const createUid = () => `race-delete-${Date.now()}-${Math.random()}`;
+// fully isolated deterministic test IDs
+const createUid = () => `race-delete-${randomUUID()}`;
 
 const createAuthRequest = (uid: string) =>
   ({
@@ -34,6 +41,8 @@ async function seedUserState(uid: string) {
     encryptedSecret: "dummy",
   });
 }
+
+//////////////////////////////////////////////////////////////////////////////
 
 describe("Race Condition: deleteUserData - parallel delete storm", () => {
   it("must be idempotent under concurrent deletion", async () => {

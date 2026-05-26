@@ -69,7 +69,7 @@ export const sanitizeName = (text: string) =>
   text.replace(/[^a-zA-ZäöüÄÖÜß\s\-]/g, "").slice(0, 40);
 
 // allow only digits, max 15 characters (e.g for a personalID)
-export const sanitizePersonalID = (text: string) =>
+export const sanitizePersonalNumber = (text: string) =>
   text.replace(/\D/g, "").slice(0, 15);
 
 // sanitize the max work hours inside the Deathline-Tracker

@@ -1,16 +1,21 @@
 //////////////////////////////////////storage.ts/////////////////////////////////
 
-// This file contains the uploadImageToProfile function, which is used to upload an image to Firebase Storage and return the URL to the image
+// This file contains the uploadImageToProfile function,
+// which is used to upload an image to Firebase Storage and return the URL to the image
 
 ////////////////////////////////////////////////////////////////////////////////
 
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { FIREBASE_STORAGE } from "../../firebaseConfig";
 
+////////////////////////////////////////////////////////////////////////////////
+
+// constants
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
 
 export async function uploadImageToProfile(
   uri: string,
-  userId: string
+  userId: string,
 ): Promise<string> {
   // basic input checks
   if (typeof uri !== "string" || !uri.trim()) {
@@ -54,11 +59,11 @@ export async function uploadImageToProfile(
   const path = `profilePictures/${encodeURIComponent(userId)}/${filename}`;
 
   // use default storage (no firebaseConfig import here)
-  const storage = getStorage();
-  const storageRef = ref(storage, path);
-  const uploadResult = await uploadBytes(storageRef, blob);
+  const storageRef = ref(FIREBASE_STORAGE, path);
+  const uploadResult = await uploadBytes(storageRef, blob, {
+    contentType: "image/jpeg",
+  });
 
   // get URL
-  const downloadURL = await getDownloadURL(uploadResult.ref);
-  return downloadURL;
+  return await getDownloadURL(uploadResult.ref);
 }

@@ -4,6 +4,8 @@
 
 ///////////////////////////////////////////////////////////////////////////////////
 
+import "./setup";
+import { randomUUID } from "crypto";
 import { ProjectService } from "../../src/services/projectService";
 import { runRace } from "./hardness/raceRunner";
 import { admin } from "../firebaseAdminTest";
@@ -19,13 +21,15 @@ type RaceResult = {
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-const ownerUid = "owner";
-const serviceId = "race-service";
-const projectId = `race-project-${Date.now()}`;
+// fully isolated deterministic IDs
+const ownerUid = `owner-${randomUUID()}`;
+const serviceId = `race-service-${randomUUID()}`;
+const projectId = `race-project-${randomUUID()}`;
 
 // get project ref
 const projectRef = (id: string) =>
   admin.firestore().collection("Projects").doc(id);
+
 const seedProject = async (id: string) => {
   await projectRef(id).set({
     userId: ownerUid,
@@ -48,6 +52,8 @@ const isValidProjectState = (raw: any) => {
   if (!(raw.updatedAt instanceof admin.firestore.Timestamp)) return false;
   return true;
 };
+
+////////////////////////////////////////////////////////////////////////////////////
 
 describe("Race Condition: concurrent project updates", () => {
   it("must preserve valid project state under parallel writes", async () => {
