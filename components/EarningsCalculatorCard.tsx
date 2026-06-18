@@ -103,22 +103,24 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
       const data = docSnap.data();
 
       // hourlyRate: validate client input
-      let hourlyRate = 0;
-      if (
-        typeof data.hourlyRate === "number" &&
-        data.hourlyRate >= 0 &&
-        data.hourlyRate <= 10000
-      ) {
-        hourlyRate = data.hourlyRate;
+      const raw = data.hourlyRate;
+
+      let hourlyRate: number | null = null;
+
+      if (raw === undefined || raw === null) {
+        hourlyRate = null;
+      } else if (typeof raw === "number" && raw >= 0 && raw <= 10000) {
+        hourlyRate = raw;
       } else {
-        console.warn("Invalid hourlyRate value, using 0");
+        console.warn("Invalid hourlyRate value (corrupted data)");
+        hourlyRate = null;
       }
 
       // totalEarnings: adopt directly, fallback 0
       const totalEarnings =
         typeof data.totalEarnings === "number" ? data.totalEarnings : 0;
 
-      setHourlyRate(projectId, hourlyRate);
+      setHourlyRate(projectId, hourlyRate ?? 0);
       useStore.getState().setTotalEarnings(projectId, totalEarnings);
     } catch (error) {
       console.error("Error fetching earnings data:", error);
