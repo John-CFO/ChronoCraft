@@ -15,7 +15,6 @@ import { ValidationError } from "../errors/domain.errors";
 type ProfileUpdateInput = {
   displayName?: string | null;
   personalNumber?: string | null;
-  photoURL?: string | null;
 };
 
 // /////////////////////////////////////////////////////////////////////////////////
@@ -34,7 +33,7 @@ export class ProfileService {
       throw new ValidationError("Invalid payload.");
     }
 
-    const allowedFields = ["displayName", "personalNumber", "photoURL"];
+    const allowedFields = ["displayName", "personalNumber"];
     const sanitizedData: Record<string, unknown> = {};
 
     // reject unknown fields (security boundary)
@@ -80,15 +79,6 @@ export class ProfileService {
       }
 
       sanitizedData.personalNumber = value;
-    }
-
-    // photoURL passthrough (already validated in storage layer)
-    if (data.photoURL != null) {
-      if (typeof data.photoURL !== "string") {
-        throw new ValidationError("photoURL must be a string");
-      }
-
-      sanitizedData.photoURL = data.photoURL;
     }
 
     if (Object.keys(sanitizedData).length === 0) {

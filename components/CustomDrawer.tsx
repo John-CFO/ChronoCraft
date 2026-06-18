@@ -1,4 +1,4 @@
-//////////////////////////////////////custom drawer component//////////////////////////////////////////
+//////////////////////////////////////CustomDrawer Component//////////////////////////////////////////
 
 // this coponent is used to create the custom  user-specific drawer
 // it includes the Edit Profile modal, the FAQ bottom sheet, the drawer item list as component and the logout function
@@ -29,16 +29,11 @@ import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { Feather } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
 import Modal from "react-native-modal";
-import { getDoc, doc } from "firebase/firestore";
-import { getDownloadURL, ref } from "firebase/storage";
+import { getDoc, doc, onSnapshot } from "firebase/firestore";
 
 import { AuthContext } from "../components/contexts/AuthContext";
 import EditProfileModal from "./EditProfileModal";
-import {
-  FIREBASE_AUTH,
-  FIREBASE_FIRESTORE,
-  FIREBASE_STORAGE,
-} from "../firebaseConfig";
+import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import FAQBottomSheet from "./FAQBottomSheet";
 import { MergedUser } from "./types/CustomUser";
 import RestartTourButton from "./../components/services/copilotTour/RestartTourButton";
@@ -119,7 +114,6 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         uid: currentUser.uid,
         displayName: data.displayName ?? undefined,
         personalNumber: data.personalNumber ?? undefined,
-        photoURL: data.photoURL ?? undefined,
         totpEnabled: data.totp?.enabled ?? false,
         hasSeenHomeTour: data.hasSeenHomeTour ?? false,
         hasSeenVacationTour: data.hasSeenVacationTour ?? false,
@@ -142,27 +136,21 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
     fetchUserProfile();
   }, []);
 
+  // hook to fetch user profile image
   useEffect(() => {
-    const loadProfileImage = async () => {
-      if (!user?.photoURL) {
-        setProfileImageUrl(null);
-        return;
-      }
+    const currentUser = FIREBASE_AUTH.currentUser;
+    if (!currentUser?.uid) return;
 
-      try {
-        const downloadUrl = await getDownloadURL(
-          ref(FIREBASE_STORAGE, user.photoURL),
-        );
+    const userRef = doc(FIREBASE_FIRESTORE, "Users", currentUser.uid);
 
-        setProfileImageUrl(downloadUrl);
-      } catch (error) {
-        console.error("Failed to load profile image:", error);
-        setProfileImageUrl(null);
-      }
-    };
+    const unsubscribe = onSnapshot(userRef, (snap) => {
+      const data = snap.data();
 
-    loadProfileImage();
-  }, [user?.photoURL]);
+      setProfileImageUrl(data?.photoURL ?? null);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // Hook to check if user is enrolled
   useEffect(() => {
@@ -178,7 +166,6 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         const snap = await getDoc(userRef);
 
         if (snap.exists()) {
-          const data = snap.data();
           setIsEnrolled(snap.exists() ? !!snap.data()?.totp?.enabled : false);
         }
       } catch (err) {

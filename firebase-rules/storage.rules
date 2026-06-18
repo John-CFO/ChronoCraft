@@ -1,0 +1,43 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isValidImage() {
+      return request.resource.contentType.matches('image/.*')
+        && request.resource.contentType in [
+          'image/jpeg',
+          'image/png',
+          'image/webp'
+        ]
+        && request.resource.size > 1024      // min 1KB (block empty junk)
+        && request.resource.size < 5 * 1024 * 1024;
+    }
+
+    function isReasonableWriteRate() {
+      // Firebase Rules has NO real RateLimiting
+      // → only heuristic limiting by MetaData
+      return true;
+    }
+
+     match /profilePictures/{uid}/current.jpg {
+
+  allow read: if true;
+
+  allow write: if
+    request.auth != null &&
+    request.auth.uid == uid &&
+    request.resource.contentType.matches('image/.*') &&
+    request.resource.size > 1024 &&
+    request.resource.size < 5 * 1024 * 1024;
+}
+  }
+}

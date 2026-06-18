@@ -26,6 +26,4 @@ export interface UserProfile {
   hasSeenWorkHoursTour?: boolean;
   hasSeenDetailsTour?: boolean;
   createdAt?: Date;
-
-  photoURL?: string | null;
 }

@@ -1,69 +1,56 @@
-//////////////////////////////////////storage.ts/////////////////////////////////
+////////////////////////////////////// storage.ts //////////////////////////////////////
 
 // This file contains the uploadImageToProfile function,
-// which is used to upload an image to Firebase Storage and return the URL to the image
+// which is used to upload an image to Firebase Storage and return the URL to the image.
 
-////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
 
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { FIREBASE_STORAGE } from "../../firebaseConfig";
 
-////////////////////////////////////////////////////////////////////////////////
+import { FIREBASE_STORAGE, FIREBASE_AUTH } from "../../firebaseConfig";
 
-// constants
-const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+//////////////////////////////////////////////////////////////////////////////////////////
 
-export async function uploadImageToProfile(
-  uri: string,
-  userId: string,
-): Promise<string> {
-  // basic input checks
-  if (typeof uri !== "string" || !uri.trim()) {
-    throw new Error("Invalid image URI");
-  }
-  if (typeof userId !== "string" || !userId.trim()) {
-    throw new Error("Invalid userId");
+export async function uploadImageToProfile(uri: string): Promise<string> {
+  // check if user is authenticated
+  const authUser = FIREBASE_AUTH.currentUser;
+
+  if (!authUser?.uid) {
+    throw new Error("User not authenticated");
   }
 
-  // allow safe userId characters only (adjust if UIDs contain other chars)
-  const userIdPattern = /^[a-zA-Z0-9_\-]{1,256}$/;
-  if (!userIdPattern.test(userId)) {
-    throw new Error("Invalid userId format");
-  }
+  // get user id
+  const uid = authUser.uid;
 
-  // fetch resource
+  // upload image
   const res = await fetch(uri);
-  if (!res.ok) throw new Error("Failed to fetch image resource");
 
+  // convert image to blob
   const blob = await res.blob();
 
-  // validate mime type
-  const mime = (blob as any).type || "";
-  if (!mime.startsWith("image/")) {
-    throw new Error("File is not an image");
+  // get storage reference
+  const storageRef = ref(
+    FIREBASE_STORAGE,
+    `profilePictures/${uid}/current.jpg`,
+  );
+
+  try {
+    const result = await uploadBytes(storageRef, blob);
+    const url = await getDownloadURL(result.ref);
+    return url;
+  } catch (error: any) {
+    console.error("Error uploading image:", error);
+    throw error;
   }
+}
 
-  // validate size (5MB max)
-  const size = (blob as any).size;
-  if (typeof size === "number" && size > MAX_BYTES) {
-    throw new Error(`Image is too large (max ${MAX_BYTES} bytes)`);
-  }
+export async function debugUpload(uri: string) {
+  const response = await fetch(uri);
+  const arrayBuffer = await response.arrayBuffer();
 
-  // build safe filename
-  const extCandidate = mime.split("/")[1] || "jpg";
-  const safeExt =
-    extCandidate.replace(/[^a-z0-9]/gi, "").toLowerCase() || "jpg";
-  const filename = `${userId}_${Date.now()}.${safeExt}`;
-
-  // safe path (no raw user input injected)
-  const path = `profilePictures/${encodeURIComponent(userId)}/${filename}`;
-
-  // use default storage (no firebaseConfig import here)
-  const storageRef = ref(FIREBASE_STORAGE, path);
-  const uploadResult = await uploadBytes(storageRef, blob, {
-    contentType: "image/jpeg",
+  const blob = new Blob([arrayBuffer], {
+    type: "image/jpeg",
   });
 
-  // get URL
-  return await getDownloadURL(uploadResult.ref);
+  return blob;
 }
