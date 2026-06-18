@@ -4,14 +4,16 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+import "./setup";
+import { randomUUID } from "crypto";
 import { verifyTotpLoginHandler } from "../../src/functions/totp";
 import { getRateLimit } from "../../src/utils/rateLimitInstance";
 import { runRace } from "./hardness/raceRunner";
 
 ///////////////////////////////////////////////////////////////////////////////
 
-const uid = "race-user";
-const deviceId = "race-device";
+const uid = `race-user-${randomUUID()}`;
+const deviceId = `race-device-${randomUUID()}`;
 
 const baseRequest = (token = "123456") => ({
   auth: { uid },
@@ -22,6 +24,8 @@ const baseRequest = (token = "123456") => ({
     },
   },
 });
+
+///////////////////////////////////////////////////////////////////////////////
 
 describe("Race Condition: TOTP login verification concurrency", () => {
   it("must enforce replay protection under concurrent valid OTP submissions", async () => {

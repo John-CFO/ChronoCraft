@@ -11,7 +11,7 @@ import { sendPasswordResetEmail } from "../../../src/services/emailService";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// mocks
+// mocking
 jest.mock("../../../src/firebaseAdmin", () => ({
   auth: {
     generatePasswordResetLink: jest.fn(),
@@ -44,11 +44,16 @@ const buildRequest = (data: { email?: string }) =>
     data,
   }) as any;
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // dependencies
 const { getRateLimit } = require("../../../src/utils/rateLimitInstance");
 const { RateLimitError } = require("../../../src/errors/domain.errors");
 const mockRateLimit = getRateLimit();
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// mocking
 jest.mock("../../../src/services/emailService", () => ({
   sendPasswordResetEmail: jest.fn(),
 }));

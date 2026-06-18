@@ -6,26 +6,21 @@
 
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
 import {
-  initializeAuth,
-  getReactNativePersistence,
-  Auth,
-  connectAuthEmulator,
-} from "firebase/auth";
-import {
   getFirestore,
   Firestore,
   connectFirestoreEmulator,
 } from "firebase/firestore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   getFunctions,
   Functions,
   connectFunctionsEmulator,
 } from "firebase/functions";
 import { getStorage } from "firebase/storage";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import "firebase/messaging";
+import { connectStorageEmulator } from "firebase/storage";
+import { connectAuthEmulator } from "firebase/auth";
 
-//////////////////////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////////////////////
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -37,19 +32,31 @@ const firebaseConfig = {
   measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// initialize new Firebase-App
-const firebaseApp: FirebaseApp =
-  getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+// // initialize new Firebase-App
+const app: FirebaseApp =
+  getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
 
-// initialize Auth
-const auth: Auth = initializeAuth(firebaseApp, {
-  persistence: getReactNativePersistence(AsyncStorage),
-});
+export const FIREBASE_APP = app;
 
-// initialize Firestore, functions and Storage
-const firestore: Firestore = getFirestore(firebaseApp);
-const storage = getStorage(firebaseApp);
-const functions: Functions = getFunctions(firebaseApp, "us-central1");
+let auth;
+
+try {
+  const {
+    initializeAuth,
+    getReactNativePersistence,
+  } = require("firebase/auth/react-native");
+
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage),
+  });
+} catch (e) {
+  const { getAuth } = require("firebase/auth");
+  auth = getAuth(app);
+}
+
+const firestore: Firestore = getFirestore(app);
+const functions: Functions = getFunctions(app, "us-central1");
+const storage = getStorage(app);
 
 // Dev mode - connect to emulators
 // if (__DEV__) {
@@ -58,13 +65,11 @@ const functions: Functions = getFunctions(firebaseApp, "us-central1");
 //   connectFirestoreEmulator(firestore, host, 8001);
 //   connectFunctionsEmulator(functions, host, 4001);
 //   connectAuthEmulator(auth, `http://${host}:5001/`);
+//   connectStorageEmulator(storage, host, 9199);
 //   console.log("🔥 Connected to Firebase Emulators");
 // }
 
-export {
-  firebaseApp as FIREBASE_APP,
-  auth as FIREBASE_AUTH,
-  firestore as FIREBASE_FIRESTORE,
-  storage as FIREBASE_STORAGE,
-  functions as FIREBASE_FUNCTIONS,
-};
+export const FIREBASE_AUTH = auth;
+export const FIREBASE_FIRESTORE = firestore;
+export const FIREBASE_FUNCTIONS = functions;
+export const FIREBASE_STORAGE = storage;

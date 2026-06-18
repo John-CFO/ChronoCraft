@@ -51,7 +51,6 @@ import {
 } from "./components/contexts/ServiceContext";
 import { navigationRef } from "./navigation/NavigationRef";
 import { AuthContext } from "./components/contexts/AuthContext";
-import { AuthStateListener } from "./onAuthStageChanges";
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "./firebaseConfig";
 
 ////////////////////////////////////////////////////////////////////////
@@ -189,37 +188,35 @@ SplashScreen.preventAutoHideAsync();
 
 // AppNavigator - reads Context for Routing
 const AppNavigator = () => {
-  const { stage, isMFAEnabled } = useContext(AuthContext);
   const { serviceId } = useService();
-
+  const { stage, isMFAEnabled } = useContext(AuthContext);
+  const lastRouteRef = React.useRef<string | null>(null);
   useEffect(() => {
     if (!navigationRef.isReady()) return;
 
+    let targetRoute: string | null = null;
+
     switch (stage) {
       case "authenticated":
-        navigationRef.reset({
-          index: 0,
-          routes: [
-            {
-              name: "Inside",
-              state: { index: 0, routes: [{ name: "Home" }] },
-            },
-          ],
-        });
+        targetRoute = "Inside";
         break;
-
       case "pendingMfa":
-        if (isMFAEnabled) {
-          navigationRef.reset({
-            index: 0,
-            routes: [{ name: "MfaScreen" }],
-          });
-        }
+        if (isMFAEnabled) targetRoute = "MfaScreen";
         break;
-
       default:
-        navigationRef.reset({ index: 0, routes: [{ name: "Login" }] });
+        targetRoute = "Login";
     }
+
+    if (!targetRoute) return;
+
+    if (lastRouteRef.current === targetRoute) return;
+
+    lastRouteRef.current = targetRoute;
+
+    navigationRef.reset({
+      index: 0,
+      routes: [{ name: targetRoute }],
+    });
   }, [stage, isMFAEnabled]);
 
   return (
@@ -251,7 +248,7 @@ const AppNavigator = () => {
       <Stack.Screen name="MfaScreen" component={MfaScreen as any} />
       <Stack.Screen name="Inside" component={AppDrawerNavigator} />
 
-      {/* Details Screen bleibt unverändert */}
+      {/* Details Screen */}
       <Stack.Screen
         name="Details"
         component={DetailsScreen as any}
@@ -411,7 +408,6 @@ const App = () => {
                 ref={navigationRef}
                 onReady={() => console.log("Navigation ready")}
               >
-                <AuthStateListener />
                 <CustomAlert />
                 {fontsLoaded && <AppNavigator />}
               </NavigationContainer>

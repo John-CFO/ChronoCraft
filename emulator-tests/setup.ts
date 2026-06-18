@@ -4,11 +4,17 @@
 
 //////////////////////////////////////////////////////////////////////
 
-import fetch from "node-fetch";
+globalThis.performance ??= {
+  now: () => Date.now(),
+  markResourceTiming: () => {},
+  clearResourceTimings: () => {},
+} as any;
 
 if (!globalThis.fetch) {
-  (globalThis as any).fetch = fetch;
+  throw new Error("global fetch not available");
 }
+
+///////////////////////////////////////////////////////////////////////
 
 import { initializeApp, getApps } from "firebase/app";
 import {
@@ -17,28 +23,43 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
+import {
+  getFirestore,
+  connectFirestoreEmulator,
+  doc,
+  setDoc,
+} from "firebase/firestore";
+import { getStorage, connectStorageEmulator } from "firebase/storage";
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 
 ///////////////////////////////////////////////////////////////////////
 
 // define emulator host
-process.env.FIREBASE_AUTH_EMULATOR_HOST = "127.0.0.1:9099";
-
+process.env.FIREBASE_AUTH_EMULATOR_HOST = "127.0.0.1:5001";
+process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8001";
+process.env.FIREBASE_STORAGE_EMULATOR_HOST = "127.0.0.1:9199";
 // init firebase
 const app =
   getApps().length > 0
     ? getApps()[0]
     : initializeApp({
-        apiKey: "dummy",
-        authDomain: "dummy",
+        apiKey: "demo",
+        authDomain: "demo",
         projectId: "chrono-craft-worktime-manager",
       });
-// init auth and functions
+
+// init services
 export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app);
 export const functions = getFunctions(app);
 
-connectAuthEmulator(auth, "http://127.0.0.1:9099");
+// connect emulators
+connectAuthEmulator(auth, "http://127.0.0.1:5001");
+connectFirestoreEmulator(db, "127.0.0.1", 8001);
+connectStorageEmulator(storage, "127.0.0.1", 9199);
 connectFunctionsEmulator(functions, "127.0.0.1", 4001);
+
 // init test user
 export const TEST_USER = {
   email: "testuser@local.test",
@@ -49,12 +70,36 @@ export const TEST_USER = {
 export async function ensureTestUser() {
   try {
     await signInWithEmailAndPassword(auth, TEST_USER.email, TEST_USER.password);
-  } catch {
+  } catch {}
+
+  try {
     await createUserWithEmailAndPassword(
       auth,
       TEST_USER.email,
       TEST_USER.password,
     );
-    await signInWithEmailAndPassword(auth, TEST_USER.email, TEST_USER.password);
+  } catch (e: any) {
+    if (e?.code !== "auth/email-already-in-use") {
+      throw e;
+    }
   }
+
+  const cred = await signInWithEmailAndPassword(
+    auth,
+    TEST_USER.email,
+    TEST_USER.password,
+  );
+
+  if (!cred.user) throw new Error("No auth user after setup");
+
+  await new Promise((r) => setTimeout(r, 300));
+  const user = auth.currentUser;
+  if (!user) throw new Error("No auth user after setup");
+
+  await setDoc(doc(db, "Users", user.uid), {
+    totp: {
+      enabled: false,
+    },
+    createdAt: new Date(),
+  });
 }

@@ -19,6 +19,7 @@ type FirebaseConfig = {
   storageBucket?: string;
 };
 
+// Parse Firebase configuration to JSON
 function parseFirebaseConfig(): FirebaseConfig {
   try {
     return JSON.parse(process.env.FIREBASE_CONFIG ?? "{}") as FirebaseConfig;
@@ -27,8 +28,10 @@ function parseFirebaseConfig(): FirebaseConfig {
   }
 }
 
+// Initialize Firebase Admin (NO emulator-specific overrides)
 if (!admin.apps.length) {
   const firebaseConfig = parseFirebaseConfig();
+
   const appOptions: admin.AppOptions = {};
 
   if (firebaseConfig.storageBucket) {
@@ -41,7 +44,6 @@ if (!admin.apps.length) {
 // HTTP handlers
 import { authValidator } from "./functions/authValidator.function";
 import { registerPushToken } from "./functions/registerPushToken.function";
-import { profileValidator } from "./functions/profileValidator.function";
 import { projectsAndWorkValidator } from "./functions/projectAndWorkValidator.function";
 import { secureDelete } from "./functions/secureDelete.function";
 import { deleteUserDataHandler } from "./functions/deleteUserData.function";
@@ -56,25 +58,16 @@ import {
 } from "./functions/totp";
 import { disableTotpHandler } from "./functions/disableTotp.function";
 
-//////////////////////////////////////////////////////////////////////////////////////////
-
-// Export all functions with clear naming for deployment and testing
+// export functions
 export const authValidatorFunction = authValidator;
-export const profileValidatorFunction = profileValidator;
 export const projectsAndWorkValidatorFunction = projectsAndWorkValidator;
 export const secureDeleteFunction = secureDelete;
 
-// Callable Functions
 export const checkTotpStatus = onCall({ cors: true }, checkTotpStatusHandler);
-
 export const disableTotp = onCall({ cors: true }, disableTotpHandler);
-
 export const createTotpSecret = onCall({ cors: true }, createTotpSecretHandler);
-
 export const verifyTotpToken = onCall({ cors: true }, verifyTotpTokenHandler);
-
 export const verifyTotpLogin = onCall({ cors: true }, verifyTotpLoginHandler);
-
 export const deleteUserData = onCall({ cors: true }, deleteUserDataHandler);
 
 export const requestPasswordResetFunction = onCall(

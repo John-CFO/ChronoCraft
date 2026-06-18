@@ -4,17 +4,21 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+import "./setup";
 import { admin } from "../firebaseAdminTest";
 import { UserRepo } from "../../src/repos/userRepo";
 import { ProfileService } from "../../src/services/profileService";
 import { runRace } from "./hardness/raceRunner";
+import { randomUUID } from "crypto";
 
 ///////////////////////////////////////////////////////////////////////////////
 
 jest.setTimeout(30000);
-const uid = "race-test-uid";
 
-const seedUser = async () => {
+// ISOLATED UID GENERATOR (fixes cross-test contamination)
+const createUid = (tag: string) => `race-profile-${tag}-${randomUUID()}`;
+
+const seedUser = async (uid: string) => {
   const ref = admin.firestore().collection("Users").doc(uid);
 
   await ref.set(
@@ -28,12 +32,14 @@ const seedUser = async () => {
   );
 };
 
-beforeEach(async () => {
-  await seedUser();
-});
+///////////////////////////////////////////////////////////////////////////////
 
 describe("Race Condition: profile concurrent updates", () => {
   it("must not result in corrupted profile state under parallel writes", async () => {
+    const uid = createUid("concurrent-write");
+
+    await seedUser(uid);
+
     const service = new ProfileService();
 
     const results = await runRace({
@@ -48,7 +54,6 @@ describe("Race Condition: profile concurrent updates", () => {
     });
 
     const failed = results.filter((r) => !r.success);
-
     expect(failed.length).toBe(0);
 
     const user = (await new UserRepo().getUser(uid)).data();
@@ -59,12 +64,15 @@ describe("Race Condition: profile concurrent updates", () => {
 
     expect(typeof user.displayName).toBe("string");
     expect(typeof user.personalNumber).toBe("string");
-
     expect(user.displayName.length).toBeGreaterThan(0);
     expect(user.personalNumber.length).toBeGreaterThan(0);
   });
 
   it("must preserve valid field types under concurrent partial updates", async () => {
+    const uid = createUid("partial-update");
+
+    await seedUser(uid);
+
     const service = new ProfileService();
 
     const results = await runRace({
@@ -84,7 +92,6 @@ describe("Race Condition: profile concurrent updates", () => {
     });
 
     const failed = results.filter((r) => !r.success);
-
     expect(failed.length).toBe(0);
 
     const user = (await new UserRepo().getUser(uid)).data();
@@ -95,12 +102,15 @@ describe("Race Condition: profile concurrent updates", () => {
 
     expect(typeof user.displayName).toBe("string");
     expect(typeof user.personalNumber).toBe("string");
-
     expect(user.displayName.length).toBeGreaterThan(0);
     expect(user.personalNumber.length).toBeGreaterThan(0);
   });
 
   it("must reject invalid concurrent payloads without corrupting persisted state", async () => {
+    const uid = createUid("invalid-payload");
+
+    await seedUser(uid);
+
     const service = new ProfileService();
 
     const results = await runRace({

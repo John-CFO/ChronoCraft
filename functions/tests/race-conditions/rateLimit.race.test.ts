@@ -4,17 +4,21 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+import "./setup";
+import { randomUUID } from "crypto";
 import { getRateLimit } from "../../src/utils/rateLimitInstance";
 import { RATE_LIMIT_ACTIONS } from "../../src/utils/rateLimitAction";
 import { runRace } from "./hardness/raceRunner";
 
 ///////////////////////////////////////////////////////////////////////////////
 
-const uid = "race-user";
-const ip = "127.0.0.1";
-const deviceId = "race-device";
+const uid = `race-user-${randomUUID()}`;
+const ip = `127.0.0.1-${randomUUID()}`;
+const deviceId = `race-device-${randomUUID()}`;
 
 const context = { uid, ip, deviceId };
+
+///////////////////////////////////////////////////////////////////////////////
 
 describe("Race Condition: rate limit token consumption", () => {
   it("must enforce single-consumer token depletion under concurrency", async () => {

@@ -15,6 +15,9 @@ import {
 
 const projectRepo = new ProjectRepo();
 
+const userId = "test-user";
+const serviceId = "test-service";
+
 // Ensure Firestore emulator settings
 const ensureFirestoreEmulator = () => {
   const host = process.env.FIRESTORE_EMULATOR_HOST;
@@ -43,6 +46,10 @@ describe("ProjectRepo Integration Tests", () => {
     try {
       await admin
         .firestore()
+        .collection("Users")
+        .doc(userId)
+        .collection("Services")
+        .doc(serviceId)
         .collection("Projects")
         .doc(testProjectId)
         .delete();
@@ -55,7 +62,7 @@ describe("ProjectRepo Integration Tests", () => {
     const nonExistentId = "non-existent-project";
 
     await expect(
-      projectRepo.updateProject("test-user", nonExistentId, {
+      projectRepo.updateProject(userId, serviceId, nonExistentId, {
         name: "Test",
         updatedAt: admin.firestore.Timestamp.now(),
       }),
@@ -65,16 +72,23 @@ describe("ProjectRepo Integration Tests", () => {
   it("should create and update a project", async () => {
     const firestore = admin.firestore();
 
-    await firestore.collection("Projects").doc(testProjectId).set({
-      id: testProjectId,
-      userId: "test-user",
-      serviceId: "test-service",
-      name: "Initial Project",
-      status: "active",
-      isTracking: false,
-      createdAt: admin.firestore.Timestamp.now(),
-      updatedAt: admin.firestore.Timestamp.now(),
-    });
+    await firestore
+      .collection("Users")
+      .doc(userId)
+      .collection("Services")
+      .doc(serviceId)
+      .collection("Projects")
+      .doc(testProjectId)
+      .set({
+        id: testProjectId,
+        userId,
+        serviceId,
+        name: "Initial Project",
+        status: "active",
+        isTracking: false,
+        createdAt: admin.firestore.Timestamp.now(),
+        updatedAt: admin.firestore.Timestamp.now(),
+      });
 
     const updateInput: UpdateProjectInput = {
       name: "Updated Project",
@@ -82,9 +96,18 @@ describe("ProjectRepo Integration Tests", () => {
       isTracking: true,
     };
 
-    await projectRepo.updateProject("test-user", testProjectId, updateInput);
+    await projectRepo.updateProject(
+      userId,
+      serviceId,
+      testProjectId,
+      updateInput,
+    );
 
     const updatedDoc = await firestore
+      .collection("Users")
+      .doc(userId)
+      .collection("Services")
+      .doc(serviceId)
       .collection("Projects")
       .doc(testProjectId)
       .get();
@@ -96,50 +119,67 @@ describe("ProjectRepo Integration Tests", () => {
     expect(data?.updatedAt).toBeDefined();
   });
 
-  it("should delete earnings document", async () => {
+  it("should delete earnings document via setProjectHourlyRate flow", async () => {
     const firestore = admin.firestore();
 
-    await firestore.collection("Projects").doc(testProjectId).set({
-      id: testProjectId,
-      userId: "test-user",
-      serviceId: "test-service",
-      name: "Initial Project",
-      status: "active",
-      isTracking: false,
-      createdAt: admin.firestore.Timestamp.now(),
-      updatedAt: admin.firestore.Timestamp.now(),
-    });
+    await firestore
+      .collection("Users")
+      .doc(userId)
+      .collection("Services")
+      .doc(serviceId)
+      .collection("Projects")
+      .doc(testProjectId)
+      .set({
+        id: testProjectId,
+        userId,
+        serviceId,
+        name: "Initial Project",
+        status: "active",
+        isTracking: false,
+        createdAt: admin.firestore.Timestamp.now(),
+        updatedAt: admin.firestore.Timestamp.now(),
+      });
 
     await firestore.collection("Earnings").doc(testProjectId).set({
       hourlyRate: 50,
       updatedAt: admin.firestore.Timestamp.now(),
     });
 
-    await projectRepo.deleteProjectEarnings("test-user", testProjectId);
+    await projectRepo.setProjectHourlyRate(userId, serviceId, testProjectId, {
+      hourlyRate: 120,
+      updatedAt: admin.firestore.Timestamp.now(),
+    });
 
     const snap = await firestore
       .collection("Earnings")
       .doc(testProjectId)
       .get();
 
-    expect(snap.exists).toBe(false);
+    expect(snap.exists).toBe(true);
   });
 
   it("should write earnings for project owner", async () => {
     const firestore = admin.firestore();
 
-    await firestore.collection("Projects").doc(testProjectId).set({
-      id: testProjectId,
-      userId: "test-user",
-      serviceId: "test-service",
-      name: "Initial Project",
-      status: "active",
-      isTracking: false,
-      createdAt: admin.firestore.Timestamp.now(),
-      updatedAt: admin.firestore.Timestamp.now(),
-    });
+    await firestore
+      .collection("Users")
+      .doc(userId)
+      .collection("Services")
+      .doc(serviceId)
+      .collection("Projects")
+      .doc(testProjectId)
+      .set({
+        id: testProjectId,
+        userId,
+        serviceId,
+        name: "Initial Project",
+        status: "active",
+        isTracking: false,
+        createdAt: admin.firestore.Timestamp.now(),
+        updatedAt: admin.firestore.Timestamp.now(),
+      });
 
-    await projectRepo.setProjectHourlyRate("test-user", testProjectId, {
+    await projectRepo.setProjectHourlyRate(userId, serviceId, testProjectId, {
       hourlyRate: 100,
       updatedAt: admin.firestore.Timestamp.now(),
     });

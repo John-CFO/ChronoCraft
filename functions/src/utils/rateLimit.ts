@@ -117,14 +117,46 @@ export class RateLimiter {
           return;
         }
 
-        const data = snap.data()!;
-        const lastRefill = data.lastRefill?.toMillis?.() ?? now;
-        const blockedUntil = data.blockedUntil?.toMillis?.() ?? 0;
-        const failCount = data.failCount ?? 0;
+        const data = snap.data();
 
-        const storedTokens = data.tokens ?? maxAttempts;
-        const storedCapacity = data.capacity ?? maxAttempts;
-        const storedRate = data.refillRatePerMs ?? rate;
+        if (!data) {
+          // fallback for concurrent init / partial state
+          tx.set(ref, {
+            tokens: maxAttempts - 1,
+            capacity: maxAttempts,
+            refillRatePerMs: rate,
+            windowMs,
+            lastRefill: Timestamp.fromMillis(now),
+            resetAt: Timestamp.fromMillis(now + windowMs),
+            failCount: 0,
+            blockedUntil: null,
+          });
+          return;
+        }
+
+        const lastRefill =
+          data.lastRefill && typeof data.lastRefill.toMillis === "function"
+            ? data.lastRefill.toMillis()
+            : now;
+
+        const blockedUntil =
+          data.blockedUntil && typeof data.blockedUntil.toMillis === "function"
+            ? data.blockedUntil.toMillis()
+            : 0;
+
+        const storedTokens =
+          typeof data.tokens === "number" ? data.tokens : maxAttempts;
+
+        const storedCapacity =
+          typeof data.capacity === "number" ? data.capacity : maxAttempts;
+
+        const storedRate =
+          typeof data.refillRatePerMs === "number"
+            ? data.refillRatePerMs
+            : rate;
+
+        const failCount =
+          typeof data.failCount === "number" ? data.failCount : 0;
 
         if (blockedUntil > now) {
           const retryAfter = Math.ceil((blockedUntil - now) / 1000);

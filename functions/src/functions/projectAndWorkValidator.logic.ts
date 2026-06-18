@@ -149,18 +149,26 @@ export async function projectsAndWorkValidatorLogic(
       }
 
       if (
+        typeof payload.serviceId !== "string" ||
+        payload.serviceId.trim().length === 0
+      ) {
+        throw new ValidationError("serviceId must be a non-empty string");
+      }
+
+      if (
         typeof payload.projectId !== "string" ||
         payload.projectId.trim().length === 0
       ) {
         throw new ValidationError("projectId must be a non-empty string");
       }
 
-      if (typeof payload.rate !== "number") {
+      if (typeof payload.rate !== "number" || Number.isNaN(payload.rate)) {
         throw new ValidationError("rate must be a number");
       }
 
       return await projectService.setHourlyRate(
         uid,
+        payload.serviceId,
         payload.projectId,
         payload.rate,
       );

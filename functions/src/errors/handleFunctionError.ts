@@ -11,7 +11,6 @@ import { FirebaseFunctionErrorCode } from "./firebaseErrors";
 import { DomainError } from "./domain.errors";
 import { logEvent } from "../utils/logger";
 import { RateLimitError } from "../errors/domain.errors";
-import { AuthorizationError } from "./domain.errors";
 
 ///////////////////////////////////////////////////////////////////////////////////
 

@@ -1,3 +1,5 @@
+//////////////////ensureAuthToken.ts////////////////////
+
 import { FIREBASE_AUTH } from "../firebaseConfig";
 
 export async function ensureAuthReady() {

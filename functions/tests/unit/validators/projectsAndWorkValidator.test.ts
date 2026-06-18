@@ -85,12 +85,15 @@ describe("projectsAndWorkValidator", () => {
 
     const result = await projectsAndWorkValidatorLogic(
       makeRequest(
-        { action: "setHourlyRate", payload: { projectId: "p1", rate: 50 } },
+        {
+          action: "setHourlyRate",
+          payload: { serviceId: "s1", projectId: "p1", rate: 50 },
+        },
         { uid: "u1" },
       ),
     );
 
-    expect(mockSetHourlyRate).toHaveBeenCalledWith("u1", "p1", 50);
+    expect(mockSetHourlyRate).toHaveBeenCalledWith("u1", "s1", "p1", 50);
     expect(result).toEqual({ success: true });
   });
 
@@ -120,7 +123,10 @@ describe("projectsAndWorkValidator", () => {
     await expect(
       projectsAndWorkValidatorLogic(
         makeRequest(
-          { action: "setHourlyRate", payload: { projectId: "p1", rate: 50 } },
+          {
+            action: "setHourlyRate",
+            payload: { serviceId: "s1", projectId: "p1", rate: 50 },
+          },
           { uid: "u1" },
         ),
       ),

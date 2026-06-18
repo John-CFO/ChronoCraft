@@ -4,6 +4,7 @@
 
 //////////////////////////////////////////////////////////////////////////////////
 
+// mocking
 jest.mock("../../../src/utils/rateLimitInstance");
 jest.mock("../../../src/repos/userRepo");
 jest.mock("../../../src/utils/logger");
@@ -16,6 +17,8 @@ jest.mock("firebase-admin", () => ({
   initializeApp: jest.fn(),
   apps: [],
 }));
+
+////////////////////////////////////////////////////////////////////////////////
 
 import { AuthService } from "../../../src/services/authService";
 import { UserRepo } from "../../../src/repos/userRepo";
