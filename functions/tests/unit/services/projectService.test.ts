@@ -1,7 +1,24 @@
 /////////////////////// projectService.test.ts //////////////////////////////
 
+// mocking
+jest.mock("firebase-admin", () => ({
+  apps: [],
+  initializeApp: jest.fn(),
+  firestore: () => ({
+    collection: () => ({
+      doc: () => ({
+        get: jest.fn().mockResolvedValue({
+          exists: false,
+        }),
+      }),
+    }),
+  }),
+}));
+
 jest.mock("../../../src/repos/projectRepo");
 jest.mock("../../../src/utils/logger");
+
+//////////////////////////////////////////////////////////////////////////////
 
 import { ProjectService } from "../../../src/services/projectService";
 import { ProjectRepo } from "../../../src/repos/projectRepo";
@@ -38,6 +55,7 @@ describe("ProjectService Unit Tests", () => {
 
       expect(repo.updateProject).toHaveBeenCalledWith(
         "user123",
+        "serviceId",
         "project1",
         expect.objectContaining({
           name: "New Name",
@@ -77,10 +95,16 @@ describe("ProjectService Unit Tests", () => {
     it("should set hourly rate", async () => {
       repo.setProjectHourlyRate.mockResolvedValue(undefined);
 
-      const result = await service.setHourlyRate("user123", "project1", 50);
+      const result = await service.setHourlyRate(
+        "user123",
+        "service1",
+        "project1",
+        50,
+      );
 
       expect(repo.setProjectHourlyRate).toHaveBeenCalledWith(
         "user123",
+        "service1",
         "project1",
         expect.objectContaining({
           hourlyRate: 50,
@@ -95,7 +119,7 @@ describe("ProjectService Unit Tests", () => {
       repo.setProjectHourlyRate.mockRejectedValue(new Error("DB error"));
 
       await expect(
-        service.setHourlyRate("user123", "project1", 50),
+        service.setHourlyRate("user123", "service1", "project1", 50),
       ).rejects.toThrow("DB error");
     });
 
@@ -103,17 +127,17 @@ describe("ProjectService Unit Tests", () => {
       repo.setProjectHourlyRate.mockRejectedValue(new Error("DB error"));
 
       await expect(
-        service.setHourlyRate("user123", "project1", 50),
+        service.setHourlyRate("user123", "service1", "project1", 50),
       ).rejects.toThrow("DB error");
     });
 
     it("should throw on invalid input", async () => {
-      await expect(service.setHourlyRate("", "project1", 50)).rejects.toThrow(
-        "Invalid input",
-      );
+      await expect(
+        service.setHourlyRate("", "service1", "project1", 50),
+      ).rejects.toThrow("Invalid input");
 
       await expect(
-        service.setHourlyRate("user123", "project1", NaN),
+        service.setHourlyRate("user123", "service1", "project1", NaN),
       ).rejects.toThrow("Invalid input");
     });
   });

@@ -10,7 +10,7 @@ import { UserProfile } from "./UserProfile";
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 export interface CustomUser extends FirebaseUser {
-  personalID?: string;
+  personalNumber?: string | unknown;
   totpEnabled?: boolean;
   firstLogin?: boolean;
   hasSeenHomeTour?: boolean;

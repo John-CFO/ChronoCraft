@@ -48,15 +48,21 @@ export class UserRepo {
   }
 
   // updateUser method to update a user
-  async updateUser(uid: string, data: any) {
+  async updateUser(uid: string, data: Record<string, unknown>) {
     const ref = this.usersRef.doc(uid);
-    const snap = await ref.get();
 
-    if (!snap.exists) {
-      throw new NotFoundError("User", { uid });
+    try {
+      await ref.update({
+        ...data,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    } catch (error: any) {
+      if (error?.code === 5 || error?.code === "not-found") {
+        throw new NotFoundError("User", { uid });
+      }
+
+      throw error;
     }
-
-    await ref.update(data);
   }
 
   // getUserTOTPSecret method to retrieve a user's TOTP secret

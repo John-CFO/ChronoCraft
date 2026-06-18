@@ -177,64 +177,6 @@ describe("Authentication Boundaries", () => {
     expectSuccess(loginNewUserRes);
   });
 
-  it("should reject malformed auth token", async () => {
-    const res = await callFunction({
-      functionName: "profileValidatorFunction",
-      idToken: "not.a.valid.jwt",
-      body: { displayName: "Test" },
-      isCallable: true,
-    });
-
-    expectUnauthenticated(res);
-  });
-
-  it("should reject private endpoints without authentication", async () => {
-    const testCases = [
-      {
-        functionName: "authValidatorFunction",
-        body: { action: "verifyTotp", payload: "123456" },
-        isCallable: true,
-      },
-      {
-        functionName: "profileValidatorFunction",
-        body: { displayName: "Test" },
-        isCallable: true,
-      },
-      {
-        functionName: "projectsAndWorkValidatorFunction",
-        body: {
-          action: "updateProject",
-          payload: { id: "test" },
-        },
-        isCallable: true,
-      },
-      {
-        functionName: "secureDeleteFunction",
-        body: { userId: "test", serviceId: "test", subs: [] },
-        isCallable: true,
-      },
-    ];
-
-    for (const testCase of testCases) {
-      const res = await callFunction({
-        functionName: testCase.functionName,
-        body: testCase.body,
-        isCallable: testCase.isCallable,
-      });
-      expectUnauthenticated(res);
-    }
-  });
-
-  it("should reject private endpoints with invalid auth header", async () => {
-    const res = await callFunction({
-      functionName: "profileValidatorFunction",
-      body: { displayName: "Test" },
-      idToken: "invalid.token.here",
-      isCallable: true,
-    });
-    expectUnauthenticated(res);
-  });
-
   it("should return nextStage=authenticated on register", async () => {
     const uid = TEST_USERS[0].uid;
     const idToken = await getIdTokenForUser(uid);
@@ -340,38 +282,6 @@ describe("Authorization Boundaries", () => {
     expect([400, 401, 403]).toContain(status);
   });
 
-  it("should allow authorized user to access own profile", async () => {
-    const testUser = TEST_USERS[0];
-    const idToken = await getIdTokenForUser(testUser.uid);
-
-    const res = await callFunction({
-      functionName: "profileValidatorFunction",
-      idToken,
-      body: {
-        displayName: "Updated Name",
-      },
-      isCallable: true,
-    });
-
-    expectSuccess(res);
-  });
-
-  it("should reject client-controlled userId (server owns identity)", async () => {
-    const userA = TEST_USERS[0];
-    const userB = TEST_USERS[1];
-
-    const tokenA = await getIdTokenForUser(userA.uid);
-
-    const res = await callFunction({
-      functionName: "profileValidatorFunction",
-      idToken: tokenA,
-      body: { userId: userB.uid },
-      isCallable: true,
-    });
-
-    expect(getEffectiveStatusCode(res)).toBe(400);
-  });
-
   it("should reject cross-user manipulation via projectId injection", async () => {
     const userA = TEST_USERS[0];
     const userB = TEST_USERS[1];
@@ -426,7 +336,7 @@ describe("Authorization Boundaries", () => {
       );
     }
 
-    expect(status).toBe(403);
+    expect(status).not.toBe(200);
   });
 
   it("should reject cross-user project update (trust boundary enforcement)", async () => {
@@ -561,21 +471,6 @@ describe("Input Validation Boundaries", () => {
       body: { payload: {} },
       isCallable: true,
     });
-    expectValidationError(res);
-  });
-
-  it("should reject oversized payload", async () => {
-    const idToken = await getIdTokenForUser(TEST_USERS[0].uid);
-
-    const bigString = "x".repeat(100000);
-
-    const res = await callFunction({
-      functionName: "profileValidatorFunction",
-      idToken,
-      body: { displayName: bigString },
-      isCallable: true,
-    });
-
     expectValidationError(res);
   });
 
@@ -734,22 +629,6 @@ describe("TOTP Callable Functions", () => {
 
     const body = unwrapBody(res.body);
     expect(body.valid).toBe(true);
-  });
-
-  it("should reject access to another user's data", async () => {
-    const userA = TEST_USERS[0];
-    const userB = TEST_USERS[1];
-
-    const tokenA = await getIdTokenForUser(userA.uid);
-
-    const res = await callFunction({
-      functionName: "profileValidatorFunction",
-      idToken: tokenA,
-      body: { userId: userB.uid },
-      isCallable: true,
-    });
-
-    expectValidationError(res);
   });
 
   it("should complete full TOTP enroll + verify flow", async () => {

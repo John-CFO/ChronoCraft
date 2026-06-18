@@ -4,6 +4,11 @@
 
 /////////////////////////////////////////////////////////////////////////////////
 
+// Emulator configuration to point to local emulator when running e2e tests
+process.env.FIREBASE_STORAGE_EMULATOR_HOST = "127.0.0.1:9199";
+
+/////////////////////////////////////////////////////////////////////////////////
+
 import * as admin from "firebase-admin";
 
 import {
@@ -19,22 +24,15 @@ import path from "path";
 jest.setTimeout(300000);
 
 /////////////////////////////////////////////////////////////////////////////////
-// Admin SDK Setup
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    projectId: process.env.GCLOUD_PROJECT || "chrono-craft-worktime-manager",
-  });
+// interface for test users
+export interface TestUser {
+  uid: string;
+  email: string;
+  displayName: string;
 }
 
-const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST;
-if (emulatorHost) {
-  const host = emulatorHost.replace("http://", "");
-  admin.firestore().settings({
-    host,
-    ssl: false,
-  });
-}
+/////////////////////////////////////////////////////////////////////////////////
 
 // Rate-limits lenient
 process.env.RL_UID_MAX_ATTEMPTS = process.env.RL_UID_MAX_ATTEMPTS ?? "1000";
@@ -54,6 +52,24 @@ export const PROJECT_ID =
   process.env.GCLOUD_PROJECT || "chrono-craft-worktime-manager";
 export const REGION = process.env.FUNCTIONS_REGION || "us-central1";
 
+// Admin SDK Setup
+if (!admin.apps.length) {
+  admin.initializeApp({
+    projectId: PROJECT_ID,
+    storageBucket: `${PROJECT_ID}.appspot.com`,
+  });
+}
+
+// ensure firestore points to emulator
+const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST ?? "127.0.0.1:8001";
+
+const host = emulatorHost.replace("http://", "");
+
+admin.firestore().settings({
+  host,
+  ssl: false,
+});
+
 // function to reset rate limit state
 export const resetRateLimitState = async (_uid: string) => {
   const db = admin.firestore();
@@ -64,13 +80,6 @@ export const resetRateLimitState = async (_uid: string) => {
       .catch(() => {});
   }
 };
-
-// interface for test users
-export interface TestUser {
-  uid: string;
-  email: string;
-  displayName: string;
-}
 
 // declare test users
 export const TEST_USERS: TestUser[] = [
@@ -101,25 +110,13 @@ beforeAll(async () => {
   const [HOST, PORT_STR] = emulatorHost.replace("http://", "").split(":");
   const PORT = Number(PORT_STR);
 
-  const candidatePaths = [
-    path.resolve(__dirname, "../../../firestore.rules"),
-    path.resolve(__dirname, "../../firestore.rules"),
-    path.resolve(process.cwd(), "firestore.rules"),
-    path.resolve(process.cwd(), "rules", "firestore.rules"),
-  ];
+  const rulesPath = path.resolve(
+    __dirname,
+    "../../../firebase-rules/firestore.rules",
+  );
 
-  let rulesPath: string | null = null;
-  for (const p of candidatePaths) {
-    if (fs.existsSync(p)) {
-      rulesPath = p;
-      break;
-    }
-  }
-
-  if (!rulesPath) {
-    throw new Error(
-      `firestore.rules not found. Tried: ${candidatePaths.join(", ")}.`,
-    );
+  if (!fs.existsSync(rulesPath)) {
+    throw new Error(`firestore.rules not found at ${rulesPath}`);
   }
 
   testEnv = await initializeTestEnvironment({
@@ -243,9 +240,6 @@ export const cleanupTestData = async () => {
 
   const usersSnapshot = await db.collection("Users").get();
   await Promise.all(usersSnapshot.docs.map((d) => d.ref.delete()));
-
-  const projectsSnapshot = await db.collection("Projects").get();
-  await Promise.all(projectsSnapshot.docs.map((d) => d.ref.delete()));
 
   for (const user of TEST_USERS) {
     try {

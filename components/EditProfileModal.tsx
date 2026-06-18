@@ -21,13 +21,15 @@ import React, { useEffect, useState, useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { User, getAuth } from "firebase/auth";
 import * as ImagePicker from "expo-image-picker";
+import { doc, getDoc } from "firebase/firestore";
 
-import { FIREBASE_AUTH } from "../firebaseConfig";
+import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import DismissKeyboard from "../components/DismissKeyboard";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
-import { sanitizeName, sanitizePersonalID } from "./InputSanitizers";
+import { sanitizeName, sanitizePersonalNumber } from "./InputSanitizers";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import { handleSaveProfile } from "../components/utils/handleSaveProfile";
+import { useDotAnimation } from "../components/DotAnimation";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -67,9 +69,14 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   }, []);
 
   // state declaration for the edit properties
-  const [newName, setNewName] = useState("");
-  const [newPersonalID, setNewPersonalID] = useState("");
+  const [newName, setNewName] = useState(user.displayName ?? "");
+  const [newPersonalNumber, setNewPersonalNumber] = useState(
+    (user as any)?.personalNumber ?? "",
+  );
+
+  // state declaration for the profile picture
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [currentPhotoUrl, setCurrentPhotoUrl] = useState<string | null>(null);
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
@@ -77,6 +84,30 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   if (!user) {
     return null;
   }
+
+  // get the personal number from the user firestore
+  useEffect(() => {
+    const loadProfile = async () => {
+      const ref = doc(FIREBASE_FIRESTORE, "Users", user.uid);
+      const snap = await getDoc(ref);
+
+      if (!snap.exists()) return;
+
+      const data = snap.data();
+
+      if (typeof data.photoURL === "string") {
+        setCurrentPhotoUrl(data.photoURL);
+      }
+
+      if (typeof data.personalNumber === "string") {
+        setNewPersonalNumber(data.personalNumber);
+      } else {
+        setNewPersonalNumber("");
+      }
+    };
+
+    loadProfile();
+  }, [user.uid]);
 
   // hook to request media library permissions on component mount
   useEffect(() => {
@@ -88,7 +119,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
           .getState()
           .showAlert(
             "Permission Error",
-            "Sorry, we need camera roll permissions to make this work!"
+            "Sorry, we need camera roll permissions to make this work!",
           );
       }
     };
@@ -115,6 +146,10 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
   // handleSave function to check user auth and save data from current user in Firestore and then close modal
   const [saving, setSaving] = useState(false);
+
+  // define the dot animation with a delay
+  const [loading, setLoading] = useState(true);
+  const dots = useDotAnimation(loading, 700);
   const handleSave = async () => {
     const currentUser = getAuth().currentUser ?? FIREBASE_AUTH.currentUser;
     if (!currentUser?.uid) {
@@ -126,7 +161,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     await handleSaveProfile({
       userId: currentUser.uid,
       newName,
-      newPersonalID,
+      newPersonalNumber: newPersonalNumber,
       imageUri,
       showAlert: useAlertStore.getState().showAlert,
       onClose,
@@ -136,7 +171,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
 
   return (
@@ -233,7 +268,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   source={
                     imageUri
                       ? { uri: imageUri }
-                      : require("../assets/profile_avatar.png")
+                      : currentPhotoUrl
+                        ? { uri: currentPhotoUrl }
+                        : require("../assets/profile_avatar.png")
                   }
                   style={{
                     height: 135,
@@ -307,9 +344,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 accessibilityHint="Enter your personal ID"
                 placeholder="Personal-ID"
                 placeholderTextColor={accessMode ? "white" : "grey"}
-                value={newPersonalID}
+                value={newPersonalNumber}
                 onChangeText={(text) =>
-                  setNewPersonalID(sanitizePersonalID(text))
+                  setNewPersonalNumber(sanitizePersonalNumber(text))
                 }
                 keyboardType="numeric"
                 style={{
@@ -363,22 +400,69 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={{
-                    height: 45,
-                    paddingVertical: 6,
-                    justifyContent: "center",
                     alignItems: "center",
+                    justifyContent: "center",
+                    height: 45,
+                    width: screenWidth * 0.7, // use 70% of the screen width
+                    maxWidth: 400,
                   }}
                 >
-                  <Text
+                  <View
                     style={{
-                      fontFamily: "MPLUSLatin_Bold",
-                      fontSize: 22,
-                      color: saving ? "lightgray" : "white",
-                      paddingRight: 10,
+                      height: 50,
+                      width: 200,
+                      justifyContent: "center",
+                      alignItems: "center",
                     }}
                   >
-                    {saving ? "Updating..." : "Update"}
-                  </Text>
+                    {saving ? (
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            marginLeft: 100,
+                            marginBottom: 5,
+                            fontFamily: "MPLUSLatin_Bold",
+                            fontSize: 22,
+                            color: "white",
+                            textAlign: "center",
+                            width: 100,
+                          }}
+                        >
+                          Updating
+                        </Text>
+                        <Text
+                          style={{
+                            marginBottom: 5,
+                            fontFamily: "MPLUSLatin_Bold",
+                            fontSize: 22,
+                            color: "white",
+                            width: 100,
+                            textAlign: "left",
+                          }}
+                        >
+                          {dots}
+                        </Text>
+                      </View>
+                    ) : (
+                      <Text
+                        style={{
+                          marginBottom: 5,
+                          fontFamily: "MPLUSLatin_Bold",
+                          fontSize: 22,
+                          color: "white",
+                          textAlign: "center",
+                        }}
+                      >
+                        Update
+                      </Text>
+                    )}
+                  </View>
                 </LinearGradient>
               </TouchableOpacity>
             </View>

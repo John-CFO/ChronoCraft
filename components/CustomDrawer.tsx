@@ -1,4 +1,4 @@
-//////////////////////////////////////custom drawer component//////////////////////////////////////////
+//////////////////////////////////////CustomDrawer Component//////////////////////////////////////////
 
 // this coponent is used to create the custom  user-specific drawer
 // it includes the Edit Profile modal, the FAQ bottom sheet, the drawer item list as component and the logout function
@@ -29,7 +29,7 @@ import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { Feather } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
 import Modal from "react-native-modal";
-import { getDoc, doc } from "firebase/firestore";
+import { getDoc, doc, onSnapshot } from "firebase/firestore";
 
 import { AuthContext } from "../components/contexts/AuthContext";
 import EditProfileModal from "./EditProfileModal";
@@ -60,6 +60,9 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
 
   // declare state for user data
   const [user, setLocalUser] = useState<MergedUser | null>(null);
+
+  //declare state for user profile image
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
 
   // declare the auth context
   const { setUser, setStage } = useContext(AuthContext);
@@ -110,8 +113,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         ...currentUser,
         uid: currentUser.uid,
         displayName: data.displayName ?? undefined,
-        personalID: data.personalID ?? undefined,
-        photoURL: data.photoURL ?? undefined,
+        personalNumber: data.personalNumber ?? undefined,
         totpEnabled: data.totp?.enabled ?? false,
         hasSeenHomeTour: data.hasSeenHomeTour ?? false,
         hasSeenVacationTour: data.hasSeenVacationTour ?? false,
@@ -134,6 +136,22 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
     fetchUserProfile();
   }, []);
 
+  // hook to fetch user profile image
+  useEffect(() => {
+    const currentUser = FIREBASE_AUTH.currentUser;
+    if (!currentUser?.uid) return;
+
+    const userRef = doc(FIREBASE_FIRESTORE, "Users", currentUser.uid);
+
+    const unsubscribe = onSnapshot(userRef, (snap) => {
+      const data = snap.data();
+
+      setProfileImageUrl(data?.photoURL ?? null);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   // Hook to check if user is enrolled
   useEffect(() => {
     const loadEnrollment = async () => {
@@ -148,7 +166,6 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         const snap = await getDoc(userRef);
 
         if (snap.exists()) {
-          const data = snap.data();
           setIsEnrolled(snap.exists() ? !!snap.data()?.totp?.enabled : false);
         }
       } catch (err) {
@@ -246,6 +263,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
 
       <ImageBackground>
         {/* user profile image */}
+
         <Image
           accessibilityRole="image"
           accessibilityLabel={
@@ -254,8 +272,8 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
               : "Default profile picture"
           }
           source={
-            user?.photoURL // render user image or default image
-              ? { uri: user.photoURL }
+            profileImageUrl // render user image or default image
+              ? { uri: profileImageUrl }
               : require("../assets/profile_avatar.png")
           }
           style={{
@@ -296,7 +314,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         >
           Personal-ID:{" "}
           <Text style={{ color: "white" }}>
-            {user?.personalID || "Unknown"}
+            {user?.personalNumber || "Unknown"}
           </Text>
         </Text>
       </View>

@@ -21,7 +21,7 @@ export const FirestoreUserUpdateSchema = z
       .refine((s) => s === undefined || (s.length >= 1 && s.length <= 100), {
         message: "Display name must be between 1 and 100 chars",
       }),
-    personalID: z
+    personalNumber: z
       .string()
       .optional()
       .transform((s) => (s === "" ? undefined : s))

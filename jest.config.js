@@ -21,4 +21,9 @@ module.exports = {
     "/emulator-tests/",
     "<rootDir>/functions/",
   ],
+  globals: {
+    "ts-jest": {
+      tsconfig: "tsconfig.test.json",
+    },
+  },
 };

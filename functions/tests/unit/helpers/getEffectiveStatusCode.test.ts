@@ -6,6 +6,8 @@
 
 import { getEffectiveStatusCode } from "../../utils/getEffectiveStatusCode";
 
+////////////////////////////////////////////////////////////////////////////////////
+
 describe("getEffectiveStatusCode helper", () => {
   it("should return 429 for plain RateLimit object", () => {
     const rateLimitObj = {

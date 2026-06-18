@@ -60,17 +60,24 @@ function hotp(secret: string, counter: number, digits = 6): string {
 describe("verifyTotpToken", () => {
   beforeAll(async () => {
     await ensureTestUser();
+    await new Promise((r) => setTimeout(r, 300));
   });
 
   it("should enable TOTP when token is valid", async () => {
-    const createFn = httpsCallable<unknown, { secret: string }>(
-      functions,
-      "createTotpSecret",
-    );
+    const createFn = httpsCallable<
+      unknown,
+      { enrollmentId: string; otpAuthUrl: string; message: string }
+    >(functions, "createTotpSecret");
 
     const createRes = await createFn({});
 
-    const secret = createRes.data.secret;
+    const otpAuthUrl = createRes.data.otpAuthUrl;
+
+    const secretMatch = otpAuthUrl.match(/secret=([^&]+)/);
+    const secret = secretMatch?.[1];
+
+    if (!secret) throw new Error("Missing secret");
+
     const counter = Math.floor(Date.now() / 1000 / 30);
     const otp = hotp(secret, counter);
 

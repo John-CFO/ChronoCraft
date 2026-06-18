@@ -18,7 +18,7 @@ type FirebaseConfig = {
 
 function parseFirebaseConfig(): FirebaseConfig {
   try {
-    return JSON.parse(process.env.FIREBASE_CONFIG ?? "{}") as FirebaseConfig;
+    return JSON.parse(process.env.FIREBASE_CONFIG ?? "{}");
   } catch {
     return {};
   }
@@ -39,18 +39,31 @@ function getStorageBucketName(): string {
   return bucket;
 }
 
+///////////////////////////////////////////////////////////////////////////
+
+async function safe(op: Promise<unknown>) {
+  try {
+    await op;
+  } catch {
+    // idempotent delete
+  }
+}
+
 async function deleteStorageObjects(uid: string) {
   const bucket = admin.storage().bucket(getStorageBucketName());
 
-  await Promise.all([
+  await safe(
     bucket.deleteFiles({
       prefix: `profilePictures/${uid}/`,
       force: true,
     }),
+  );
+
+  await safe(
     bucket.file(`profilePictures/${uid}`).delete({
       ignoreNotFound: true,
     }),
-  ]);
+  );
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -61,57 +74,54 @@ export const deleteUserDataHandler = async (request: any) => {
   if (!uid || typeof uid !== "string") {
     throw new HttpsError("unauthenticated", "Not logged in");
   }
-  const userDocRef = admin.firestore().collection("Users").doc(uid);
-
-  const snap = await userDocRef.get();
-  if (!snap.exists) {
-    return { success: true };
-  }
 
   const db = admin.firestore();
+  const auth = admin.auth();
 
   const userRef = db.collection("Users").doc(uid);
   const mfaRef = db.collection("mfa_totp").doc(uid);
-  const deletionLockRef = db.collection("deletionLocks").doc(uid);
 
-  try {
-    await db.runTransaction(async (tx) => {
-      const lockSnap = await tx.get(deletionLockRef);
+  let ownsDeletion = false;
 
-      if (lockSnap.exists) {
-        throw new HttpsError(
-          "failed-precondition",
-          "Deletion already in progress",
-        );
-      }
+  // atomarer ownership fence
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(userRef);
 
-      tx.set(deletionLockRef, {
-        startedAt: admin.firestore.FieldValue.serverTimestamp(),
-        uid,
-        earningsLocked: true,
-      });
-    });
-
-    await deleteStorageObjects(uid).catch(() => {});
-
-    await mfaRef.delete().catch(() => {});
-
-    await db.recursiveDelete(userRef).catch(() => {});
-
-    try {
-      await admin.auth().deleteUser(uid);
-    } catch (error: any) {
-      if (error?.code !== "auth/user-not-found") {
-        throw error;
-      }
+    // user already deleted
+    if (!snap.exists) {
+      return;
     }
 
-    await deletionLockRef.delete().catch(() => {});
+    const data = snap.data() ?? {};
 
+    // another request already owns deletion
+    if (data.deletionState === "DELETING") {
+      return;
+    }
+
+    tx.set(
+      userRef,
+      {
+        deletionState: "DELETING",
+        deletionStartedAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
+
+    ownsDeletion = true;
+  });
+
+  // another concurrent request already performs deletion
+  if (!ownsDeletion) {
     return { success: true };
-  } catch (error) {
-    console.error("Error deleting user data:", error);
-
-    throw new HttpsError("internal", "User deletion failed");
   }
+
+  await Promise.all([
+    safe(deleteStorageObjects(uid)),
+    safe(mfaRef.delete()),
+    safe(db.recursiveDelete(userRef)),
+    safe(auth.deleteUser(uid)),
+  ]);
+
+  return { success: true };
 };

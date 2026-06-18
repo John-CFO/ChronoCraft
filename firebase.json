@@ -17,11 +17,11 @@
   ],
 
   "firestore": {
-    "rules": "firestore.rules"
+    "rules": "firebase-rules/firestore.rules"
   },
 
   "storage": {
-    "rules": "storage.rules"
+    "rules": "firebase-rules/storage.rules"
   },
 
   "emulators": {
