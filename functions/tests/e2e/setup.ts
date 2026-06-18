@@ -61,19 +61,14 @@ if (!admin.apps.length) {
 }
 
 // ensure firestore points to emulator
+const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST ?? "127.0.0.1:8001";
+
+const host = emulatorHost.replace("http://", "");
+
 admin.firestore().settings({
-  host: "127.0.0.1:8001",
+  host,
   ssl: false,
 });
-
-const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST;
-if (emulatorHost) {
-  const host = emulatorHost.replace("http://", "");
-  admin.firestore().settings({
-    host,
-    ssl: false,
-  });
-}
 
 // function to reset rate limit state
 export const resetRateLimitState = async (_uid: string) => {
@@ -115,25 +110,13 @@ beforeAll(async () => {
   const [HOST, PORT_STR] = emulatorHost.replace("http://", "").split(":");
   const PORT = Number(PORT_STR);
 
-  const candidatePaths = [
-    path.resolve(__dirname, "../../../firestore.rules"),
-    path.resolve(__dirname, "../../firestore.rules"),
-    path.resolve(process.cwd(), "firestore.rules"),
-    path.resolve(process.cwd(), "rules", "firestore.rules"),
-  ];
+  const rulesPath = path.resolve(
+    __dirname,
+    "../../../firebase-rules/firestore.rules",
+  );
 
-  let rulesPath: string | null = null;
-  for (const p of candidatePaths) {
-    if (fs.existsSync(p)) {
-      rulesPath = p;
-      break;
-    }
-  }
-
-  if (!rulesPath) {
-    throw new Error(
-      `firestore.rules not found. Tried: ${candidatePaths.join(", ")}.`,
-    );
+  if (!fs.existsSync(rulesPath)) {
+    throw new Error(`firestore.rules not found at ${rulesPath}`);
   }
 
   testEnv = await initializeTestEnvironment({
@@ -257,9 +240,6 @@ export const cleanupTestData = async () => {
 
   const usersSnapshot = await db.collection("Users").get();
   await Promise.all(usersSnapshot.docs.map((d) => d.ref.delete()));
-
-  const projectsSnapshot = await db.collection("Projects").get();
-  await Promise.all(projectsSnapshot.docs.map((d) => d.ref.delete()));
 
   for (const user of TEST_USERS) {
     try {

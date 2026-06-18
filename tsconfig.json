@@ -10,17 +10,12 @@
     "esModuleInterop": true,
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
-    "types": ["@react-native-async-storage/async-storage", "node", "jest"],
-    "paths": {
-      "@firebase/auth": ["./node_modules/@firebase/auth/dist/index.rn.d.ts"]
-    }
+    "types": ["@react-native-async-storage/async-storage", "node", "jest"]
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
-    "validation/overrides/firestore.override.js",
-    "functions/jest.unit.config.js",
-    "functions/src/functions/projectAndWorkValidator.functionsts"
+    "validation/overrides/firestore.override.js"
   ],
   "exclude": ["node_modules"],
   "rootDir": "./"

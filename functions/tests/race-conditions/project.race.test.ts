@@ -28,10 +28,17 @@ const projectId = `race-project-${randomUUID()}`;
 
 // get project ref
 const projectRef = (id: string) =>
-  admin.firestore().collection("Projects").doc(id);
+  admin
+    .firestore()
+    .collection("Users")
+    .doc(ownerUid)
+    .collection("Services")
+    .doc(serviceId)
+    .collection("Projects")
+    .doc(id);
 
-const seedProject = async (id: string) => {
-  await projectRef(id).set({
+const seedProject = async () => {
+  await projectRef(projectId).set({
     userId: ownerUid,
     serviceId,
     name: "init",
@@ -59,7 +66,7 @@ describe("Race Condition: concurrent project updates", () => {
   it("must preserve valid project state under parallel writes", async () => {
     const service = new ProjectService();
 
-    await seedProject(projectId);
+    await seedProject();
 
     const results = await runRace({
       participants: 20,
@@ -89,7 +96,7 @@ describe("Race Condition: mixed field updates", () => {
   it("must not produce partial or invalid document states", async () => {
     const service = new ProjectService();
 
-    await seedProject(projectId);
+    await seedProject();
 
     const results = await runRace({
       participants: 25,
@@ -128,13 +135,13 @@ describe("Race Condition: earnings idempotent writes", () => {
   it("must stay stable under repeated writes", async () => {
     const service = new ProjectService();
 
-    await seedProject(projectId);
+    await seedProject();
 
     const results = await runRace({
       participants: 20,
       jitterMs: 5,
       operation: async () => {
-        return service.setHourlyRate(ownerUid, projectId, 100);
+        return service.setHourlyRate(ownerUid, serviceId, projectId, 100);
       },
     });
 
@@ -160,7 +167,7 @@ describe("Race Condition: idempotent updates", () => {
   it("must remain stable under repeated identical writes", async () => {
     const service = new ProjectService();
 
-    await seedProject(projectId);
+    await seedProject();
 
     const payload = {
       name: "stable-update",
@@ -195,7 +202,7 @@ describe("Race Condition: earnings write + project deletion", () => {
   it("must not create orphan earnings state", async () => {
     const service = new ProjectService();
 
-    await seedProject(projectId);
+    await seedProject();
 
     await runRace({
       participants: 25,
@@ -206,7 +213,12 @@ describe("Race Condition: earnings write + project deletion", () => {
             return await service.deleteProject(ownerUid, serviceId, projectId);
           }
 
-          return await service.setHourlyRate(ownerUid, projectId, 100);
+          return await service.setHourlyRate(
+            ownerUid,
+            serviceId,
+            projectId,
+            100,
+          );
         } catch (error: any) {
           if (
             error?.code === "aborted" ||
@@ -240,7 +252,7 @@ describe("Race Condition: earnings write + project deletion", () => {
 
 describe("Race Condition: write-after-delete rejection guarantee", () => {
   it("must reject all writes after deletion wins", async () => {
-    await seedProject(projectId);
+    await seedProject();
 
     const project = await projectRef(projectId).get();
     const earnings = await admin
@@ -263,7 +275,7 @@ describe("Race Condition: delete vs earnings update timing", () => {
   it("must not allow write after deletion", async () => {
     const service = new ProjectService();
 
-    await seedProject(projectId);
+    await seedProject();
 
     const results = await runRace({
       participants: 20,
@@ -273,7 +285,7 @@ describe("Race Condition: delete vs earnings update timing", () => {
           await service.deleteProject(ownerUid, serviceId, projectId);
         }
 
-        return service.setHourlyRate(ownerUid, projectId, 120);
+        return service.setHourlyRate(ownerUid, serviceId, projectId, 120);
       },
     });
 

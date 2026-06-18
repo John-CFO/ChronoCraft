@@ -4,15 +4,20 @@
 
 ////////////////////////////////////////////////////////////////////
 
+// mocking
 jest.mock("../../../src/utils/rateLimitInstance", () => ({
   rateLimit: {
     check: jest.fn(),
   },
 }));
 
+////////////////////////////////////////////////////////////////////
+
 import { secureCore } from "../../../src/functions/secureCore";
 import { RateLimitError } from "../../../src/errors/domain.errors";
 import { rateLimit } from "../../../src/utils/rateLimitInstance";
+
+////////////////////////////////////////////////////////////////////
 
 describe("secureCore security logic", () => {
   it("should propagate RateLimitError", async () => {
