@@ -18,13 +18,10 @@ export class ProjectService {
 
   // validate service ownership
   private async assertServiceOwnership(userId: string, serviceId: string) {
-    if (process.env.NODE_ENV === "test") {
-      return;
-    }
+    if (process.env.NODE_ENV === "test") return;
 
-    const db = admin.firestore();
-
-    const ref = db
+    const ref = admin
+      .firestore()
       .collection("Users")
       .doc(userId)
       .collection("Services")
@@ -36,27 +33,25 @@ export class ProjectService {
       throw new ValidationError("Service not found or not accessible");
     }
   }
-
-  // update project
+  // Queries
   async updateProject(
     userId: string,
     serviceId: string,
     projectId: string,
     data: any,
   ) {
-    if (!projectId || !serviceId || !userId) {
+    if (!userId || !serviceId || !projectId) {
       throw new ValidationError("Invalid input");
     }
 
     const { projectId: _, userId: __, serviceId: ___, ...updateData } = data;
 
-    return await this.projectRepo.updateProject(userId, projectId, {
+    return await this.projectRepo.updateProject(userId, serviceId, projectId, {
       ...updateData,
       updatedAt: Timestamp.now(),
     });
   }
 
-  // get projects
   async getProjects(userId: string, serviceId: string) {
     if (!userId || !serviceId) {
       throw new ValidationError("Invalid input");
@@ -74,7 +69,7 @@ export class ProjectService {
   async deleteProject(userId: string, serviceId: string, projectId: string) {
     await this.assertServiceOwnership(userId, serviceId);
 
-    return this.projectRepo.deleteProject(userId, projectId);
+    return this.projectRepo.deleteProject(userId, serviceId, projectId);
   }
 
   async createProject(userId: string, name: string, serviceId: string) {
@@ -83,9 +78,15 @@ export class ProjectService {
     return this.projectRepo.createProject(userId, name, serviceId);
   }
 
-  async setHourlyRate(userId: string, projectId: string, rate: number) {
+  async setHourlyRate(
+    userId: string,
+    serviceId: string,
+    projectId: string,
+    rate: number,
+  ) {
     if (
       !userId ||
+      !serviceId ||
       !projectId ||
       typeof rate !== "number" ||
       Number.isNaN(rate)
@@ -93,20 +94,17 @@ export class ProjectService {
       throw new ValidationError("Invalid input");
     }
 
-    if (process.env.NODE_ENV !== "test") {
-      const lockRef = admin
-        .firestore()
-        .collection("deletionLocks")
-        .doc(projectId);
+    const lockRef = admin
+      .firestore()
+      .collection("deletionLocks")
+      .doc(projectId);
+    const lockSnap = await lockRef.get();
 
-      const lockSnap = await lockRef.get();
-
-      if (lockSnap.exists) {
-        throw new ValidationError("Project deletion in progress");
-      }
+    if (lockSnap.exists) {
+      throw new ValidationError("Project deletion in progress");
     }
 
-    return this.projectRepo.setProjectHourlyRate(userId, projectId, {
+    return this.projectRepo.setProjectHourlyRate(userId, serviceId, projectId, {
       hourlyRate: rate,
       updatedAt: Timestamp.now(),
     });
