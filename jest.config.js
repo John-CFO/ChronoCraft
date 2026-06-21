@@ -19,6 +19,7 @@ module.exports = {
   testPathIgnorePatterns: [
     "/node_modules/",
     "/emulator-tests/",
+    "/firebase-rules/",
     "<rootDir>/functions/",
   ],
   globals: {

@@ -60,14 +60,6 @@ export const useValidatedStore = () => {
   ) => {
     const uid = getAuth().currentUser?.uid;
 
-    console.log("SET_TIMER_AND_EARNINGS DEBUG (RAW)", {
-      projectId,
-      timer,
-      totalEarnings,
-      uid,
-      currentUser: store.currentUser,
-    });
-
     if (!uid) {
       console.error("CRITICAL: Missing uid in setTimerAndEarnings");
       return;

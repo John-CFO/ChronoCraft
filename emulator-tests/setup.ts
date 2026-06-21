@@ -16,37 +16,28 @@ if (!globalThis.fetch) {
 
 ///////////////////////////////////////////////////////////////////////
 
-import { initializeApp, getApps } from "firebase/app";
+import { initializeApp } from "firebase/app";
 import {
   getAuth,
   connectAuthEmulator,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
-import {
-  getFirestore,
-  connectFirestoreEmulator,
-  doc,
-  setDoc,
-} from "firebase/firestore";
-import { getStorage, connectStorageEmulator } from "firebase/storage";
+import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 
 ///////////////////////////////////////////////////////////////////////
 
 // define emulator host
 process.env.FIREBASE_AUTH_EMULATOR_HOST = "127.0.0.1:5001";
-process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8001";
-process.env.FIREBASE_STORAGE_EMULATOR_HOST = "127.0.0.1:9199";
-// init firebase
-const app =
-  getApps().length > 0
-    ? getApps()[0]
-    : initializeApp({
-        apiKey: "demo",
-        authDomain: "demo",
-        projectId: "chrono-craft-worktime-manager",
-      });
+
+// init app
+const app = initializeApp({
+  apiKey: "demo",
+  authDomain: "demo",
+  projectId: "chrono-craft-worktime-manager",
+});
 
 // init services
 export const auth = getAuth(app);
@@ -56,8 +47,6 @@ export const functions = getFunctions(app);
 
 // connect emulators
 connectAuthEmulator(auth, "http://127.0.0.1:5001");
-connectFirestoreEmulator(db, "127.0.0.1", 8001);
-connectStorageEmulator(storage, "127.0.0.1", 9199);
 connectFunctionsEmulator(functions, "127.0.0.1", 4001);
 
 // init test user

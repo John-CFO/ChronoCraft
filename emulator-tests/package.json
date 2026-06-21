@@ -6,6 +6,7 @@
     "test": "vitest run --config vitest.config.ts"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.1",
     "@types/node": "^25.0.10",
     "firebase-admin": "^13.6.0",
     "ts-node": "^10.9.1",
