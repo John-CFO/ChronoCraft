@@ -1,3 +1,4 @@
+// vitest.config.ts
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
@@ -5,7 +6,7 @@ export default defineConfig({
     globals: true,
     environment: "node",
     setupFiles: "./vitest.setup.ts",
-    include: ["**/*.test.ts"],
+    include: ["../firebase-rules/**/*.test.ts"],
     testTimeout: 15000,
   },
 });
