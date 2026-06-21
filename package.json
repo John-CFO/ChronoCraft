@@ -10,6 +10,7 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "test": "jest",
     "test:e2e": "firebase emulators:exec \"npm --prefix emulator-tests run test\"",
+    "test:rules": "npm --prefix emulator-tests run test",
     "clean-install": "rm -rf node_modules package-lock.json && npm install --legacy-peer-deps",
     "create:test-user": "ts-node scripts/createTestUser.ts"
   },
@@ -21,6 +22,7 @@
     "@babel/runtime": "^7.24.6",
     "@expo/config-plugins": "^7.8.0",
     "@expo/metro-config": "^0.17.1",
+    "@firebase/rules-unit-testing": "^5.0.1",
     "@gorhom/bottom-sheet": "4.6.0",
     "@react-native-async-storage/async-storage": "^1.21.0",
     "@react-native-community/datetimepicker": "^7.7.0",
@@ -72,6 +74,7 @@
     "react-native-svg": "^14.1.0",
     "react-native-type-animation": "^0.3.0",
     "text-encoding-polyfill": "^0.6.7",
+    "vitest": "^4.1.9",
     "zod": "^4.1.8",
     "zustand": "^4.5.4"
   },
