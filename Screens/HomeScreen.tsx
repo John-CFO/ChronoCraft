@@ -51,6 +51,7 @@ import {
 import { RootStackParamList } from "../navigation/RootStackParams";
 import ProjectListItem from "../components/projectListItem";
 import { Project } from "../components/types/Project";
+import { sortProjects } from "../components/utils/sortProjects";
 import { useStore } from "../components/TimeTrackingState";
 import NoteModal from "../components/NoteModal";
 import RoutingLoader from "../components/RoutingLoader";
@@ -128,7 +129,7 @@ const HomeScreen: React.FC = () => {
   // initialize the project id globally to reset all components in the details screen
   const { setProjectId } = useStore();
 
-  // handle project state with props title, id and name
+  // handle project state with props title, id, name and createdAt
   const [projects, setProjects] = useState<Project[]>([]);
 
   // new project name state
@@ -136,6 +137,9 @@ const HomeScreen: React.FC = () => {
 
   // state to handel sort modal
   const [sortModalVisible, setSortModalVisible] = useState(false);
+
+  // sort order state
+  const [sortOrder, setSortOrder] = useState("DATE_DESC");
 
   const openSortModal = () => {
     setSortModalVisible(true);
@@ -145,32 +149,33 @@ const HomeScreen: React.FC = () => {
     setSortModalVisible(false);
   };
 
-  // sort order state
-  const [sortOrder, setSortOrder] = useState("DATE_DESC");
-
   // function to sort the projects
   const sortedProjects = React.useMemo(() => {
-    return [...projects].sort((a, b) => {
-      const aDate = normalizeCreatedAt(a.createdAt);
-      const bDate = normalizeCreatedAt(b.createdAt);
-
-      const aTime = aDate ? aDate.getTime() : 0;
-      const bTime = bDate ? bDate.getTime() : 0;
-
-      switch (sortOrder) {
-        case "DATE_DESC":
-          return bTime - aTime;
-        case "DATE_ASC":
-          return aTime - bTime;
-        case "NAME_ASC":
-          return a.name.localeCompare(b.name);
-        case "NAME_DESC":
-          return b.name.localeCompare(a.name);
-        default:
-          return 0;
-      }
-    });
+    return sortProjects(projects, sortOrder);
   }, [projects, sortOrder]);
+
+  // const sortedProjects = React.useMemo(() => {
+  //   return [...projects].sort((a, b) => {
+  //     const aDate = normalizeCreatedAt(a.createdAt);
+  //     const bDate = normalizeCreatedAt(b.createdAt);
+
+  //     const aTime = aDate ? aDate.getTime() : 0;
+  //     const bTime = bDate ? bDate.getTime() : 0;
+
+  //     switch (sortOrder) {
+  //       case "DATE_DESC":
+  //         return bTime - aTime;
+  //       case "DATE_ASC":
+  //         return aTime - bTime;
+  //       case "NAME_ASC":
+  //         return a.name.localeCompare(b.name);
+  //       case "NAME_DESC":
+  //         return b.name.localeCompare(a.name);
+  //       default:
+  //         return 0;
+  //     }
+  //   });
+  // }, [projects, sortOrder]);
 
   // ref to handle the flatlist scroll animation and refresh the projects list
   const flatListRef = React.useRef<FlatList>(null);
