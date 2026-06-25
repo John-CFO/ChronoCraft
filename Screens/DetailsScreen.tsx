@@ -26,6 +26,7 @@ import { useCopilotOffset } from "../components/services/copilotTour/CopilotOffs
 import CustomTooltip from "../components/services/copilotTour/CustomToolTip";
 import ProgressCard from "../components/ProgressCard";
 import { usePreventBackWhileTracking } from "../components/PreventBackBTN";
+import { logError } from "../lib/loggerClient";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -54,9 +55,7 @@ const DetailsScreen: React.FC = () => {
 
   useEffect(() => {
     if (projectId) setProjectId(projectId);
-    return () => {
-      console.log("[DetailsScreen] UNMOUNT");
-    };
+    return () => {};
   }, [projectId]);
 
   // declare the copilot offset
@@ -127,7 +126,7 @@ const DetailsScreen: React.FC = () => {
             setShowTourCard(false);
           }
         } catch (err) {
-          console.error("Error fetching tour status:", err);
+          logError("DetailsScreen/fetchTourStatus", err);
           setShowTourCard(false); // if there is an error
         }
       };

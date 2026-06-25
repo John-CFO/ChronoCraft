@@ -24,6 +24,7 @@ import WorkHoursState from "../components/WorkHoursState";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { sanitizeHours } from "./InputSanitizers";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+import { logError } from "../lib/loggerClient";
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -50,7 +51,6 @@ const WorkHoursInput = () => {
   const accessMode = useAccessibilityStore(
     (state) => state.accessibilityEnabled,
   );
-  // console.log("accessMode in LoginScreen:", accessMode);
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
@@ -65,7 +65,11 @@ const WorkHoursInput = () => {
         if (!serviceId) return;
         const userId = getAuth().currentUser?.uid;
         if (!userId) {
-          console.log("No user authenticated");
+          logError(
+            "WorkHoursInput.handleSaveMinHours",
+            new Error("User ID not available"),
+          );
+
           return;
         }
 
@@ -99,7 +103,7 @@ const WorkHoursInput = () => {
           setGlobalDocId(null);
         }
       } catch (error) {
-        console.error("Error fetching hours:", error);
+        logError("WorkHoursInput.fetchExpectedHours", error);
         useAlertStore
           .getState()
           .showAlert("Error", "Failed to load work hours. Please try again.", [
@@ -118,11 +122,6 @@ const WorkHoursInput = () => {
     newExpected: number,
     existingData?: any,
   ) => {
-    // console.log("[DEBUG recalc] called with", {
-    //   duration,
-    //   newExpected,
-    //   existingData,
-    // });
     try {
       const previousExpected =
         existingData?.expectedHours !== undefined
@@ -132,15 +131,6 @@ const WorkHoursInput = () => {
       const newOver = Math.max(duration - newExpected, 0);
       const roundedOver = parseFloat(newOver.toFixed(2));
       const roundedDuration = parseFloat(duration.toFixed(2));
-
-      // console.log("[DEBUG recalc] previousExpected:", previousExpected);
-      // console.log(
-      //   "[DEBUG recalc] newOver (raw):",
-      //   newOver,
-      //   "roundedOver:",
-      //   roundedOver
-      // );
-      // console.log("[DEBUG recalc] roundedDuration:", roundedDuration);
 
       // build history entry (optional)- only if previousExpected is known
       const historyEntry =
@@ -153,7 +143,7 @@ const WorkHoursInput = () => {
               },
             ]
           : [];
-      // console.log("[DEBUG recalc] historyEntry:", historyEntry);
+
       // Merge-Update, to prevent overwriting
       await setDoc(
         docRef,
@@ -171,14 +161,8 @@ const WorkHoursInput = () => {
         },
         { merge: true },
       );
-      const verifySnap = await getDoc(docRef);
-      // console.log("[DEBUG recalc] verify doc:", {
-      //   workDay: existingData?.workDay,
-      //   id: docRef.id,
-      //   data: verifySnap.data(),
-      // });
     } catch (err) {
-      console.error("recalcAndSaveForDay error:", err);
+      logError("WorkHoursInput.recalcAndSaveForDay", err);
       throw err;
     }
   };
@@ -212,7 +196,7 @@ const WorkHoursInput = () => {
     try {
       const userId = getAuth().currentUser?.uid;
       if (!userId) {
-        console.error("User ID not available.");
+        logError("WorkHoursInput.handleSaveMinHours", "User ID not available");
         setSaving(false);
         return;
       }
@@ -307,7 +291,7 @@ const WorkHoursInput = () => {
       setDocExists(true);
       setGlobalDocId(docRef.id);
     } catch (error) {
-      console.error("Error saving expected hours:", error);
+      logError("WorkHoursInput.handleSaveMinHours", error);
       useAlertStore
         .getState()
         .showAlert(
@@ -322,7 +306,7 @@ const WorkHoursInput = () => {
 
   return (
     <>
-      {/* DetailsScreen copilot tour step 2 */}
+      {/* Worktime-Tracker Screen copilot tour step 2 */}
       <CopilotStep
         name="Daily Work-Hours"
         order={1}
@@ -448,7 +432,6 @@ const WorkHoursInput = () => {
                   fontFamily: "MPLUSLatin_Bold",
                   fontSize: 22,
                   color: saving ? "lightgray" : "white",
-                  marginBottom: 5,
                   paddingRight: 10,
                 }}
               >

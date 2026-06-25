@@ -12,6 +12,7 @@ import { doc, setDoc, getDoc } from "firebase/firestore";
 
 import { useAccessibilityStore } from "./accessibilityStore";
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../../../firebaseConfig";
+import { logError } from "../../../lib/loggerClient";
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -44,7 +45,7 @@ const AccessibilityToggleButton = () => {
             return;
           }
         } catch (err) {
-          console.error("Error loading accessibility from backend:", err);
+          logError("AccessibilityToggle/loadFromBackend", err);
         }
       }
 
@@ -53,7 +54,7 @@ const AccessibilityToggleButton = () => {
         const localValue = await AsyncStorage.getItem(STORAGE_KEY);
         setAccessibility(localValue === "true");
       } catch (err) {
-        console.error("Error loading accessibility from AsyncStorage:", err);
+        logError("AccessibilityToggle/loadFromStorage", err);
       }
       setLoading(false);
     };
@@ -70,7 +71,7 @@ const AccessibilityToggleButton = () => {
     try {
       await AsyncStorage.setItem(STORAGE_KEY, newValue.toString());
     } catch (err) {
-      console.error("Error saving accessibility locally:", err);
+      logError("AccessibilityToggle/saveLocal", err);
     }
 
     // Store in backend
@@ -84,7 +85,7 @@ const AccessibilityToggleButton = () => {
         { merge: true },
       );
     } catch (err) {
-      console.error("Error saving accessibility to backend:", err);
+      logError("AccessibilityToggle/saveBackend", err);
     }
   };
 

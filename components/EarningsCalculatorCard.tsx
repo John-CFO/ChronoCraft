@@ -27,6 +27,7 @@ import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { sanitizeRateInput } from "./InputSanitizers";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import { HourlyRateSchema } from "../validation/earningsSchemas";
+import { logError } from "../lib/loggerClient";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -112,7 +113,10 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
       } else if (typeof raw === "number" && raw >= 0 && raw <= 10000) {
         hourlyRate = raw;
       } else {
-        console.warn("Invalid hourlyRate value (corrupted data)");
+        logError(
+          "EarningsCalculatorCard/invalidHourlyRate",
+          new Error("Corrupted hourlyRate value"),
+        );
         hourlyRate = null;
       }
 
@@ -123,7 +127,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
       setHourlyRate(projectId, hourlyRate ?? 0);
       useStore.getState().setTotalEarnings(projectId, totalEarnings);
     } catch (error) {
-      console.error("Error fetching earnings data:", error);
+      logError("EarningsCalculatorCard/fetchEarningsData", error);
       // fail safe
       setHourlyRate(projectId, 0);
       useStore.getState().setTotalEarnings(projectId, 0);
@@ -184,7 +188,10 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
     setSaving(true);
     try {
       if (!serviceId) {
-        console.error("Missing serviceId");
+        logError(
+          "EarningsCalculatorCard/missingServiceId",
+          new Error("serviceId is missing"),
+        );
         return;
       }
 
@@ -192,7 +199,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
       setHourlyRate(projectId, rate);
       setRateInput("");
     } catch (error) {
-      console.error("Error saving hourly rate");
+      logError("EarningsCalculatorCard/saveHourlyRate", error);
       useAlertStore.getState().showAlert("Error", "Failed to save hourly rate");
     }
     setSaving(false);
@@ -333,7 +340,6 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
                     fontFamily: "MPLUSLatin_Bold",
                     fontSize: 22,
                     color: saving ? "lightgray" : "white",
-                    marginBottom: 5,
                     paddingRight: 10,
                   }}
                 >

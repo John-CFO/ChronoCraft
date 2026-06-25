@@ -10,6 +10,7 @@ import { doc, updateDoc } from "firebase/firestore";
 
 import { FIREBASE_FIRESTORE } from "../../firebaseConfig";
 import { uploadImageToProfile, debugUpload } from "./storage";
+import { logError } from "../../lib/loggerClient";
 
 ///////////////////////////////////////////////////////////////////////
 
@@ -39,7 +40,7 @@ export async function handleSaveProfile({
   setSaving,
 }: HandleSaveProfileParams) {
   if (!userId) {
-    console.warn("Missing user ID");
+    logError("handleSaveProfile/missingUserId", new Error("userId is missing"));
     return;
   }
 
@@ -63,6 +64,7 @@ export async function handleSaveProfile({
 
     ProfileSchema.parse(normalizedData);
   } catch (err: any) {
+    logError("handleSaveProfile/validation", err);
     showAlert(
       "Invalid input",
       err.errors?.[0]?.message || "Please enter valid data.",
@@ -98,6 +100,7 @@ export async function handleSaveProfile({
 
     onClose();
   } catch (error: any) {
+    logError("handleSaveProfile/updateProfile", error);
     showAlert("Error", error.message || "An unexpected error occurred.");
   } finally {
     setSaving(false);

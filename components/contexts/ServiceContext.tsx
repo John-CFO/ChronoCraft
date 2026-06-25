@@ -9,6 +9,7 @@ import { collection, getDocs, addDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../../firebaseConfig";
+import { logError } from "../../lib/loggerClient";
 
 // ////////////////////////////////////////////////////////////////////////////////////
 
@@ -59,7 +60,7 @@ export const ServiceProvider: React.FC<{ children: React.ReactNode }> = ({
           setServiceId(snapshot.docs[0].id);
         }
       } catch (err) {
-        console.error("Service init failed", err);
+        logError("ServiceContext/createService", err);
         setServiceId(null);
       } finally {
         setLoading(false);

@@ -34,6 +34,7 @@ import { FIREBASE_AUTH } from "../firebaseConfig";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useDotAnimation } from "../components/DotAnimation";
 import { useAccessibilityStore } from "./services/accessibility/accessibilityStore";
+import { logError } from "../lib/loggerClient";
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -162,7 +163,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
       try {
         await FIREBASE_AUTH.signOut();
       } catch (err) {
-        console.error("signOut failed:", err);
+        logError("FAQBottomSheet/signOut", err);
       }
 
       return true;

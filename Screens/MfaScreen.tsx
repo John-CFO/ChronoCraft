@@ -16,6 +16,7 @@ import OTPInput from "../components/OTPInput";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { useDotAnimation } from "../components/DotAnimation";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+import { logError } from "../lib/loggerClient";
 
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -77,7 +78,10 @@ const MfaScreen: React.FC = () => {
       const res = await verifyTotpLoginCallable({ token: tokenInput });
 
       if (!res.data) {
-        console.warn("No data returned from verifyTotpLogin");
+        logError(
+          "MfaScreen/verifyTotp/noResponse",
+          new Error("verifyTotpLogin returned no data"),
+        );
         useAlertStore
           .getState()
           .showAlert("Error", "No response from server. Please try again.");
@@ -98,7 +102,7 @@ const MfaScreen: React.FC = () => {
           );
       }
     } catch (e: any) {
-      console.error("verifyTotp error", e);
+      logError("MfaScreen/verifyTotp", e);
 
       let errorMessage = "Invalid authentication code.";
 

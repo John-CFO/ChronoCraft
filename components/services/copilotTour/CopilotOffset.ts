@@ -36,15 +36,15 @@ export const useCopilotOffset = () => {
     }
 
     // 📋 Debug-Output (only for Dev-Mode with real devices)
-    if (__DEV__) {
-      console.log("[useCopilotOffset] Debug Info:");
-      console.log("Plattform:", Platform.OS);
-      console.log("height:", height);
-      console.log("width:", width);
-      console.log("scale (DPI):", scale);
-      console.log("safeArea top:", top);
-      console.log("final calculatedOffset:", calculatedOffset);
-    }
+    // if (__DEV__) {
+    //   console.log("[useCopilotOffset] Debug Info:");
+    //   console.log("Plattform:", Platform.OS);
+    //   console.log("height:", height);
+    //   console.log("width:", width);
+    //   console.log("scale (DPI):", scale);
+    //   console.log("safeArea top:", top);
+    //   console.log("final calculatedOffset:", calculatedOffset);
+    // }
 
     setOffset(calculatedOffset);
   }, [height, top]);

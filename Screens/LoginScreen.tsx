@@ -46,6 +46,7 @@ import {
   LoginInputSchema,
   RegisterInputSchema,
 } from "../validation/authSchemas";
+import { logError } from "../lib/loggerClient";
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -120,7 +121,7 @@ const LoginScreen: React.FC = () => {
         navigation.navigate("MfaScreen" as never);
       }
     } catch (error) {
-      console.error(error);
+      logError("LoginScreen/login", error);
       useAlertStore
         .getState()
         .showAlert("Login failed", "Something went wrong, please try again!");
@@ -155,8 +156,8 @@ const LoginScreen: React.FC = () => {
             "registerPushTokenFunction",
           );
           await registerPushToken({ token });
-        } catch (e) {
-          console.warn("[PushToken] ignored failure", e);
+        } catch (error) {
+          logError("LoginScreen/registerPushToken", error);
         }
       }
 
@@ -164,7 +165,7 @@ const LoginScreen: React.FC = () => {
         navigation.navigate("MfaScreen" as never);
       }
     } catch (error) {
-      console.error("Registration failed:", error);
+      logError("LoginScreen/register", error);
       // alert notification toast
       Toast.show({
         type: ALERT_TYPE.DANGER,
