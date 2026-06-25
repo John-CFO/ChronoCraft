@@ -10,6 +10,7 @@ import { getAuth } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
+import { logError, logWarn } from "../lib/loggerClient";
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -65,7 +66,7 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
     if (!serviceId) return;
     const user = getAuth().currentUser;
     if (!user) {
-      console.log("No user found, skipping loadState");
+      logError("WorkHoursState.loadState", "No user found");
       return;
     }
 
@@ -84,7 +85,6 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
       const docSnap = await getDoc(docRef);
 
       if (!docSnap.exists()) {
-        console.log("Document does not exist");
         return;
       }
 
@@ -97,7 +97,7 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
         startWorkTime: data.startWorkTime ?? null,
       });
     } catch (error) {
-      console.error("Error loading state:", error);
+      logError("WorkHoursState.loadState", error);
     }
   },
 
@@ -106,7 +106,7 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
     if (!serviceId) return;
     const user = getAuth().currentUser;
     if (!user) {
-      console.log("No user found, skipping saveState");
+      logError("WorkHoursState.saveState", "No user found");
       return;
     }
 
@@ -134,7 +134,7 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
 
       await setDoc(docRef, stateToSave);
     } catch (error) {
-      console.error("Error saving state:", error);
+      logError("WorkHoursState.saveState", error);
     }
   },
 

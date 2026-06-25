@@ -29,6 +29,7 @@ import VacationRemindModal from "../components/VacationRemindModal";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import { FirestoreVacationSchema } from "../validation/vacationSchemas";
+import { logError, logEvent, logWarn } from "../lib/loggerClient";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -52,13 +53,13 @@ const VacationList = () => {
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
 
   // handle reminder modal state
   const [reminderModalVisible, setReminderModalVisible] = useState(false);
   const [selectedVacationId, setSelectedVacationId] = useState<string | null>(
-    null
+    null,
   );
 
   // hook to get the user from firebase to show the vacations
@@ -84,7 +85,7 @@ const VacationList = () => {
       user.uid,
       "Services",
       serviceId,
-      "Vacations"
+      "Vacations",
     );
 
     const unsubscribe = onSnapshot(
@@ -96,11 +97,10 @@ const VacationList = () => {
           // optional: Zod Parsing, only warn if error, no blocking
           const parsed = FirestoreVacationSchema.safeParse(rawData);
           if (!parsed.success) {
-            console.warn(
-              "Invalid vacation doc structure:",
-              doc.id,
-              parsed.error
-            );
+            logEvent("VacationList.invalidVacationDocument", {
+              documentId: doc.id,
+              validation: parsed.error.issues,
+            });
           }
 
           return rawData; // or parsed.data if clean parse
@@ -127,20 +127,24 @@ const VacationList = () => {
         setVacations(mapped);
       },
       (error) => {
+        logError("VacationList.onSnapshot", error);
         useAlertStore
           .getState()
           .showAlert(
             "Error loading vacations",
-            "Could not fetch vacation data. Please try again."
+            "Could not fetch vacation data. Please try again.",
           );
-      }
+      },
     );
 
     return () => unsubscribe();
   }, [user, serviceId]);
   // function to delete vacation dates
   const handleDeleteDate = async (vacationId: string) => {
-    if (!serviceId) return;
+    if (!serviceId) {
+      logWarn("VacationRemindModal.handleSaveReminder", "Missing serviceId");
+      return;
+    }
     // alert to confirm deletion
     useAlertStore
       .getState()
@@ -161,7 +165,7 @@ const VacationList = () => {
                 "Services",
                 serviceId,
                 "Vacations",
-                vacationId
+                vacationId,
               );
 
               // firestore batch for atomic updates
@@ -181,9 +185,8 @@ const VacationList = () => {
               batch.delete(vacationDoc);
               // commit the batch to the database
               await batch.commit();
-              // console.log(`Vacation ${vacationId} was deleted.`);
             } catch (error) {
-              console.error("Error deleting vacation:", error);
+              logError("VacationList.handleDeleteDate", error);
             }
           },
           style: "destructive", // to visually indicate a destructive action
@@ -283,17 +286,17 @@ const VacationList = () => {
                       return {
                         formatted: `${parseInt(day, 10)}.${parseInt(
                           month,
-                          10
+                          10,
                         )}.${year}`,
                         timestamp: new Date(
                           parseInt(year, 10),
                           parseInt(month, 10) - 1, // -1 because months are zero-based
-                          parseInt(day, 10)
+                          parseInt(day, 10),
                         ),
                       };
                     })
                     .sort(
-                      (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
+                      (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
                     ); // sort by timestamp
                   // extract the first and last date to show a range in the UI
                   const displayRange =

@@ -26,6 +26,7 @@ import OTPInput from "./OTPInput";
 import DismissKeyboard from "../components/DismissKeyboard";
 import { useDotAnimation } from "../components/DotAnimation";
 import { ensureAuthReady } from "../services/ensureAuthToken";
+import { logError } from "../lib/loggerClient";
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -130,7 +131,7 @@ const MultiFactorModal: React.FC<Props> = ({
         throw new Error("No OTP URL received from server");
       }
     } catch (error: any) {
-      console.error("startEnroll error", error);
+      logError("MultiFactorModal/startEnroll", error);
 
       let errorMessage =
         error.message || "Cannot start TOTP enrollment. Please try again.";
@@ -165,7 +166,10 @@ const MultiFactorModal: React.FC<Props> = ({
     try {
       const id = enrollmentId;
       if (!id) {
-        console.error("Enrollment ID missing");
+        logError(
+          "MultiFactorModal/confirmEnroll/missingEnrollmentId",
+          new Error("Enrollment ID missing"),
+        );
         return;
       }
 
@@ -216,7 +220,7 @@ const MultiFactorModal: React.FC<Props> = ({
           .showAlert("Error", data.message || "Invalid TOTP code");
       }
     } catch (error: any) {
-      console.error("confirmEnroll error", error);
+      logError("MultiFactorModal/confirmEnroll", error);
 
       let errorMessage = error.message || "Failed to verify TOTP";
       if (error.code === "functions/invalid-argument") {
@@ -266,7 +270,7 @@ const MultiFactorModal: React.FC<Props> = ({
           try {
             onClose();
           } catch (e) {
-            console.error("onClose failed:", e);
+            logError("MultiFactorModal/onClose", e);
           }
 
           useAlertStore
@@ -285,7 +289,7 @@ const MultiFactorModal: React.FC<Props> = ({
         throw new Error(data.message || "Disabling MFA failed");
       }
     } catch (err: any) {
-      console.error("disableTotp error", err);
+      logError("MultiFactorModal/disableTotp", err);
       useAlertStore
         .getState()
         .showAlert("Error", err.message || "Cannot disable MFA.");

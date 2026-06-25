@@ -15,6 +15,7 @@ import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { useService } from "../components/contexts/ServiceContext";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+import { logError } from "../lib/loggerClient";
 
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -53,7 +54,11 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
         [
           {
             text: "Cancel",
-            onPress: () => console.log("Note deletion canceled"),
+            onPress: () =>
+              logError(
+                "NoteCard/deleteNote/canceled",
+                new Error("User canceled note deletion"),
+              ),
             style: "cancel",
           },
           {
@@ -61,7 +66,10 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
             onPress: async () => {
               const user = FIREBASE_AUTH.currentUser;
               if (!user) {
-                console.error("User is not authenticated.");
+                logError(
+                  "NoteCard/deleteNote/missingAuthUser",
+                  new Error("User is not authenticated"),
+                );
                 return;
               }
 
@@ -80,7 +88,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
                 await deleteDoc(noteDocRef);
                 onDelete(note.id);
               } catch (error) {
-                console.error("Error deleting note");
+                logError("NoteCard/deleteNote", error);
                 useAlertStore
                   .getState()
                   .showAlert("Error", "Failed to delete note");

@@ -5,6 +5,7 @@ import { collection, getDocs, query } from "firebase/firestore";
 
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { useService } from "../components/contexts/ServiceContext";
+import { logError } from "../lib/loggerClient";
 
 //////////////////////////////////////////////////////////////
 
@@ -40,7 +41,7 @@ export const useNotes = (projectId: string) => {
 
       const user = FIREBASE_AUTH.currentUser;
       if (!user) {
-        setError(new Error("User not authenticated"));
+        logError("fetchNotes", "No user found");
         setLoading(false);
         return;
       }
@@ -73,8 +74,8 @@ export const useNotes = (projectId: string) => {
         });
 
         setNotes(notes);
-      } catch (e) {
-        setError(new Error("Failed to fetch notes"));
+      } catch (err) {
+        logError("fetchNotes", err);
       } finally {
         setLoading(false);
       }

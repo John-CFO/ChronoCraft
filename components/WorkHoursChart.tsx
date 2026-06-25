@@ -22,6 +22,7 @@ import ChartRadioButtons from "./ChartRadioButtons";
 import { formatTooltipDate } from "../components/FormatToolTip";
 import { formatTime } from "../components/WorkTimeCalc";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
+import { logWarn } from "../lib/loggerClient";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -34,7 +35,7 @@ const WorkHoursChart = () => {
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
 
   // initialstate for the chart type
@@ -137,7 +138,7 @@ const WorkHoursChart = () => {
         const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ...
         const startOfWeek = new Date(today);
         startOfWeek.setDate(
-          today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1) // define the start of the week
+          today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1), // define the start of the week
         );
         // set the hours, minutes, seconds, and milliseconds to 0
         startOfWeek.setHours(0, 0, 0, 0);
@@ -237,7 +238,10 @@ const WorkHoursChart = () => {
       .filter((item: any) => item.elapsedTime > 0)
       .map((item: any) => {
         if (!item.workDay || isNaN(new Date(item.workDay).getTime())) {
-          console.warn("Invalid or missing day:", item);
+          logWarn("WorkHoursChart.invalidWorkDay", {
+            item,
+            workDay: item?.workDay,
+          });
           return null;
         }
         const formattedDate = formatDate(item.workDay, chartType);
@@ -272,7 +276,7 @@ const WorkHoursChart = () => {
     innerWidth > 0
       ? Math.max(
           innerWidth,
-          initialSpacing + stackData.length * (barWidth + spacing) + spacing
+          initialSpacing + stackData.length * (barWidth + spacing) + spacing,
         )
       : initialSpacing + stackData.length * (barWidth + spacing) + spacing;
 
@@ -284,7 +288,7 @@ const WorkHoursChart = () => {
       const sum =
         (item.stacks || []).reduce(
           (acc: number, curr: { value: number }) => acc + (curr?.value || 0),
-          0
+          0,
         ) || 0;
       if (sum > maxSum) maxSum = sum;
     });
@@ -318,7 +322,7 @@ const WorkHoursChart = () => {
 
   return (
     <>
-      {/* DetailsScreen copilot tour step 2 */}
+      {/* Worktime-Tracker Screen copilot tour step 2 */}
       <CopilotStep
         name="Work-Hours Chart"
         order={3}

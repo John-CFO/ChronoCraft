@@ -11,6 +11,7 @@ import Entypo from "@expo/vector-icons/Entypo";
 
 import { resetTourFlags } from "./TourService";
 import { useAlertStore } from "../customAlert/alertStore";
+import { logError } from "../../../lib/loggerClient";
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -37,7 +38,7 @@ const RestartTourButton: React.FC<RestartTourProps> = ({ userId }) => {
         .getState()
         .showAlert(
           "Restart Tour",
-          "The tour will be shown again when opening the respective screens."
+          "The tour will be shown again when opening the respective screens.",
         );
 
       //  reload the screen
@@ -46,7 +47,7 @@ const RestartTourButton: React.FC<RestartTourProps> = ({ userId }) => {
         params: { triggerReload: Date.now() },
       });
     } catch (error) {
-      console.log("Error restarting tour:", error);
+      logError("RestartTourButton/restartTour", error);
     }
   };
 
