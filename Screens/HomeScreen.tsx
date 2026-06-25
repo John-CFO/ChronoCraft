@@ -1,4 +1,4 @@
-///////////////////////////////////// HomeSceen Component////////////////////////////////////////////
+///////////////////////////////////// HomeSceen Component ////////////////////////////////////////////
 
 // This component shows a list of projects and enabled the user to add and delete his projects.
 // The user can also write notes to every project in the list wich is also visible in the DetailsScreen.
@@ -49,6 +49,8 @@ import {
   FIREBASE_APP,
 } from "../firebaseConfig";
 import { RootStackParamList } from "../navigation/RootStackParams";
+import ProjectListItem from "../components/projectListItem";
+import { Project } from "../components/types/Project";
 import { useStore } from "../components/TimeTrackingState";
 import NoteModal from "../components/NoteModal";
 import RoutingLoader from "../components/RoutingLoader";
@@ -73,13 +75,6 @@ type HomeScreenRouteProp = RouteProp<
 >;
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
-
-interface Project {
-  id: string;
-  name: string;
-  createdAt: Date | null;
-  [key: string]: any;
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -449,166 +444,191 @@ const HomeScreen: React.FC = () => {
   // define the dot animation with a delay
   const dots = useDotAnimation(loading, 700);
 
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled,
+  );
+
   // scroll animation with parameters to handle the scroll animation
-  const renderItem = ({ item, index }: { item: Project; index: number }) => {
-    // calculate animation
-    const inputRange = [
-      -1,
-      0,
-      ITEM_HEIGHT * index,
-      ITEM_HEIGHT * (index + 1),
-      ITEM_HEIGHT * (index + 2),
-    ];
-
-    const scale = scrollY.interpolate({
-      inputRange,
-      outputRange: [1, 1, 1, 0.8, 0.8],
-      extrapolate: "clamp",
-    });
-
-    const opacity = scrollY.interpolate({
-      inputRange,
-      outputRange: [1, 1, 1, 0.5, 0],
-      extrapolate: "clamp",
-    });
-
-    // set the date in the right format
-    const dateObj = normalizeCreatedAt(item.createdAt);
-
-    // calculate the average item height to handle functionality of the scroll animation
-    const mesureItemHeight = (event: LayoutChangeEvent) => {
-      const { height } = event.nativeEvent.layout;
-      setLastItemHeight(height);
-    };
-
-    return (
-      // add and delete  project card animation
-      <Animatable.View
-        animation="zoomInUp"
-        duration={1500}
-        delay={index * 100}
-        useNativeDriver
-        // ref to animate the project deleting
-        ref={(ref) => {
-          if (ref && item.id) {
-            animationRefs.current[item.id] = ref;
-          }
+  const renderItem = React.useCallback(
+    ({ item, index }: { item: Project; index: number }) => (
+      <ProjectListItem
+        item={item}
+        index={index}
+        ITEM_HEIGHT={ITEM_HEIGHT}
+        scrollY={scrollY}
+        accessMode={accessMode}
+        animationRef={(id, ref) => {
+          if (ref) animationRefs.current[id] = ref;
         }}
-      >
-        {/* Animation View parameters */}
-        <Animated.View
-          style={{
-            height: ITEM_HEIGHT,
-            transform: [{ scale }],
-            opacity,
-            margin: 5,
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            borderWidth: 1,
-            borderColor: "aqua",
-            minWidth: "98%",
-            backgroundColor: "#191919",
-            borderRadius: 8,
-          }}
-          onLayout={mesureItemHeight}
-        >
-          {/* Button to navigate to the details screen */}
-          <TouchableOpacity
-            onPress={() => handleProjectPress(item.id as string, item.name)}
-            accessibilityRole="button"
-            accessibilityLabel={`Project ${item.name}, created on ${
-              dateObj ? dayjs(dateObj).format("DD MMMM YYYY") : "unknown date"
-            }`}
-            accessibilityHint="Tap to view project details"
-            style={{ alignItems: "center", justifyContent: "center", flex: 1 }}
-          >
-            <View
-              style={{
-                height: "100%",
-                width: "100%",
-              }}
-            >
-              {/* Section with date in the project container */}
-              {dateObj ? (
-                <Text
-                  style={{
-                    color: accessMode ? "white" : "grey",
-                    fontSize: accessMode ? 16 : 13,
-                    paddingLeft: 10,
-                    marginTop: 5,
-                  }}
-                >
-                  {dayjs(dateObj).format("DD.MM.YYYY")}
-                </Text>
-              ) : (
-                <Text
-                  style={{
-                    color: "gray",
-                    fontSize: 13,
-                    paddingLeft: 10,
-                    marginTop: 5,
-                    fontStyle: "italic",
-                  }}
-                >
-                  No date available
-                </Text>
-              )}
+        onPress={handleProjectPress}
+        onDelete={handleDeleteProject}
+        onAddNote={openNoteModal}
+        setLastItemHeight={setLastItemHeight}
+      />
+    ),
+    [scrollY, accessMode],
+  );
 
-              {/* Project name in the project container */}
-              <Text
-                style={{
-                  marginTop: 5,
-                  marginLeft: 30,
-                  fontSize: accessMode ? 28 : 24,
-                  fontFamily: "MPLUSLatin_Bold",
-                  color: "white",
-                }}
-              >
-                {item.name}
-              </Text>
-            </View>
-          </TouchableOpacity>
-          <View
-            style={{
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "space-evenly",
-              marginRight: 10,
-              height: "100%",
-            }}
-          >
-            {/* Button to delete a project */}
-            <TouchableOpacity
-              onPress={() => handleDeleteProject(item.id)}
-              accessibilityRole="button"
-              accessibilityLabel="Delete the project"
-              accessibilityHint="Delete the project"
-            >
-              <AntDesign
-                name="delete"
-                size={30}
-                color={accessMode ? "white" : "darkgrey"}
-              />
-            </TouchableOpacity>
-            {/* Button to add a note to a project */}
-            <TouchableOpacity
-              onPress={() => openNoteModal(item.id)}
-              accessibilityRole="button"
-              accessibilityLabel="Add a note"
-              accessibilityHint="Add a note. You can watch it in the details screen"
-            >
-              <MaterialIcons
-                name="edit-note"
-                size={30}
-                color={accessMode ? "white" : "darkgrey"}
-              />
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
-      </Animatable.View>
-    );
-  };
+  // const renderItem = ({ item, index }: { item: Project; index: number }) => {
+  //   // calculate animation
+  //   const inputRange = [
+  //     -1,
+  //     0,
+  //     ITEM_HEIGHT * index,
+  //     ITEM_HEIGHT * (index + 1),
+  //     ITEM_HEIGHT * (index + 2),
+  //   ];
+
+  //   const scale = scrollY.interpolate({
+  //     inputRange,
+  //     outputRange: [1, 1, 1, 0.8, 0.8],
+  //     extrapolate: "clamp",
+  //   });
+
+  //   const opacity = scrollY.interpolate({
+  //     inputRange,
+  //     outputRange: [1, 1, 1, 0.5, 0],
+  //     extrapolate: "clamp",
+  //   });
+
+  //   // set the date in the right format
+  //   const dateObj = normalizeCreatedAt(item.createdAt);
+
+  //   // calculate the average item height to handle functionality of the scroll animation
+  //   const mesureItemHeight = (event: LayoutChangeEvent) => {
+  //     const { height } = event.nativeEvent.layout;
+  //     setLastItemHeight(height);
+  //   };
+
+  //   return (
+  //     // add and delete  project card animation
+  //     <Animatable.View
+  //       animation="zoomInUp"
+  //       duration={1500}
+  //       delay={index * 100}
+  //       useNativeDriver
+  //       // ref to animate the project deleting
+  //       ref={(ref) => {
+  //         if (ref && item.id) {
+  //           animationRefs.current[item.id] = ref;
+  //         }
+  //       }}
+  //     >
+  //       {/* Animation View parameters */}
+  //       <Animated.View
+  //         style={{
+  //           height: ITEM_HEIGHT,
+  //           transform: [{ scale }],
+  //           opacity,
+  //           margin: 5,
+  //           flexDirection: "row",
+  //           justifyContent: "space-between",
+  //           alignItems: "center",
+  //           borderWidth: 1,
+  //           borderColor: "aqua",
+  //           minWidth: "98%",
+  //           backgroundColor: "#191919",
+  //           borderRadius: 8,
+  //         }}
+  //         onLayout={mesureItemHeight}
+  //       >
+  //         {/* Button to navigate to the details screen */}
+  //         <TouchableOpacity
+  //           onPress={() => handleProjectPress(item.id as string, item.name)}
+  //           accessibilityRole="button"
+  //           accessibilityLabel={`Project ${item.name}, created on ${
+  //             dateObj ? dayjs(dateObj).format("DD MMMM YYYY") : "unknown date"
+  //           }`}
+  //           accessibilityHint="Tap to view project details"
+  //           style={{ alignItems: "center", justifyContent: "center", flex: 1 }}
+  //         >
+  //           <View
+  //             style={{
+  //               height: "100%",
+  //               width: "100%",
+  //             }}
+  //           >
+  //             {/* Section with date in the project container */}
+  //             {dateObj ? (
+  //               <Text
+  //                 style={{
+  //                   color: accessMode ? "white" : "grey",
+  //                   fontSize: accessMode ? 16 : 13,
+  //                   paddingLeft: 10,
+  //                   marginTop: 5,
+  //                 }}
+  //               >
+  //                 {dayjs(dateObj).format("DD.MM.YYYY")}
+  //               </Text>
+  //             ) : (
+  //               <Text
+  //                 style={{
+  //                   color: "gray",
+  //                   fontSize: 13,
+  //                   paddingLeft: 10,
+  //                   marginTop: 5,
+  //                   fontStyle: "italic",
+  //                 }}
+  //               >
+  //                 No date available
+  //               </Text>
+  //             )}
+
+  //             {/* Project name in the project container */}
+  //             <Text
+  //               style={{
+  //                 marginTop: 5,
+  //                 marginLeft: 30,
+  //                 fontSize: accessMode ? 28 : 24,
+  //                 fontFamily: "MPLUSLatin_Bold",
+  //                 color: "white",
+  //               }}
+  //             >
+  //               {item.name}
+  //             </Text>
+  //           </View>
+  //         </TouchableOpacity>
+  //         <View
+  //           style={{
+  //             flexDirection: "column",
+  //             alignItems: "center",
+  //             justifyContent: "space-evenly",
+  //             marginRight: 10,
+  //             height: "100%",
+  //           }}
+  //         >
+  //           {/* Button to delete a project */}
+  //           <TouchableOpacity
+  //             onPress={() => handleDeleteProject(item.id)}
+  //             accessibilityRole="button"
+  //             accessibilityLabel="Delete the project"
+  //             accessibilityHint="Delete the project"
+  //           >
+  //             <AntDesign
+  //               name="delete"
+  //               size={30}
+  //               color={accessMode ? "white" : "darkgrey"}
+  //             />
+  //           </TouchableOpacity>
+  //           {/* Button to add a note to a project */}
+  //           <TouchableOpacity
+  //             onPress={() => openNoteModal(item.id)}
+  //             accessibilityRole="button"
+  //             accessibilityLabel="Add a note"
+  //             accessibilityHint="Add a note. You can watch it in the details screen"
+  //           >
+  //             <MaterialIcons
+  //               name="edit-note"
+  //               size={30}
+  //               color={accessMode ? "white" : "darkgrey"}
+  //             />
+  //           </TouchableOpacity>
+  //         </View>
+  //       </Animated.View>
+  //     </Animatable.View>
+  //   );
+  // };
 
   // hook to check Firestore if the user has seen the Copilot home tour
   const fetchTourStatus = async () => {
@@ -655,11 +675,6 @@ const HomeScreen: React.FC = () => {
   const EmptyStepNumber = () => {
     return null;
   };
-
-  // initialize the accessibility store
-  const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled,
-  );
 
   return (
     <DismissKeyboard>
