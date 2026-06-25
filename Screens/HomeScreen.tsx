@@ -16,7 +16,6 @@ import {
   TextInput,
   TouchableOpacity,
   Animated,
-  LayoutChangeEvent,
   Dimensions,
   FlatList,
 } from "react-native";
@@ -33,15 +32,12 @@ import Modal from "react-native-modal";
 import { doc, getDoc } from "firebase/firestore";
 import { getAuth, Auth } from "firebase/auth";
 import { LinearGradient } from "expo-linear-gradient";
-import { AntDesign } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
-import dayjs from "dayjs";
 import {
   CopilotProvider,
   CopilotStep,
   walkthroughable,
 } from "react-native-copilot";
-import * as Animatable from "react-native-animatable";
 
 import {
   FIREBASE_FIRESTORE,
@@ -49,6 +45,11 @@ import {
   FIREBASE_APP,
 } from "../firebaseConfig";
 import { RootStackParamList } from "../navigation/RootStackParams";
+import {
+  fetchProjects,
+  deleteProject,
+  createProject,
+} from "../services/projects.api";
 import ProjectListItem from "../components/projectListItem";
 import { Project } from "../components/types/Project";
 import { sortProjects } from "../components/utils/sortProjects";
@@ -64,9 +65,7 @@ import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { useDotAnimation } from "../components/DotAnimation";
 import { sanitizeTitle } from "../components/InputSanitizers";
 import SortModal from "../components/SortModal";
-import { normalizeCreatedAt } from "../components/helper/normalizeCreatedAt.helper";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
-import { projectsAndWorkValidatorCallable } from "../firebase/functions";
 import { logError } from "../lib/loggerClient";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -84,15 +83,6 @@ const WalkthroughTouchableOpacity = walkthroughable(TouchableOpacity);
 
 // definition of the walkthroughable component to handle the copilot with (View)
 const CopilotView = walkthroughable(View);
-
-// function to unwrap the body
-const unwrapBody = (body: any): any => {
-  if (body && typeof body === "object" && "result" in body) {
-    return body.result;
-  }
-
-  return body;
-};
 
 const HomeScreen: React.FC = () => {
   // initialize the copilot offset
@@ -153,29 +143,6 @@ const HomeScreen: React.FC = () => {
   const sortedProjects = React.useMemo(() => {
     return sortProjects(projects, sortOrder);
   }, [projects, sortOrder]);
-
-  // const sortedProjects = React.useMemo(() => {
-  //   return [...projects].sort((a, b) => {
-  //     const aDate = normalizeCreatedAt(a.createdAt);
-  //     const bDate = normalizeCreatedAt(b.createdAt);
-
-  //     const aTime = aDate ? aDate.getTime() : 0;
-  //     const bTime = bDate ? bDate.getTime() : 0;
-
-  //     switch (sortOrder) {
-  //       case "DATE_DESC":
-  //         return bTime - aTime;
-  //       case "DATE_ASC":
-  //         return aTime - bTime;
-  //       case "NAME_ASC":
-  //         return a.name.localeCompare(b.name);
-  //       case "NAME_DESC":
-  //         return b.name.localeCompare(a.name);
-  //       default:
-  //         return 0;
-  //     }
-  //   });
-  // }, [projects, sortOrder]);
 
   // ref to handle the flatlist scroll animation and refresh the projects list
   const flatListRef = React.useRef<FlatList>(null);
@@ -261,7 +228,7 @@ const HomeScreen: React.FC = () => {
 
     let active = true;
 
-    const fetchProjects = async () => {
+    const loadProjects = async () => {
       const user = FIREBASE_AUTH.currentUser;
 
       if (!serviceId || !user) {
@@ -277,25 +244,11 @@ const HomeScreen: React.FC = () => {
       setIsLoading(true);
 
       try {
-        const res = await projectsAndWorkValidatorCallable({
-          action: "getProjects",
-          payload: {
-            serviceId,
-          },
-        });
-
-        const body = unwrapBody(res.data);
+        const projects = await fetchProjects(serviceId);
 
         if (!active) return;
 
-        setProjects(
-          (body?.projects ?? []).map((project: any) => ({
-            id: project.id,
-            ...project,
-            name: project.name ?? "",
-            createdAt: normalizeCreatedAt(project.createdAt),
-          })),
-        );
+        setProjects(projects);
       } catch (err) {
         logError("HomeScreen/fetchProjects", err);
       } finally {
@@ -303,7 +256,7 @@ const HomeScreen: React.FC = () => {
       }
     };
 
-    fetchProjects();
+    loadProjects();
 
     return () => {
       active = false;
@@ -341,15 +294,7 @@ const HomeScreen: React.FC = () => {
     }
 
     try {
-      const res = await projectsAndWorkValidatorCallable({
-        action: "createProject",
-        payload: {
-          name: trimmedName,
-          serviceId,
-        },
-      });
-
-      const data = unwrapBody(res.data);
+      const data = await createProject(serviceId, trimmedName);
 
       const projectForState = {
         id: data.projectId,
@@ -404,13 +349,7 @@ const HomeScreen: React.FC = () => {
                   await ref.zoomOut(300);
                 }
 
-                await projectsAndWorkValidatorCallable({
-                  action: "deleteProject",
-                  payload: {
-                    projectId,
-                    serviceId,
-                  },
-                });
+                await deleteProject(serviceId, projectId);
 
                 setProjects((prev) => prev.filter((p) => p.id !== projectId));
 
@@ -474,166 +413,6 @@ const HomeScreen: React.FC = () => {
     ),
     [scrollY, accessMode],
   );
-
-  // const renderItem = ({ item, index }: { item: Project; index: number }) => {
-  //   // calculate animation
-  //   const inputRange = [
-  //     -1,
-  //     0,
-  //     ITEM_HEIGHT * index,
-  //     ITEM_HEIGHT * (index + 1),
-  //     ITEM_HEIGHT * (index + 2),
-  //   ];
-
-  //   const scale = scrollY.interpolate({
-  //     inputRange,
-  //     outputRange: [1, 1, 1, 0.8, 0.8],
-  //     extrapolate: "clamp",
-  //   });
-
-  //   const opacity = scrollY.interpolate({
-  //     inputRange,
-  //     outputRange: [1, 1, 1, 0.5, 0],
-  //     extrapolate: "clamp",
-  //   });
-
-  //   // set the date in the right format
-  //   const dateObj = normalizeCreatedAt(item.createdAt);
-
-  //   // calculate the average item height to handle functionality of the scroll animation
-  //   const mesureItemHeight = (event: LayoutChangeEvent) => {
-  //     const { height } = event.nativeEvent.layout;
-  //     setLastItemHeight(height);
-  //   };
-
-  //   return (
-  //     // add and delete  project card animation
-  //     <Animatable.View
-  //       animation="zoomInUp"
-  //       duration={1500}
-  //       delay={index * 100}
-  //       useNativeDriver
-  //       // ref to animate the project deleting
-  //       ref={(ref) => {
-  //         if (ref && item.id) {
-  //           animationRefs.current[item.id] = ref;
-  //         }
-  //       }}
-  //     >
-  //       {/* Animation View parameters */}
-  //       <Animated.View
-  //         style={{
-  //           height: ITEM_HEIGHT,
-  //           transform: [{ scale }],
-  //           opacity,
-  //           margin: 5,
-  //           flexDirection: "row",
-  //           justifyContent: "space-between",
-  //           alignItems: "center",
-  //           borderWidth: 1,
-  //           borderColor: "aqua",
-  //           minWidth: "98%",
-  //           backgroundColor: "#191919",
-  //           borderRadius: 8,
-  //         }}
-  //         onLayout={mesureItemHeight}
-  //       >
-  //         {/* Button to navigate to the details screen */}
-  //         <TouchableOpacity
-  //           onPress={() => handleProjectPress(item.id as string, item.name)}
-  //           accessibilityRole="button"
-  //           accessibilityLabel={`Project ${item.name}, created on ${
-  //             dateObj ? dayjs(dateObj).format("DD MMMM YYYY") : "unknown date"
-  //           }`}
-  //           accessibilityHint="Tap to view project details"
-  //           style={{ alignItems: "center", justifyContent: "center", flex: 1 }}
-  //         >
-  //           <View
-  //             style={{
-  //               height: "100%",
-  //               width: "100%",
-  //             }}
-  //           >
-  //             {/* Section with date in the project container */}
-  //             {dateObj ? (
-  //               <Text
-  //                 style={{
-  //                   color: accessMode ? "white" : "grey",
-  //                   fontSize: accessMode ? 16 : 13,
-  //                   paddingLeft: 10,
-  //                   marginTop: 5,
-  //                 }}
-  //               >
-  //                 {dayjs(dateObj).format("DD.MM.YYYY")}
-  //               </Text>
-  //             ) : (
-  //               <Text
-  //                 style={{
-  //                   color: "gray",
-  //                   fontSize: 13,
-  //                   paddingLeft: 10,
-  //                   marginTop: 5,
-  //                   fontStyle: "italic",
-  //                 }}
-  //               >
-  //                 No date available
-  //               </Text>
-  //             )}
-
-  //             {/* Project name in the project container */}
-  //             <Text
-  //               style={{
-  //                 marginTop: 5,
-  //                 marginLeft: 30,
-  //                 fontSize: accessMode ? 28 : 24,
-  //                 fontFamily: "MPLUSLatin_Bold",
-  //                 color: "white",
-  //               }}
-  //             >
-  //               {item.name}
-  //             </Text>
-  //           </View>
-  //         </TouchableOpacity>
-  //         <View
-  //           style={{
-  //             flexDirection: "column",
-  //             alignItems: "center",
-  //             justifyContent: "space-evenly",
-  //             marginRight: 10,
-  //             height: "100%",
-  //           }}
-  //         >
-  //           {/* Button to delete a project */}
-  //           <TouchableOpacity
-  //             onPress={() => handleDeleteProject(item.id)}
-  //             accessibilityRole="button"
-  //             accessibilityLabel="Delete the project"
-  //             accessibilityHint="Delete the project"
-  //           >
-  //             <AntDesign
-  //               name="delete"
-  //               size={30}
-  //               color={accessMode ? "white" : "darkgrey"}
-  //             />
-  //           </TouchableOpacity>
-  //           {/* Button to add a note to a project */}
-  //           <TouchableOpacity
-  //             onPress={() => openNoteModal(item.id)}
-  //             accessibilityRole="button"
-  //             accessibilityLabel="Add a note"
-  //             accessibilityHint="Add a note. You can watch it in the details screen"
-  //           >
-  //             <MaterialIcons
-  //               name="edit-note"
-  //               size={30}
-  //               color={accessMode ? "white" : "darkgrey"}
-  //             />
-  //           </TouchableOpacity>
-  //         </View>
-  //       </Animated.View>
-  //     </Animatable.View>
-  //   );
-  // };
 
   // hook to check Firestore if the user has seen the Copilot home tour
   const fetchTourStatus = async () => {
