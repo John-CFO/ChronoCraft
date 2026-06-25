@@ -206,7 +206,7 @@ const HomeScreen: React.FC = () => {
   const ITEM_HEIGHT: number = 100;
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  const [averageItemHeight, setAverageItemHeight] = useState(ITEM_HEIGHT);
+  const [lastItemHeight, setLastItemHeight] = useState(ITEM_HEIGHT);
 
   // Gatecheck to check if the user can read the projects
   useEffect(() => {
@@ -253,66 +253,6 @@ const HomeScreen: React.FC = () => {
       active = false;
     };
   }, [serviceId, serviceLoading]);
-
-  //NOTE: check both hooks by testing if one of them is redundant
-  // function to load data from firestore
-  useEffect(() => {
-    if (serviceLoading) return;
-    if (canReadProjects === null) return;
-
-    let active = true;
-
-    const fetchProjects = async () => {
-      const user = FIREBASE_AUTH.currentUser;
-
-      if (!serviceId || !user) {
-        if (active) setIsLoading(false);
-        return;
-      }
-
-      if (canReadProjects === false) {
-        if (active) setIsLoading(false);
-        return;
-      }
-
-      setIsLoading(true);
-
-      try {
-        const res = await projectsAndWorkValidatorCallable({
-          action: "getProjects",
-          payload: {
-            serviceId,
-          },
-        });
-
-        const body = unwrapBody(res.data);
-
-        const projects = body?.projects ?? [];
-
-        setProjects(
-          projects.map((project: any) => ({
-            id: project.id,
-            name: project.name ?? "",
-            createdAt: normalizeCreatedAt(project.createdAt),
-            userId: project.userId,
-            status: project.status,
-            isTracking: project.isTracking,
-            hourlyRate: project.hourlyRate,
-          })),
-        );
-      } catch (err) {
-        logError("HomeScreen/fetchProjects", err);
-      } finally {
-        if (active) setIsLoading(false);
-      }
-    };
-
-    fetchProjects();
-
-    return () => {
-      active = false;
-    };
-  }, [serviceId, serviceLoading, canReadProjects, refresh]);
 
   // function to load data from firestore
   useEffect(() => {
@@ -510,8 +450,8 @@ const HomeScreen: React.FC = () => {
   const dots = useDotAnimation(loading, 700);
 
   // scroll animation with parameters to handle the scroll animation
-  const renderItem = ({ item, index }: { item: any; index: number }) => {
-    // Animation-Berechnungen
+  const renderItem = ({ item, index }: { item: Project; index: number }) => {
+    // calculate animation
     const inputRange = [
       -1,
       0,
@@ -532,26 +472,13 @@ const HomeScreen: React.FC = () => {
       extrapolate: "clamp",
     });
 
-    // converte date to enable both unix timestamps and firebase timestamps
-    let dateObj: Date | null = null;
-    if (item.createdAt) {
-      if (item.createdAt instanceof Date) {
-        dateObj = item.createdAt;
-      } else if (
-        item.createdAt.toDate &&
-        typeof item.createdAt.toDate === "function"
-      ) {
-        dateObj = item.createdAt.toDate();
-      } else if (typeof item.createdAt === "number") {
-        // Fallback for Unix-Timestamps
-        dateObj = new Date(item.createdAt);
-      }
-    }
+    // set the date in the right format
+    const dateObj = normalizeCreatedAt(item.createdAt);
 
     // calculate the average item height to handle functionality of the scroll animation
     const mesureItemHeight = (event: LayoutChangeEvent) => {
       const { height } = event.nativeEvent.layout;
-      setAverageItemHeight(height);
+      setLastItemHeight(height);
     };
 
     return (
