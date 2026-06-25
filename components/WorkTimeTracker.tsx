@@ -31,6 +31,7 @@ import WorkTimeAnimation from "../components/WorkTimeAnimation";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import { AsyncStorageWorkTrackerSchema } from "../validation/asyncStorageSchemas";
+import { logError, logWarn } from "../lib/loggerClient";
 
 ///////////////////////////////////////////////////////////////////////////////////
 
@@ -71,7 +72,6 @@ const WorkTimeTracker = () => {
   const accessMode = useAccessibilityStore(
     (state) => state.accessibilityEnabled,
   );
-  // console.log("accessMode in LoginScreen:", accessMode);
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
@@ -115,9 +115,22 @@ const WorkTimeTracker = () => {
   // useEffect to get the expected hours for today
   useEffect(() => {
     const getExpectedHoursForToday = async () => {
-      if (!serviceId) return;
+      if (!serviceId) {
+        logError(
+          "WorkTimeTracker.getExpectedHoursForToday",
+          "No serviceId found",
+        );
+        return;
+      }
+
       const userId = getAuth().currentUser?.uid;
-      if (!userId) return;
+      if (!userId) {
+        logError(
+          "WorkTimeTracker.getExpectedHoursForToday",
+          "User ID not available",
+        );
+        return;
+      }
       const today = dayjs().format("YYYY-MM-DD"); // current day
       setWorkDay(today);
       try {
@@ -141,7 +154,7 @@ const WorkTimeTracker = () => {
         // set current doc id to the current day
         setCurrentDocId(today);
       } catch (error) {
-        console.error("Error fetching expected hours:", error);
+        logError("WorkTimeTracker.getExpectedHoursForToday", error);
         useAlertStore
           .getState()
           .showAlert(
@@ -155,7 +168,9 @@ const WorkTimeTracker = () => {
 
   // hook to update elapsed time
   useEffect(() => {
-    if (!isWorking || !startWorkTime) return;
+    if (!isWorking || !startWorkTime) {
+      return;
+    }
 
     const updateElapsedTime = () => {
       const now = Date.now();
@@ -202,7 +217,6 @@ const WorkTimeTracker = () => {
           ["elapsedTime", JSON.stringify(elapsedTime)],
           ["lastActiveTime", nowISO],
         ]);
-        // console.log(` Save elapsedTime: ${elapsedTime}, Time: ${nowISO}`);
       }
       // if the app returns to "active" from a state that was not "active"
       // and the timer is running (isWorking === true), calculate the elapsed time
@@ -213,7 +227,6 @@ const WorkTimeTracker = () => {
       ) {
         // prevent multiple state changes when app goes from inactive to active
         if (handledActive) {
-          // console.log(" Second active state change ignored.");
           return;
         }
         handledActive = true;
@@ -226,12 +239,10 @@ const WorkTimeTracker = () => {
           // calculate the elapsed time since the last active time (in hours)
           const elapsedMs = Date.now() - new Date(lastTime).getTime();
           const elapsedHours = elapsedMs / (1000 * 60 * 60);
-          // console.log(`App was inactive for ${elapsedHours.toFixed(2)} Hours.`);
+
           // update the elapsed time
           const newElapsed = savedElapsedTime + elapsedHours;
-          // console.log(
-          //   ` Calculate new time: ${savedElapsedTime} + ${elapsedHours.toFixed(2)} = ${newElapsed.toFixed(2)}`
-          // );
+
           // update only with newValue if the new elapsed time is greater than the current
           const newValue = newElapsed > elapsedTime ? newElapsed : elapsedTime;
           setElapsedTime(newValue);
@@ -268,7 +279,7 @@ const WorkTimeTracker = () => {
     if (!serviceId) return;
     const userId = getAuth().currentUser?.uid;
     if (!userId) {
-      console.error("User ID not available.");
+      logError("WorkTimeTracker.handleStartWork", "User ID not available");
       return;
     }
     try {
@@ -311,14 +322,17 @@ const WorkTimeTracker = () => {
           .showAlert("Attention", "First add your expected hours.");
       }
     } catch (error) {
-      console.error("WorkTracker: Start operation failed", error);
+      logError("WorkTimeTracker.handleStartWork", error);
       useAlertStore.getState().showAlert("Error", "Failed to start tracking");
     }
   };
 
   // function to stop work
   const handleStopWork = async () => {
-    if (!serviceId) return;
+    if (!serviceId) {
+      logError("WorkTimeTracker.handleStopWork", "Service ID not available");
+      return;
+    }
     setIsWorking(false);
 
     const currentStartTime = startWorkTime;
@@ -326,7 +340,7 @@ const WorkTimeTracker = () => {
     const currentDoc = currentDocId;
 
     if (!currentStartTime || !currentDoc) {
-      console.error("WorkTracker: Missing data for stop operation");
+      logError("WorkTimeTracker.handleStopWork", "No start time or doc found");
       return;
     }
 
@@ -375,14 +389,17 @@ const WorkTimeTracker = () => {
       setRefreshTrigger((prev) => prev + 1);
       loadState(serviceId);
     } catch (error) {
-      console.error("Error in handleStopWork", error);
+      logError("WorkTimeTracker.handleStopWork", error);
       useAlertStore.getState().showAlert("Error", "Failed to stop tracking");
     }
   };
 
   // function to get the chart data from firestore
   const fetchChartData = async () => {
-    if (!serviceId || !user) return [];
+    if (!serviceId || !user) {
+      logError("WorkTimeTracker.fetchChartData", "No serviceId or user found");
+      return [];
+    }
 
     try {
       const snapshot = await getDocs(
@@ -406,7 +423,7 @@ const WorkTimeTracker = () => {
         };
       });
     } catch (error) {
-      console.error("Error fetching chart data", error);
+      logError("WorkTimeTracker.fetchChartData", error);
       return [];
     }
   };
@@ -423,7 +440,10 @@ const WorkTimeTracker = () => {
   // function to get the list data from firestore
   useEffect(() => {
     const fetchListData = async () => {
-      if (!serviceId || !user) return;
+      if (!serviceId || !user) {
+        logError("WorkTimeTracker.fetchListData", "No serviceId or user found");
+        return;
+      }
 
       try {
         const snapshot = await getDocs(
@@ -441,7 +461,7 @@ const WorkTimeTracker = () => {
           .map((doc) => {
             const item = doc.data();
             if (!item.workDay || isNaN(new Date(item.workDay).getTime())) {
-              console.warn("Invalid workDay in item:", item);
+              logWarn("WorkTimeTracker.fetchListData", "Invalid work day");
               return null;
             }
             return {
@@ -456,7 +476,7 @@ const WorkTimeTracker = () => {
 
         setData(formattedData);
       } catch (error) {
-        console.error("Error fetching list data", error);
+        logError("WorkTimeTracker.fetchListData", error);
       }
     };
 
@@ -465,7 +485,6 @@ const WorkTimeTracker = () => {
 
   // hook to update the local accumulated duration
   useEffect(() => {
-    // console.log("updating accumulated duration");
     setAccumulatedDuration(elapsedTime);
   }, []); // once when the component mounts
 
@@ -476,19 +495,16 @@ const WorkTimeTracker = () => {
 
   // hook to updates refs if state changes
   useEffect(() => {
-    // console.log("updating refs");
     accumulatedDurationRef.current = accumulatedDuration;
   }, [accumulatedDuration]);
 
   // hook to update isWorkingRef
   useEffect(() => {
-    // console.log("updating isWorkingRef");
     isWorkingRef.current = isWorking;
   }, [isWorking]);
 
   // hook to update startWorkTimeRef
   useEffect(() => {
-    // console.log("updating startWorkTimeRef");
     startWorkTimeRef.current = startWorkTime;
   }, [startWorkTime]);
 
@@ -511,7 +527,7 @@ const WorkTimeTracker = () => {
   useEffect(() => {
     if (isWorking) {
       saveIntervalRef.current = setInterval(() => {
-        // console.log("[INTERVAL] Auto-save triggered");
+        // save the state every 30 seconds
         saveState();
       }, 15000);
     }
@@ -527,15 +543,21 @@ const WorkTimeTracker = () => {
   useEffect(() => {
     const restoreState = async () => {
       try {
-        if (!serviceId) return;
+        if (!serviceId) {
+          logError("WorkTimeTracker.restoreState", "No serviceId found");
+          return;
+        }
         const saved = await AsyncStorage.getItem("workTimeTrackerState");
-        if (!saved) return;
+        if (!saved) {
+          logWarn("WorkTimeTracker.restoreState", "No saved state found");
+          return;
+        }
         const parsed = JSON.parse(saved);
 
         // AsyncStorage Schema validation
         const validation = AsyncStorageWorkTrackerSchema.safeParse(parsed);
         if (!validation.success) {
-          console.error("Invalid AsyncStorage data:", validation.error);
+          logError("WorkTimeTracker.restoreState", validation.error);
           await AsyncStorage.removeItem("workTimeTrackerState");
           return;
         }
@@ -547,7 +569,10 @@ const WorkTimeTracker = () => {
 
         if (validatedData.isWorking && validatedData.startWorkTime) {
           const userId = getAuth().currentUser?.uid;
-          if (!userId) return;
+          if (!userId) {
+            logError("WorkTimeTracker.restoreState", "No userId found");
+            return;
+          }
 
           const docIdToCheck =
             validatedData.currentDocId || dayjs().format("YYYY-MM-DD");
@@ -563,9 +588,7 @@ const WorkTimeTracker = () => {
           const docSnap = await getDoc(workRef);
           const data = docSnap.exists() ? docSnap.data() : null;
           if (!data) {
-            console.warn(
-              "Saved running session exists but no firestore doc -> not auto-resuming.",
-            );
+            logWarn("WorkTimeTracker.restoreState", "No data found");
             await AsyncStorage.removeItem("workTimeTrackerState");
             return;
           }
@@ -584,7 +607,7 @@ const WorkTimeTracker = () => {
           setCurrentDocId(docIdToCheck);
         }
       } catch (err) {
-        console.error("Error restoring state:", err);
+        logError("WorkTimeTracker.restoreState", err);
       }
     };
 
@@ -593,7 +616,6 @@ const WorkTimeTracker = () => {
 
   // hook to save the state when the component unmounts
   useEffect(() => {
-    // console.log("[UNMOUNT] Saving state to AsyncStorage");
     return () => {
       saveState();
     };
@@ -601,7 +623,7 @@ const WorkTimeTracker = () => {
 
   return (
     <>
-      {/* DetailsScreen copilot tour step 2 */}
+      {/* Worktime-Tracker Screen copilot tour step 2 */}
       <CopilotStep
         name="Work-Time Tracker"
         order={2}

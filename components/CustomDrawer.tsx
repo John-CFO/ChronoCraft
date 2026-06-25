@@ -41,6 +41,7 @@ import AccessibilityToggleButton from "./services/accessibility/AccessibilityTog
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import MFAButton from "./services/MFAButton";
 import MultiFactorModal from "./MultiFactorModal";
+import { logError } from "../lib/loggerClient";
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -127,7 +128,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
       setLocalUser(mergedUser);
       setIsEnrolled(!!mergedUser.totpEnabled);
     } catch (error) {
-      console.error("Error fetching user profile:", error);
+      logError("CustomDrawer/fetchUserProfile", error);
     }
   };
 
@@ -169,7 +170,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
           setIsEnrolled(snap.exists() ? !!snap.data()?.totp?.enabled : false);
         }
       } catch (err) {
-        console.error("Error loading TOTP enrollment", err);
+        logError("CustomDrawer/loadTotpEnrollment", err);
         setIsEnrolled(false);
       }
     };

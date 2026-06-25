@@ -15,8 +15,8 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Modal from "react-native-modal";
-
 import { httpsCallable } from "firebase/functions";
+
 import { FIREBASE_FUNCTIONS } from "../firebaseConfig";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useDotAnimation } from "../components/DotAnimation";

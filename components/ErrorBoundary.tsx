@@ -8,6 +8,7 @@
 import React from "react";
 import { Text, View, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { logError } from "../lib/loggerClient";
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -34,7 +35,7 @@ class ErrorBoundary extends React.Component<
 
   // function to catch errors
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("Caught by Error Boundary:", error, errorInfo);
+    logError("ErrorBoundary/catch", { error, errorInfo });
   }
 
   // function to refresh the page

@@ -1,5 +1,5 @@
 /////////////////////app navigator and stack navigator///////////////////////
-
+//NOTE - finish client logging
 // This file is used to create the app navigator and the stack navigator
 // It includes the whole app three(stack navigator, drawer navigator and app navigator)
 // Also it inclues the dropdown menu for the help button nad the global provider for the Copilot guided tour
@@ -44,13 +44,12 @@ import CustomAlert from "./components/services/customAlert/CustomAlert";
 import { useAlertStore } from "./components/services/customAlert/alertStore";
 import { NotificationManager } from "./components/services/PushNotifications";
 import { useAccessibilityStore } from "./components/services/accessibility/accessibilityStore";
-import { AuthProvider } from "./components/contexts/AuthContext";
+import { AuthProvider, AuthContext } from "./components/contexts/AuthContext";
 import {
   ServiceProvider,
   useService,
 } from "./components/contexts/ServiceContext";
 import { navigationRef } from "./navigation/NavigationRef";
-import { AuthContext } from "./components/contexts/AuthContext";
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "./firebaseConfig";
 
 ////////////////////////////////////////////////////////////////////////
@@ -404,10 +403,7 @@ const App = () => {
         <SafeAreaProvider>
           <GestureHandlerRootView style={{ flex: 1 }}>
             <BottomSheetModalProvider>
-              <NavigationContainer
-                ref={navigationRef}
-                onReady={() => console.log("Navigation ready")}
-              >
+              <NavigationContainer ref={navigationRef} onReady={() => {}}>
                 <CustomAlert />
                 {fontsLoaded && <AppNavigator />}
               </NavigationContainer>

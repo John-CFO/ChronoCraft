@@ -14,6 +14,7 @@ import { getAuth } from "firebase/auth";
 
 import { updateProjectData } from "../components/FirestoreService";
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
+import { logEvent } from "../lib/loggerClient";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -125,11 +126,6 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
   setProjectData: (projectId: string, incoming: Partial<ProjectState>) => {
     set((state) => {
       const prev = state.projects[projectId] || {};
-
-      // DEBUG: incoming + caller stack (temporary)
-      // console.log(`[STORE][setProjectData:${projectId}] incoming:`, incoming, {
-      //   stack: new Error().stack?.split("\n").slice(2, 6),
-      // });
 
       // copy prev to start merge
       const merged: any = { ...prev };
@@ -300,7 +296,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
 
     if (project?.isTracking) {
       if (!effectiveSilent) {
-        console.warn(`[STORE] Project ${projectId} is already tracked`);
+        logEvent("TimeTrackingState.startTimer", "Project is already tracked");
       }
       return;
     }
@@ -332,7 +328,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
         pauseTime: null,
       });
     } catch (error) {
-      console.error("Error updating Firestore on startTimer:", error);
+      logEvent("TimeTrackingState.startTimer", error);
     }
   },
 
@@ -343,15 +339,13 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
 
     // check if project is being tracked
     if (!project.isTracking) {
-      console.warn("Project is not being tracked");
+      logEvent("TimeTrackingState.stopTimer", "Project is not being tracked");
       return;
     }
 
     // check if start time is set
     if (!project.startTime) {
-      console.warn(
-        "startTime is not set. Cannot stop timer. Please start the timer first.",
-      );
+      logEvent("TimeTrackingState.stopTimer", "startTime is not set");
       return;
     }
 
@@ -388,8 +382,6 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
       },
     }));
 
-    // console.log("StopTimer: State updated with final timer:", finalElapsedTime);
-
     try {
       // update firestore
       await updateProjectData(projectId, serviceId, {
@@ -403,10 +395,8 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
         originalStartTime: project.originalStartTime || project.startTime,
         lastStartTime: project.startTime || project.lastStartTime,
       });
-
-      // console.log("StopTimer: Firestore update successful");
     } catch (error) {
-      console.error("Error updating Firestore in stopTimer:", error);
+      logEvent("TimeTrackingState.stopTimer", error);
     }
   },
 
@@ -438,11 +428,6 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
 
   // statefunction to set the total earnings in the EarningsCalculatorCard
   setTotalEarnings: (projectId, earnings) => {
-    // console.log(
-    //   `[STORE:${projectId}] setTotalEarnings ->`,
-    //   earnings,
-    //   new Error().stack?.split("\n").slice(2, 6)
-    // );
     set((state) => ({
       projects: {
         ...state.projects,
@@ -462,13 +447,6 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
     totalEarnings: number,
   ) =>
     set((state) => {
-      // console.log(
-      //   `[STORE][setTimerAndEarnings:${projectId}] timer=${timer}, earnings=${totalEarnings}`,
-      //   {
-      //     stack: new Error().stack?.split("\n").slice(2, 6),
-      //   }
-      // );
-
       const prev = state.projects[projectId] || {};
       if (prev.timer === timer && prev.totalEarnings === totalEarnings)
         return state;
@@ -509,7 +487,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
 
       return false;
     } catch (error) {
-      console.error("Error fetching project data:", error);
+      logEvent("TimeTrackingState.getProjectTrackingState", error);
       return false;
     }
   },
@@ -560,7 +538,7 @@ export const useStore = create<TimeTrackingState>((set, get) => ({
         originalStartTime: null,
       });
     } catch (error) {
-      console.error("Error resetting project data:", error);
+      logEvent("TimeTrackingState.resetAll", error);
     }
   },
 }));

@@ -30,6 +30,7 @@ import { sanitizeComment } from "./InputSanitizers";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import { NoteInputSchema } from "../validation/noteSchemas";
 import { useService } from "./contexts/ServiceContext";
+import { logError } from "../lib/loggerClient";
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -114,7 +115,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
       });
 
       if (!inputValidation.success) {
-        console.error("Invalid note input:", inputValidation.error);
+        logError("NoteModal/validation", inputValidation.error);
         useAlertStore
           .getState()
           .showAlert("Error", "Invalid note data provided");
@@ -124,7 +125,10 @@ const NoteModal: React.FC<NoteModalProps> = ({
       // authentication and authorization
       const user = FIREBASE_AUTH.currentUser;
       if (!user || user.uid !== userId) {
-        console.error("Authentication or authorization failed");
+        logError(
+          "NoteModal/auth",
+          new Error("Authentication or authorization failed"),
+        );
         useAlertStore.getState().showAlert("Error", "Not authorized");
         return;
       }
@@ -137,7 +141,10 @@ const NoteModal: React.FC<NoteModalProps> = ({
 
       const projectSnapshot = await getDoc(projectRef);
       if (!projectSnapshot.exists()) {
-        console.error("Project does not exist:", projectId);
+        logError(
+          "NoteModal/projectNotFound",
+          new Error(`Project not found: ${projectId}`),
+        );
         useAlertStore.getState().showAlert("Error", "Project not found");
         return;
       }
@@ -158,7 +165,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
       setComment("");
       onClose();
     } catch (error) {
-      console.error("Saving comment failed");
+      logError("NoteModal/saveComment", error);
       useAlertStore.getState().showAlert("Error", "Failed to save note");
     } finally {
       setSaving(false);

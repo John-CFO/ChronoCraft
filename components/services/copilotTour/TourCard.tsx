@@ -20,6 +20,7 @@ import { AccessibilityInfo } from "react-native";
 
 import { FIREBASE_FIRESTORE } from "../../../firebaseConfig";
 import { useAlertStore } from "../customAlert/alertStore";
+import { logError } from "../../../lib/loggerClient";
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -104,7 +105,7 @@ const TourButton: React.FC<TourButtonProps> = ({
   const updateFireStoreTourStatus = async (
     userId: string,
     status: boolean,
-    tourKey: string
+    tourKey: string,
   ) => {
     try {
       const userRef = doc(FIREBASE_FIRESTORE, "Users", userId);
@@ -115,7 +116,7 @@ const TourButton: React.FC<TourButtonProps> = ({
       //   status
       // );
     } catch (error) {
-      console.log("Error updating Firestore status:", error);
+      logError("TourButton/updateFirestoreTourStatus", error);
     }
   };
   // reference for the timeout
@@ -148,8 +149,8 @@ const TourButton: React.FC<TourButtonProps> = ({
         needsRefCheck &&
         (!scrollViewRef || !scrollViewRef.current || !isScrollViewReady)
       ) {
-        console.error("[Tour] ScrollView is not ready:", {
-          scrollViewRef,
+        logError("TourButton/scrollViewNotReady", {
+          scrollViewRefExists: !!scrollViewRef,
           isScrollViewReady,
         });
         throw new Error("ScrollView is not ready");
@@ -159,7 +160,7 @@ const TourButton: React.FC<TourButtonProps> = ({
       await updateFireStoreTourStatus(userId, true, storageKey);
       setShowTourCard(false);
     } catch (error) {
-      console.error("[Tour] Tour Start Error:", error);
+      logError("TourButton/startTour", error);
       if (error instanceof Error) {
         useAlertStore.getState().showAlert(
           error.message.includes("ScrollView") ? "Loading Error" : "Tour Error",
@@ -180,7 +181,7 @@ const TourButton: React.FC<TourButtonProps> = ({
                 },
                 { text: "Cancel", style: "cancel" },
               ]
-            : undefined
+            : undefined,
         );
       }
     }
@@ -196,7 +197,7 @@ const TourButton: React.FC<TourButtonProps> = ({
         .getState()
         .showAlert("Skip Tour", "You can start the tour later in the menu.");
     } catch (error) {
-      console.log("Error skipping tour:", error);
+      logError("TourButton/skipTour", error);
     }
   };
 

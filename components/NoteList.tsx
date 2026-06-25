@@ -26,7 +26,7 @@ const NoteList: React.FC<{ projectId: string }> = ({ projectId }) => {
     (state) => state.accessibilityEnabled,
   );
 
-  // loaduing and error conditions
+  // loading and error conditions
   if (loading) return <ActivityIndicator size="large" color="white" />;
   if (error)
     return <Text style={{ color: "red" }}>Error: {error.message}</Text>;

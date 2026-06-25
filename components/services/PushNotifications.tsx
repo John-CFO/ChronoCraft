@@ -4,6 +4,7 @@
 
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
+import { logError } from "../../lib/loggerClient";
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -51,7 +52,7 @@ export class NotificationManager {
 
       return token; // return generated token
     } catch (error) {
-      console.error("Error while registering for push notifications:", error);
+      logError("NotificationManager/registerForPushNotifications", error);
       return null; // returns null if there is an error
     }
   }
@@ -71,7 +72,7 @@ export class NotificationManager {
         trigger, // trigger for the notification when it should be sent
       });
     } catch (error) {
-      console.error("Error scheduling notification:", error);
+      logError("NotificationManager/scheduleNotification", error);
     }
   }
 

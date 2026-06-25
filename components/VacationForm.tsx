@@ -19,6 +19,7 @@ import { useCalendarStore } from "../components/CalendarState";
 import { useService } from "../components/contexts/ServiceContext";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { VacationInputSchema } from "../validation/vacationSchemas";
+import { logError } from "../lib/loggerClient";
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -49,7 +50,7 @@ const VacationForm = () => {
       // check if user is logged in
       const user = FIREBASE_AUTH.currentUser;
       if (!user) {
-        console.error("No user logged in");
+        logError("VacationForm.handleSaveVacation", "No user logged in");
         return;
       }
       // reduce markedDates to remove `customStyles` property (unchanged)
@@ -73,9 +74,9 @@ const VacationForm = () => {
       // validate input with zod
       const parsed = VacationInputSchema.safeParse(input);
       if (!parsed.success) {
-        console.error(
-          "Vacation input validation failed:",
-          parsed.error.format(),
+        logError(
+          "VacationForm.handleSaveVacation.validation",
+          parsed.error.issues,
         );
         useAlertStore
           .getState()
@@ -106,7 +107,7 @@ const VacationForm = () => {
 
       resetMarkedDates(); // reset marked dates after saving
     } catch (error) {
-      console.error("Error saving vacation:", error);
+      logError("VacationForm.handleSaveVacation", error);
       useAlertStore
         .getState()
         .showAlert("Error", "Saving vacation failed.", [{ text: "OK" }]);
@@ -116,7 +117,6 @@ const VacationForm = () => {
   // save function with error handling for the button
   const handleSave = async () => {
     if (!markedDates || Object.keys(markedDates).length === 0) {
-      // console.error("No data to save in markedDates");
       useAlertStore
         .getState()
         .showAlert("Attention!", "First vote a vacation date.", [

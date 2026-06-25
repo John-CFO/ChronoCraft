@@ -30,6 +30,7 @@ import { sanitizeName, sanitizePersonalNumber } from "./InputSanitizers";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import { handleSaveProfile } from "../components/utils/handleSaveProfile";
 import { useDotAnimation } from "../components/DotAnimation";
+import { logError } from "../lib/loggerClient";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -153,7 +154,10 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   const handleSave = async () => {
     const currentUser = getAuth().currentUser ?? FIREBASE_AUTH.currentUser;
     if (!currentUser?.uid) {
-      console.warn("No authenticated user; aborting profile update");
+      logError(
+        "EditProfileModal/missingAuthUser",
+        new Error("No authenticated user"),
+      );
       return;
     }
 

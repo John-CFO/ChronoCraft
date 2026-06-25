@@ -8,6 +8,7 @@
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 import { FIREBASE_STORAGE, FIREBASE_AUTH } from "../../firebaseConfig";
+import { logError } from "../../lib/loggerClient";
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -39,7 +40,7 @@ export async function uploadImageToProfile(uri: string): Promise<string> {
     const url = await getDownloadURL(result.ref);
     return url;
   } catch (error: any) {
-    console.error("Error uploading image:", error);
+    logError("storage/uploadImageToProfile", error);
     throw error;
   }
 }

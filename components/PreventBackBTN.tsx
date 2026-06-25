@@ -12,6 +12,7 @@ import { getAuth } from "firebase/auth";
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useService } from "../components/contexts/ServiceContext";
 import { useAlertStore } from "./services/customAlert/alertStore";
+import { logError } from "../lib/loggerClient";
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -33,7 +34,7 @@ export function usePreventBackWhileTracking(projectId: string) {
       "Services",
       serviceId,
       "Projects",
-      projectId
+      projectId,
     );
 
     // Firestore Real-Time Listener
@@ -50,13 +51,14 @@ export function usePreventBackWhileTracking(projectId: string) {
           typeof data.isTracking === "boolean" ? data.isTracking : false;
       },
       (error) => {
+        logError("usePreventBackWhileTracking:onSnapshot", error);
         useAlertStore
           .getState()
           .showAlert(
             "Error",
-            "Failed to fetch project data. Please try again."
+            "Failed to fetch project data. Please try again.",
           );
-      }
+      },
     );
 
     // BackHandler Listener
@@ -66,7 +68,7 @@ export function usePreventBackWhileTracking(projectId: string) {
           .getState()
           .showAlert(
             "Project is still running.",
-            "You can't leave the app. Please stop the project first."
+            "You can't leave the app. Please stop the project first.",
           );
         return true; // block back navigation
       }

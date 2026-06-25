@@ -39,6 +39,7 @@ import { useService } from "../components/contexts/ServiceContext";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import { useValidatedStore } from "../validation/useValidatedStore";
+import { logError } from "../lib/loggerClient";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 type RootStackParamList = {
@@ -81,7 +82,7 @@ function formatTime(seconds: number, showMs = false): string {
       String(secs).padStart(2, "0"),
     ].join(":");
   } catch (err) {
-    console.error("formatTime failed:", err);
+    logError("TimeTrackerCard.formatTime", err);
     return "00:00:00";
   }
 }
@@ -91,7 +92,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   const route = useRoute<TimeTrackerRouteProp>();
 
   if (!route?.params?.projectId) {
-    console.error("[TT] Missing projectId in route.params");
+    logError("TimeTrackerCard.init", "Missing projectId in route.params");
     return null;
   }
 
@@ -99,7 +100,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   const { serviceId } = useService();
 
   if (!serviceId) {
-    console.error(`[TT:${projectId}] Missing serviceId`);
+    logError("TimeTrackerCard.init", "Missing serviceId");
   }
 
   // screensize for dynamic size calculation
@@ -185,20 +186,24 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
   // hook to fetch project data from firestore when navigate from home screen to details screen
   const fetchProjectData = useCallback(async () => {
-    console.log("Fetching project data started");
     const user = getAuth().currentUser;
 
     if (!user) {
-      console.error(`[TT:${projectId}] AUTH NULL -> skip fetch`);
+      logError(
+        `TimeTrackerCard.${projectId}.fetchProjectData`,
+        "AUTH NULL -> skip fetch",
+      );
       return;
     }
     if (!serviceId) {
-      console.error(`[TT:${projectId}] serviceId missing -> skip fetch`);
+      logError(
+        `TimeTrackerCard.${projectId}.fetchProjectData`,
+        "serviceId missing -> skip fetch",
+      );
       return;
     }
 
     try {
-      console.trace(`[TT:${projectId}] fetchProjectData CALL`);
       const docRef = doc(
         FIREBASE_FIRESTORE,
         "Users",
@@ -241,36 +246,21 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
           originalStartTime: toDate(projectData.originalStartTime),
           lastStartTime: toDate(projectData.lastStartTime),
         };
-        console.trace(
-          `[TT:${projectId}] setProjectData BEFORE CALL`,
-          formattedData,
-        );
-
-        console.log("ZOD INPUT DEBUG", {
-          projectId,
-          uid: formattedData.uid,
-          projectDataUid: projectData.uid,
-          storeUid: getAuth().currentUser?.uid,
-        });
-
-        console.log("VALIDATION PAYLOAD", {
-          projectId,
-          projectData: formattedData,
-          uid: formattedData.uid,
-        });
 
         try {
           // heavy validation (Zod) — Firestore → store
           setProjectData(projectId, formattedData as ProjectState);
         } catch (err) {
-          console.error(`[TT:${projectId}] fetch crash`, err);
-          console.trace();
+          logError(`TimeTrackerCard.${projectId}.fetchProjectData`, err);
         }
       } else {
-        console.error(`[TT:${projectId}] Project data not found in Firestore`);
+        logError(
+          `TimeTrackerCard.${projectId}.fetchProjectData`,
+          "Project data not found",
+        );
       }
     } catch (error) {
-      console.error(`[TT:${projectId}] Firestore fetch failed:`, error);
+      logError(`TimeTrackerCard.${projectId}.fetchProjectData`, error);
     }
   }, [projectId, serviceId, setProjectData]);
 
@@ -328,28 +318,17 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
     if (wholeSecond !== lastWholeSecondRef.current) {
       const earnings = computeEarnings(wholeSecond, hourlyRateRef.current);
-      console.trace(`[TT:${projectId}] setTimerAndEarnings BEFORE`, {
-        projectId,
-        wholeSecond,
-        earnings,
-        typeofProjectId: typeof projectId,
-        typeofWhole: typeof wholeSecond,
-        typeofEarnings: typeof earnings,
-      });
+
       try {
         // use the LIGHT version here (very cheap checks only)
         setTimerAndEarningsLight(projectId, wholeSecond, earnings);
       } catch (err) {
-        console.error(`[TT:${projectId}] HOT PATH CRASH`, {
+        logError(`TimeTrackerCard.${projectId}.HOT_PATH`, {
           err,
           projectId,
           wholeSecond,
           earnings,
-          typeofProjectId: typeof projectId,
-          typeofWhole: typeof wholeSecond,
-          typeofEarnings: typeof earnings,
         });
-        console.trace();
       }
       lastWholeSecondRef.current = wholeSecond;
     }
@@ -374,9 +353,9 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
             // parse ISO stored time safely
             const bgEnter = Date.parse(storedBgTime);
             if (!Number.isFinite(bgEnter)) {
-              console.warn(
-                `[TT:${projectId}] invalid bgTime in AsyncStorage:`,
-                storedBgTime,
+              logError(
+                "TimeTrackerCard.handleAppStateChange",
+                "Invalid bgTime in AsyncStorage",
               );
               // clean up obviously bad value
               try {
@@ -385,9 +364,9 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
             } else {
               const elapsedSeconds = (Date.now() - bgEnter) / 1000;
               if (!Number.isFinite(elapsedSeconds) || elapsedSeconds < 0) {
-                console.warn(
-                  `[TT:${projectId}] computed invalid elapsedSeconds:`,
-                  elapsedSeconds,
+                logError(
+                  "TimeTrackerCard.handleAppStateChange",
+                  "Invalid elapsedSeconds",
                 );
                 // do not apply resume when nonsense
               } else {
@@ -397,9 +376,9 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
                 // optional plausibility cap (example: 10 years in seconds)
                 const MAX_SECONDS = 10 * 365 * 24 * 3600;
                 if (wholeNew < 0 || wholeNew > MAX_SECONDS) {
-                  console.warn(
-                    `[TT:${projectId}] implausible resumed timer:`,
-                    wholeNew,
+                  logError(
+                    "TimeTrackerCard.handleAppStateChange",
+                    "Implausible resumed timer",
                   );
                   // choose to clamp or ignore — here: ignore resume and keep previous values
                 } else {
@@ -411,10 +390,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
                     // LIGHT validation + write — cheap checks only (hot-path)
                     setTimerAndEarningsLight(projectId, wholeNew, earnings);
                   } catch (err) {
-                    console.error(
-                      `[TT:${projectId}] bg resume setTimerAndEarningsLight failed:`,
-                      err,
-                    );
+                    logError("TimeTrackerCard.handleAppStateChange", err);
                   }
 
                   accumulatedTimeRef.current = newAccum;
@@ -449,10 +425,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
           }
         }
       } catch (err) {
-        console.error(
-          `[TimeTrackerCard:${projectId}] handleAppStateChange failed:`,
-          err,
-        );
+        logError(`TimeTrackerCard.${projectId}.handleAppStateChange`, err);
       } finally {
         setAppState(nextAppState);
       }
@@ -497,9 +470,9 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
           // basic sanity checks
           if (!Number.isFinite(parsedTime) || parsedTime < 0) {
-            console.warn(
-              `[TT:${projectId}] invalid persistedTimer value:`,
-              savedTime,
+            logError(
+              "TimeTrackerCard.initializeComponent",
+              "Invalid persistedTimer value",
             );
             // cleanup bad persisted value and fallback to 0
             try {
@@ -514,9 +487,9 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
             // optional plausibility cap (example: 10 years in seconds)
             const MAX_SECONDS = 10 * 365 * 24 * 3600;
             if (whole < 0 || whole > MAX_SECONDS) {
-              console.warn(
-                `[TT:${projectId}] implausible persisted timer:`,
-                whole,
+              logError(
+                "TimeTrackerCard.initializeComponent",
+                "Implausible persisted timer",
               );
               try {
                 await AsyncStorage.removeItem(`persistedTimer_${projectId}`);
@@ -532,10 +505,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
                 accumulatedTimeRef.current = parsedTime;
                 setDisplayTime(parsedTime);
               } catch (err) {
-                console.error(
-                  `[TT:${projectId}] persisted timer failed heavy validation:`,
-                  err,
-                );
+                logError("TimeTrackerCard.initializeComponent", err);
                 // clear corrupted persisted value and fallback
                 try {
                   await AsyncStorage.removeItem(`persistedTimer_${projectId}`);
@@ -551,7 +521,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
           startAnimation();
         }
       } catch (error) {
-        console.error("Initialization error:", error);
+        logError("TimeTrackerCard.initializeComponent", error);
       }
     };
 
@@ -583,18 +553,15 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
   // function to start the timer
   const handleStart = async () => {
-    console.trace(`[TT:${projectId}] START pressed`);
-
     const currentlyTracking =
       useStore.getState().projects?.[projectId]?.isTracking;
 
     if (!serviceId) {
-      console.error(`[TT:${projectId}] Missing serviceId in handleStart`);
+      logError("TimeTrackerCard.startTimer", "Missing serviceId");
       return;
     }
 
     if (currentlyTracking || isTrackingRef.current) {
-      console.log(`[TT:${projectId}] start skipped - already tracking`);
       return;
     }
 
@@ -604,19 +571,16 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
       isTrackingRef.current = true;
       startAnimation();
     } catch (err) {
-      console.error(`[TT:${projectId}] start crash`, err);
-      console.trace();
+      logError("TimeTrackerCard.startTimer", err);
     }
   };
 
   // function to stop the timer
   const handleStop = async () => {
-    console.trace(`[TT:${projectId}] STOP pressed`);
-
     if (!isTrackingRef.current) return;
 
     if (!serviceId) {
-      console.error(`[TT:${projectId}] Missing serviceId in handleStop`);
+      logError("TimeTrackerCard.stopTimer", "Missing serviceId");
       return;
     }
 
@@ -629,23 +593,21 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
       await stopTimer(projectId, serviceId);
       isTrackingRef.current = false;
     } catch (err) {
-      console.error(`[TT:${projectId}] stop crash`, err);
-      console.trace();
+      logError("TimeTrackerCard.stopTimer", err);
     }
   };
 
   // function to reset the timer
   const [resetting, setResetting] = useState(false);
   const handleReset = async () => {
-    console.trace(`[TT:${projectId}] RESET pressed`);
     const project = useStore.getState().projects[projectId];
 
     if (!serviceId) {
-      console.error(`[TT:${projectId}] Missing serviceId in handleReset`);
+      logError("TimeTrackerCard.reset", "Missing serviceId");
       return;
     }
     if (!project) {
-      console.error(`[TT:${projectId}] Missing project in handleReset`);
+      logError("TimeTrackerCard.reset", "Missing project");
       return;
     }
 
@@ -670,7 +632,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
         [
           {
             text: "Cancel",
-            onPress: () => console.log("Project reset canceled"),
+            onPress: () => {},
             style: "cancel",
           },
           {
@@ -686,8 +648,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
                 await AsyncStorage.removeItem(`isTracking_${projectId}`);
                 await AsyncStorage.removeItem(`timerState_${projectId}`);
               } catch (err) {
-                console.error(`[TT:${projectId}] reset crash`, err);
-                console.trace();
+                logError("TimeTrackerCard.reset", err);
               } finally {
                 setResetting(false);
               }
@@ -884,7 +845,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
                     fontFamily: "MPLUSLatin_Bold",
                     fontSize: 22,
                     color: resetting ? "lightgray" : "white",
-                    marginBottom: 5,
+
                     paddingRight: 10,
                   }}
                 >

@@ -30,7 +30,7 @@ import {
 } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import Modal from "react-native-modal";
-import { getDocs, doc, getDoc, collection } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { getAuth, Auth } from "firebase/auth";
 import { LinearGradient } from "expo-linear-gradient";
 import { AntDesign } from "@expo/vector-icons";
@@ -64,6 +64,7 @@ import SortModal from "../components/SortModal";
 import { normalizeCreatedAt } from "../components/helper/normalizeCreatedAt.helper";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import { projectsAndWorkValidatorCallable } from "../firebase/functions";
+import { logError } from "../lib/loggerClient";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 type HomeScreenRouteProp = RouteProp<
@@ -253,6 +254,7 @@ const HomeScreen: React.FC = () => {
     };
   }, [serviceId, serviceLoading]);
 
+  //NOTE: check both hooks by testing if one of them is redundant
   // function to load data from firestore
   useEffect(() => {
     if (serviceLoading) return;
@@ -299,7 +301,7 @@ const HomeScreen: React.FC = () => {
           })),
         );
       } catch (err) {
-        console.error("Error fetching projects", err);
+        logError("HomeScreen/fetchProjects", err);
       } finally {
         if (active) setIsLoading(false);
       }
@@ -355,7 +357,7 @@ const HomeScreen: React.FC = () => {
           })),
         );
       } catch (err) {
-        console.error("Error fetching projects", err);
+        logError("HomeScreen/fetchProjects", err);
       } finally {
         if (active) setIsLoading(false);
       }
@@ -430,7 +432,7 @@ const HomeScreen: React.FC = () => {
       setRefresh((r) => !r);
       Keyboard.dismiss();
     } catch (error) {
-      console.error("Error adding project", error);
+      logError("HomeScreen/createProject", error);
       useAlertStore.getState().showAlert("Error", "Could not add project.");
     }
   };
@@ -474,7 +476,7 @@ const HomeScreen: React.FC = () => {
 
                 setRefresh((prev) => !prev);
               } catch (err) {
-                console.error("Delete project failed", err);
+                logError("HomeScreen/deleteProject", err);
               }
             },
           },
@@ -484,27 +486,23 @@ const HomeScreen: React.FC = () => {
 
   // function to navigate to the details screen if user pressed an a listed project
   const handleProjectPress = (projectId: string, projectName: string) => {
-    // console.log("navigate to details screen", projectId);
     setProjectId(projectId); // to send it global to the details screen to reset all components in the details screen
     navigation.navigate("Details", { projectId, projectName });
   };
 
   // function to handle sorting
   const handleSortChange = (newSort: string) => {
-    // console.log("Sort order changed to:", newSort);
     setSortOrder(newSort);
   };
 
   // function to show the note-modal
   const openNoteModal = (projectId: string) => {
-    // console.log("Note modal opened with ID:", projectId);
     setSelectedProjectId(projectId);
     setNoteModalVisible(true);
   };
 
   // function to close the note-modal
   const closeNoteModal = () => {
-    // console.log("Note modal closed");
     setNoteModalVisible(false);
   };
 
@@ -735,7 +733,6 @@ const HomeScreen: React.FC = () => {
   const accessMode = useAccessibilityStore(
     (state) => state.accessibilityEnabled,
   );
-  // console.log("accessMode in LoginScreen:", accessMode);
 
   return (
     <DismissKeyboard>

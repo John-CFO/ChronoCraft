@@ -25,6 +25,7 @@ import CheckmarkAnimation from "./Checkmark";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { useAccessibilityStore } from "./services/accessibility/accessibilityStore";
 import { FirestoreVacationSchema } from "../validation/vacationSchemas";
+import { logError, logWarn } from "../lib/loggerClient";
 
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -45,7 +46,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
   // hook to announce accessibility
   useEffect(() => {
     AccessibilityInfo.announceForAccessibility(
-      "Vacation Remind Modal opened. Please select a reminder duration and press save."
+      "Vacation Remind Modal opened. Please select a reminder duration and press save.",
     );
   }, []);
 
@@ -93,18 +94,27 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
   const handleSaveReminder = async (
     id: string,
     uid?: string,
-    onClose?: () => void
+    onClose?: () => void,
   ): Promise<void> => {
     setSaving(true);
     try {
-      if (!serviceId) return;
+      if (!serviceId) {
+        logWarn("VacationRemindModal.handleSaveReminder", "Missing serviceId");
+        return;
+      }
+
       if (!id) {
+        logWarn(
+          "VacationRemindModal.handleSaveReminder",
+          "Missing vacation id",
+        );
         useAlertStore.getState().showAlert("Error", "No vacation selected.");
         return;
       }
 
       const currentUid = uid || FIREBASE_AUTH.currentUser?.uid;
       if (!currentUid) {
+        logWarn("VacationRemindModal.handleSaveReminder", "User not logged in");
         useAlertStore
           .getState()
           .showAlert("Error", "You must be logged in to save a reminder.");
@@ -136,6 +146,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
 
       const pushToken = (userDoc as any).pushToken;
       if (!pushToken) {
+        logWarn("VacationRemindModal.handleSaveReminder", "Missing push token");
         useAlertStore.getState().showAlert("Error", "Push Token not found.");
         return;
       }
@@ -148,12 +159,16 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
         "Services",
         serviceId,
         "Vacations",
-        id
+        id,
       );
       const vacationSnap = await getDoc(vacationRef);
       const vacationRaw = vacationSnap.exists() ? vacationSnap.data() : null;
 
       if (!vacationRaw) {
+        logWarn(
+          "VacationRemindModal.handleSaveReminder",
+          "Vacation not found in Firestore",
+        );
         useAlertStore.getState().showAlert("Error", "Vacation not found.");
         return;
       }
@@ -169,7 +184,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
           .getState()
           .showAlert(
             "Error",
-            "Vacation already has a reminder. Delete and create a new one to change it."
+            "Vacation already has a reminder. Delete and create a new one to change it.",
           );
         return;
       }
@@ -177,6 +192,10 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
       const startDateRaw = (vacationDoc as any).startDate;
       const startDate = new Date(startDateRaw);
       if (isNaN(startDate.getTime())) {
+        logWarn(
+          "VacationRemindModal.handleSaveReminder",
+          "Invalid vacation start date",
+        );
         useAlertStore
           .getState()
           .showAlert("Error", "Invalid vacation start date.");
@@ -191,7 +210,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
           reminderDuration,
           createdAt: new Date(),
         },
-        { merge: true }
+        { merge: true },
       );
 
       const reminderDate = new Date(startDate);
@@ -201,7 +220,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
         "Vacation Reminder",
         `Your vacation starts in ${reminderDuration} days.`,
         reminderDate,
-        pushToken
+        pushToken,
       );
 
       setSelectedOption(null);
@@ -210,7 +229,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
         .showAlert("Success", "Reminder saved successfully.");
       if (typeof onClose === "function") onClose();
     } catch (err) {
-      console.error("Failed to save reminder:", err);
+      logError("VacationRemindModal.handleSaveReminder", err);
       useAlertStore
         .getState()
         .showAlert("Error", "Failed to save reminder. Please try again.");
@@ -220,7 +239,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
   };
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
 
   return (
@@ -308,7 +327,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
                 handleSaveReminder(
                   vacationId,
                   FIREBASE_AUTH.currentUser?.uid || "",
-                  onClose
+                  onClose,
                 );
               }
             }}

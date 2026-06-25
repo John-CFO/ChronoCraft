@@ -29,6 +29,8 @@ import useDebounceValue from "../hooks/useDebounceValue";
 import { NotificationManager } from "./services/PushNotifications";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import { MaxWorkHoursSchema } from "../validation/progressSchemas";
+import { useAlertStore } from "../components/services/customAlert/alertStore";
+import { logError } from "../lib/loggerClient";
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -112,7 +114,11 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
         if (!serviceId) return;
         const user = FIREBASE_AUTH.currentUser;
         if (!user) {
-          Alert.alert("Error", "Authentication required");
+          useAlertStore
+            .getState()
+            .showAlert("Error", "Authentication required");
+
+          logError("ProgressCard:auth", "Missing authentication");
           return;
         }
 
@@ -130,13 +136,20 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
 
           const projectSnap = await getDoc(projectRef);
           if (!projectSnap.exists()) {
-            Alert.alert("Error", "Project not found");
+            useAlertStore.getState().showAlert("Error", "Project not found");
+
+            logError("ProgressCard:updateMaxWorkHours", "Project not found");
             return;
           }
 
           const projectData = projectSnap.data();
           if (projectData.userId !== user.uid) {
-            Alert.alert("Error", "Not authorized");
+            useAlertStore.getState().showAlert("Error", "Not authorized");
+
+            logError(
+              "ProgressCard:updateMaxWorkHours",
+              "Unauthorized access attempt",
+            );
             return;
           }
 
@@ -145,8 +158,11 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
 
           if (onSaveSuccess) onSaveSuccess();
         } catch (error) {
-          console.error("Error saving max work hours:", error);
-          Alert.alert("Failed to save. Try again.");
+          logError("ProgressCard:saveMaxWorkHours", error);
+
+          useAlertStore
+            .getState()
+            .showAlert("Error", "Failed to save. Try again.");
         }
       }, 500),
       [projectId, setProjectData, onSaveSuccess, serviceId],
@@ -156,7 +172,9 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
     const handleSave = () => {
       const user = FIREBASE_AUTH.currentUser;
       if (!user) {
-        Alert.alert("Error", "Authentication required");
+        useAlertStore.getState().showAlert("Error", "Authentication required");
+
+        logError("ProgressCard:auth", "Missing authentication");
         return;
       }
 
@@ -170,7 +188,12 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
       });
 
       if (!validationResult.success) {
-        Alert.alert("Invalid input", "Please enter hours between 1 and 10000");
+        useAlertStore
+          .getState()
+          .showAlert("Invalid input", "Please enter hours between 1 and 10000");
+
+        logError("ProgressCard:invalidInput", "Invalid input");
+
         return;
       }
 
@@ -243,7 +266,7 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
               useNativeDriver: true,
             }),
           ]),
-          // { iterations: 10 } // repeat the animation 10 times if it is active
+          //{ iterations: 10 }, // repeat the animation 10 times if it is active
         );
 
         animationRef.current.start();
@@ -403,7 +426,7 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
                     fontFamily: "MPLUSLatin_Bold",
                     fontSize: 22,
                     color: saving ? "lightgray" : "white",
-                    marginBottom: 5,
+
                     paddingRight: 10,
                   }}
                 >
