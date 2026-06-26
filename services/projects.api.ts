@@ -21,12 +21,13 @@ export async function fetchProjects(serviceId: string): Promise<Project[]> {
 
   const body = unwrapBody(res.data);
 
-  return (body?.projects ?? []).map((project: any) => ({
-    id: project.id,
-    ...project,
-    name: project.name ?? "",
-    createdAt: normalizeCreatedAt(project.createdAt),
-  }));
+  return (body?.projects ?? []).map(
+    (project: any): Project => ({
+      id: project.id,
+      name: project.name ?? "",
+      createdAt: normalizeCreatedAt(project.createdAt),
+    }),
+  );
 }
 
 export async function createProject(

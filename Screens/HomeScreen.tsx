@@ -46,9 +46,9 @@ import {
 } from "../firebaseConfig";
 import { RootStackParamList } from "../navigation/RootStackParams";
 import {
-  fetchProjects,
-  deleteProject,
-  createProject,
+  fetchProjects as fetchProjectsApi,
+  deleteProject as deleteProjectApi,
+  createProject as createProjectApi,
 } from "../services/projects.api";
 import ProjectListItem from "../components/projectListItem";
 import { Project } from "../components/types/Project";
@@ -244,7 +244,7 @@ const HomeScreen: React.FC = () => {
       setIsLoading(true);
 
       try {
-        const projects = await fetchProjects(serviceId);
+        const projects = await fetchProjectsApi(serviceId);
 
         if (!active) return;
 
@@ -294,7 +294,7 @@ const HomeScreen: React.FC = () => {
     }
 
     try {
-      const data = await createProject(serviceId, trimmedName);
+      const data = await createProjectApi(serviceId, trimmedName);
 
       const projectForState = {
         id: data.projectId,
@@ -349,7 +349,7 @@ const HomeScreen: React.FC = () => {
                   await ref.zoomOut(300);
                 }
 
-                await deleteProject(serviceId, projectId);
+                await deleteProjectApi(serviceId, projectId);
 
                 setProjects((prev) => prev.filter((p) => p.id !== projectId));
 
