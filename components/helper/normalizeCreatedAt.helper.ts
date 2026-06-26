@@ -14,6 +14,15 @@ export const normalizeCreatedAt = (value: unknown): Date | null => {
     return (value as any).toDate();
   }
 
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "_seconds" in value &&
+    typeof (value as any)._seconds === "number"
+  ) {
+    return new Date((value as any)._seconds * 1000);
+  }
+
   if (typeof value === "number") return new Date(value);
 
   const parsed = new Date(value as any);
