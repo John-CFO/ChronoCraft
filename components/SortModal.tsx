@@ -44,7 +44,7 @@ const SortModalFAB = ({
   // hook to announce accessibility
   useEffect(() => {
     AccessibilityInfo.announceForAccessibility(
-      "Sort Modal opened. Please select a sort option."
+      "Sort Modal opened. Please select a sort option.",
     );
   }, []);
 
@@ -73,9 +73,8 @@ const SortModalFAB = ({
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
-  // console.log("accessMode in LoginScreen:", accessMode);
 
   return (
     <View

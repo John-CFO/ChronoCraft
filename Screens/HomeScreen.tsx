@@ -1,4 +1,4 @@
-///////////////////////////////////// HomeSceen Component////////////////////////////////////////////
+///////////////////////////////////// HomeSceen Component ////////////////////////////////////////////
 
 // This component shows a list of projects and enabled the user to add and delete his projects.
 // The user can also write notes to every project in the list wich is also visible in the DetailsScreen.
@@ -16,7 +16,6 @@ import {
   TextInput,
   TouchableOpacity,
   Animated,
-  LayoutChangeEvent,
   Dimensions,
   FlatList,
 } from "react-native";
@@ -33,15 +32,12 @@ import Modal from "react-native-modal";
 import { doc, getDoc } from "firebase/firestore";
 import { getAuth, Auth } from "firebase/auth";
 import { LinearGradient } from "expo-linear-gradient";
-import { AntDesign } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
-import dayjs from "dayjs";
 import {
   CopilotProvider,
   CopilotStep,
   walkthroughable,
 } from "react-native-copilot";
-import * as Animatable from "react-native-animatable";
 
 import {
   FIREBASE_FIRESTORE,
@@ -49,6 +45,14 @@ import {
   FIREBASE_APP,
 } from "../firebaseConfig";
 import { RootStackParamList } from "../navigation/RootStackParams";
+import {
+  fetchProjects as fetchProjectsApi,
+  deleteProject as deleteProjectApi,
+  createProject as createProjectApi,
+} from "../services/projects.api";
+import ProjectListItem from "../components/projectListItem";
+import { Project } from "../components/types/Project";
+import { sortProjects } from "../components/utils/sortProjects";
 import { useStore } from "../components/TimeTrackingState";
 import NoteModal from "../components/NoteModal";
 import RoutingLoader from "../components/RoutingLoader";
@@ -61,9 +65,7 @@ import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { useDotAnimation } from "../components/DotAnimation";
 import { sanitizeTitle } from "../components/InputSanitizers";
 import SortModal from "../components/SortModal";
-import { normalizeCreatedAt } from "../components/helper/normalizeCreatedAt.helper";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
-import { projectsAndWorkValidatorCallable } from "../firebase/functions";
 import { logError } from "../lib/loggerClient";
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -74,13 +76,6 @@ type HomeScreenRouteProp = RouteProp<
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
-interface Project {
-  id: string;
-  name: string;
-  createdAt: Date | null;
-  [key: string]: any;
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 // definition of the walkthroughable component to handle the copilot with (TouchableOpacity)
@@ -88,15 +83,6 @@ const WalkthroughTouchableOpacity = walkthroughable(TouchableOpacity);
 
 // definition of the walkthroughable component to handle the copilot with (View)
 const CopilotView = walkthroughable(View);
-
-// function to unwrap the body
-const unwrapBody = (body: any): any => {
-  if (body && typeof body === "object" && "result" in body) {
-    return body.result;
-  }
-
-  return body;
-};
 
 const HomeScreen: React.FC = () => {
   // initialize the copilot offset
@@ -133,7 +119,7 @@ const HomeScreen: React.FC = () => {
   // initialize the project id globally to reset all components in the details screen
   const { setProjectId } = useStore();
 
-  // handle project state with props title, id and name
+  // handle project state with props title, id, name and createdAt
   const [projects, setProjects] = useState<Project[]>([]);
 
   // new project name state
@@ -141,6 +127,9 @@ const HomeScreen: React.FC = () => {
 
   // state to handel sort modal
   const [sortModalVisible, setSortModalVisible] = useState(false);
+
+  // sort order state
+  const [sortOrder, setSortOrder] = useState("DATE_DESC");
 
   const openSortModal = () => {
     setSortModalVisible(true);
@@ -150,31 +139,9 @@ const HomeScreen: React.FC = () => {
     setSortModalVisible(false);
   };
 
-  // sort order state
-  const [sortOrder, setSortOrder] = useState("DATE_DESC");
-
   // function to sort the projects
   const sortedProjects = React.useMemo(() => {
-    return [...projects].sort((a, b) => {
-      const aDate = normalizeCreatedAt(a.createdAt);
-      const bDate = normalizeCreatedAt(b.createdAt);
-
-      const aTime = aDate ? aDate.getTime() : 0;
-      const bTime = bDate ? bDate.getTime() : 0;
-
-      switch (sortOrder) {
-        case "DATE_DESC":
-          return bTime - aTime;
-        case "DATE_ASC":
-          return aTime - bTime;
-        case "NAME_ASC":
-          return a.name.localeCompare(b.name);
-        case "NAME_DESC":
-          return b.name.localeCompare(a.name);
-        default:
-          return 0;
-      }
-    });
+    return sortProjects(projects, sortOrder);
   }, [projects, sortOrder]);
 
   // ref to handle the flatlist scroll animation and refresh the projects list
@@ -206,7 +173,7 @@ const HomeScreen: React.FC = () => {
   const ITEM_HEIGHT: number = 100;
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  const [averageItemHeight, setAverageItemHeight] = useState(ITEM_HEIGHT);
+  const [lastItemHeight, setLastItemHeight] = useState(ITEM_HEIGHT);
 
   // Gatecheck to check if the user can read the projects
   useEffect(() => {
@@ -254,7 +221,6 @@ const HomeScreen: React.FC = () => {
     };
   }, [serviceId, serviceLoading]);
 
-  //NOTE: check both hooks by testing if one of them is redundant
   // function to load data from firestore
   useEffect(() => {
     if (serviceLoading) return;
@@ -262,7 +228,7 @@ const HomeScreen: React.FC = () => {
 
     let active = true;
 
-    const fetchProjects = async () => {
+    const loadProjects = async () => {
       const user = FIREBASE_AUTH.currentUser;
 
       if (!serviceId || !user) {
@@ -278,84 +244,11 @@ const HomeScreen: React.FC = () => {
       setIsLoading(true);
 
       try {
-        const res = await projectsAndWorkValidatorCallable({
-          action: "getProjects",
-          payload: {
-            serviceId,
-          },
-        });
-
-        const body = unwrapBody(res.data);
-
-        const projects = body?.projects ?? [];
-
-        setProjects(
-          projects.map((project: any) => ({
-            id: project.id,
-            name: project.name ?? "",
-            createdAt: normalizeCreatedAt(project.createdAt),
-            userId: project.userId,
-            status: project.status,
-            isTracking: project.isTracking,
-            hourlyRate: project.hourlyRate,
-          })),
-        );
-      } catch (err) {
-        logError("HomeScreen/fetchProjects", err);
-      } finally {
-        if (active) setIsLoading(false);
-      }
-    };
-
-    fetchProjects();
-
-    return () => {
-      active = false;
-    };
-  }, [serviceId, serviceLoading, canReadProjects, refresh]);
-
-  // function to load data from firestore
-  useEffect(() => {
-    if (serviceLoading) return;
-    if (canReadProjects === null) return;
-
-    let active = true;
-
-    const fetchProjects = async () => {
-      const user = FIREBASE_AUTH.currentUser;
-
-      if (!serviceId || !user) {
-        if (active) setIsLoading(false);
-        return;
-      }
-
-      if (canReadProjects === false) {
-        if (active) setIsLoading(false);
-        return;
-      }
-
-      setIsLoading(true);
-
-      try {
-        const res = await projectsAndWorkValidatorCallable({
-          action: "getProjects",
-          payload: {
-            serviceId,
-          },
-        });
-
-        const body = unwrapBody(res.data);
+        const projects = await fetchProjectsApi(serviceId);
 
         if (!active) return;
 
-        setProjects(
-          (body?.projects ?? []).map((project: any) => ({
-            id: project.id,
-            ...project,
-            name: project.name ?? "",
-            createdAt: normalizeCreatedAt(project.createdAt),
-          })),
-        );
+        setProjects(projects);
       } catch (err) {
         logError("HomeScreen/fetchProjects", err);
       } finally {
@@ -363,7 +256,7 @@ const HomeScreen: React.FC = () => {
       }
     };
 
-    fetchProjects();
+    loadProjects();
 
     return () => {
       active = false;
@@ -401,15 +294,7 @@ const HomeScreen: React.FC = () => {
     }
 
     try {
-      const res = await projectsAndWorkValidatorCallable({
-        action: "createProject",
-        payload: {
-          name: trimmedName,
-          serviceId,
-        },
-      });
-
-      const data = unwrapBody(res.data);
+      const data = await createProjectApi(serviceId, trimmedName);
 
       const projectForState = {
         id: data.projectId,
@@ -464,13 +349,7 @@ const HomeScreen: React.FC = () => {
                   await ref.zoomOut(300);
                 }
 
-                await projectsAndWorkValidatorCallable({
-                  action: "deleteProject",
-                  payload: {
-                    projectId,
-                    serviceId,
-                  },
-                });
+                await deleteProjectApi(serviceId, projectId);
 
                 setProjects((prev) => prev.filter((p) => p.id !== projectId));
 
@@ -509,179 +388,31 @@ const HomeScreen: React.FC = () => {
   // define the dot animation with a delay
   const dots = useDotAnimation(loading, 700);
 
+  // initialize the accessibility store
+  const accessMode = useAccessibilityStore(
+    (state) => state.accessibilityEnabled,
+  );
+
   // scroll animation with parameters to handle the scroll animation
-  const renderItem = ({ item, index }: { item: any; index: number }) => {
-    // Animation-Berechnungen
-    const inputRange = [
-      -1,
-      0,
-      ITEM_HEIGHT * index,
-      ITEM_HEIGHT * (index + 1),
-      ITEM_HEIGHT * (index + 2),
-    ];
-
-    const scale = scrollY.interpolate({
-      inputRange,
-      outputRange: [1, 1, 1, 0.8, 0.8],
-      extrapolate: "clamp",
-    });
-
-    const opacity = scrollY.interpolate({
-      inputRange,
-      outputRange: [1, 1, 1, 0.5, 0],
-      extrapolate: "clamp",
-    });
-
-    // converte date to enable both unix timestamps and firebase timestamps
-    let dateObj: Date | null = null;
-    if (item.createdAt) {
-      if (item.createdAt instanceof Date) {
-        dateObj = item.createdAt;
-      } else if (
-        item.createdAt.toDate &&
-        typeof item.createdAt.toDate === "function"
-      ) {
-        dateObj = item.createdAt.toDate();
-      } else if (typeof item.createdAt === "number") {
-        // Fallback for Unix-Timestamps
-        dateObj = new Date(item.createdAt);
-      }
-    }
-
-    // calculate the average item height to handle functionality of the scroll animation
-    const mesureItemHeight = (event: LayoutChangeEvent) => {
-      const { height } = event.nativeEvent.layout;
-      setAverageItemHeight(height);
-    };
-
-    return (
-      // add and delete  project card animation
-      <Animatable.View
-        animation="zoomInUp"
-        duration={1500}
-        delay={index * 100}
-        useNativeDriver
-        // ref to animate the project deleting
-        ref={(ref) => {
-          if (ref && item.id) {
-            animationRefs.current[item.id] = ref;
-          }
+  const renderItem = React.useCallback(
+    ({ item, index }: { item: Project; index: number }) => (
+      <ProjectListItem
+        item={item}
+        index={index}
+        ITEM_HEIGHT={ITEM_HEIGHT}
+        scrollY={scrollY}
+        accessMode={accessMode}
+        animationRef={(id, ref) => {
+          if (ref) animationRefs.current[id] = ref;
         }}
-      >
-        {/* Animation View parameters */}
-        <Animated.View
-          style={{
-            height: ITEM_HEIGHT,
-            transform: [{ scale }],
-            opacity,
-            margin: 5,
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            borderWidth: 1,
-            borderColor: "aqua",
-            minWidth: "98%",
-            backgroundColor: "#191919",
-            borderRadius: 8,
-          }}
-          onLayout={mesureItemHeight}
-        >
-          {/* Button to navigate to the details screen */}
-          <TouchableOpacity
-            onPress={() => handleProjectPress(item.id as string, item.name)}
-            accessibilityRole="button"
-            accessibilityLabel={`Project ${item.name}, created on ${
-              dateObj ? dayjs(dateObj).format("DD MMMM YYYY") : "unknown date"
-            }`}
-            accessibilityHint="Tap to view project details"
-            style={{ alignItems: "center", justifyContent: "center", flex: 1 }}
-          >
-            <View
-              style={{
-                height: "100%",
-                width: "100%",
-              }}
-            >
-              {/* Section with date in the project container */}
-              {dateObj ? (
-                <Text
-                  style={{
-                    color: accessMode ? "white" : "grey",
-                    fontSize: accessMode ? 16 : 13,
-                    paddingLeft: 10,
-                    marginTop: 5,
-                  }}
-                >
-                  {dayjs(dateObj).format("DD.MM.YYYY")}
-                </Text>
-              ) : (
-                <Text
-                  style={{
-                    color: "gray",
-                    fontSize: 13,
-                    paddingLeft: 10,
-                    marginTop: 5,
-                    fontStyle: "italic",
-                  }}
-                >
-                  No date available
-                </Text>
-              )}
-
-              {/* Project name in the project container */}
-              <Text
-                style={{
-                  marginTop: 5,
-                  marginLeft: 30,
-                  fontSize: accessMode ? 28 : 24,
-                  fontFamily: "MPLUSLatin_Bold",
-                  color: "white",
-                }}
-              >
-                {item.name}
-              </Text>
-            </View>
-          </TouchableOpacity>
-          <View
-            style={{
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "space-evenly",
-              marginRight: 10,
-              height: "100%",
-            }}
-          >
-            {/* Button to delete a project */}
-            <TouchableOpacity
-              onPress={() => handleDeleteProject(item.id)}
-              accessibilityRole="button"
-              accessibilityLabel="Delete the project"
-              accessibilityHint="Delete the project"
-            >
-              <AntDesign
-                name="delete"
-                size={30}
-                color={accessMode ? "white" : "darkgrey"}
-              />
-            </TouchableOpacity>
-            {/* Button to add a note to a project */}
-            <TouchableOpacity
-              onPress={() => openNoteModal(item.id)}
-              accessibilityRole="button"
-              accessibilityLabel="Add a note"
-              accessibilityHint="Add a note. You can watch it in the details screen"
-            >
-              <MaterialIcons
-                name="edit-note"
-                size={30}
-                color={accessMode ? "white" : "darkgrey"}
-              />
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
-      </Animatable.View>
-    );
-  };
+        onPress={handleProjectPress}
+        onDelete={handleDeleteProject}
+        onAddNote={openNoteModal}
+        setLastItemHeight={setLastItemHeight}
+      />
+    ),
+    [scrollY, accessMode],
+  );
 
   // hook to check Firestore if the user has seen the Copilot home tour
   const fetchTourStatus = async () => {
@@ -728,11 +459,6 @@ const HomeScreen: React.FC = () => {
   const EmptyStepNumber = () => {
     return null;
   };
-
-  // initialize the accessibility store
-  const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled,
-  );
 
   return (
     <DismissKeyboard>
