@@ -5,20 +5,21 @@
 ////////////////////////////////////////////////////////////////////////////////////
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { collection, getDocs, addDoc } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../../firebaseConfig";
 import { logError } from "../../lib/loggerClient";
 
-// ////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
 
 interface ServiceContextType {
   serviceId: string | null;
   loading: boolean;
+  ready: boolean;
 }
 
-// ////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
 
 // Create the context
 const ServiceContext = createContext<ServiceContextType | undefined>(undefined);
@@ -29,16 +30,21 @@ export const ServiceProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [serviceId, setServiceId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(FIREBASE_AUTH, async (user) => {
-      if (!user) {
+    let active = true;
+
+    const run = async (user: any) => {
+      if (!user?.uid) {
         setServiceId(null);
+        setReady(false);
         setLoading(false);
         return;
       }
 
       setLoading(true);
+      setReady(false);
 
       try {
         const servicesRef = collection(
@@ -50,28 +56,40 @@ export const ServiceProvider: React.FC<{ children: React.ReactNode }> = ({
 
         const snapshot = await getDocs(servicesRef);
 
-        if (snapshot.empty) {
-          const newServiceRef = await addDoc(servicesRef, {
-            createdAt: new Date(),
-          });
+        if (!active) return;
 
-          setServiceId(newServiceRef.id);
-        } else {
-          setServiceId(snapshot.docs[0].id);
+        if (snapshot.empty) {
+          setServiceId(null);
+          setReady(false);
+          setLoading(false);
+          return;
         }
+
+        setServiceId(snapshot.docs[0].id);
+        setReady(true);
+        setLoading(false);
       } catch (err) {
-        logError("ServiceContext/createService", err);
+        if (!active) return;
+
+        logError("ServiceContext/load", err);
         setServiceId(null);
-      } finally {
+        setReady(false);
         setLoading(false);
       }
+    };
+
+    const unsub = onAuthStateChanged(FIREBASE_AUTH, (user) => {
+      run(user);
     });
 
-    return unsubscribe;
+    return () => {
+      active = false;
+      unsub();
+    };
   }, []);
 
   return (
-    <ServiceContext.Provider value={{ serviceId, loading }}>
+    <ServiceContext.Provider value={{ serviceId, loading, ready }}>
       {children}
     </ServiceContext.Provider>
   );

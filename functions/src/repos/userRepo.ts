@@ -32,6 +32,11 @@ export class UserRepo {
           hasSeenVacationTour: false,
           hasSeenWorkHoursTour: false,
         });
+
+        const serviceRef = ref.collection("Services").doc();
+        tx.set(serviceRef, {
+          createdAt: FieldValue.serverTimestamp(),
+        });
       }
     });
 
