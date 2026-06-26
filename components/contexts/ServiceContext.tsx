@@ -16,6 +16,7 @@ import { logError } from "../../lib/loggerClient";
 interface ServiceContextType {
   serviceId: string | null;
   loading: boolean;
+  ready: boolean;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -29,6 +30,7 @@ export const ServiceProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [serviceId, setServiceId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -36,11 +38,13 @@ export const ServiceProvider: React.FC<{ children: React.ReactNode }> = ({
     const run = async (user: any) => {
       if (!user?.uid) {
         setServiceId(null);
+        setReady(false);
         setLoading(false);
         return;
       }
 
       setLoading(true);
+      setReady(false);
 
       try {
         const servicesRef = collection(
@@ -51,21 +55,25 @@ export const ServiceProvider: React.FC<{ children: React.ReactNode }> = ({
         );
 
         const snapshot = await getDocs(servicesRef);
+
         if (!active) return;
 
         if (snapshot.empty) {
           setServiceId(null);
-          setLoading(true);
+          setReady(false);
+          setLoading(false);
           return;
         }
 
         setServiceId(snapshot.docs[0].id);
+        setReady(true);
         setLoading(false);
       } catch (err) {
         if (!active) return;
 
         logError("ServiceContext/load", err);
         setServiceId(null);
+        setReady(false);
         setLoading(false);
       }
     };
@@ -81,7 +89,7 @@ export const ServiceProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   return (
-    <ServiceContext.Provider value={{ serviceId, loading }}>
+    <ServiceContext.Provider value={{ serviceId, loading, ready }}>
       {children}
     </ServiceContext.Provider>
   );
