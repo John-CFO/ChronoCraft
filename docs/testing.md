@@ -225,6 +225,25 @@ The test suite is structured into:
 
 ---
 
+# Indempotengy
+
+## Idempotency Guarantees
+
+Idempotency is tested across multiple system layers:
+
+- Authentication Boundaries (functional idempotency)
+  - repeated register calls
+  - login/register flows without side effects
+
+- Race Condition Tests (concurrent idempotency)
+  - register vs register (concurrent execution)
+  - register on existing user
+  - login vs login under parallel load
+  - project updates under repeated writes
+  - rate limit repeated consumption safety
+
+  ***
+
 # Integration Tests
 
 Integration tests validate interactions between services and external systems:
