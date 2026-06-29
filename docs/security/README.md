@@ -16,7 +16,7 @@ Detailed behavior is split into subsystem documents.
 
 ---
 
-## System Overview
+## Security Request Flow (Runtime Pipeline | Decision Path)
 
 The system implements a server-side security model for authentication and abuse prevention.
 
@@ -107,7 +107,7 @@ See: `data-protection.md`
 
 ---
 
-## High-Level Architecture (C4 Context)
+## C4 Container View (Firebase Security System Structure)
 
 ```
 User
