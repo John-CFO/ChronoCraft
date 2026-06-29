@@ -22,6 +22,38 @@ The system implements a server-side security model for authentication and abuse 
 
 It consists of three core security layers:
 
+```mermaid
+flowchart TD
+
+    Client[Client]
+
+    subgraph Backend["Firebase Cloud Functions"]
+
+        Context[Build Security Context]
+
+        RL[Rate Limiter]
+
+        Auth[TOTP Verification]
+
+        Crypto[Cryptographic Operations]
+
+    end
+
+    DB[(Firestore)]
+
+    Client --> Context
+
+    Context --> RL
+
+    RL -->|Allowed| Auth
+    RL -->|Blocked| Denied[RateLimitError]
+
+    Auth -->|Valid| Crypto
+    Auth -->|Invalid| Reject[Authentication Failed]
+
+    Crypto --> DB
+```
+
 ### 1. Authentication Layer (TOTP)
 
 Responsible for user identity verification using time-based one-time passwords.
@@ -98,6 +130,34 @@ Firestore (State Storage)
 ## Security Principles
 
 The system follows these principles:
+
+```mermaid
+flowchart TD
+
+Req[Incoming Request]
+
+Req --> AuthCheck{Authenticated?}
+
+AuthCheck -- No --> Reject[Reject Request]
+
+AuthCheck -- Yes --> Context[Build Security Context<br/>uid + ip + deviceId + action]
+
+Context --> RL[Rate Limit Check<br/>Token Bucket]
+
+RL --> RLFail{Rate Limited?}
+
+RLFail -- Yes --> Block[Return RateLimitError]
+
+RLFail -- No --> TOTP[TOTP Verification]
+
+TOTP --> TOTPFail{Valid TOTP?}
+
+TOTPFail -- No --> Reject2[Reject Authentication]
+
+TOTPFail -- Yes --> Success[Authentication Successful]
+
+Success --> Write[Update Firestore State]
+```
 
 ### 1. Server Authority
 
