@@ -75,7 +75,7 @@ jobs:
         run: npx tsc --noEmit
 
       - name: ESLint (Expo)
-        run: npm exec eslint . --max-warnings=0
+        run: npx eslint . --max-warnings=0
 
   # ---------------------------
   # FIREBASE RULES (no Node build)
