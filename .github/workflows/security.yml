@@ -67,10 +67,12 @@ jobs:
           cache: npm
 
       - name: Install dependencies
+        working-directory: functions
         run: npm ci
 
       - name: TypeScript check (Expo)
-        run: npx tsc -p ./tsconfig.json --noEmit
+        working-directory: functions
+        run: npx tsc --noEmit
 
       - name: ESLint (Expo)
         run: npm exec eslint . --max-warnings=0
