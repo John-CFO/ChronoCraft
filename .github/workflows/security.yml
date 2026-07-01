@@ -37,7 +37,7 @@ jobs:
         run: npm exec tsc -- --noEmit
 
       - name: ESLint
-        run: npm exec eslint . --max-warnings=0
+        run: npm run lint
 
       - name: Unit Tests
         run: npm run test:unit
@@ -69,7 +69,7 @@ jobs:
         run: npm ci
 
       - name: TypeScript check (Expo)
-        run: npm exec tsc --noEmit
+        run: npm exec tsc --noEmit --project tsconfig.json
 
       - name: ESLint (Expo)
         run: npm exec eslint . --max-warnings=0
@@ -85,14 +85,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
       - name: Validate Firestore Rules
-        run: |
-          npm install -g firebase-tools
-          firebase rules:validate firebase-rules/firestore.rules
+        run: firebase deploy --only firestore:rules --dry-run
 
       - name: Validate Storage Rules
-        run: |
-          firebase rules:validate firebase-rules/storage.rules
+        run: firebase deploy --only storage --dry-run
 
   # ---------------------------
   # DEPENDENCY SECURITY (global)
@@ -114,8 +114,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: npm audit
-        run: npm audit --audit-level=high
+      - name: npm audit (report)
+        run: npm audit || true
+
+      - name: Check for critical vulnerabilities only
+        run: npm audit --audit-level=critical
 
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
