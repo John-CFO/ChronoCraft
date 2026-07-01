@@ -4,6 +4,7 @@
   "type": "commonjs",
   "main": "lib/index.js",
   "scripts": {
+    "lint": "eslint .",
     "build": "tsc -p tsconfig.json",
     "test:e2e": "jest --config=jest.e2e.config.js tests/e2e --runInBand",
     "test:unit": "jest --config=jest.unit.config.js",

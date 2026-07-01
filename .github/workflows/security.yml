@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   # ---------------------------
@@ -27,7 +28,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22.22.2
           cache: npm
 
       - name: Install dependencies
@@ -69,7 +70,7 @@ jobs:
         run: npm ci
 
       - name: TypeScript check (Expo)
-        run: npm exec tsc --noEmit --project tsconfig.json
+        run: npm exec tsc -p tsconfig.json --noEmit
 
       - name: ESLint (Expo)
         run: npm exec eslint . --max-warnings=0
@@ -122,6 +123,8 @@ jobs:
 
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run Semgrep
         uses: returntocorp/semgrep-action@v1
