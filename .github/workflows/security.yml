@@ -9,8 +9,50 @@ permissions:
   contents: read
 
 jobs:
-  security-check:
-    name: Security Pipeline
+  # ---------------------------
+  # FUNCTIONS (Backend / Firebase)
+  # ---------------------------
+  functions-security:
+    name: Functions Security
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: functions
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript check
+        run: npm exec tsc -- --noEmit
+
+      - name: ESLint
+        run: npm exec eslint . --max-warnings=0
+
+      - name: Unit Tests
+        run: npm run test:unit
+
+      - name: Integration Tests
+        run: npm run test:integration
+
+      - name: E2E Tests
+        run: npm run test:e2e
+
+  # ---------------------------
+  # ROOT (Expo App)
+  # ---------------------------
+  app-security:
+    name: Expo App Security
     runs-on: ubuntu-latest
 
     steps:
@@ -26,46 +68,57 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # ---------------------------
-      # Code Quality
-      # ---------------------------
+      - name: TypeScript check (Expo)
+        run: npm exec tsc --noEmit
 
-      - name: TypeScript check
-        run: npx tsc --noEmit
+      - name: ESLint (Expo)
+        run: npm exec eslint . --max-warnings=0
 
-      - name: ESLint
-        run: npx eslint . --max-warnings=0
+  # ---------------------------
+  # FIREBASE RULES (no Node build)
+  # ---------------------------
+  rules-security:
+    name: Firebase Rules Security
+    runs-on: ubuntu-latest
 
-      # ---------------------------
-      # Tests
-      # ---------------------------
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Unit Tests (Vitest)
-        run: npm run test
+      - name: Validate Firestore Rules
+        run: |
+          npm install -g firebase-tools
+          firebase rules:validate firebase-rules/firestore.rules
 
-      - name: Firebase Emulator Tests
-        run: npm run test:emulator
+      - name: Validate Storage Rules
+        run: |
+          firebase rules:validate firebase-rules/storage.rules
 
-      - name: E2E Tests
-        run: npm run test:e2e
+  # ---------------------------
+  # DEPENDENCY SECURITY (global)
+  # ---------------------------
+  dependency-security:
+    name: Dependency Security
+    runs-on: ubuntu-latest
 
-      # ---------------------------
-      # Dependency Security
-      # ---------------------------
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: npm audit
         run: npm audit --audit-level=high
 
-      # ---------------------------
-      # Secret Scanning
-      # ---------------------------
-
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
-
-      # ---------------------------
-      # SAST
-      # ---------------------------
 
       - name: Run Semgrep
         uses: returntocorp/semgrep-action@v1
