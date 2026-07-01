@@ -70,7 +70,7 @@ jobs:
         run: npm ci
 
       - name: TypeScript check (Expo)
-        run: npm exec tsc -p tsconfig.json --noEmit
+        run: npx tsc -p ./tsconfig.json --noEmit
 
       - name: ESLint (Expo)
         run: npm exec eslint . --max-warnings=0
@@ -89,8 +89,14 @@ jobs:
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
+      - name: Write service account key
+        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > $HOME/gcloud.json
+
+      - name: Set credentials
+        run: echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcloud.json" >> $GITHUB_ENV
+
       - name: Validate Firestore Rules
-        run: firebase deploy --only firestore:rules --dry-run
+        run: firebase deploy --only firestore:rules --dry-run --project chrono-craft-worktime-manager
 
       - name: Validate Storage Rules
         run: firebase deploy --only storage --dry-run
@@ -105,6 +111,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
