@@ -54,6 +54,8 @@ jobs:
 
       - name: Integration Tests
         run: npm run test:integration
+        env:
+          RATE_LIMIT_HMAC_KEY: test-key
 
       # -------------------------
       # E2E RUN (separate Emulator Lifecycle!)
@@ -61,6 +63,8 @@ jobs:
       - name: E2E Tests
         run: npm run test:e2e
         working-directory: functions
+        env:
+          RATE_LIMIT_HMAC_KEY: test-key
 
       # -------------------------
       # RACE RUN (separate Emulator Lifecycle!)
@@ -68,6 +72,8 @@ jobs:
       - name: Race Tests
         run: npm run test:race
         working-directory: functions
+        env:
+          RATE_LIMIT_HMAC_KEY: test-key
 
   # ---------------------------
   # ROOT (Expo App)
