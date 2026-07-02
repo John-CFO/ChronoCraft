@@ -17,6 +17,6 @@
     "**/*.tsx",
     "validation/overrides/firestore.override.js"
   ],
-  "exclude": ["node_modules"],
+  "exclude": ["node_modules", "functions"],
   "rootDir": "./"
 }

@@ -43,6 +43,12 @@ jobs:
       - name: Unit Tests
         run: npm run test:unit
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
