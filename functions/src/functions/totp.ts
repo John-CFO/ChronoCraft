@@ -339,8 +339,14 @@ export const verifyTotpTokenHandler = async (request: any) => {
     });
 
     return { valid: true, message: "TOTP enabled successfully!" };
-  } catch (error) {
-    console.error("Error in verifyTotpTokenHandler:", error);
+  } catch (error: any) {
+    // console.error("Error in verifyTotpTokenHandler:", error);
+    console.error({
+      name: error?.name,
+      code: error?.code,
+      message: error?.message,
+      stack: error?.stack,
+    });
     throw handleFunctionError(error, "verifyTotpTokenHandler");
   }
 };
