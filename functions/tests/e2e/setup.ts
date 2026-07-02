@@ -3,7 +3,15 @@
 // This file contains the setup for the end-to-end tests
 
 /////////////////////////////////////////////////////////////////////////////////
-
+console.log("[E2E] setup.ts loaded");
+console.log("[E2E] ENV CHECK", {
+  NODE_ENV: process.env.NODE_ENV,
+  GCLOUD_PROJECT: process.env.GCLOUD_PROJECT,
+  FIRESTORE_EMULATOR_HOST: process.env.FIRESTORE_EMULATOR_HOST,
+  FIREBASE_AUTH_EMULATOR_HOST: process.env.FIREBASE_AUTH_EMULATOR_HOST,
+  FUNCTIONS_EMULATOR_ORIGIN: process.env.FUNCTIONS_EMULATOR_ORIGIN,
+  CI: process.env.CI,
+});
 // Emulator configuration to point to local emulator when running e2e tests
 process.env.FIREBASE_STORAGE_EMULATOR_HOST = "127.0.0.1:9199";
 
@@ -101,6 +109,9 @@ export const TEST_USERS: TestUser[] = [
 export let testEnv: RulesTestEnvironment;
 
 beforeAll(async () => {
+  console.log("[E2E] beforeAll START");
+  console.log("[E2E] emulatorHost raw:", process.env.FIRESTORE_EMULATOR_HOST);
+
   const emulatorHost =
     process.env.FIRESTORE_EMULATOR_HOST ||
     `${process.env.TEST_FIRESTORE_HOST || "127.0.0.1"}:${
@@ -110,14 +121,21 @@ beforeAll(async () => {
   const [HOST, PORT_STR] = emulatorHost.replace("http://", "").split(":");
   const PORT = Number(PORT_STR);
 
+  console.log("[E2E] parsed emulator host:", HOST, PORT);
+
   const rulesPath = path.resolve(
     __dirname,
     "../../../firebase-rules/firestore.rules",
   );
+  console.log("[E2E] firestore rules path:", rulesPath);
+  console.log("[E2E] rules exists:", fs.existsSync(rulesPath));
 
   if (!fs.existsSync(rulesPath)) {
     throw new Error(`firestore.rules not found at ${rulesPath}`);
   }
+
+  console.log("[E2E] initializing test environment...");
+  const start = Date.now();
 
   testEnv = await initializeTestEnvironment({
     projectId: PROJECT_ID,
@@ -128,23 +146,26 @@ beforeAll(async () => {
     },
   });
 
+  console.log("[E2E] test environment ready in ms:", Date.now() - start);
+
   process.env.FIRESTORE_EMULATOR_HOST = `${HOST}:${PORT}`;
 
   if (!process.env.FIREBASE_AUTH_EMULATOR_HOST) {
     process.env.FIREBASE_AUTH_EMULATOR_HOST = "127.0.0.1:5001";
   }
 
+  console.log("[E2E] seeding test data start");
   // Seed initial test data (clean & deterministic)
   await testEnv.withSecurityRulesDisabled(async (context) => {
     const db = context.firestore();
-
+    console.log("[E2E] seeding users...");
     for (const user of TEST_USERS) {
       await db.collection("Users").doc(user.uid).set({
         displayName: user.displayName,
         email: user.email,
       });
     }
-
+    console.log("[E2E] seeding services...");
     await db
       .collection("Users")
       .doc(TEST_USERS[0].uid)
@@ -159,6 +180,8 @@ beforeAll(async () => {
       .doc("test-service")
       .set({ name: "Test Service" });
   });
+  console.log("[E2E] seeding done");
+  console.log("[E2E] beforeAll DONE");
 });
 
 afterAll(async () => {
@@ -184,7 +207,8 @@ const getAuthEmulatorHost = () => {
 const fetchIdTokenForUid = async (uid: string): Promise<string> => {
   const host = getAuthEmulatorHost();
   const url = `http://${host}/identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=any`;
-
+  console.log("[E2E] fetchIdTokenForUid", uid);
+  console.log("[E2E] auth emulator host:", host);
   const customToken = await admin.auth().createCustomToken(uid);
 
   const res = await fetch(url, {
@@ -192,7 +216,7 @@ const fetchIdTokenForUid = async (uid: string): Promise<string> => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token: customToken, returnSecureToken: true }),
   });
-
+  console.log("[E2E] idToken received for:", uid);
   if (!res.ok)
     throw new Error(`Failed to get idToken: ${res.status} ${await res.text()}`);
 
@@ -249,9 +273,13 @@ export const cleanupTestData = async () => {
 };
 
 export const resetTotpState = async (uid: string) => {
+  console.log("[E2E][resetTotpState][START]", { uid });
+
   const db = admin.firestore();
 
-  //delets MFA-fields in Users document directly
+  console.log("[E2E][resetTotpState] deleting Users MFA fields", { uid });
+
+  // deletes MFA-fields in Users document directly
   await db.collection("Users").doc(uid).set(
     {
       totp: admin.firestore.FieldValue.delete(),
@@ -259,20 +287,40 @@ export const resetTotpState = async (uid: string) => {
     },
     { merge: true },
   );
-  // delets MFA document in mfa_totp collection
+
+  console.log("[E2E][resetTotpState] mfa_totp delete start", { uid });
+
+  // deletes MFA document in mfa_totp collection
   await db
     .collection("mfa_totp")
     .doc(uid)
     .delete()
-    .catch(() => {});
+    .catch((err) => {
+      console.log("[E2E][resetTotpState] mfa_totp delete error", {
+        uid,
+        err: err?.message ?? err,
+      });
+    });
 
-  // delets pending Enrollments
+  console.log("[E2E][resetTotpState] mfa_totp delete done", { uid });
+
+  console.log("[E2E][resetTotpState] pending query start", { uid });
+
+  // deletes pending Enrollments
   const pending = await db
     .collection("mfa_totp_pending")
     .where("uid", "==", uid)
     .get();
 
+  console.log("[E2E][resetTotpState] pending count", {
+    uid,
+    size: pending.size,
+  });
+
   await Promise.all(pending.docs.map((d) => d.ref.delete()));
+
+  console.log("[E2E][resetTotpState] pending delete done", { uid });
+  console.log("[E2E][resetTotpState][END]", { uid });
 };
 
 export const getTestTotpSecret = async (uid: string) => {
@@ -300,7 +348,12 @@ export const callFunction = async ({
   if (idToken) headers.Authorization = `Bearer ${idToken}`;
 
   const payload = isCallable ? { data: body } : body;
-
+  console.log("[E2E][callFunction][REQUEST]", {
+    functionName,
+    hasToken: !!idToken,
+    isCallable,
+    url: `${FUNCTIONS_EMULATOR_ORIGIN}/${PROJECT_ID}/${REGION}/${functionName}`,
+  });
   const res = await fetch(url, {
     method: "POST",
     headers,
@@ -309,12 +362,21 @@ export const callFunction = async ({
 
   let json;
   const text = await res.text();
-
+  console.log("[E2E][callFunction][RAW RESPONSE]", {
+    functionName,
+    status: res.status,
+    raw: text?.slice?.(0, 500),
+  });
   try {
     json = JSON.parse(text);
   } catch {
     json = text;
   }
-
+  console.log("[E2E][callFunction][PARSED RESPONSE]", {
+    functionName,
+    status: res.status,
+    type: typeof json,
+    bodyPreview: typeof json === "string" ? json.slice(0, 300) : json,
+  });
   return { status: res.status, body: json };
 };
