@@ -71,6 +71,10 @@ export class AuthService {
 
     logEvent("verifyTotp", valid ? "info" : "warn", { uid, valid });
 
+    if (!valid) {
+      throw new BusinessRuleError("INVALID_TOTP", "Invalid TOTP code");
+    }
+
     return { valid };
   }
 }

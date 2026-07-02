@@ -88,8 +88,7 @@ export class AuthenticationError extends DomainError {
 
 export class AuthorizationError extends DomainError {
   constructor(message = "Not authorized") {
-    super(message, "permission-denied", "Not authorized");
-    this.name = "AuthorizationError";
+    super(message, "authorization-error", "Not authorized");
   }
 }
 export class RateLimitError extends DomainError {
