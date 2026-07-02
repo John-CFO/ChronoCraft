@@ -43,6 +43,9 @@ jobs:
       - name: Unit Tests
         run: npm run test:unit
 
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
       - name: Integration Tests
         run: npm run test:integration
 
@@ -67,12 +70,10 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        working-directory: functions
         run: npm ci
 
       - name: TypeScript check (Expo)
-        working-directory: functions
-        run: npx tsc --noEmit
+        run: npx tsc -p ./tsconfig.json --noEmit
 
       - name: ESLint (Expo)
         run: npx eslint . --max-warnings=0
