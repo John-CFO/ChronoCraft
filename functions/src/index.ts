@@ -41,11 +41,6 @@ if (!admin.apps.length) {
   admin.initializeApp(appOptions);
 }
 
-// ENV GUARDS (fail fast)
-if (!process.env.RATE_LIMIT_HMAC_KEY) {
-  throw new Error("Missing RATE_LIMIT_HMAC_KEY");
-}
-
 // HTTP handlers
 import { authValidator } from "./functions/authValidator.function";
 import { registerPushToken } from "./functions/registerPushToken.function";
