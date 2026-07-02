@@ -61,7 +61,10 @@ export class AuthService {
     const secret = await this.userRepo.getUserTOTPSecret(uid);
 
     if (!secret) {
-      return { valid: false };
+      throw new BusinessRuleError(
+        "TOTP not configured",
+        "Please configure your TOTP.",
+      );
     }
 
     const { valid } = verifyTotp(secret, code);
