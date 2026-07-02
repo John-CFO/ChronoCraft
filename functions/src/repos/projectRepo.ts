@@ -138,8 +138,16 @@ export class ProjectRepo {
     input: any,
   ) {
     const ref = this.projectDoc(ownerId, serviceId, projectId);
-
+    console.log("[ProjectRepo.updateProject][BEFORE GET]", {
+      ownerId,
+      serviceId,
+      projectId,
+    });
     const snap = await ref.get();
+    console.log("[ProjectRepo.updateProject][SNAPSHOT]", {
+      exists: snap.exists,
+      data: snap.data(),
+    });
     if (!snap.exists) throw new ProjectNotFoundError(projectId);
 
     if (snap.data()?.userId !== ownerId) {
