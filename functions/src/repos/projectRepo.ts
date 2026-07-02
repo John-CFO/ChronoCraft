@@ -9,7 +9,11 @@ import * as admin from "firebase-admin";
 import { HttpsError } from "firebase-functions/v2/https";
 import { Timestamp } from "firebase-admin/firestore";
 
-import { DomainError, AuthorizationError } from "../errors/domain.errors";
+import {
+  DomainError,
+  AuthorizationError,
+  ValidationError,
+} from "../errors/domain.errors";
 
 import { logEvent } from "../utils/logger";
 
@@ -138,20 +142,19 @@ export class ProjectRepo {
     input: any,
   ) {
     const ref = this.projectDoc(ownerId, serviceId, projectId);
-    console.log("[ProjectRepo.updateProject][BEFORE GET]", {
-      ownerId,
-      serviceId,
-      projectId,
-    });
     const snap = await ref.get();
-    console.log("[ProjectRepo.updateProject][SNAPSHOT]", {
-      exists: snap.exists,
-      data: snap.data(),
-    });
-    if (!snap.exists) throw new ProjectNotFoundError(projectId);
+    const data = snap.data();
 
-    if (snap.data()?.userId !== ownerId) {
+    if (!snap.exists || !data) {
+      throw new ProjectNotFoundError(projectId);
+    }
+
+    if (data.userId !== ownerId) {
       throw new AuthorizationError("Not your project");
+    }
+
+    if (!input || typeof input !== "object" || Array.isArray(input)) {
+      throw new ValidationError("Invalid input");
     }
 
     await ref.update({
