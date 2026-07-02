@@ -143,9 +143,14 @@ export class ProjectRepo {
   ) {
     const ref = this.projectDoc(ownerId, serviceId, projectId);
     const snap = await ref.get();
+
+    if (!snap.exists) {
+      throw new ProjectNotFoundError(projectId);
+    }
+
     const data = snap.data();
 
-    if (!snap.exists || !data) {
+    if (!data) {
       throw new ProjectNotFoundError(projectId);
     }
 
