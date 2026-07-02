@@ -75,10 +75,6 @@ export class AuthService {
 
     const { valid } = verifyTotp(secret, code);
     logEvent("verifyTotp", valid ? "info" : "warn", { uid, valid });
-
-    return {
-      valid: Boolean(valid),
-      message: valid ? "OK" : "Invalid TOTP code",
-    };
+    return { valid };
   }
 }
