@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "eslint .",
     "build": "tsc -p tsconfig.json",
-    "test:e2e": "firebase emulators:exec --only firestore,auth,functions \"jest --config=jest.e2e.config.js tests/e2e --runInBand\"",
+    "test:e2e": "npm run build && firebase emulators:exec --only firestore,auth,functions \"jest --config=jest.e2e.config.js tests/e2e --runInBand\"",
     "test:unit": "jest --config=jest.unit.config.js",
     "test:race": "jest --config jest.race.config.js",
     "test:integration": "firebase emulators:exec --only functions,auth,firestore,storage \"jest --config=jest.integration.config.js\"",
