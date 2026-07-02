@@ -54,27 +54,20 @@ export class AuthService {
     await rateLimit.check(
       "mfa_totp",
       "verify",
-      {
-        uid,
-        ip: "unknown",
-        deviceId: "unknown",
-      },
-      {
-        maxAttempts: 5,
-        windowMs: 60_000,
-      },
+      { uid, ip: "unknown", deviceId: "unknown" },
+      { maxAttempts: 5, windowMs: 60_000 },
     );
 
     const secret = await this.userRepo.getUserTOTPSecret(uid);
+
     if (!secret) {
-      throw new BusinessRuleError(
-        "TOTP not configured",
-        "Please configure your TOTP.",
-      );
+      return { valid: false };
     }
 
     const { valid } = verifyTotp(secret, code);
+
     logEvent("verifyTotp", valid ? "info" : "warn", { uid, valid });
+
     return { valid };
   }
 }
