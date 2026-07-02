@@ -55,8 +55,19 @@ jobs:
       - name: Integration Tests
         run: npm run test:integration
 
+      # -------------------------
+      # E2E RUN (separate Emulator Lifecycle!)
+      # -------------------------
       - name: E2E Tests
         run: npm run test:e2e
+        working-directory: functions
+
+      # -------------------------
+      # RACE RUN (separate Emulator Lifecycle!)
+      # -------------------------
+      - name: Race Tests
+        run: npm run test:race
+        working-directory: functions
 
   # ---------------------------
   # ROOT (Expo App)

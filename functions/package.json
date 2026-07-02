@@ -8,7 +8,7 @@
     "build": "tsc -p tsconfig.json",
     "test:e2e": "npm run build && firebase emulators:exec --only firestore,auth,functions,storage \"jest --config=jest.e2e.config.js tests/e2e --runInBand\"",
     "test:unit": "jest --config=jest.unit.config.js",
-    "test:race": "jest --config jest.race.config.js",
+    "test:race": "firebase emulators:exec --only firestore,auth,functions,storage \"jest --config jest.race.config.js --runInBand\"",
     "test:integration": "firebase emulators:exec --only functions,auth,firestore,storage \"jest --config=jest.integration.config.js\"",
     "test:integration:user": "jest tests/integration/repos/userRepo.integration.ts --config=jest.integration.config.js",
     "emulators": "firebase emulators:start --only firestore,auth --project=test-project"
