@@ -11,8 +11,7 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "noImplicitAny": false,
-    "ignoreDeprecations": "6.0",
-    "types": ["node", "@firebase/rules-unit-testing"]
+    "ignoreDeprecations": "6.0"
   },
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules", "lib", "dist", "tests"]
