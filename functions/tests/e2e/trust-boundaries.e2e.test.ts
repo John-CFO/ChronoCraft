@@ -245,12 +245,12 @@ describe("Authorization Boundaries", () => {
   beforeAll(async () => {
     await adminDb.collection("Services").doc("test-service").set({
       name: "Test Service",
-      ownerId: TEST_USERS[1].uid,
+      ownerId: TEST_USERS[0].uid,
     });
   });
 
   it("should update project successfully for authenticated user", async () => {
-    const owner = TEST_USERS[1];
+    const owner = TEST_USERS[0];
     const ownerToken = await getIdTokenForUser(owner.uid);
 
     const createRes = await callFunction({
