@@ -243,6 +243,13 @@ describe("Authentication Boundaries", () => {
 
 describe("Authorization Boundaries", () => {
   beforeAll(async () => {
+    const token = await getIdTokenForUser(TEST_USERS[0].uid);
+    await callFunction({
+      functionName: "authValidatorFunction",
+      idToken: token,
+      body: { action: "register" },
+      isCallable: true,
+    });
     await adminDb.collection("Services").doc("test-service").set({
       name: "Test Service",
       ownerId: TEST_USERS[0].uid,
