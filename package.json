@@ -9,6 +9,7 @@
     "web": "expo start --web",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "test": "jest",
+    "postinstall": "cd functions && npm install",
     "test:e2e": "firebase emulators:exec \"npm --prefix emulator-tests run test\"",
     "test:rules": "npm --prefix emulator-tests run test",
     "clean-install": "rm -rf node_modules package-lock.json && npm install --legacy-peer-deps",
