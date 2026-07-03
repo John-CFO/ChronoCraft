@@ -12,6 +12,6 @@
     "resolveJsonModule": true,
     "types": ["node", "@firebase/rules-unit-testing"]
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts"],
+  "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules", "lib", "dist", "tests"]
 }
