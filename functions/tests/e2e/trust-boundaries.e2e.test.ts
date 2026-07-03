@@ -241,6 +241,14 @@ describe("Authentication Boundaries", () => {
 });
 
 describe("Authorization Boundaries", () => {
+  beforeAll(async () => {
+    const db = testEnv.authenticatedContext(TEST_USERS[1].uid).firestore();
+    await db.collection("Services").doc("test-service").set({
+      name: "Test Service",
+      ownerId: TEST_USERS[1].uid,
+    });
+  });
+
   it("should update project successfully for authenticated user", async () => {
     const owner = TEST_USERS[1];
     const ownerToken = await getIdTokenForUser(owner.uid);
