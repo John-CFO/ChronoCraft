@@ -478,7 +478,7 @@ describe("Error Handling Boundaries", () => {
 
 describe("Rate Limit Boundaries", () => {
   it("should implement rate limiting (only if enabled)", async () => {
-    const requests = [];
+    const requests: Promise<{ status: number; body: any }>[] = [];
     for (let i = 0; i < 5; i++) {
       requests.push(
         callFunction({
