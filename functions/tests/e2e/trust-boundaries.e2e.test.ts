@@ -241,7 +241,7 @@ describe("Authentication Boundaries", () => {
 });
 
 describe("Authorization Boundaries", () => {
-  it("should prevent updating projects outside ownership scope (service-level validation)", async () => {
+  it("should update project successfully for authenticated user", async () => {
     const owner = TEST_USERS[1];
     const ownerToken = await getIdTokenForUser(owner.uid);
 
@@ -315,7 +315,7 @@ describe("Authorization Boundaries", () => {
     expectValidationError(res);
   });
 
-  it("should enforce ownership through authenticated context only", async () => {
+  it("should allow authenticated user to create and update their own project", async () => {
     const user = TEST_USERS[0];
     const token = await getIdTokenForUser(user.uid);
 
@@ -342,6 +342,7 @@ describe("Authorization Boundaries", () => {
         action: "updateProject",
         payload: {
           projectId,
+          serviceId: "test-service",
           name: "Valid Update",
         },
       },

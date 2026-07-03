@@ -1,13 +1,14 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "outDir": "lib-test",
     "rootDir": ".",
-    "esModuleInterop": true,
-    "module": "commonjs",
     "target": "ES2020",
-    "isolatedModules": false,
+    "module": "commonjs",
     "moduleResolution": "node",
+    "esModuleInterop": true,
+    "strict": true,
+    "isolatedModules": false,
 
     // IMPORTANT: baseUrl and paths for absolute Imports
     "paths": {
