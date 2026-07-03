@@ -14,6 +14,7 @@ import {
 } from "./setup";
 import { hotp } from "../../src/security/totpCore";
 import { totpEnrollAndVerify } from "./totp.helpers";
+import { firestore as adminDb } from "../../src/firebaseAdmin";
 
 ////////////////////////////////////////////////////////////////////////////////////
 
@@ -242,8 +243,7 @@ describe("Authentication Boundaries", () => {
 
 describe("Authorization Boundaries", () => {
   beforeAll(async () => {
-    const db = testEnv.authenticatedContext(TEST_USERS[1].uid).firestore();
-    await db.collection("Services").doc("test-service").set({
+    await adminDb.collection("Services").doc("test-service").set({
       name: "Test Service",
       ownerId: TEST_USERS[1].uid,
     });
