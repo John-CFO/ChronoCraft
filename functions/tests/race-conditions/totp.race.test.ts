@@ -29,15 +29,16 @@ const baseRequest = (token = "123456") => ({
 
 describe("Race Condition: TOTP login verification concurrency", () => {
   it("must enforce replay protection under concurrent valid OTP submissions", async () => {
-    const results = await runRace({
+    const results = await runRace<{ success: boolean }>({
       participants: 30,
       jitterMs: 20,
       operation: async () => {
-        return verifyTotpLoginHandler(baseRequest());
+        const res = await verifyTotpLoginHandler(baseRequest());
+        return { success: res?.valid === true };
       },
     });
 
-    const success = results.filter((r) => r.success).length;
+    const success = results.filter((r) => r.result?.success === true).length;
 
     if (success > 1) {
       throw new Error("Replay protection failed under concurrency");
@@ -49,27 +50,32 @@ describe("Race Condition: TOTP rate limit vs valid login race", () => {
   it("must block excess verification attempts under parallel execution", async () => {
     const rateLimit = getRateLimit();
 
-    const results = await runRace({
+    const results = await runRace<{ type: string; success: boolean }>({
       participants: 40,
       jitterMs: 25,
       operation: async (index) => {
         if (index % 2 === 0) {
-          return verifyTotpLoginHandler(baseRequest());
+          // real Login-Comparsion
+          const result = await verifyTotpLoginHandler(baseRequest());
+          return { type: "login", success: result?.valid === true };
+        } else {
+          // only Rate‑Limit‑Check (no Login)
+          await rateLimit.check("mfa_totp", "mfa_totp_login", {
+            uid,
+            ip: "127.0.0.1",
+            deviceId,
+          });
+          return { type: "ratelimit", success: true };
         }
-
-        await rateLimit.check("mfa_totp", "mfa_totp_login", {
-          uid,
-          ip: "127.0.0.1",
-          deviceId,
-        });
-
-        return { success: true };
       },
     });
 
-    const success = results.filter((r) => r.success).length;
+    // count only Login‑Results – access via result.type
+    const loginSuccesses = results.filter(
+      (r) => r.result?.type === "login" && r.success,
+    ).length;
 
-    if (success > 5) {
+    if (loginSuccesses > 5) {
       throw new Error("Rate limit bypass under concurrent TOTP verification");
     }
   });
@@ -77,11 +83,12 @@ describe("Race Condition: TOTP rate limit vs valid login race", () => {
 
 describe("Race Condition: TOTP state consistency under concurrent login attempts", () => {
   it("must not corrupt lastUsedStep or verification state", async () => {
-    const results = await runRace({
+    const results = await runRace<{ success: boolean }>({
       participants: 20,
       jitterMs: 20,
       operation: async () => {
-        return verifyTotpLoginHandler(baseRequest());
+        const res = await verifyTotpLoginHandler(baseRequest());
+        return { success: res?.valid === true };
       },
     });
 
