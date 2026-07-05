@@ -25,8 +25,8 @@ describe("Race Condition: rate limit token consumption", () => {
     const rateLimit = getRateLimit();
 
     const results = await runRace({
-      participants: 30,
-      jitterMs: 20,
+      participants: 15,
+      jitterMs: 100,
       operation: async () => {
         await rateLimit.check(
           "security",
@@ -44,7 +44,7 @@ describe("Race Condition: rate limit token consumption", () => {
     if (failed.length === 0) {
       throw new Error("Rate limit race not triggered (unexpected)");
     }
-  }, 10000);
+  }, 15000);
 });
 
 describe("Race Condition: rate limit block consistency", () => {

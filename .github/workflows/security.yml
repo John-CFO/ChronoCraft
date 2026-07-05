@@ -16,6 +16,9 @@ jobs:
   functions-security:
     name: Functions Security
     runs-on: ubuntu-latest
+    env:
+      GCLOUD_PROJECT: demo-test
+      FIREBASE_PROJECT: demo-test
 
     defaults:
       run:
