@@ -14,7 +14,6 @@ import {
 } from "./setup";
 import { hotp } from "../../src/security/totpCore";
 import { totpEnrollAndVerify } from "./totp.helpers";
-import { firestore as adminDb } from "../../src/firebaseAdmin";
 
 ////////////////////////////////////////////////////////////////////////////////////
 
@@ -242,19 +241,6 @@ describe("Authentication Boundaries", () => {
 });
 
 describe("Authorization Boundaries", () => {
-  beforeAll(async () => {
-    const uid = TEST_USERS[0].uid;
-    await adminDb.collection("Users").doc(uid).set({
-      uid: uid,
-      email: TEST_USERS[0].email,
-      displayName: "Test User",
-    });
-    await adminDb.collection("Services").doc("test-service").set({
-      name: "Test Service",
-      ownerId: uid,
-    });
-  });
-
   it("should update project successfully for authenticated user", async () => {
     const owner = TEST_USERS[0];
     const ownerToken = await getIdTokenForUser(owner.uid);

@@ -29,7 +29,7 @@ export class ProjectService {
 
     const { projectId: _, userId: __, serviceId: ___, ...updateData } = data;
 
-    return await this.projectRepo.updateProject(userId, serviceId, projectId, {
+    return this.projectRepo.updateProject(userId, serviceId, projectId, {
       ...updateData,
       updatedAt: Timestamp.now(),
     });

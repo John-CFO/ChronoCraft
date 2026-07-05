@@ -9,12 +9,7 @@ import * as admin from "firebase-admin";
 import { HttpsError } from "firebase-functions/v2/https";
 import { Timestamp } from "firebase-admin/firestore";
 
-import {
-  DomainError,
-  AuthorizationError,
-  ValidationError,
-} from "../errors/domain.errors";
-
+import { DomainError, AuthorizationError } from "../errors/domain.errors";
 import { logEvent } from "../utils/logger";
 
 //////////////////////////////////////////////////////////////////////
@@ -149,7 +144,6 @@ export class ProjectRepo {
     }
 
     const data = snap.data();
-
     if (!data) {
       throw new ProjectNotFoundError(projectId);
     }
@@ -158,14 +152,15 @@ export class ProjectRepo {
       throw new AuthorizationError("Not your project");
     }
 
-    if (!input || typeof input !== "object" || Array.isArray(input)) {
-      throw new ValidationError("Invalid input");
-    }
+    const sanitized = Object.fromEntries(
+      Object.entries(input).filter(([_, v]) => v !== undefined),
+    );
+    const updateData = {
+      ...sanitized,
+      updatedAt: Timestamp.now(),
+    };
 
-    await ref.update({
-      ...input,
-      updatedAt: admin.firestore.Timestamp.now(),
-    });
+    await ref.update(updateData);
   }
 
   async deleteProject(ownerId: string, serviceId: string, projectId: string) {
