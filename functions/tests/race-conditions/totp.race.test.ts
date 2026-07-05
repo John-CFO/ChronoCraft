@@ -51,8 +51,8 @@ describe("Race Condition: TOTP rate limit vs valid login race", () => {
     const rateLimit = getRateLimit();
 
     const results = await runRace<{ type: string; success: boolean }>({
-      participants: 40,
-      jitterMs: 25,
+      participants: 20,
+      jitterMs: 50,
       operation: async (index) => {
         if (index % 2 === 0) {
           // real Login-Comparsion

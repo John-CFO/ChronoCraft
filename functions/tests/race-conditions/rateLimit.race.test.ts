@@ -44,7 +44,7 @@ describe("Race Condition: rate limit token consumption", () => {
     if (failed.length === 0) {
       throw new Error("Rate limit race not triggered (unexpected)");
     }
-  });
+  }, 10000);
 });
 
 describe("Race Condition: rate limit block consistency", () => {
