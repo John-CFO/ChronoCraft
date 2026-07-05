@@ -21,7 +21,7 @@ describe("AES-256-GCM Encryption", () => {
   it("fails if authTag is manipulated", () => {
     const encrypted = encrypt("secret", KEY);
     const parts = encrypted.split(":");
-    parts[1] = parts[1].replace(/./, "0");
+    parts[1] = "0".repeat(parts[1].length);
     expect(() => decrypt(parts.join(":"), KEY)).toThrow();
   });
 
