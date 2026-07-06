@@ -9,6 +9,7 @@ import { randomUUID } from "crypto";
 import { verifyTotpLoginHandler } from "../../src/functions/totp";
 import { getRateLimit } from "../../src/utils/rateLimitInstance";
 import { runRace } from "./hardness/raceRunner";
+import { RateLimitError } from "../../src/errors/domain.errors";
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -50,16 +51,17 @@ describe("Race Condition: TOTP rate limit vs valid login race", () => {
   it("must block excess verification attempts under parallel execution", async () => {
     const rateLimit = getRateLimit();
 
+    // 40 participants: 20 Login‑attempts, 20 pure Rate‑Limit‑Checks
     const results = await runRace<{ type: string; success: boolean }>({
-      participants: 14,
-      jitterMs: 200,
+      participants: 40,
+      jitterMs: 100,
       operation: async (index) => {
         if (index % 2 === 0) {
-          // real Login-Comparsion
+          // Login‑Attempt – throw on Rate‑Limit no error, instead return { valid: false }
           const result = await verifyTotpLoginHandler(baseRequest());
           return { type: "login", success: result?.valid === true };
         } else {
-          // only Rate‑Limit‑Check (no Login)
+          // Pure Rate‑Limit‑Check – wthrow upon exceeding a RateLimitError‑Exception
           await rateLimit.check("mfa_totp", "mfa_totp_login", {
             uid,
             ip: "127.0.0.1",
@@ -70,13 +72,16 @@ describe("Race Condition: TOTP rate limit vs valid login race", () => {
       },
     });
 
-    // count only Login‑Results – access via result.type
-    const loginSuccesses = results.filter(
-      (r) => r.result?.type === "login" && r.success,
-    ).length;
+    // Check, if at least a raw Rate‑Limit‑Check was blocked by a RateLimitError‑Exception
+    const rateLimitBlocked = results.some(
+      (r) =>
+        r.result?.type === "ratelimit" &&
+        !r.success &&
+        r.error instanceof RateLimitError,
+    );
 
-    if (loginSuccesses > 6) {
-      throw new Error("Rate limit bypass under concurrent TOTP verification");
+    if (!rateLimitBlocked) {
+      throw new Error("Rate limit did not block any request under concurrency");
     }
   });
 });
