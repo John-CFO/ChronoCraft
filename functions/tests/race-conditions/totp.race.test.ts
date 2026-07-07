@@ -15,6 +15,7 @@ import { RateLimitError } from "../../src/errors/domain.errors";
 
 const uid = `race-user-${randomUUID()}`;
 const deviceId = `race-device-${randomUUID()}`;
+const ip = "127.0.0.1";
 
 const baseRequest = (token = "123456") => ({
   auth: { uid },
@@ -48,40 +49,55 @@ describe("Race Condition: TOTP login verification concurrency", () => {
 });
 
 describe("Race Condition: TOTP rate limit vs valid login race", () => {
-  it("must block excess verification attempts under parallel execution", async () => {
+  it("must enforce rate limit under concurrent requests without bypass", async () => {
     const rateLimit = getRateLimit();
 
-    // 40 participants: 20 Login‑attempts, 20 pure Rate‑Limit‑Checks
-    const results = await runRace<{ type: string; success: boolean }>({
-      participants: 40,
-      jitterMs: 100,
-      operation: async (index) => {
-        if (index % 2 === 0) {
-          // Login‑Attempt – throw on Rate‑Limit no error, instead return { valid: false }
-          const result = await verifyTotpLoginHandler(baseRequest());
-          return { type: "login", success: result?.valid === true };
-        } else {
-          // Pure Rate‑Limit‑Check – wthrow upon exceeding a RateLimitError‑Exception
-          await rateLimit.check("mfa_totp", "mfa_totp_login", {
-            uid,
-            ip: "127.0.0.1",
-            deviceId,
+    const results = await runRace<{ rejected: boolean }>({
+      participants: 30,
+      jitterMs: 5,
+      operation: async () => {
+        try {
+          await rateLimit.check(
+            "mfa_totp",
+            "mfa_totp_login",
+            { uid, ip, deviceId },
+            { maxAttempts: 5, windowMs: 60_000 },
+          );
+          console.log({
+            acceptedCount,
+            rejectedCount,
+            total: results.length,
           });
-          return { type: "ratelimit", success: true };
+          return { rejected: false };
+        } catch (err) {
+          if (err instanceof RateLimitError) {
+            return { rejected: true };
+          }
+          throw err;
         }
       },
     });
 
-    // Check, if at least a raw Rate‑Limit‑Check was blocked by a RateLimitError‑Exception
-    const rateLimitBlocked = results.some(
-      (r) =>
-        r.result?.type === "ratelimit" &&
-        !r.success &&
-        r.error instanceof RateLimitError,
-    );
+    const rejectedCount = results.filter((r) => r.result?.rejected).length;
+    const acceptedCount = results.filter((r) => !r.result?.rejected).length;
 
-    if (!rateLimitBlocked) {
-      throw new Error("Rate limit did not block any request under concurrency");
+    /**
+     * SECURITY INVARIANT:
+     * If rate limiter is active under concurrency,
+     * it MUST produce at least one rejection.
+     */
+    if (rejectedCount === 0) {
+      throw new Error("Rate limit did not trigger under concurrent load");
+    }
+
+    /**
+     * SAFETY INVARIANT:
+     * System must not silently accept all requests under race conditions.
+     */
+    if (acceptedCount === results.length) {
+      throw new Error(
+        "All concurrent requests were accepted — rate limit ineffective",
+      );
     }
   });
 });

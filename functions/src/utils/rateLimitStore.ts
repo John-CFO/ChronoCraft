@@ -101,8 +101,8 @@ export class FirestoreRateLimitStore implements RateLimitStore {
 
   // ---------- transaction ----------
   async runTransaction<T>(cb: (tx: Transaction) => Promise<T>): Promise<T> {
-    return this.db.runTransaction(async (tx) => {
-      return cb(tx);
+    return this.db.runTransaction(async (tx) => cb(tx), {
+      maxAttempts: 5,
     });
   }
 
