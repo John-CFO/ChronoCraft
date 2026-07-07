@@ -8,6 +8,7 @@ import "./setup";
 import { randomUUID } from "crypto";
 import { admin } from "../firebaseAdminTest";
 import { encrypt, verifyTotpLoginHandler } from "../../src/functions/totp";
+import { hotp } from "../../src/security/totpCore";
 import { getRateLimit } from "../../src/utils/rateLimitInstance";
 import { runRace } from "./hardness/raceRunner";
 import { RateLimitError } from "../../src/errors/domain.errors";
@@ -30,6 +31,17 @@ const baseRequest = (token: string) => ({
   },
 });
 
+const generateTestTotp = (secret: string) => {
+  const counter = Math.floor(Date.now() / 1000 / 30);
+  return hotp(secret, counter);
+};
+
+const seedAuthUser = async () => {
+  await admin.auth().createUser({
+    uid,
+  });
+};
+
 const seedTotp = async () => {
   await admin
     .firestore()
@@ -42,6 +54,7 @@ const seedTotp = async () => {
 };
 
 beforeAll(async () => {
+  await seedAuthUser();
   await seedTotp();
 });
 
@@ -49,7 +62,7 @@ beforeAll(async () => {
 
 describe("Race Condition: TOTP login verification concurrency", () => {
   it("must enforce replay protection under concurrent valid OTP submissions", async () => {
-    const token = "VALID_TEST_TOKEN";
+    const token = generateTestTotp(secret);
 
     const results = await runRace<{ success: boolean }>({
       participants: 30,
@@ -96,7 +109,9 @@ describe("Race Condition: TOTP rate limit vs valid login race", () => {
     });
 
     const rejectedCount = results.filter((r) => r.result?.rejected).length;
-    const acceptedCount = results.filter((r) => !r.result?.rejected).length;
+    const acceptedCount = results.filter(
+      (r) => r.result?.rejected === false,
+    ).length;
 
     /**
      * SECURITY INVARIANT:
@@ -121,7 +136,7 @@ describe("Race Condition: TOTP rate limit vs valid login race", () => {
 
 describe("Race Condition: TOTP state consistency under concurrent login attempts", () => {
   it("must not corrupt lastUsedStep or verification state", async () => {
-    const token = "VALID_TEST_TOKEN";
+    const token = generateTestTotp(secret);
 
     const results = await runRace<{ success: boolean }>({
       participants: 20,
@@ -135,6 +150,14 @@ describe("Race Condition: TOTP state consistency under concurrent login attempts
 
     if (results.length !== 20) {
       throw new Error("Incomplete race execution");
+    }
+
+    const failures = results.filter((r) => r.result?.success === false);
+
+    if (failures.length === 0) {
+      throw new Error(
+        "Expected replay protection or rate limit rejection under concurrency",
+      );
     }
   });
 });
