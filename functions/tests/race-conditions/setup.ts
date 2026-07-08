@@ -12,6 +12,9 @@ import dotenv from "dotenv";
 // use dotenv to load the .env file
 dotenv.config({ path: ".env" });
 
+// declare environment variable for secret key in CI environment
+process.env.TOTP_ENCRYPTION_KEY ??= "test-totp-encryption-key";
+
 beforeAll(async () => {
   const db = admin.firestore();
 
