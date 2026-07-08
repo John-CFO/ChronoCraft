@@ -12,6 +12,8 @@ jest.mock("firebase-functions/v2/https", () => ({
   onCall: (fn: any) => fn,
 }));
 
+//////////////////////////////////////////////////////////////////////////////////////
+
 describe("secureFunction (integration)", () => {
   it("should allow execution when auth is present", async () => {
     const wrapped = secureFunction(
