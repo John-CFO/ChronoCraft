@@ -132,10 +132,8 @@ export async function projectsAndWorkValidatorLogic(
           payload.projectId,
           payload,
         );
-      } catch (error: unknown) {
-        console.error("updateProject failed", error);
-
-        throw error;
+      } catch (error) {
+        throw handleFunctionError(error, "projectsAndWorkValidator");
       }
     }
 

@@ -3,11 +3,12 @@
   "compilerOptions": {
     "outDir": "lib-test",
     "rootDir": ".",
-    "esModuleInterop": true,
-    "module": "commonjs",
     "target": "ES2020",
+    "module": "commonjs",
+    "moduleResolution": "node16",
+    "esModuleInterop": true,
+    "strict": true,
     "isolatedModules": false,
-    "moduleResolution": "node",
 
     // IMPORTANT: baseUrl and paths for absolute Imports
     "paths": {

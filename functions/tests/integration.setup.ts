@@ -28,3 +28,10 @@ process.env.RATE_LIMIT_HMAC_KEY = "test-hmac-key";
 if (!admin.apps.length) {
   admin.initializeApp({ projectId: "test-project" });
 }
+
+// Silence logger output during integration tests.
+// Logging itself is not under test here and expected error paths
+// would otherwise clutter the Jest output.
+jest.mock("../src/utils/logger", () => ({
+  logEvent: jest.fn(),
+}));

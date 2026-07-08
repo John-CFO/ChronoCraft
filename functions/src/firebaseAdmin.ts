@@ -11,7 +11,9 @@ import { getAuth } from "firebase-admin/auth";
 ///////////////////////////////////////////////////////////////
 
 if (!getApps().length) {
-  initializeApp();
+  initializeApp({
+    projectId: process.env.GCLOUD_PROJECT || "test-project",
+  });
 }
 
 const firestore = getFirestore();

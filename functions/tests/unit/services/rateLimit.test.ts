@@ -73,7 +73,7 @@ class MockClock implements Clock {
 class FakeStore {
   public docs: Record<string, any> = {};
 
-  private key(
+  private makeKey(
     useCase: string,
     ip: string,
     device: string,
@@ -91,9 +91,36 @@ class FakeStore {
     uid: string,
   ) {
     return {
-      key: this.key(useCase, ip, device, action, uid),
-      __store: this.docs,
+      key: this.makeKey(useCase, ip, device, action, uid),
     } as any;
+  }
+
+  async runTransaction(cb: any) {
+    const tx = {
+      get: async (ref: any) => {
+        const doc = this.docs[ref.key];
+
+        return doc
+          ? { exists: true, data: () => doc }
+          : { exists: false, data: () => undefined };
+      },
+
+      set: (ref: any, data: any) => {
+        this.docs[ref.key] = data;
+      },
+
+      update: (ref: any, patch: any) => {
+        const existing = this.docs[ref.key];
+        if (!existing) throw new Error("Doc not found");
+
+        this.docs[ref.key] = {
+          ...existing,
+          ...patch,
+        };
+      },
+    };
+
+    return cb(tx);
   }
 
   async getActionDoc(
@@ -103,7 +130,7 @@ class FakeStore {
     action: string,
     uid: string,
   ) {
-    return this.docs[this.key(useCase, ip, device, action, uid)] ?? null;
+    return this.docs[this.makeKey(useCase, ip, device, action, uid)] ?? null;
   }
 
   async setActionDoc(
@@ -112,9 +139,35 @@ class FakeStore {
     device: string,
     action: string,
     uid: string,
-    doc: any,
+    data: any,
   ) {
-    this.docs[this.key(useCase, ip, device, action, uid)] = doc;
+    this.docs[this.makeKey(useCase, ip, device, action, uid)] = data;
+  }
+
+  async updateActionDoc(
+    useCase: string,
+    ip: string,
+    device: string,
+    action: string,
+    uid: string,
+    data: any,
+  ) {
+    const key = this.makeKey(useCase, ip, device, action, uid);
+
+    this.docs[key] = {
+      ...(this.docs[key] ?? {}),
+      ...data,
+    };
+  }
+
+  async deleteActionDoc(
+    useCase: string,
+    ip: string,
+    device: string,
+    action: string,
+    uid: string,
+  ) {
+    delete this.docs[this.makeKey(useCase, ip, device, action, uid)];
   }
 }
 
@@ -197,10 +250,11 @@ describe("RateLimiter", () => {
       "login",
       ctx.uid,
       {
-        tokens: 3,
+        tokens: 1,
         capacity: 5,
-        refillRatePerMs: 0.001,
-        lastRefill: { toMillis: () => now },
+        refillRatePerMs: 0,
+        lastRefill: { toMillis: () => clock.now() },
+        failCount: 0,
       },
     );
 
@@ -217,9 +271,9 @@ describe("RateLimiter", () => {
   it("fails closed on transaction error", async () => {
     const admin = require("firebase-admin");
 
-    admin.firestore = () => ({
-      runTransaction: jest.fn().mockRejectedValueOnce(new Error("TX failed")),
-    });
+    store.runTransaction = async () => {
+      throw new Error("TX failed");
+    };
 
     await expect(
       limiter.check("mfa_totp", "login", ctx, {

@@ -339,8 +339,7 @@ export const verifyTotpTokenHandler = async (request: any) => {
     });
 
     return { valid: true, message: "TOTP enabled successfully!" };
-  } catch (error) {
-    console.error("Error in verifyTotpTokenHandler:", error);
+  } catch (error: any) {
     throw handleFunctionError(error, "verifyTotpTokenHandler");
   }
 };
@@ -439,7 +438,6 @@ export const verifyTotpLoginHandler = async (request: any) => {
       if (!pendingSnap.empty) {
         throw new FailedPreconditionError("TOTP verification not completed");
       }
-
       throw new NotFoundError("TOTP configuration");
     }
 
@@ -469,39 +467,49 @@ export const verifyTotpLoginHandler = async (request: any) => {
     const matchedStep = verification.matchedStep!;
 
     // --- TRANSACTION (Replay Protection + State Update) ---
-    const txResult = await firestore.runTransaction(async (tx) => {
-      const totpDoc = await tx.get(totpRef);
+    let txResult;
+    try {
+      txResult = await firestore.runTransaction(async (tx) => {
+        const totpDoc = await tx.get(totpRef);
 
-      if (!totpDoc.exists) {
-        throw new NotFoundError("TOTP configuration");
-      }
+        if (!totpDoc.exists) {
+          throw new NotFoundError("TOTP configuration");
+        }
 
-      const data = totpDoc.data()!;
-      const lastUsedStep = data.lastUsedStep ?? -1;
+        const data = totpDoc.data()!;
+        const lastUsedStep = data.lastUsedStep ?? -1;
 
-      // Replay Protection
-      if (lastUsedStep >= matchedStep) {
-        throw new ConflictError("TOTP already used");
-      }
+        // Replay Protection
+        if (lastUsedStep >= matchedStep) {
+          throw new ConflictError("TOTP already used");
+        }
 
-      const userRef = firestore.collection("Users").doc(uid);
+        const userRef = firestore.collection("Users").doc(uid);
 
-      tx.set(
-        userRef,
-        {
-          "totp.failedLoginAttempts": 0,
-          "totp.lastVerified": FieldValue.serverTimestamp(),
-        },
-        { merge: true },
-      );
+        tx.set(
+          userRef,
+          {
+            "totp.failedLoginAttempts": 0,
+            "totp.lastVerified": FieldValue.serverTimestamp(),
+          },
+          { merge: true },
+        );
 
-      tx.update(totpRef, {
-        lastUsedStep: matchedStep,
-        lastVerified: FieldValue.serverTimestamp(),
+        tx.update(totpRef, {
+          lastUsedStep: matchedStep,
+          lastVerified: FieldValue.serverTimestamp(),
+        });
+
+        return { valid: true };
       });
-
-      return { valid: true };
-    });
+    } catch (error) {
+      // Replay‑Protection: ConflictError goes to a invalid answer
+      if (error instanceof ConflictError) {
+        return { valid: false, message: "TOTP already used" };
+      }
+      // throw other errors
+      throw error;
+    }
 
     if (!txResult.valid) {
       return txResult;
