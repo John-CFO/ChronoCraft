@@ -1,16 +1,17 @@
 {
   "compilerOptions": {
     "target": "es2020",
-    "module": "node16",
+    "module": "commonjs",
     "outDir": "lib",
     "rootDir": "src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "moduleResolution": "node16",
+    "moduleResolution": "node",
     "resolveJsonModule": true,
-    "types": ["node", "@firebase/rules-unit-testing"]
+    "noImplicitAny": false,
+    "ignoreDeprecations": "6.0"
   },
-  "include": ["src/**/*"],
+  "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules", "lib", "dist", "tests"]
 }

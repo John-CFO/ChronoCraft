@@ -16,23 +16,6 @@ import { ValidationError } from "../errors/domain.errors";
 export class ProjectService {
   private projectRepo = new ProjectRepo();
 
-  // validate service ownership
-  private async assertServiceOwnership(userId: string, serviceId: string) {
-    if (process.env.NODE_ENV === "test") return;
-
-    const ref = admin
-      .firestore()
-      .collection("Users")
-      .doc(userId)
-      .collection("Services")
-      .doc(serviceId);
-
-    const snap = await ref.get();
-
-    if (!snap.exists) {
-      throw new ValidationError("Service not found or not accessible");
-    }
-  }
   // Queries
   async updateProject(
     userId: string,
@@ -46,7 +29,7 @@ export class ProjectService {
 
     const { projectId: _, userId: __, serviceId: ___, ...updateData } = data;
 
-    return await this.projectRepo.updateProject(userId, serviceId, projectId, {
+    return this.projectRepo.updateProject(userId, serviceId, projectId, {
       ...updateData,
       updatedAt: Timestamp.now(),
     });
@@ -57,8 +40,6 @@ export class ProjectService {
       throw new ValidationError("Invalid input");
     }
 
-    await this.assertServiceOwnership(userId, serviceId);
-
     const res = await this.projectRepo.getProjects(userId, serviceId);
 
     return {
@@ -67,14 +48,10 @@ export class ProjectService {
   }
 
   async deleteProject(userId: string, serviceId: string, projectId: string) {
-    await this.assertServiceOwnership(userId, serviceId);
-
     return this.projectRepo.deleteProject(userId, serviceId, projectId);
   }
 
   async createProject(userId: string, name: string, serviceId: string) {
-    await this.assertServiceOwnership(userId, serviceId);
-
     return this.projectRepo.createProject(userId, name, serviceId);
   }
 

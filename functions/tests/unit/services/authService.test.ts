@@ -46,7 +46,7 @@ describe("AuthService Unit Tests", () => {
     } as any);
 
     mockVerifyTotp = verifyTotp as jest.MockedFunction<typeof verifyTotp>;
-    mockVerifyTotp.mockImplementation((secret, code) => {
+    mockVerifyTotp.mockImplementation((_secret, code) => {
       return {
         valid: typeof code === "string" && /^\d{6}$/.test(code),
       };

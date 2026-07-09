@@ -119,6 +119,8 @@ beforeAll(async () => {
     throw new Error(`firestore.rules not found at ${rulesPath}`);
   }
 
+  const start = Date.now();
+
   testEnv = await initializeTestEnvironment({
     projectId: PROJECT_ID,
     firestore: {
@@ -251,7 +253,7 @@ export const cleanupTestData = async () => {
 export const resetTotpState = async (uid: string) => {
   const db = admin.firestore();
 
-  //delets MFA-fields in Users document directly
+  // deletes MFA-fields in Users document directly
   await db.collection("Users").doc(uid).set(
     {
       totp: admin.firestore.FieldValue.delete(),
@@ -259,14 +261,17 @@ export const resetTotpState = async (uid: string) => {
     },
     { merge: true },
   );
-  // delets MFA document in mfa_totp collection
+
+  // deletes MFA document in mfa_totp collection
   await db
     .collection("mfa_totp")
     .doc(uid)
     .delete()
-    .catch(() => {});
+    .catch((err) => {
+      if (err.code !== "not-found") throw err;
+    });
 
-  // delets pending Enrollments
+  // deletes pending Enrollments
   const pending = await db
     .collection("mfa_totp_pending")
     .where("uid", "==", uid)

@@ -10,7 +10,6 @@ import { HttpsError } from "firebase-functions/v2/https";
 import { Timestamp } from "firebase-admin/firestore";
 
 import { DomainError, AuthorizationError } from "../errors/domain.errors";
-
 import { logEvent } from "../utils/logger";
 
 //////////////////////////////////////////////////////////////////////
@@ -138,18 +137,30 @@ export class ProjectRepo {
     input: any,
   ) {
     const ref = this.projectDoc(ownerId, serviceId, projectId);
-
     const snap = await ref.get();
-    if (!snap.exists) throw new ProjectNotFoundError(projectId);
 
-    if (snap.data()?.userId !== ownerId) {
+    if (!snap.exists) {
+      throw new ProjectNotFoundError(projectId);
+    }
+
+    const data = snap.data();
+    if (!data) {
+      throw new ProjectNotFoundError(projectId);
+    }
+
+    if (data.userId !== ownerId) {
       throw new AuthorizationError("Not your project");
     }
 
-    await ref.update({
-      ...input,
-      updatedAt: admin.firestore.Timestamp.now(),
-    });
+    const sanitized = Object.fromEntries(
+      Object.entries(input).filter(([_, v]) => v !== undefined),
+    );
+    const updateData = {
+      ...sanitized,
+      updatedAt: Timestamp.now(),
+    };
+
+    await ref.update(updateData);
   }
 
   async deleteProject(ownerId: string, serviceId: string, projectId: string) {

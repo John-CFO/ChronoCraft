@@ -6,11 +6,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 import { Timestamp } from "firebase-admin/firestore";
-import * as admin from "firebase-admin";
 
 import { logEvent } from "./logger";
 import { RateLimitError } from "../errors/domain.errors";
 import { RateLimitStore } from "./rateLimitStore";
+
+///////////////////////////////////////////////////////////////////////////////
 
 // ---------- Clock ----------
 export interface Clock {
@@ -100,9 +101,8 @@ export class RateLimiter {
     const rate = maxAttempts / windowMs;
 
     try {
-      await admin.firestore().runTransaction(async (tx) => {
+      await this.store.runTransaction(async (tx) => {
         const snap = await tx.get(ref);
-
         if (!snap.exists) {
           tx.set(ref, {
             tokens: maxAttempts - 1,
@@ -118,7 +118,6 @@ export class RateLimiter {
         }
 
         const data = snap.data();
-
         if (!data) {
           // fallback for concurrent init / partial state
           tx.set(ref, {
@@ -191,7 +190,6 @@ export class RateLimiter {
 
         const newFailCount = failCount + 1;
         const penaltyMs = calculatePenalty(newFailCount);
-
         tx.update(ref, {
           failCount: newFailCount,
           blockedUntil: Timestamp.fromMillis(now + penaltyMs),
@@ -213,7 +211,6 @@ export class RateLimiter {
       });
     } catch (err: any) {
       if (err instanceof RateLimitError) throw err;
-
       logEvent("ratelimit-error", "error", {
         useCase,
         action,

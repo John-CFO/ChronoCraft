@@ -11,6 +11,10 @@ jest.mock("../../../src/utils/rateLimitInstance", () => ({
   },
 }));
 
+jest.mock("../../../src/utils/logger", () => ({
+  logEvent: jest.fn(),
+}));
+
 ////////////////////////////////////////////////////////////////////
 
 import { secureCore } from "../../../src/functions/secureCore";

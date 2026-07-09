@@ -10,7 +10,12 @@
     "esModuleInterop": true,
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
-    "types": ["@react-native-async-storage/async-storage", "node", "jest"]
+    "types": [
+      "@react-native-async-storage/async-storage",
+      "node",
+      "@firebase/rules-unit-testing",
+      "jest"
+    ]
   },
   "include": [
     "**/*.ts",

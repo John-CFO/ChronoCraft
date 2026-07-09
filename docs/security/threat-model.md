@@ -127,7 +127,7 @@ Risk:
 
 Mitigation:
 
-- fail-closed design for rate limiter
+- fail-closed behavior for rate limiter failures under normal operating conditions
 - any unexpected error → request denied with `RateLimitError`
 
 This prevents:
@@ -228,10 +228,10 @@ Even with current mitigations:
 
 ### Concurrency guarantees
 
-- single-consumer token enforcement
-- no race-condition bypass under parallel execution
+- transactional single-consumer token enforcement under contention
+- no observed race-condition bypass under concurrent execution
 - no corruption of `failCount` or `blockedUntil`
-- deterministic exhaustion behavior under load
+- consistent exhaustion behavior under load
 
 ---
 
@@ -243,7 +243,7 @@ Key properties:
 
 - no global user lockout across devices
 - strong isolation per request context
-- deterministic enforcement under concurrency
+- stable enforcement under concurrent execution
 - cryptographically protected identifiers
 - strict fail-closed behavior for security-critical failures
 

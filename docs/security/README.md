@@ -181,7 +181,17 @@ Security behavior is deterministic under concurrency:
 
 ---
 
-### 3. Context Isolation
+### 3. Concurrent Enforcement
+
+Security behavior is consistent under concurrent execution:
+
+- Firestore transactions provide atomic state updates under contention
+- race-condition bypass is mitigated in normal operation
+- state transitions remain consistent under load
+
+---
+
+### 4. Context Isolation
 
 Security state is isolated per request context:
 
@@ -195,7 +205,7 @@ This avoids global lockouts while still limiting abuse per context.
 
 ---
 
-### 4. Fail-Closed Security (Critical Paths)
+### 5. Fail-Closed Security (Critical Paths)
 
 For security-critical operations:
 

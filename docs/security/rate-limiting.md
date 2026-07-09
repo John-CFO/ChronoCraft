@@ -146,13 +146,12 @@ blockedUntil
 
 ## Transaction Safety
 
-All updates happen inside a Firestore transaction:
+All updates are executed inside Firestore transactions:
 
-- prevents race conditions
-- ensures single-consumer token depletion
-- guarantees atomic state updates
-
-This is verified by race-condition tests.
+- provides atomic read-modify-write semantics
+- reduces race-condition windows
+- ensures consistent state updates under contention
+- may retry under high concurrency (Firestore behavior)
 
 ---
 
@@ -175,15 +174,14 @@ Rationale:
 
 ## Concurrency Guarantees (Tested)
 
-The implementation is validated by race-condition tests:
+The implementation is validated under concurrent load.
 
 ### Verified properties:
 
-- only one concurrent request can consume a token
-- no bypass under parallel execution
-- no corruption of `failCount` or `blockedUntil`
-- consistent enforcement under load spikes
-- deterministic exhaustion behavior
+- rate limit enforcement occurs under concurrency
+- system prevents uncontrolled bypass of limits
+- state updates remain consistent under transactional execution
+- behavior is stable under race conditions, but not strictly linearizable
 
 ---
 
@@ -218,14 +216,13 @@ Used for:
 
 ## Security Properties
 
-This system guarantees:
+This system provides:
 
 - server-enforced rate limiting
-- atomic state transitions
-- resistance against race-condition bypass
-- deterministic lockout behavior
+- transactional state updates
+- practical resistance against race-condition bypass
+- context-scoped abuse mitigation
 - cryptographically protected identifiers (IP/device)
-- per-context isolation of rate limit state
 
 ---
 

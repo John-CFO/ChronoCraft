@@ -19,3 +19,9 @@ jest.mock("react-native-modal", () => {
   return ({ children, isVisible }) =>
     isVisible ? React.createElement(View, null, children) : null;
 });
+
+// Silence console noise in tests
+beforeAll(() => {
+  jest.spyOn(console, "log").mockImplementation(() => {});
+  jest.spyOn(console, "error").mockImplementation(() => {});
+});

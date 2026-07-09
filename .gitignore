@@ -18,6 +18,10 @@ web-build/
 # Metro
 .metro-health-check*
 
+# Firebase Service Account
+credentials/
+*.json
+
 # debug
 npm-debug.*
 yarn-debug.*

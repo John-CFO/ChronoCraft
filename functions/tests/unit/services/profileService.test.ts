@@ -79,7 +79,6 @@ describe("ProfileService Unit Tests", () => {
     });
 
     it("should sanitize displayName and personalNumber", async () => {
-      const uid = "user123";
       const updateData = {
         displayName: '<script>alert("xss")</script>New Name',
         personalNumber: "PN-<b>00123</b>",
