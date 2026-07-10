@@ -80,7 +80,6 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
   const handleSelectOption = (optionIndex: number) => {
     const selectedDuration = reminderDurations[optionIndex]; // map index to duration
     setSelectedOption(optionIndex); // update selected option
-    //console.log("Selected option updated:", selectedDuration);
   };
 
   // reset the selected option when the model will be closed
@@ -218,7 +217,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
 
       await NotificationManager.scheduleVacationReminder(
         "Vacation Reminder",
-        `Your vacation starts in ${reminderDuration} days.`,
+        `Your vacation starts in ${reminderDuration} days. Don't forget to take your time off.`,
         reminderDate,
         pushToken,
       );
