@@ -9,7 +9,7 @@
     "test:e2e": "npm run build && firebase emulators:exec --project demo-test --only firestore,auth,functions,storage \"jest --config=jest.e2e.config.js tests/e2e --runInBand\"",
     "test:unit": "jest --config=jest.unit.config.js",
     "test:race": "firebase emulators:exec --project demo-test --only firestore,auth,functions,storage \"jest --config jest.race.config.js --runInBand\"",
-    "test:integration": "firebase emulators:exec --project demo-test --only functions,auth,firestore,storage \"jest --config=jest.integration.config.js\"",
+    "test:integration": "firebase emulators:exec --project demo-test --only functions,auth,firestore,storage \".\\node_modules\\.bin\\jest --config=jest.integration.config.js --runInBand --forceExit\"",
     "test:integration:user": "jest tests/integration/repos/userRepo.integration.ts --config=jest.integration.config.js",
     "emulators": "firebase emulators:start --only firestore,auth --project=test-project"
   },
