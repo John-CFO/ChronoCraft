@@ -18,7 +18,7 @@ if (!process.env.FIREBASE_AUTH_EMULATOR_HOST) {
 if (!process.env.FIREBASE_STORAGE_EMULATOR_HOST) {
   process.env.FIREBASE_STORAGE_EMULATOR_HOST = "localhost:9199";
 }
-process.env.GCLOUD_PROJECT = "test-project";
+process.env.GCLOUD_PROJECT = "demo-test";
 
 process.env.NODE_ENV = "test";
 process.env.RATE_LIMIT_DISABLED = "true";
@@ -26,8 +26,13 @@ process.env.RATE_LIMIT_HMAC_KEY = "test-hmac-key";
 
 // Firebase Admin init (idempotent)
 if (!admin.apps.length) {
-  admin.initializeApp({ projectId: "test-project" });
+  admin.initializeApp({ projectId: "demo-test" });
 }
+
+// cleanup
+afterAll(async () => {
+  await Promise.all(admin.apps.map((app) => app?.delete()));
+});
 
 // Silence logger output during integration tests.
 // Logging itself is not under test here and expected error paths
