@@ -19,6 +19,7 @@ import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 import WorkHoursState from "../components/WorkHoursState";
 import ChartRadioButtons from "./ChartRadioButtons";
+import YearSelector from "./YearSelector";
 import { formatTooltipDate } from "../components/FormatToolTip";
 import { formatTime } from "../components/WorkTimeCalc";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
@@ -124,6 +125,9 @@ const WorkHoursChart = () => {
     }
   };
 
+  // state to hold the selected year
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
   // function to filter data by chart type
   const filterDataByChartType = (data: any, type: string) => {
     // get the current date
@@ -158,7 +162,7 @@ const WorkHoursChart = () => {
         );
         // condition to check the chart type
       } else if (type === "year") {
-        return itemDate.getFullYear() === today.getFullYear();
+        return itemDate.getFullYear() === selectedYear;
       }
       return false;
     });
@@ -313,6 +317,11 @@ const WorkHoursChart = () => {
     return Math.max(1, rounded);
   };
 
+  // function to calculate the available years
+  const availableYears = [
+    ...new Set(data.map((item) => new Date(item.workDay).getFullYear())),
+  ].sort((a, b) => b - a);
+
   // use the getDynamicMaxValue function
   const dynamicMaxValue = getDynamicMaxValue();
   // calculate the number of sections for the Y-Axis
@@ -368,6 +377,14 @@ const WorkHoursChart = () => {
                   setTooltipData(null); // close tooltip if chart type changes
                 }}
               />
+
+              {chartType === "year" && (
+                <YearSelector
+                  years={availableYears}
+                  selectedYear={selectedYear}
+                  onChange={setSelectedYear}
+                />
+              )}
               {/* Frame-Container with horizontal scrollbar */}
               <View style={{ paddingHorizontal: cardPadding }}>
                 {/* Horizontal scrollbarer container for the BarChart */}
