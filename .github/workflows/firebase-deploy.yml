@@ -1,31 +1,33 @@
 name: Deploy Firestore Rules
 
 on:
-    push:
-        branches:
-            - main
+  push:
+    branches:
+      - master
+
+  permissions:
+  contents: read
 
 jobs:
-    deploy:
-        runs-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout repo
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-            - name: Setup Node
-              uses: actions/setup-node@v4
-              with:
-                  node-version: 22.22.2
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.2
 
-            - name: Install Firebase CLI
-              run: npm install -g firebase-tools
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
 
-            - name: Write service account key
-              run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > $HOME/gcloud.json
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
-            - name: Set credentials
-              run: echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcloud.json" >> $GITHUB_ENV
-
-            - name: Deploy Firestore Rules
-              run: firebase deploy --only firestore:rules --project chrono-craft-worktime-manager
+      - name: Deploy Firestore Rules
+        run: firebase deploy --only firestore:rules --project chrono-craft-worktime-manager
