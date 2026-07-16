@@ -9,6 +9,12 @@
 jest.mock("../../../src/repos/userRepo");
 jest.mock("../../../src/utils/logger");
 
+jest.mock("../../../src/functions/security", () => ({
+  InputValidator: {
+    sanitizeString: (input: string) => input.replace(/[<>]/g, "").trim(),
+  },
+}));
+
 ///////////////////////////////////////////////////////////////////////////////
 
 import { ProfileService } from "../../../src/services/profileService";
@@ -78,23 +84,22 @@ describe("ProfileService Unit Tests", () => {
       ).rejects.toThrow("Database error");
     });
 
-    it("should sanitize displayName and personalNumber", async () => {
+    it("should trim displayName and personalNumber before update", async () => {
+      const uid = "user123";
+
       const updateData = {
-        displayName: '<script>alert("xss")</script>New Name',
-        personalNumber: "PN-<b>00123</b>",
+        displayName: " New Name ",
+        personalNumber: " PN-00123 ",
       };
 
-      const sanitize = (input: string) =>
-        input
-          .replace(/<[^>]*>/g, "")
-          .replace(/alert\([^)]*\)/g, "")
-          .trim();
+      mockUserRepo.updateUser.mockResolvedValue(undefined);
 
-      const sanitizedDisplayName = sanitize(updateData.displayName);
-      const sanitizedPersonalNumber = sanitize(updateData.personalNumber);
+      await profileService.updateProfile(uid, updateData);
 
-      expect(sanitizedDisplayName).toBe("New Name");
-      expect(sanitizedPersonalNumber).toBe("PN-00123");
+      expect(mockUserRepo.updateUser).toHaveBeenCalledWith(uid, {
+        displayName: "New Name",
+        personalNumber: "PN-00123",
+      });
     });
 
     describe("uid handling", () => {
