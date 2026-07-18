@@ -10,7 +10,7 @@ import { getAuth } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
-import { logError, logWarn } from "../lib/loggerClient";
+import { logError } from "../lib/loggerClient";
 
 ////////////////////////////////////////////////////////////////////////////
 
