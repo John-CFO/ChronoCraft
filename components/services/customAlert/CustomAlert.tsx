@@ -119,7 +119,7 @@ const CustomAlert = () => {
             maxWidth: 600,
             backgroundColor: "#191919",
             padding: 20,
-            borderRadius: 15,
+            borderRadius: 12,
             borderWidth: 2,
             borderColor: "aqua",
             alignItems: "center",
@@ -173,15 +173,16 @@ const CustomAlert = () => {
                   activeOpacity={0.7}
                   style={{
                     width: 120,
-                    height: 45,
+                    height: 50,
                     borderRadius: 14,
                     elevation: 5,
                     backgroundColor: "transparent",
                     shadowColor: "black",
+                    overflow: "hidden",
                     shadowOffset: { width: 0, height: 2 },
                     shadowOpacity: 0.3,
                     shadowRadius: 3,
-                    borderWidth: 1.5,
+                    borderWidth: 2,
                     borderColor:
                       button.style === "destructive" ? "#FF4C4C" : "aqua",
                   }}
@@ -198,7 +199,6 @@ const CustomAlert = () => {
                       flex: 1,
                       justifyContent: "center",
                       alignItems: "center",
-                      borderRadius: 12,
                     }}
                   >
                     <Text

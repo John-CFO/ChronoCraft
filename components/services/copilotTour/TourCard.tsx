@@ -265,12 +265,12 @@ const TourButton: React.FC<TourButtonProps> = ({
             accessibilityHint="Begins a walkthrough of the app"
             onPress={handleStartTour}
             style={{
+              flex: 1,
+              height: 50,
               borderRadius: 12,
               overflow: "hidden",
               borderWidth: 2,
               borderColor: "aqua",
-              flex: 1,
-              height: 50,
             }}
           >
             <LinearGradient
@@ -278,11 +278,9 @@ const TourButton: React.FC<TourButtonProps> = ({
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={{
-                paddingVertical: 6,
+                flex: 1,
                 justifyContent: "center",
                 alignItems: "center",
-                height: 50,
-                width: "100%",
               }}
             >
               <Text
@@ -304,11 +302,12 @@ const TourButton: React.FC<TourButtonProps> = ({
             accessibilityHint="Skips the tour and returns to the app"
             onPress={handleSkipTour}
             style={{
+              flex: 1,
+              height: 50,
               borderRadius: 12,
               overflow: "hidden",
-              borderWidth: 3,
+              borderWidth: 2,
               borderColor: "white",
-              flex: 1,
             }}
           >
             <LinearGradient
@@ -316,10 +315,9 @@ const TourButton: React.FC<TourButtonProps> = ({
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={{
-                alignItems: "center",
+                flex: 1,
                 justifyContent: "center",
-                height: 45,
-                width: "100%",
+                alignItems: "center",
               }}
             >
               <Text
