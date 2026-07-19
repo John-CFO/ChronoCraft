@@ -323,51 +323,61 @@ const HomeScreen: React.FC = () => {
   };
 
   // function to delete projects
-  const handleDeleteProject = async (projectId: string) => {
-    useAlertStore
-      .getState()
-      .showAlert(
-        "Attention!",
-        "Do you really want to delete the project? If you delete the project, all notes will be deleted as well.",
-        [
-          {
-            text: "Cancel",
-            style: "cancel",
-          },
-          {
-            text: "Delete",
-            style: "destructive",
-            onPress: async () => {
-              try {
-                const user = FIREBASE_AUTH.currentUser;
-
-                if (!user?.uid || !serviceId) return;
-
-                const ref = animationRefs.current[projectId];
-
-                if (ref) {
-                  await ref.zoomOut(300);
-                }
-
-                await deleteProjectApi(serviceId, projectId);
-
-                setProjects((prev) => prev.filter((p) => p.id !== projectId));
-
-                setRefresh((prev) => !prev);
-              } catch (err) {
-                logError("HomeScreen/deleteProject", err);
-              }
+  const handleDeleteProject = useCallback(
+    async (projectId: string) => {
+      useAlertStore
+        .getState()
+        .showAlert(
+          "Attention!",
+          "Do you really want to delete the project? If you delete the project, all notes will be deleted as well.",
+          [
+            {
+              text: "Cancel",
+              style: "cancel",
+              onPress: () => {},
             },
-          },
-        ],
-      );
-  };
+            {
+              text: "Delete",
+              style: "destructive",
+              onPress: async () => {
+                try {
+                  const user = FIREBASE_AUTH.currentUser;
+
+                  if (!user?.uid || !serviceId) {
+                    return;
+                  }
+
+                  const ref = animationRefs.current[projectId];
+
+                  if (ref) {
+                    await ref.zoomOut(300);
+                  }
+
+                  await deleteProjectApi(serviceId, projectId);
+
+                  setProjects((prev) => prev.filter((p) => p.id !== projectId));
+
+                  setRefresh((prev) => !prev);
+                } catch (err) {
+                  logError("HomeScreen/deleteProject", err);
+                }
+              },
+            },
+          ],
+        );
+    },
+    [serviceId],
+  );
 
   // function to navigate to the details screen if user pressed an a listed project
-  const handleProjectPress = (projectId: string, projectName: string) => {
-    setProjectId(projectId); // to send it global to the details screen to reset all components in the details screen
-    navigation.navigate("Details", { projectId, projectName });
-  };
+
+  const handleProjectPress = useCallback(
+    (projectId: string, projectName: string) => {
+      setProjectId(projectId); // to send it global to the details screen to reset all components in the details screen
+      navigation.navigate("Details", { projectId, projectName });
+    },
+    [navigation, setProjectId],
+  );
 
   // function to handle sorting
   const handleSortChange = (newSort: string) => {
@@ -375,10 +385,13 @@ const HomeScreen: React.FC = () => {
   };
 
   // function to show the note-modal
-  const openNoteModal = (projectId: string) => {
-    setSelectedProjectId(projectId);
-    setNoteModalVisible(true);
-  };
+  const openNoteModal = useCallback(
+    (projectId: string) => {
+      setSelectedProjectId(projectId);
+      setNoteModalVisible(true);
+    },
+    [navigation, setProjectId],
+  );
 
   // function to close the note-modal
   const closeNoteModal = () => {
@@ -394,7 +407,7 @@ const HomeScreen: React.FC = () => {
   );
 
   // scroll animation with parameters to handle the scroll animation
-  const renderItem = React.useCallback(
+  const renderItem = useCallback(
     ({ item, index }: { item: Project; index: number }) => (
       <ProjectListItem
         item={item}
@@ -411,7 +424,7 @@ const HomeScreen: React.FC = () => {
         setLastItemHeight={setLastItemHeight}
       />
     ),
-    [scrollY, accessMode],
+    [accessMode, handleProjectPress, handleDeleteProject, openNoteModal],
   );
 
   // hook to check Firestore if the user has seen the Copilot home tour

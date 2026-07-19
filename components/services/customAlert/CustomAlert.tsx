@@ -32,7 +32,7 @@ const CustomAlert = () => {
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
   // console.log("accessMode in LoginScreen:", accessMode);
 
@@ -213,7 +213,7 @@ const CustomAlert = () => {
                     </Text>
                   </LinearGradient>
                 </TouchableOpacity>
-              )
+              ),
             )}
           </View>
         </Animated.View>

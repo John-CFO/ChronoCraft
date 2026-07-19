@@ -28,7 +28,7 @@ interface AlertState {
     title: string,
     message: string,
     buttons?: AlertButton[],
-    options?: AlertOptions
+    options?: AlertOptions,
   ) => void;
   hideAlert: () => void;
 }
@@ -40,7 +40,6 @@ export const useAlertStore = create<AlertState>((set) => ({
   title: "",
   message: "",
   showAlert: (title, message, buttons = [{ text: "OK" }], options) => {
-    // console.log("showAlert: set visible to true");
     set({
       visible: true,
       title,
@@ -50,7 +49,6 @@ export const useAlertStore = create<AlertState>((set) => ({
     });
   },
   hideAlert: () => {
-    // console.log("hideAlert: set visible to false");
     set({ visible: false });
   },
 }));
