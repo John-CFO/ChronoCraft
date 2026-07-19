@@ -55,10 +55,10 @@ const Circle: React.FC<CircleProps> = ({
 }) => {
   // calculate progress once per component
   const circleProgress = useDerivedValue(
-    () => (sharedProgress.value + circleOffset) % 1
+    () => (sharedProgress.value + circleOffset) % 1,
   );
   const outlineProgress = useDerivedValue(
-    () => (sharedProgress.value + outlineOffset) % 1
+    () => (sharedProgress.value + outlineOffset) % 1,
   );
 
   // animated style for the outer circle
@@ -70,14 +70,14 @@ const Circle: React.FC<CircleProps> = ({
           scale: interpolate(
             progress,
             INTERPOLATION_INPUT,
-            CIRCLE_SCALE_OUTPUT
+            CIRCLE_SCALE_OUTPUT,
           ),
         },
       ],
       opacity: interpolate(
         progress,
         INTERPOLATION_INPUT,
-        CIRCLE_OPACITY_OUTPUT
+        CIRCLE_OPACITY_OUTPUT,
       ),
     };
   });
@@ -101,14 +101,14 @@ const Circle: React.FC<CircleProps> = ({
           scale: interpolate(
             progress,
             INTERPOLATION_INPUT,
-            OUTLINE_SCALE_OUTPUT
+            OUTLINE_SCALE_OUTPUT,
           ),
         },
       ],
       opacity: interpolate(
         progress,
         INTERPOLATION_INPUT,
-        OUTLINE_OPACITY_OUTPUT
+        OUTLINE_OPACITY_OUTPUT,
       ),
     };
   });
@@ -137,7 +137,7 @@ const WorkTimeAnimation = () => {
         easing: Easing.inOut(Easing.ease),
       }),
       -1,
-      false
+      false,
     );
   }, [sharedProgress]);
 
