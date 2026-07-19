@@ -169,7 +169,9 @@ const ProjectListItem: React.FC<Props> = ({
         >
           {/* Button to delete a project */}
           <TouchableOpacity
-            onPress={() => onDelete(item.id)}
+            onPress={() => {
+              onDelete(item.id);
+            }}
             accessibilityRole="button"
             accessibilityLabel="Delete the project"
             accessibilityHint="Delete the project"
