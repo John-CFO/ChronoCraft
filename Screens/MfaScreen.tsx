@@ -89,9 +89,12 @@ const MfaScreen: React.FC = () => {
       }
 
       if (res.data.valid) {
+        await user?.getIdToken(true);
+
         useAlertStore
           .getState()
           .showAlert("Success", "Authentication successful.");
+
         setStage("authenticated");
       } else {
         useAlertStore

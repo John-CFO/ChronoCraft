@@ -116,10 +116,6 @@ const LoginScreen: React.FC = () => {
       // === Single state transition point ===
       setUser(user);
       setStage(nextStage);
-
-      if (nextStage === "pendingMfa") {
-        navigation.navigate("MfaScreen" as never);
-      }
     } catch (error) {
       logError("LoginScreen/login", error);
       useAlertStore

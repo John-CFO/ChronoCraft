@@ -200,7 +200,7 @@ const AppNavigator = () => {
         targetRoute = "Inside";
         break;
       case "pendingMfa":
-        if (isMFAEnabled) targetRoute = "MfaScreen";
+        targetRoute = "MfaScreen";
         break;
       default:
         targetRoute = "Login";

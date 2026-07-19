@@ -32,7 +32,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       if (firebaseUser) {
         await firebaseUser.getIdToken(true);
         setUser(firebaseUser);
-        setStage("authenticated");
+
+        // Firebase session exists.
+        // The real auth stage (MFA pending/authenticated)
+        // is determined after login validation.
+        setStage((currentStage) =>
+          currentStage === "pendingMfa" ? "pendingMfa" : "authenticated",
+        );
       } else {
         setUser(null);
         setStage("loggedOut");
