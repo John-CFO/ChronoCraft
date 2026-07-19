@@ -253,6 +253,7 @@ const AppNavigator = () => {
         component={DetailsScreen as any}
         initialParams={{ projectId: "" }}
         options={({ navigation }) => ({
+          gestureEnabled: false,
           headerShown: true,
           presentation: "modal",
           animationTypeForReplace: "push",
