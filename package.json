@@ -103,5 +103,8 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "@xmldom/xmldom": "^0.9.10"
+  }
 }
