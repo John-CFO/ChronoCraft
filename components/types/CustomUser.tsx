@@ -21,4 +21,7 @@ export interface CustomUser extends FirebaseUser {
 
 // use MergedUser to combine FirebaseUser and UserProfile
 // to use it in the CustomDrawer (fetchUserProfile)
-export type MergedUser = FirebaseUser & UserProfile;
+export type MergedUser = Omit<FirebaseUser, "photoURL"> &
+  UserProfile & {
+    photoURL: string;
+  };

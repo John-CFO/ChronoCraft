@@ -202,19 +202,19 @@ const LoginScreen: React.FC = () => {
                 translucent={false}
                 backgroundColor="black"
               />
-
-              <Image
-                source={require("../assets/time-bg.png")}
-                resizeMode="cover"
-                style={{
-                  flex: 1,
-                  position: "absolute",
-                  width: "100%",
-                  height: "100%",
-                  overflow: "hidden",
-                }}
-              />
-
+              <View>
+                <Image
+                  source={require("../assets/time-bg.png")}
+                  resizeMode="cover"
+                  style={{
+                    flex: 1,
+                    position: "absolute",
+                    width: "100%",
+                    height: "100%",
+                    overflow: "hidden",
+                  }}
+                />
+              </View>
               {/* Blur-Overlay */}
               <BlurView
                 intensity={20}

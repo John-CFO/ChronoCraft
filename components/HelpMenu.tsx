@@ -46,13 +46,13 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
 
   // function to get accessibility mode
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
 
   // open animation
   useEffect(() => {
     AccessibilityInfo.announceForAccessibility(
-      "Help menu opened. You can close it by pressing the close button."
+      "Help menu opened. You can close it by pressing the close button.",
     );
     // animate the sliding
     Animated.parallel([

@@ -5,14 +5,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-import {
-  View,
-  Text,
-  ImageBackground,
-  Image,
-  ScrollView,
-  TouchableOpacity,
-} from "react-native";
+import { View, Text, Image, ScrollView, TouchableOpacity } from "react-native";
 import React, {
   useRef,
   useMemo,
@@ -113,6 +106,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
       const mergedUser: MergedUser = {
         ...currentUser,
         uid: currentUser.uid,
+        photoURL: data.photoURL ?? currentUser.photoURL,
         displayName: data.displayName ?? undefined,
         personalNumber: data.personalNumber ?? undefined,
         totpEnabled: data.totp?.enabled ?? false,
@@ -262,9 +256,8 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         )}
       </Modal>
 
-      <ImageBackground>
-        {/* user profile image */}
-
+      {/* user profile image */}
+      <View>
         <Image
           accessibilityRole="image"
           accessibilityLabel={
@@ -287,7 +280,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
             borderColor: "aqua",
           }}
         />
-      </ImageBackground>
+      </View>
       {/* employee-name and personal-ID */}
       <View style={{ margin: 20 }}>
         {/* render user name or unknown */}
