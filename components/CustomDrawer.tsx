@@ -262,7 +262,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         )}
       </Modal>
 
-      <ImageBackground>
+      <View>
         {/* user profile image */}
 
         <Image
@@ -287,7 +287,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
             borderColor: "aqua",
           }}
         />
-      </ImageBackground>
+      </View>
       {/* employee-name and personal-ID */}
       <View style={{ margin: 20 }}>
         {/* render user name or unknown */}

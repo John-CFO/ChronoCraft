@@ -11,7 +11,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ImageBackground,
   Image,
   Dimensions,
   findNodeHandle,
@@ -19,11 +18,12 @@ import {
 } from "react-native";
 import React, { useEffect, useState, useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
-import { User, getAuth } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import * as ImagePicker from "expo-image-picker";
 import { doc, getDoc } from "firebase/firestore";
 
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
+import { MergedUser } from "../components/types/CustomUser";
 import DismissKeyboard from "../components/DismissKeyboard";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { sanitizeName, sanitizePersonalNumber } from "./InputSanitizers";
@@ -36,7 +36,7 @@ import { logError } from "../lib/loggerClient";
 
 // interface for edit profile modal component props
 interface EditProfileModalProps {
-  user: User;
+  user: MergedUser;
   userId: string;
   onClose: () => void;
   visible: boolean;
@@ -72,7 +72,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   // state declaration for the edit properties
   const [newName, setNewName] = useState(user.displayName ?? "");
   const [newPersonalNumber, setNewPersonalNumber] = useState(
-    (user as any)?.personalNumber ?? "",
+    user.personalNumber ?? "",
   );
 
   // state declaration for the profile picture
@@ -238,7 +238,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
           >
             {/* user profile image upload */}
 
-            <ImageBackground>
+            <View>
               <TouchableOpacity
                 onPress={pickImage}
                 accessibilityRole="button"
@@ -286,7 +286,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                   }}
                 />
               </TouchableOpacity>
-            </ImageBackground>
+            </View>
           </View>
 
           {/* change user name */}

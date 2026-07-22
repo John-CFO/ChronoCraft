@@ -16,6 +16,7 @@
 
 export interface UserProfile {
   uid?: string;
+  photoURL?: string;
   personalNumber?: string | null;
   email?: string | null;
   firstLogin?: boolean;
