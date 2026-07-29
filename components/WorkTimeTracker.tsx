@@ -397,8 +397,7 @@ const WorkTimeTracker = () => {
   // function to get the chart data from firestore
   const fetchChartData = async () => {
     if (!serviceId || !user) {
-      logError("WorkTimeTracker.fetchChartData", "No serviceId or user found");
-      return [];
+      return;
     }
 
     try {

@@ -6,31 +6,15 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "splash": {
-      "resizeMode": "contain",
-      "backgroundColor": "#000000"
-    },
-    "updates": {
-      "fallbackToCacheTimeout": 0
-    },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yourcompany.yourapp",
-      "splash": {
-        "resizeMode": "contain",
-        "backgroundColor": "#000000"
-      }
+      "bundleIdentifier": "com.yourcompany.yourapp"
     },
+
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#000000"
-      },
-      "splash": {
-        "resizeMode": "contain",
         "backgroundColor": "#000000"
       },
       "package": "com.ChronoCraft_Android",
@@ -39,22 +23,6 @@
         "WAKE_LOCK",
         "POST_NOTIFICATIONS"
       ]
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
-    "plugins": [
-      "expo-localization",
-      [
-        "expo-notifications"
-      ],
-      "expo-build-properties"
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "481d68c9-3b59-4eac-8ee4-d89d19ea9ea8"
-      }
-    },
-    "owner": "john-cfo"
+    }
   }
 }

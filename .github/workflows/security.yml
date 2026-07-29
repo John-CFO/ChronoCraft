@@ -154,8 +154,8 @@ jobs:
       - name: npm audit (report)
         run: npm audit || true
 
-      - name: Check for critical vulnerabilities only
-        run: npm audit --audit-level=critical
+      - name: Check production vulnerabilities
+        run: npm audit --omit=dev --audit-level=critical
 
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2

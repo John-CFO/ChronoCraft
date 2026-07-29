@@ -54,11 +54,6 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
         [
           {
             text: "Cancel",
-            onPress: () =>
-              logError(
-                "NoteCard/deleteNote/canceled",
-                new Error("User canceled note deletion"),
-              ),
             style: "cancel",
           },
           {

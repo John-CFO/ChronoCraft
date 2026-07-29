@@ -300,7 +300,6 @@ const NoteModal: React.FC<NoteModalProps> = ({
                   fontFamily: "MPLUSLatin_Bold",
                   fontSize: 22,
                   color: saving ? "lightgray" : "white",
-                  marginBottom: 5,
                   paddingRight: 10,
                 }}
               >
