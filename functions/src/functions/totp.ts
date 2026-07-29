@@ -37,11 +37,11 @@ function deriveEncryptionKey(rawKey: string): Buffer {
 }
 // function to generate a TOTP (to use it in totp testing)
 function buildOtpAuthUrl(
-  uid: string,
+  accountName: string,
   secret: string,
-  issuer = "MyApp",
+  issuer = "ChronoCraft",
 ): string {
-  return `otpauth://totp/${issuer}:${uid}?secret=${secret}&issuer=${issuer}&algorithm=SHA1&digits=6&period=30`;
+  return `otpauth://totp/${issuer}:${accountName}?secret=${secret}&issuer=${issuer}&algorithm=SHA1&digits=6&period=30`;
 }
 
 // Cipheriv
@@ -117,6 +117,11 @@ export const createTotpSecretHandler = async (request: any) => {
     }
 
     const uid = request.auth.uid;
+    const email = request.auth.token.email;
+
+    if (!email) {
+      throw new ValidationError("User email not available");
+    }
 
     const userRef = firestore.collection("Users").doc(uid);
     const userSnap = await userRef.get();
@@ -181,7 +186,7 @@ export const createTotpSecretHandler = async (request: any) => {
 
     return {
       enrollmentId,
-      otpAuthUrl: buildOtpAuthUrl(uid, secret),
+      otpAuthUrl: buildOtpAuthUrl(email, secret),
       message:
         "Scan the QR code with your authenticator app. This secret expires in 1 hour.",
     };

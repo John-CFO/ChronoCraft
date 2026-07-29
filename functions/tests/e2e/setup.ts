@@ -119,8 +119,6 @@ beforeAll(async () => {
     throw new Error(`firestore.rules not found at ${rulesPath}`);
   }
 
-  const start = Date.now();
-
   testEnv = await initializeTestEnvironment({
     projectId: PROJECT_ID,
     firestore: {
@@ -134,6 +132,22 @@ beforeAll(async () => {
 
   if (!process.env.FIREBASE_AUTH_EMULATOR_HOST) {
     process.env.FIREBASE_AUTH_EMULATOR_HOST = "127.0.0.1:5001";
+  }
+
+  for (const user of TEST_USERS) {
+    try {
+      await admin.auth().createUser({
+        uid: user.uid,
+        email: user.email,
+        emailVerified: true,
+        displayName: user.displayName,
+      });
+    } catch (error: any) {
+      // User already exists
+      if (error.code !== "auth/uid-already-exists") {
+        throw error;
+      }
+    }
   }
 
   // Seed initial test data (clean & deterministic)
@@ -187,7 +201,16 @@ const fetchIdTokenForUid = async (uid: string): Promise<string> => {
   const host = getAuthEmulatorHost();
   const url = `http://${host}/identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=any`;
 
-  const customToken = await admin.auth().createCustomToken(uid);
+  const user = TEST_USERS.find((u) => u.uid === uid);
+
+  if (!user) {
+    throw new Error(`Unknown test user ${uid}`);
+  }
+
+  const customToken = await admin.auth().createCustomToken(uid, {
+    email: user.email,
+    email_verified: true,
+  });
 
   const res = await fetch(url, {
     method: "POST",
