@@ -71,8 +71,12 @@ jobs:
       - name: Debug build output
         run: |
           ls -la
+          echo "---- LIB ----"
           ls -la lib
-          find lib -maxdepth 2 -type f | head -50
+          echo "---- FILES ----"
+          find lib -maxdepth 3 -type f | sort | head -100
+          echo "---- INDEX EXPORTS ----"
+          grep -R "exports\." lib/index.js || true
         working-directory: functions
 
       # -------------------------
