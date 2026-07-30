@@ -68,6 +68,9 @@ jobs:
         working-directory: functions
         env:
           RATE_LIMIT_HMAC_KEY: test-key
+          FIREBASE_AUTH_EMULATOR_HOST: 127.0.0.1:9099
+          FIRESTORE_EMULATOR_HOST: 127.0.0.1:8080
+          FIREBASE_FUNCTIONS_EMULATOR_HOST: 127.0.0.1:5001
 
       # -------------------------
       # RACE RUN (separate Emulator Lifecycle!)
