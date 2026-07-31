@@ -61,25 +61,6 @@ jobs:
           RATE_LIMIT_HMAC_KEY: test-key
 
       # -------------------------
-      # DEBUG BUILD OUTPUT
-      # -------------------------
-
-      - name: Build Functions
-        run: npm run build
-        working-directory: functions
-
-      - name: Debug build output
-        run: |
-          ls -la
-          echo "---- LIB ----"
-          ls -la lib
-          echo "---- FILES ----"
-          find lib -maxdepth 3 -type f | sort | head -100
-          echo "---- INDEX EXPORTS ----"
-          grep -R "exports\." lib/index.js || true
-        working-directory: functions
-
-      # -------------------------
       # E2E RUN (separate Emulator Lifecycle!)
       # -------------------------
       - name: E2E Tests
