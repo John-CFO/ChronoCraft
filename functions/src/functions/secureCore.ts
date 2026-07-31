@@ -85,9 +85,7 @@ export async function secureCore(
 
     return result;
   } catch (err) {
-    logEvent("security_error", "error", {
-      error: (err as any)?.message,
-    });
+    logEvent("security_error", "error");
 
     throw err;
   }

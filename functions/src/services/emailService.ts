@@ -72,7 +72,7 @@ export async function sendPasswordResetEmail(to: string, link: string) {
   });
 
   if (!result || (result as any).error) {
-    throw new Error(`Resend send failed: ${JSON.stringify(result)}`);
+    throw new ConfigurationError("Password reset email delivery failed");
   }
   return result;
 }

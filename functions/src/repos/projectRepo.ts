@@ -117,11 +117,7 @@ export class ProjectRepo {
 
     await ref.set(data);
 
-    logEvent("project-created", "info", {
-      userId,
-      serviceId,
-      projectId: ref.id,
-    });
+    logEvent("project-deleted", "info");
 
     return {
       projectId: ref.id,
@@ -197,11 +193,7 @@ export class ProjectRepo {
 
     await lockRef.delete().catch(() => {});
 
-    logEvent("project-deleted", "info", {
-      ownerId,
-      serviceId,
-      projectId,
-    });
+    logEvent("project-deleted", "info");
   }
 
   async setProjectHourlyRate(

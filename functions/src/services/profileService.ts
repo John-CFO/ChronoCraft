@@ -88,7 +88,6 @@ export class ProfileService {
     await this.userRepo.updateUser(uid, sanitizedData);
 
     logEvent("profile updated", "info", {
-      uid,
       updatedFields: Object.keys(sanitizedData),
     });
 
