@@ -30,7 +30,7 @@ export class AuthService {
       });
     }
 
-    logEvent(`auth ${action}`, "info", { uid });
+    logEvent(`auth ${action}`, "info");
 
     const userDoc = await this.userRepo.getUser(uid).catch(() => null);
     const data = userDoc?.data();
@@ -69,7 +69,7 @@ export class AuthService {
 
     const { valid } = verifyTotp(secret, code);
 
-    logEvent("verifyTotp", valid ? "info" : "warn", { uid, valid });
+    logEvent("verifyTotp", valid ? "info" : "warn", { valid });
 
     if (!valid) {
       throw new BusinessRuleError("INVALID_TOTP", "Invalid TOTP code");

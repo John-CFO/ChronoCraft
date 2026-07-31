@@ -34,8 +34,7 @@ export class SecureDeleteService {
     }
 
     logEvent("secure delete", "info", {
-      uid: userId,
-      serviceId,
+      action: "delete_service",
     });
 
     return { success: true };
