@@ -5,6 +5,7 @@
 
 ///////////////////////////////////////////////////////////////////////////
 
+// function to sanitize log metadata
 export function sanitizeLogMetadata(
   metadata?: Record<string, unknown>,
 ): Record<string, unknown> | undefined {
@@ -12,15 +13,18 @@ export function sanitizeLogMetadata(
     return undefined;
   }
 
-  const blockedKeys = new Set([
-    "password",
-    "token",
-    "secret",
-    "otp",
-    "code",
-    "link",
-    "email",
-  ]);
+  const sensitivePatterns = [
+    /password/i,
+    /token/i,
+    /secret/i,
+    /otp/i,
+    /code/i,
+    /link/i,
+    /email/i,
+    /authorization/i,
+    /cookie/i,
+    /session/i,
+  ];
 
   const sanitizeValue = (value: unknown): unknown => {
     if (Array.isArray(value)) {
@@ -30,7 +34,9 @@ export function sanitizeLogMetadata(
     if (value !== null && typeof value === "object") {
       return Object.fromEntries(
         Object.entries(value)
-          .filter(([key]) => !blockedKeys.has(key.toLowerCase()))
+          .filter(
+            ([key]) => !sensitivePatterns.some((pattern) => pattern.test(key)),
+          )
           .map(([key, val]) => [key, sanitizeValue(val)]),
       );
     }
@@ -39,4 +45,18 @@ export function sanitizeLogMetadata(
   };
 
   return sanitizeValue(metadata) as Record<string, unknown>;
+}
+
+// function to sanitize log messages
+export function sanitizeLogMessage(message: string): string {
+  return (
+    message
+      // mask e-mail adress
+      .replace(
+        /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi,
+        "[REDACTED_EMAIL]",
+      )
+      // mask bearer token
+      .replace(/\bBearer\s+[A-Za-z0-9\-._~+/]+=*\b/gi, "[REDACTED_TOKEN]")
+  );
 }
