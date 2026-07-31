@@ -20,7 +20,7 @@ export function handleFunctionError(
 ): HttpsError {
   // RateLimitError
   if (error instanceof RateLimitError) {
-    logEvent(`Rate limit exceeded: ${error.message}`, "warn");
+    logEvent("Rate limit exceeded", "warn");
 
     return new HttpsError(
       "resource-exhausted",
@@ -34,11 +34,9 @@ export function handleFunctionError(
 
     const level = firebaseErrorCode === "permission-denied" ? "warn" : "error";
 
-    logEvent(
-      `Domain error in ${functionName || "function"}: ${error.message}`,
-      level,
-      { code: error.code },
-    );
+    logEvent(`Domain error in ${functionName || "function"}`, level, {
+      code: error.code,
+    });
 
     return new HttpsError(
       firebaseErrorCode,
@@ -48,26 +46,20 @@ export function handleFunctionError(
 
   // Firebase HttpsError
   if (error instanceof HttpsError) {
-    logEvent(
-      `HttpsError in ${functionName || "function"}: ${error.message}`,
-      "error",
-      { code: error.code },
-    );
+    logEvent(`HttpsError in ${functionName || "function"}`, "error", {
+      code: error.code,
+    });
     return error;
   }
 
-  // Generic erros
+  // Generic errors
   const rawCode = typeof error.code === "string" ? error.code : "";
   const code: FirebaseFunctionErrorCode =
     (rawCode.replace("functions/", "") as FirebaseFunctionErrorCode) ||
     "internal";
 
-  // Log the error
-  logEvent(
-    `Error in ${functionName || "function"}: ${error.message || code}`,
-    "error",
-    { code },
-  );
+  // Log the error without exposing error details
+  logEvent(`Error in ${functionName || "function"}`, "error", { code });
 
   // Cases for HttpsError
   switch (code) {
@@ -129,5 +121,6 @@ function mapDomainErrorToFirebase(
     "database-error": "internal",
     "external-service-error": "unavailable",
   };
+
   return mapping[domainCode] || "internal";
 }
