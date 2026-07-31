@@ -12,15 +12,18 @@ export function sanitizeLogMetadata(
     return undefined;
   }
 
-  const blockedKeys = new Set([
-    "password",
-    "token",
-    "secret",
-    "otp",
-    "code",
-    "link",
-    "email",
-  ]);
+  const sensitivePatterns = [
+    /password/i,
+    /token/i,
+    /secret/i,
+    /otp/i,
+    /code/i,
+    /link/i,
+    /email/i,
+    /authorization/i,
+    /cookie/i,
+    /session/i,
+  ];
 
   const sanitizeValue = (value: unknown): unknown => {
     if (Array.isArray(value)) {
@@ -30,7 +33,9 @@ export function sanitizeLogMetadata(
     if (value !== null && typeof value === "object") {
       return Object.fromEntries(
         Object.entries(value)
-          .filter(([key]) => !blockedKeys.has(key.toLowerCase()))
+          .filter(
+            ([key]) => !sensitivePatterns.some((pattern) => pattern.test(key)),
+          )
           .map(([key, val]) => [key, sanitizeValue(val)]),
       );
     }
