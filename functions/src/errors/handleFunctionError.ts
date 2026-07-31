@@ -20,9 +20,7 @@ export function handleFunctionError(
 ): HttpsError {
   // RateLimitError
   if (error instanceof RateLimitError) {
-    logEvent(`Rate limit exceeded: ${error.message}`, "warn", {
-      stack: error?.stack,
-    });
+    logEvent(`Rate limit exceeded: ${error.message}`, "warn");
 
     return new HttpsError(
       "resource-exhausted",
@@ -39,7 +37,7 @@ export function handleFunctionError(
     logEvent(
       `Domain error in ${functionName || "function"}: ${error.message}`,
       level,
-      { code: error.code, stack: error?.stack },
+      { code: error.code },
     );
 
     return new HttpsError(
@@ -53,7 +51,7 @@ export function handleFunctionError(
     logEvent(
       `HttpsError in ${functionName || "function"}: ${error.message}`,
       "error",
-      { code: error.code, stack: error?.stack },
+      { code: error.code },
     );
     return error;
   }
@@ -68,7 +66,7 @@ export function handleFunctionError(
   logEvent(
     `Error in ${functionName || "function"}: ${error.message || code}`,
     "error",
-    { code, stack: error.stack },
+    { code },
   );
 
   // Cases for HttpsError
