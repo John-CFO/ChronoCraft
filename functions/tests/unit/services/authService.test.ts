@@ -66,17 +66,13 @@ describe("AuthService Unit Tests", () => {
   describe("loginOrRegister", () => {
     it("should log event and return success for login", async () => {
       const result = await authService.loginOrRegister("login", "user123");
-      expect(mockLogEvent).toHaveBeenCalledWith("auth login", "info", {
-        uid: "user123",
-      });
+      expect(mockLogEvent).toHaveBeenCalledWith("auth login", "info");
       expect(result).toEqual({ nextStage: "authenticated" });
     });
 
     it("should log event and return success for register", async () => {
       const result = await authService.loginOrRegister("register", "user123");
-      expect(mockLogEvent).toHaveBeenCalledWith("auth register", "info", {
-        uid: "user123",
-      });
+      expect(mockLogEvent).toHaveBeenCalledWith("auth register", "info");
       expect(result).toEqual({ nextStage: "authenticated" });
     });
 
@@ -142,7 +138,6 @@ describe("AuthService Unit Tests", () => {
       expect(mockVerifyTotp).toHaveBeenCalledWith(secret, code);
 
       expect(mockLogEvent).toHaveBeenCalledWith("verifyTotp", "info", {
-        uid,
         valid: true,
       });
 

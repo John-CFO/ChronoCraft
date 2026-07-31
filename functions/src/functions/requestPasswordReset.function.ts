@@ -132,9 +132,7 @@ export const requestPasswordResetHandler = async (request: CallableRequest) => {
         "If an account exists for that email, you will receive instructions to reset your password.",
     };
   } catch (error) {
-    logEvent("RESET_FAILED", "error", {
-      message: (error as any)?.message,
-    });
+    logEvent("RESET_FAILED", "error");
 
     throw handleFunctionError(error, "requestPasswordReset");
   }

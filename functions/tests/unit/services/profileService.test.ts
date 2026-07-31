@@ -55,7 +55,6 @@ describe("ProfileService Unit Tests", () => {
 
       expect(mockUserRepo.updateUser).toHaveBeenCalledWith(uid, updateData);
       expect(mockLogEvent).toHaveBeenCalledWith("profile updated", "info", {
-        uid,
         updatedFields: ["displayName", "personalNumber"],
       });
       expect(result).toEqual({ success: true });
