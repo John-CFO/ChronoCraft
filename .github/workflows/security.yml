@@ -68,7 +68,6 @@ jobs:
         working-directory: functions
         env:
           RATE_LIMIT_HMAC_KEY: test-key
-
       # -------------------------
       # RACE RUN (separate Emulator Lifecycle!)
       # -------------------------

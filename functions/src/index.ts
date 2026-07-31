@@ -60,14 +60,21 @@ import { disableTotpHandler } from "./functions/disableTotp.function";
 
 // export functions
 export const authValidatorFunction = authValidator;
+
 export const projectsAndWorkValidatorFunction = projectsAndWorkValidator;
+
 export const secureDeleteFunction = secureDelete;
 
 export const checkTotpStatus = onCall({ cors: true }, checkTotpStatusHandler);
+
 export const disableTotp = onCall({ cors: true }, disableTotpHandler);
+
 export const createTotpSecret = onCall({ cors: true }, createTotpSecretHandler);
+
 export const verifyTotpToken = onCall({ cors: true }, verifyTotpTokenHandler);
+
 export const verifyTotpLogin = onCall({ cors: true }, verifyTotpLoginHandler);
+
 export const deleteUserData = onCall({ cors: true }, deleteUserDataHandler);
 
 export const requestPasswordResetFunction = onCall(
