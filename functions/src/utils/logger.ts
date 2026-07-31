@@ -6,7 +6,7 @@
 /////////////////////////////////////////////////////////////////////////////////
 
 import * as admin from "firebase-admin";
-import { sanitizeLogMetadata } from "./sanatizeLogger";
+import { sanitizeLogMetadata, sanitizeLogMessage } from "./sanatizeLogger";
 
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -38,7 +38,7 @@ export function logEvent(
   metadata?: Record<string, unknown>,
 ) {
   const logEntry: LogEntry = {
-    message,
+    message: sanitizeLogMessage(message),
     level,
     timestamp: new Date().toISOString(),
     metadata: sanitizeLogMetadata(metadata),
