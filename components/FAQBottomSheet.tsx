@@ -186,6 +186,10 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
   // define the dot animation with a delay
   const dots = useDotAnimation(loading, 700);
 
+  // define the alternative method for MFA workflow
+  const mfaFaqOneDevice =
+    "The QR code used to set up your authenticator app is usually intended to be scanned with a second device. If you only have one smartphone, you can use the following alternative method:\n\n1. Take a screenshot of the displayed QR code.\n2. Open your authenticator app.\n3. Use the option to import a QR code from an image or your gallery.\n4. Select the screenshot and complete the setup process.\n\nPlease note that not every authenticator app supports importing QR codes from images. Google Authenticator supports importing QR codes from saved images depending on the app version.\n\nAfter successfully enabling MFA, you should delete the screenshot. The QR code contains your secret TOTP key, which is used to generate your MFA codes. Anyone who gains access to this key could generate valid MFA codes for your account.";
+
   return (
     <View
       accessibilityViewIsModal
@@ -623,6 +627,66 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
+            </Collapsible>
+            {/* FAQ 4: How can I set up MFA if I only have one smartphone? */}
+            <TouchableOpacity
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel={`How can I set up MFA if I only have one smartphone? ${
+                expandedSections.faq4 ? "Expanded" : "Collapsed"
+              }`}
+              accessibilityHint="Toggles the answer for how to close the tooltip"
+              accessibilityState={{ expanded: !!expandedSections.faq4 }}
+              onPress={() => {
+                // announce planned new state (compute new state before toggle to have correct announcement)
+                const willBeExpanded = !expandedSections.faq4;
+                toggleSection("faq4");
+                AccessibilityInfo.isScreenReaderEnabled().then((enabled) => {
+                  if (enabled)
+                    AccessibilityInfo.announceForAccessibility(
+                      willBeExpanded ? "Answer opened" : "Answer closed",
+                    );
+                });
+              }}
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                paddingVertical: 12,
+                borderBottomWidth: 1,
+                borderBottomColor: "rgba(255, 255, 255, 0.1)",
+              }}
+            >
+              <Text
+                accessible={false}
+                style={{
+                  fontSize: accessMode ? 18 : 16,
+                  fontWeight: "600",
+                  color: expandedSections.faq4 ? "aqua" : "white",
+                  flex: 1,
+                  marginRight: 16,
+                }}
+              >
+                How can I set up MFA if I only have one smartphone?
+              </Text>
+              <Text style={{ color: "aqua", fontSize: accessMode ? 28 : 20 }}>
+                {expandedSections.faq4 ? "−" : "+"}
+              </Text>
+            </TouchableOpacity>
+            <Collapsible collapsed={!expandedSections.faq4}>
+              <Text
+                accessible={true}
+                accessibilityLiveRegion="polite"
+                accessibilityLabel={mfaFaqOneDevice}
+                style={{
+                  paddingTop: 12,
+                  fontSize: accessMode ? 18 : 14,
+                  color: "#CCCCCC",
+                  lineHeight: 20,
+                }}
+              >
+                {mfaFaqOneDevice}
+              </Text>
             </Collapsible>
           </View>
         </View>
