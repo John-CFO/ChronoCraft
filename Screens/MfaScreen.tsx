@@ -151,9 +151,10 @@ const MfaScreen: React.FC = () => {
       }}
     >
       <Text
+        accessibilityRole="header"
         style={{
           color: "white",
-          fontSize: 28,
+          fontSize: accessMode ? 32 : 28,
           fontFamily: "MPLUSLatin_Bold",
           marginBottom: 20,
           textAlign: "center",
@@ -184,7 +185,10 @@ const MfaScreen: React.FC = () => {
         accessibilityRole="button"
         accessibilityLabel="Confirm TOTP"
         accessibilityHint="Confirms the TOTP code"
-        accessibilityState={{ busy: loading }}
+        accessibilityState={{
+          busy: loading,
+          disabled: tokenInput.length !== 6 || loading,
+        }}
         style={{
           width: screenWidth * 0.7,
           maxWidth: 400,
@@ -194,7 +198,6 @@ const MfaScreen: React.FC = () => {
           borderColor: tokenInput.length === 6 ? "#00f7f7" : "#666666",
           marginTop: 20,
         }}
-        disabled={tokenInput.length !== 6 || loading}
       >
         <LinearGradient
           colors={
@@ -224,7 +227,7 @@ const MfaScreen: React.FC = () => {
               <Text
                 style={{
                   fontFamily: "MPLUSLatin_Bold",
-                  fontSize: 22,
+                  fontSize: accessMode ? 24 : 22,
                   color: "white",
                   textAlign: "center",
                   flexShrink: 0,
@@ -236,7 +239,7 @@ const MfaScreen: React.FC = () => {
                 style={{
                   marginLeft: 4,
                   fontFamily: "MPLUSLatin_Bold",
-                  fontSize: 18,
+                  fontSize: accessMode ? 20 : 18,
                   color: "white",
                   textAlign: "left",
                   minWidth: 36,
@@ -250,7 +253,7 @@ const MfaScreen: React.FC = () => {
             <Text
               style={{
                 fontFamily: "MPLUSLatin_Bold",
-                fontSize: 22,
+                fontSize: accessMode ? 24 : 22,
                 color: "white",
                 textAlign: "center",
               }}
@@ -272,9 +275,10 @@ const MfaScreen: React.FC = () => {
         }}
       >
         <Text
+          accessibilityHint="Signs out and returns to the login screen"
           style={{
-            color: "#999",
-            fontSize: 16,
+            color: accessMode ? "white" : "#999",
+            fontSize: accessMode ? 20 : 16,
             fontFamily: "MPLUSLatin_Regular",
           }}
         >
@@ -286,10 +290,12 @@ const MfaScreen: React.FC = () => {
       <View style={{ marginTop: 30, paddingHorizontal: 20 }}>
         <Text
           style={{
-            color: "#888",
-            fontSize: 14,
+            color: accessMode ? "white" : "#888",
+            fontSize: accessMode ? 18 : 14,
             textAlign: "center",
-            fontFamily: "MPLUSLatin_ExtraLight",
+            fontFamily: accessMode
+              ? "MPLUSLatin_Regular"
+              : "MPLUSLatin_ExtraLight",
           }}
         >
           Note: This screen cannot be bypassed. You must enter the correct TOTP
