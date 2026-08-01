@@ -26,14 +26,14 @@ const OTPInput: React.FC<Props> = ({
 }) => {
   // declare states
   const [values, setValues] = useState<string[]>(
-    Array.from({ length }, () => "")
+    Array.from({ length }, () => ""),
   );
   const [shouldAutoFocus, setShouldAutoFocus] = useState(false);
 
   //declare refs
   const inputs = useRef<(TextInput | null)[]>([]);
   const anims = useRef(
-    Array.from({ length }, () => new Animated.Value(0))
+    Array.from({ length }, () => new Animated.Value(0)),
   ).current;
 
   // hook to auto focus
@@ -62,7 +62,7 @@ const OTPInput: React.FC<Props> = ({
   // function to handle key press
   const handleKeyPress = (
     e: { nativeEvent: { key: string } },
-    index: number
+    index: number,
   ) => {
     if (e.nativeEvent.key === "Backspace") {
       if (values[index]) {
@@ -155,8 +155,13 @@ const OTPInput: React.FC<Props> = ({
                 {/* input field */}
                 <TextInput
                   accessible={true}
+                  textContentType="oneTimeCode"
+                  autoComplete="one-time-code"
+                  accessibilityValue={{
+                    text: values[index] ? "Entered" : "Empty",
+                  }}
                   accessibilityLabel={`Number ${index + 1} from ${length}`}
-                  accessibilityHint="Add a number"
+                  accessibilityHint="Enter one digit of the authentication code"
                   ref={(r) => (inputs.current[index] = r)}
                   value={values[index]}
                   onChangeText={(t) => handleChange(t, index)}
