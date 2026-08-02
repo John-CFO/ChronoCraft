@@ -108,6 +108,7 @@ jobs:
   # ---------------------------
   rules-security:
     name: Firebase Rules Security
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
 
     steps:
