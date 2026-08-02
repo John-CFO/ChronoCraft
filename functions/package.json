@@ -23,6 +23,9 @@
     "firebase-functions": "^7.2.5",
     "resend": "^6.10.0"
   },
+  "overrides": {
+    "protobufjs": "7.6.5"
+  },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.1",
     "@types/jest": "^29.0.0",
