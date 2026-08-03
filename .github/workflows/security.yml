@@ -1,3 +1,29 @@
+############ Security CI Pipeline ############
+# This workflow performs security and quality validation for the
+# entire project on every pull request targeting the master branch.
+#
+# The pipeline validates:
+# - Firebase Cloud Functions
+# - Expo application
+# - Firestore and Storage Security Rules
+# - Project dependencies
+#
+# Steps include:
+# - TypeScript compilation
+# - ESLint
+# - Unit tests
+# - Integration tests
+# - End-to-end tests
+# - Race condition tests
+# - Firestore and Storage rule validation (dry-run)
+# - Dependency vulnerability checks
+# - Secret scanning (Gitleaks)
+# - Static security analysis (Semgrep)
+#
+# Note: This workflow validates changes only and does not deploy
+# any resources.
+##############################################
+
 name: Security CI
 
 on:

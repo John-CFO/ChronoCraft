@@ -1,3 +1,20 @@
+############ CodeQL Security Analysis ############
+# This workflow performs static application security testing (SAST)
+# using GitHub CodeQL.
+#
+# It automatically runs on every push and pull request targeting
+# the master branch to detect potential security vulnerabilities
+# and coding issues in the JavaScript/TypeScript codebase.
+#
+# Steps:
+# - Checkout repository
+# - Initialize CodeQL
+# - Automatically build the project
+# - Perform CodeQL analysis
+#
+# Note: Findings are uploaded to GitHub Security for review.
+###############################################
+
 name: "CodeQL"
 
 on:
