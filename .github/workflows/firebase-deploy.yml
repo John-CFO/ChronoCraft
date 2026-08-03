@@ -1,3 +1,18 @@
+############ Firestore Rules Deployment ############
+# This workflow automatically deploys Firestore Security Rules
+# whenever changes are pushed to the master branch.
+#
+# Steps:
+# - Checkout repository
+# - Setup Node.js
+# - Install Firebase CLI
+# - Authenticate with Google Cloud
+# - Deploy Firestore Security Rules
+#
+# Note: Only Firestore rules are deployed. No functions,
+# hosting, storage rules, or other Firebase resources are affected.
+###################################################
+
 name: Deploy Firestore Rules
 
 on:
