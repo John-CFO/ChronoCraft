@@ -97,48 +97,62 @@ The dependency update is deferred until a planned Firebase Admin SDK upgrade cyc
 
 ---
 
-### postcss vulnerability
+### brace-expansion vulnerability
 
-**Package:** postcss@8.5.15  
-**Severity:** High  
-**CVE/Advisory:** GHSA-r28c-9q8g-f849
+**Package:** brace-expansion@1.1.15  
+**Severity:** High
 
 **Source:**
 
-Development dependency introduced by Vitest/Vite tooling in emulator tests.
+Development dependency introduced by ESLint tooling.
 
 Dependency chain:
 
 ```text
-vitest@4.1.9
-└── vite@8.0.16
-    └── postcss@8.5.15
+eslint@8.57.0
+└── @eslint/eslintrc@2.1.4
+    └── minimatch@3.1.5
+        └── brace-expansion@1.1.15
+```
+
+Additional dependency path:
+
+```text
+ts-jest@29.4.11
+└── jest@30.4.2
+    └── glob@10.5.0
+        └── minimatch@9.0.9
+            └── brace-expansion@2.1.1
 ```
 
 **Risk assessment:**
 
-The vulnerable package is only used within the emulator test development environment.
+The vulnerable package is only used by development tooling.
 
 It is not included in:
 
-- production application builds
+- Production application builds
 - Firebase Functions runtime
-- deployed backend code
+- Deployed backend code
+
+The vulnerable functionality requires processing crafted brace patterns through minimatch / brace-expansion.
+
+No untrusted user-controlled input reaches this dependency during application runtime.
 
 **Decision:**
 
 Risk accepted temporarily.
 
-The dependency is part of the test tooling stack and does not affect production runtime security.
+The dependency will be reviewed during the next ESLint/Jest tooling upgrade cycle.
 
 **Mitigation:**
 
-- Development dependencies are monitored through `npm audit`.
-- Dependency upgrades are evaluated during test tooling updates.
+- Dependency is monitored through `npm audit`.
+- Development dependency upgrades are evaluated during tooling maintenance updates.
 - Production dependency audits are separated from development tooling findings.
 
 **Review status:** Accepted  
-**Review trigger:** Next Vitest/Vite tooling upgrade
+**Review trigger:** Next ESLint/Jest tooling upgrade
 
 ---
 
@@ -157,12 +171,47 @@ Updated transitive dependency versions through dependency updates and package lo
 Affected dependency trees:
 
 - Root application dependencies
+- Functions dependencies
 - emulator-tests dependencies
 
 Current resolved version:
 
 ```text
 protobufjs@7.6.5
+```
+
+**Status:** Resolved
+
+---
+
+### postcss vulnerability
+
+**Package:** postcss@8.5.18  
+**Severity:** High  
+**CVE/Advisory:** GHSA-r28c-9q8g-f849
+
+**Resolution:**
+
+Updated transitive dependency through dependency update.
+
+**Affected dependency tree:**
+
+```text
+vitest@4.1.9
+└── vite@8.0.16
+    └── postcss@8.5.18
+```
+
+**Previous vulnerable version:**
+
+```text
+postcss@8.5.15
+```
+
+**Current resolved version:**
+
+```text
+postcss@8.5.18
 ```
 
 **Status:** Resolved
