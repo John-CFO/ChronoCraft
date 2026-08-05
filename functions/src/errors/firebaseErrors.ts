@@ -47,14 +47,14 @@ export interface FirebaseErrorDetails {
   stack?: string;
 }
 
-export function isFirebaseError(error: any): error is FirebaseErrorDetails {
-  return error && typeof error === "object" && "code" in error;
+export function isFirebaseError(error: unknown): error is FirebaseErrorDetails {
+  return typeof error === "object" && error !== null && "code" in error;
 }
 
 export function createFirebaseError(
   code: FirebaseFunctionErrorCode,
   message: string,
-  details?: any
+  details?: any,
 ): FirebaseErrorDetails {
   return {
     code,

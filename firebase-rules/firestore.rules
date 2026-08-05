@@ -2,6 +2,13 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+      /* =======================
+     Security Configuration
+  ======================= */
+  match /security/{document=**} {
+    allow read, write: if false;
+  }
+
     function isOwner(userId) {
       return request.auth != null && request.auth.uid == userId;
     }
