@@ -24,8 +24,8 @@ export const validateReviewerRegistration = beforeUserCreated(async (event) => {
   }
 
   const whitelistSnapshot = await db
-    .collection("security")
-    .doc("auth")
+    .collection("auth")
+    .doc("reviewers")
     .collection("reviewers")
     .doc(email)
     .get();
