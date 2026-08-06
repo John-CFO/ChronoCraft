@@ -60,8 +60,8 @@ describe("beforeUserCreated whitelist validation (integration)", () => {
       }
 
       await firestore
-        .collection("security")
-        .doc("auth")
+        .collection("auth")
+        .doc("reviewers")
         .collection("reviewers")
         .doc(email)
         .delete()
@@ -87,8 +87,8 @@ describe("beforeUserCreated whitelist validation (integration)", () => {
     cleanupEmails.push(email);
 
     await firestore
-      .collection("security")
-      .doc("auth")
+      .collection("auth")
+      .doc("reviewers")
       .collection("reviewers")
       .doc(email)
       .set({
