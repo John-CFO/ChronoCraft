@@ -15,11 +15,11 @@ import { getFirestore } from "firebase-admin/firestore";
 const db = getFirestore();
 
 // function to validate user registration
-export const validateReviewerRegistration = beforeUserCreated(async (event) => {
-  const email = event.data?.email?.trim().toLowerCase();
+export const validateReviewerEmail = async (email?: string) => {
+  const normalizedEmail = email?.trim().toLowerCase();
 
   // if no email is provided, throw an error
-  if (!email) {
+  if (!normalizedEmail) {
     throw new HttpsError("permission-denied", "Registration is not allowed");
   }
 
@@ -27,7 +27,7 @@ export const validateReviewerRegistration = beforeUserCreated(async (event) => {
     .collection("auth")
     .doc("reviewers")
     .collection("reviewers")
-    .doc(email)
+    .doc(normalizedEmail)
     .get();
 
   // if the user is not whitelisted, throw an error
@@ -42,4 +42,7 @@ export const validateReviewerRegistration = beforeUserCreated(async (event) => {
   if (data?.active !== true) {
     throw new HttpsError("permission-denied", "Registration is not allowed");
   }
+};
+export const validateReviewerRegistration = beforeUserCreated(async (event) => {
+  await validateReviewerEmail(event.data?.email);
 });
