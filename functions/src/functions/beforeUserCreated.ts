@@ -11,11 +11,10 @@ import { getFirestore } from "firebase-admin/firestore";
 
 /////////////////////////////////////////////////////////////////////////////
 
-// get firestore
-const db = getFirestore();
-
 // function to validate user registration
 export const validateReviewerEmail = async (email?: string) => {
+  const db = getFirestore();
+
   const normalizedEmail = email?.trim().toLowerCase();
 
   // if no email is provided, throw an error
