@@ -238,6 +238,25 @@ describe("Authentication Boundaries", () => {
     const body = unwrapBody(res.body);
     expect(body.nextStage).toBe("authenticated");
   });
+
+  it("should allow existing user to login", async () => {
+    const uid = TEST_USERS[0].uid;
+    const idToken = await getIdTokenForUser(uid);
+
+    const res = await callFunction({
+      functionName: "authValidatorFunction",
+      idToken,
+      body: {
+        action: "login",
+      },
+      isCallable: true,
+    });
+
+    expectSuccess(res);
+
+    const body = unwrapBody(res.body);
+    expect(body.nextStage).toBe("authenticated");
+  });
 });
 
 describe("Authorization Boundaries", () => {
