@@ -19,6 +19,7 @@ export const validateReviewerEmail = async (email?: string) => {
 
   // if no email is provided, throw an error
   if (!normalizedEmail) {
+    console.log("BLOCK: missing email");
     throw new HttpsError("permission-denied", "Registration is not allowed");
   }
 
@@ -31,6 +32,7 @@ export const validateReviewerEmail = async (email?: string) => {
 
   // if the user is not whitelisted, throw an error
   if (!whitelistSnapshot.exists) {
+    console.log("BLOCK: whitelist missing", normalizedEmail);
     throw new HttpsError("permission-denied", "Registration is not allowed");
   }
 
@@ -39,6 +41,7 @@ export const validateReviewerEmail = async (email?: string) => {
 
   // if the user is not active, throw an error
   if (data?.active !== true) {
+    console.log("BLOCK: inactive reviewer", normalizedEmail, data);
     throw new HttpsError("permission-denied", "Registration is not allowed");
   }
 };
