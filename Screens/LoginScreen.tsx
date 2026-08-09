@@ -47,6 +47,10 @@ import {
   RegisterInputSchema,
 } from "../validation/authSchemas";
 import { logError } from "../lib/loggerClient";
+import {
+  isFirebaseError,
+  FIREBASE_ERROR_CODES,
+} from "../functions/src/errors/firebaseErrors";
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -160,14 +164,29 @@ const LoginScreen: React.FC = () => {
       if (nextStage === "pendingMfa") {
         navigation.navigate("MfaScreen" as never);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       logError("LoginScreen/register", error);
-      // alert notification toast
-      Toast.show({
-        type: ALERT_TYPE.DANGER,
-        title: "Registration failed",
-        textBody: "Choose email and password and then click Register!",
-      });
+
+      if (
+        isFirebaseError(error) &&
+        error.code === FIREBASE_ERROR_CODES.PERMISSION_DENIED &&
+        error.message === "REGISTRATION_NOT_ALLOWED"
+      ) {
+        useAlertStore
+          .getState()
+          .showAlert(
+            "Access restricted",
+            "This application is currently available only for invited reviewers.",
+          );
+        return;
+      }
+
+      useAlertStore
+        .getState()
+        .showAlert(
+          "Registration failed",
+          "Registration could not be completed. Please check your email address and try again.",
+        );
     } finally {
       setLoading(false);
     }
