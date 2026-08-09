@@ -7,8 +7,8 @@ process.env.FIREBASE_STORAGE_EMULATOR_HOST = "127.0.0.1:9199";
 
 if (!admin.apps.length) {
   admin.initializeApp({
-    projectId: "test-project",
-    storageBucket: "test-project.appspot.com",
+    projectId: "demo-test",
+    storageBucket: "demo-test.appspot.com",
   });
 }
 

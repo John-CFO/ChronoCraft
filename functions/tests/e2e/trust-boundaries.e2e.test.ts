@@ -14,6 +14,13 @@ import {
 } from "./setup";
 import { hotp } from "../../src/security/totpCore";
 import { totpEnrollAndVerify } from "./totp.helpers";
+import { admin } from "../../tests/firebaseAdminTest";
+import {
+  createUserWithEmailAndPassword,
+  getAuth,
+  connectAuthEmulator,
+} from "firebase/auth";
+import { initializeApp } from "firebase/app";
 
 ////////////////////////////////////////////////////////////////////////////////////
 
@@ -24,6 +31,31 @@ type CallResult = {
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
+
+// create a test app  for the independent tests using the whitelist
+const clientApp = initializeApp({
+  apiKey: "demo-test-api-key",
+  authDomain: "demo-test.firebaseapp.com",
+  projectId: "demo-test",
+});
+
+const auth = getAuth(clientApp);
+
+connectAuthEmulator(auth, "http://127.0.0.1:5001");
+
+const firestore = admin.firestore();
+
+// whitelist entry
+const createWhitelistEntry = async (email: string) => {
+  await firestore
+    .collection("auth")
+    .doc("reviewers")
+    .collection("reviewers")
+    .doc(email)
+    .set({
+      active: true,
+    });
+};
 
 // --- Helper functions for error handling ---
 
@@ -177,6 +209,32 @@ describe("Authentication Boundaries", () => {
     expectSuccess(loginNewUserRes);
   });
 
+  it("should reject registration when email is already registered (independentcity)", async () => {
+    const email = `duplicate-${Date.now()}@race-test.com`;
+
+    await createWhitelistEntry(email);
+
+    const first = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      "Password123!",
+    );
+
+    expect(first.user.email).toBe(email);
+
+    await expect(
+      createUserWithEmailAndPassword(auth, email, "Password123!"),
+    ).rejects.toMatchObject({
+      code: "auth/email-already-in-use",
+    });
+
+    const users = await admin.auth().listUsers(1000);
+
+    const matchingUsers = users.users.filter((user) => user.email === email);
+
+    expect(matchingUsers).toHaveLength(1);
+  });
+
   it("should return nextStage=authenticated on register", async () => {
     const uid = TEST_USERS[0].uid;
     const idToken = await getIdTokenForUser(uid);
@@ -230,6 +288,25 @@ describe("Authentication Boundaries", () => {
       functionName: "authValidatorFunction",
       idToken,
       body: { action: "login" },
+      isCallable: true,
+    });
+
+    expectSuccess(res);
+
+    const body = unwrapBody(res.body);
+    expect(body.nextStage).toBe("authenticated");
+  });
+
+  it("should allow existing user to login", async () => {
+    const uid = TEST_USERS[0].uid;
+    const idToken = await getIdTokenForUser(uid);
+
+    const res = await callFunction({
+      functionName: "authValidatorFunction",
+      idToken,
+      body: {
+        action: "login",
+      },
       isCallable: true,
     });
 

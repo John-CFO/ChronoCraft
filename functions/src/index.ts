@@ -42,6 +42,7 @@ if (!admin.apps.length) {
 }
 
 // HTTP handlers
+import { validateReviewerRegistration } from "./functions/beforeUserCreated";
 import { authValidator } from "./functions/authValidator.function";
 import { registerPushToken } from "./functions/registerPushToken.function";
 import { projectsAndWorkValidator } from "./functions/projectAndWorkValidator.function";
@@ -60,6 +61,8 @@ import { disableTotpHandler } from "./functions/disableTotp.function";
 
 // export functions
 export const authValidatorFunction = authValidator;
+
+export const beforeUserCreated = validateReviewerRegistration;
 
 export const projectsAndWorkValidatorFunction = projectsAndWorkValidator;
 
