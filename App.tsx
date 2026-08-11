@@ -7,7 +7,7 @@
 /////////////////////////////////////////////////////////////////////////////
 
 import { Text, TouchableOpacity } from "react-native";
-import React, { useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
@@ -49,6 +49,7 @@ import {
   ServiceProvider,
   useService,
 } from "./components/contexts/ServiceContext";
+import { initI18n } from "./components/services/lacalization/i18n";
 import { navigationRef } from "./navigation/NavigationRef";
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "./firebaseConfig";
 
@@ -318,6 +319,24 @@ const App = () => {
     return () => clearTimeout(timeoutId); // prevent memory leak
   }, []); // only run once
 
+  // state to check if i18n is ready
+  const [i18nReady, setI18nReady] = useState(false);
+
+  // hook to initialize i18n
+  useEffect(() => {
+    const initializeI18n = async () => {
+      try {
+        await initI18n();
+      } catch (error) {
+        console.error("[App] Failed to initialize i18n:", error);
+      } finally {
+        setI18nReady(true);
+      }
+    };
+
+    initializeI18n();
+  }, []);
+
   // hide splashscreen
   useEffect(() => {
     const hide = async () => {
@@ -406,7 +425,7 @@ const App = () => {
             <BottomSheetModalProvider>
               <NavigationContainer ref={navigationRef} onReady={() => {}}>
                 <CustomAlert />
-                {fontsLoaded && <AppNavigator />}
+                {fontsLoaded && i18nReady && <AppNavigator />}
               </NavigationContainer>
             </BottomSheetModalProvider>
           </GestureHandlerRootView>

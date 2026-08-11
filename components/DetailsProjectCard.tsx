@@ -8,6 +8,7 @@ import { View, Text } from "react-native";
 import React from "react";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
+import { useTranslation } from "react-i18next";
 
 import DigitalClock from "../components/DigitalClock";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
@@ -36,8 +37,14 @@ const DetailsProjectCard: React.FC<DetailsProjectCardProps> = () => {
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
+
+  const { t, i18n } = useTranslation();
+
+  console.log("[DetailsProjectCard] i18n.language:", i18n.language);
+  console.log("[DetailsProjectCard] resolvedLanguage:", i18n.resolvedLanguage);
+  console.log("[DetailsProjectCard] translation:", t("drawer.language"));
 
   return (
     <View>

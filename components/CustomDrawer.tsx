@@ -5,14 +5,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-import {
-  View,
-  Text,
-  ImageBackground,
-  Image,
-  ScrollView,
-  TouchableOpacity,
-} from "react-native";
+import { View, Text, Image, ScrollView, TouchableOpacity } from "react-native";
 import React, {
   useRef,
   useMemo,
@@ -42,6 +35,8 @@ import { useAccessibilityStore } from "../components/services/accessibility/acce
 import MFAButton from "./services/MFAButton";
 import MultiFactorModal from "./MultiFactorModal";
 import { logError } from "../lib/loggerClient";
+import LanguageButton from "./services/lacalization/LanguageButton";
+import LanguageModal from "./services/lacalization/LanguageModal";
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -67,6 +62,9 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
 
   // declare the auth context
   const { setUser, setStage } = useContext(AuthContext);
+
+  // declare state for language modal
+  const [languageModalVisible, setLanguageModalVisible] = useState(false);
 
   // declare state for 2FA modal
   const [mfaModalVisible, setMfaModalVisible] = useState(false);
@@ -357,10 +355,16 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         >
           <RestartTourButton userId={user?.uid || ""} />
           <AccessibilityToggleButton />
+          <LanguageButton onPress={() => setLanguageModalVisible(true)} />
           <MFAButton
             onPress={() => setMfaModalVisible(true)}
             isEnrolled={isEnrolled}
             disabled={isEnrolled === null}
+          />
+          {/* LanguageModal */}
+          <LanguageModal
+            visible={languageModalVisible}
+            onClose={() => setLanguageModalVisible(false)}
           />
         </View>
 
