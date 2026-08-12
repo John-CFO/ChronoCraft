@@ -41,7 +41,7 @@ const LanguageModal: React.FC<LanguageModalProps> = ({ visible, onClose }) => {
       return;
     }
 
-    AccessibilityInfo.announceForAccessibility(t("languageModalOpened"));
+    AccessibilityInfo.announceForAccessibility(t("drawer.languageModalOpened"));
 
     const timeout = setTimeout(() => {
       if (languageTitleRef.current) {
@@ -70,7 +70,7 @@ const LanguageModal: React.FC<LanguageModalProps> = ({ visible, onClose }) => {
   return (
     <Modal
       accessibilityViewIsModal
-      accessibilityLabel={t("languageModal")}
+      accessibilityLabel={t("drawer.languageModal")}
       isVisible={visible}
       backdropColor="black"
       onBackdropPress={onClose}
@@ -100,7 +100,7 @@ const LanguageModal: React.FC<LanguageModalProps> = ({ visible, onClose }) => {
 
         <View
           accessibilityRole="header"
-          accessibilityLabel={t("select Language")}
+          accessibilityLabel={t("drawer.selectLanguage")}
           style={{
             width: 330,
             height: 80,
@@ -120,7 +120,7 @@ const LanguageModal: React.FC<LanguageModalProps> = ({ visible, onClose }) => {
               marginRight: 9,
             }}
           >
-            {t("select Language")}
+            {t("drawer.selectLanguage")}
           </Text>
         </View>
 
@@ -149,7 +149,7 @@ const LanguageModal: React.FC<LanguageModalProps> = ({ visible, onClose }) => {
                 onPress={() => handleSelect(item.code)}
                 accessibilityRole="button"
                 accessibilityLabel={`${item.nativeName}${
-                  isSelected ? `, ${t("currentLanguage")}` : ""
+                  isSelected ? `, ${t("drawer.currentLanguage")}` : ""
                 }`}
                 accessibilityState={{
                   selected: isSelected,
@@ -235,8 +235,8 @@ const LanguageModal: React.FC<LanguageModalProps> = ({ visible, onClose }) => {
         >
           <Text
             accessible
-            accessibilityLabel={t("navigationTip")}
-            accessibilityHint={t("navigationTipHint")}
+            accessibilityLabel={t("drawer.navigationTip")}
+            accessibilityHint={t("drawer.navigationTipHint")}
             style={{
               fontSize: accessMode ? 20 : 18,
               color: accessMode ? "white" : "lightgrey",
@@ -245,7 +245,7 @@ const LanguageModal: React.FC<LanguageModalProps> = ({ visible, onClose }) => {
                 : "MPLUSLatin_ExtraLight",
             }}
           >
-            {t("swipe to close")}
+            {t("drawer.swipeToClose")}
           </Text>
         </View>
       </View>
