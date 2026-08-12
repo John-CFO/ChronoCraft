@@ -9,6 +9,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { useCopilot } from "react-native-copilot";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTranslation } from "react-i18next";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { useAccessibilityStore } from "../accessibility/accessibilityStore";
 
@@ -121,16 +122,11 @@ const CustomTooltip = () => {
                 borderRadius: 6,
               }}
             >
-              <Text
-                numberOfLines={1}
-                style={{
-                  color: accessMode ? "black" : "grey",
-                  fontSize: accessMode ? 18 : 14,
-                  fontWeight: "bold",
-                }}
-              >
-                {t("tour.skip")}
-              </Text>
+              <Ionicons
+                name="play-skip-forward-outline"
+                size={accessMode ? 26 : 22}
+                color={accessMode ? "black" : "grey"}
+              />
             </LinearGradient>
           </TouchableOpacity>
         )}
@@ -167,15 +163,11 @@ const CustomTooltip = () => {
                 borderRadius: 6,
               }}
             >
-              <Text
-                style={{
-                  color: "white",
-                  fontSize: accessMode ? 18 : 14,
-                  fontWeight: "bold",
-                }}
-              >
-                {t("tour.previous")}
-              </Text>
+              <Ionicons
+                name="play-back-outline"
+                size={accessMode ? 26 : 22}
+                color="white"
+              />
             </LinearGradient>
           </TouchableOpacity>
         )}
@@ -212,16 +204,11 @@ const CustomTooltip = () => {
                 borderRadius: 6,
               }}
             >
-              <Text
-                numberOfLines={1}
-                style={{
-                  color: "white",
-                  fontSize: accessMode ? 18 : 14,
-                  fontWeight: "bold",
-                }}
-              >
-                {t("tour.next")}
-              </Text>
+              <Ionicons
+                name="play-forward-outline"
+                size={accessMode ? 26 : 22}
+                color="white"
+              />
             </LinearGradient>
           </TouchableOpacity>
         ) : (
@@ -255,16 +242,11 @@ const CustomTooltip = () => {
                 borderRadius: 6,
               }}
             >
-              <Text
-                numberOfLines={1}
-                style={{
-                  color: "white",
-                  fontSize: accessMode ? 18 : 14,
-                  fontWeight: "bold",
-                }}
-              >
-                {t("tour.finish")}
-              </Text>
+              <Ionicons
+                name="checkmark"
+                size={accessMode ? 26 : 22}
+                color="white"
+              />
             </LinearGradient>
           </TouchableOpacity>
         )}
