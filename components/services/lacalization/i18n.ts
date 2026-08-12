@@ -87,8 +87,6 @@ export const initI18n = async (): Promise<void> => {
       escapeValue: false,
     },
   });
-
-  console.log("[i18n] Initialized:", i18n.language);
 };
 
 export const changeLanguage = async (
@@ -100,8 +98,6 @@ export const changeLanguage = async (
 
   await i18n.changeLanguage(language);
   await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, language);
-
-  console.log("[i18n] Language changed:", language);
 };
 
 export const getSupportedLanguages = (): readonly SupportedLanguage[] =>

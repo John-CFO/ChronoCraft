@@ -8,29 +8,23 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { useCopilot } from "react-native-copilot";
 import { LinearGradient } from "expo-linear-gradient";
+import { useTranslation } from "react-i18next";
 
 import { useAccessibilityStore } from "../accessibility/accessibilityStore";
 
 //////////////////////////////////////////////////////////////////////////////////////
 
-export interface TooltipProps {
-  labels: Labels;
-}
+const CustomTooltip = () => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
 
-export type Labels = Partial<
-  Record<"skip" | "previous" | "next" | "finish", string>
->;
-
-//////////////////////////////////////////////////////////////////////////////////////
-
-const CustomTooltip = ({ labels }: TooltipProps) => {
-  // get copilot hooks
+  // get copilot hooksback
   const { goToNext, goToPrev, stop, currentStep, isFirstStep, isLastStep } =
     useCopilot();
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
   // console.log("accessMode in LoginScreen:", accessMode);
 
@@ -99,8 +93,8 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
         {!isLastStep && (
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel={labels.skip ?? "Skip"}
-            accessibilityHint="End the tour and close the tooltip"
+            accessibilityLabel={t("tour.skip")}
+            accessibilityHint={t("tour.endTourHint")}
             onPress={handleStop}
             style={{
               height: 40,
@@ -135,7 +129,7 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
                   fontWeight: "bold",
                 }}
               >
-                {labels.skip ?? "Skip"}
+                {t("tour.skip")}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -145,8 +139,8 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
         {!isFirstStep && (
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel={labels.previous ?? "Previous"}
-            accessibilityHint="Back to the previous step"
+            accessibilityLabel={t("tour.previous")}
+            accessibilityHint={t("tour.previousStepHint")}
             onPress={handlePrev}
             style={{
               height: 40,
@@ -180,7 +174,7 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
                   fontWeight: "bold",
                 }}
               >
-                {labels.previous ?? "Previous"}
+                {t("tour.previous")}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -190,8 +184,8 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
         {!isLastStep ? (
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel={labels.next ?? "Next"}
-            accessibilityHint="Go to the next step"
+            accessibilityLabel={t("tour.next")}
+            accessibilityHint={t("tour.nextStepHint")}
             onPress={handleNext}
             style={{
               height: 40,
@@ -226,15 +220,15 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
                   fontWeight: "bold",
                 }}
               >
-                {labels.next ?? "Next"}
+                {t("tour.next")}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel={labels.finish ?? "Finish"}
-            accessibilityHint="End the tour and close the tooltip"
+            accessibilityLabel={t("tour.finish")}
+            accessibilityHint={t("tour.endTourHint")}
             onPress={handleStop}
             style={{
               height: 40,
@@ -269,7 +263,7 @@ const CustomTooltip = ({ labels }: TooltipProps) => {
                   fontWeight: "bold",
                 }}
               >
-                {labels.finish ?? "Finish"}
+                {t("tour.finish")}
               </Text>
             </LinearGradient>
           </TouchableOpacity>

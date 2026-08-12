@@ -17,6 +17,7 @@ import { useCopilot } from "react-native-copilot";
 import { doc, updateDoc } from "firebase/firestore";
 import { LinearGradient } from "expo-linear-gradient";
 import { AccessibilityInfo } from "react-native";
+import { useTranslation } from "react-i18next";
 
 import { FIREBASE_FIRESTORE } from "../../../firebaseConfig";
 import { useAlertStore } from "../customAlert/alertStore";
@@ -48,13 +49,16 @@ const TourButton: React.FC<TourButtonProps> = ({
   showTourCard,
   setShowTourCard,
 }) => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // initialize start the tour with the useCopilot hook
   const { start } = useCopilot();
 
   // hook to inform the user that the tour is active
   useEffect(() => {
     if (showTourCard) {
-      AccessibilityInfo.announceForAccessibility("Tour introduction is active");
+      AccessibilityInfo.announceForAccessibility(t("tour.introductionActive"));
     }
   }, [showTourCard]);
 
@@ -163,14 +167,16 @@ const TourButton: React.FC<TourButtonProps> = ({
       logError("TourButton/startTour", error);
       if (error instanceof Error) {
         useAlertStore.getState().showAlert(
-          error.message.includes("ScrollView") ? "Loading Error" : "Tour Error",
           error.message.includes("ScrollView")
-            ? "Please wait until the content is fully loaded"
-            : "An unexpected error occurred. Please try restarting the app.",
+            ? t("tour.errors.loading.title")
+            : t("tour.errors.general.title"),
+          error.message.includes("ScrollView")
+            ? t("tour.errors.loading.message")
+            : t("tour.errors.general.message"),
           error.message.includes("ScrollView")
             ? [
                 {
-                  text: "Retry",
+                  text: t("tour.retry"),
                   onPress: () => {
                     // delete previous timeout
                     if (tourTimeoutRef.current) {
@@ -179,7 +185,7 @@ const TourButton: React.FC<TourButtonProps> = ({
                     handleStartTour();
                   },
                 },
-                { text: "Cancel", style: "cancel" },
+                { text: t("tour.cancel"), style: "cancel" },
               ]
             : undefined,
         );
@@ -195,7 +201,7 @@ const TourButton: React.FC<TourButtonProps> = ({
       setShowTourCard(false);
       useAlertStore
         .getState()
-        .showAlert("Skip Tour", "You can start the tour later in the menu.");
+        .showAlert(t("tour.skipAlertTitle"), t("tour.skipAlertMessage"));
     } catch (error) {
       logError("TourButton/skipTour", error);
     }
@@ -207,7 +213,7 @@ const TourButton: React.FC<TourButtonProps> = ({
     <Animated.View
       accessible={true}
       accessibilityViewIsModal={true}
-      accessibilityLabel="Tour introduction modal"
+      accessibilityLabel={t("tour.introductionModal")}
       style={{
         position: "absolute",
         top: 0,
@@ -238,7 +244,7 @@ const TourButton: React.FC<TourButtonProps> = ({
         <Text
           accessible={true}
           accessibilityRole="header"
-          accessibilityLabel="Start Introducing Tour"
+          accessibilityLabel={t("tour.introductionTitle")}
           style={{
             color: "white",
             fontSize: 28,
@@ -247,7 +253,7 @@ const TourButton: React.FC<TourButtonProps> = ({
             textAlign: "center",
           }}
         >
-          Start {"\n"} Introducing Tour
+          {t("tour.introductionTitle")}
         </Text>
 
         <View
@@ -261,8 +267,8 @@ const TourButton: React.FC<TourButtonProps> = ({
           {/* PLAY Button */}
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel="Start introduction tour"
-            accessibilityHint="Begins a walkthrough of the app"
+            accessibilityLabel={t("tour.start")}
+            accessibilityHint={t("tour.startHint")}
             onPress={handleStartTour}
             style={{
               flex: 1,
@@ -290,7 +296,7 @@ const TourButton: React.FC<TourButtonProps> = ({
                   fontFamily: "MPLUSLatin_Bold",
                 }}
               >
-                PLAY
+                {t("tour.play")}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -298,8 +304,8 @@ const TourButton: React.FC<TourButtonProps> = ({
           {/* SKIP Button */}
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel="Skip introduction tour"
-            accessibilityHint="Skips the tour and returns to the app"
+            accessibilityLabel={t("tour.skip.label")}
+            accessibilityHint={t("tour.skip.hint")}
             onPress={handleSkipTour}
             style={{
               flex: 1,
@@ -327,7 +333,7 @@ const TourButton: React.FC<TourButtonProps> = ({
                   fontFamily: "MPLUSLatin_Bold",
                 }}
               >
-                SKIP
+                {t("tour.skip")}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
