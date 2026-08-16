@@ -5,6 +5,7 @@
 ///////////////////////////////////////////////////////////////////////////
 
 import { z } from "zod";
+import i18n from "../components/services/lacalization/i18n";
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -18,11 +19,11 @@ export const MarkedDateEntrySchema = z
     selected: z.boolean().optional(),
     color: z
       .string()
-      .regex(/^#?[0-9A-Fa-f]{3,8}$/, "invalid color")
+      .regex(/^#?[0-9A-Fa-f]{3,8}$/, i18n.t("validation.invalidColor"))
       .optional(),
     textColor: z
       .string()
-      .regex(/^#?[0-9A-Fa-f]{3,8}$/, "invalid textColor")
+      .regex(/^#?[0-9A-Fa-f]{3,8}$/, i18n.t("validation.invalidTextColor"))
       .optional(),
   })
   .strict();
@@ -69,7 +70,7 @@ export const FirestoreVacationSchema = z.object({
   uid: z.string(),
   startDate: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "startDate must be YYYY-MM-DD"),
+    .regex(/^\d{4}-\d{2}-\d{2}$/, i18n.t("validation.invalidStartDateFormat")),
   markedDates: MarkedDatesSchema,
   createdAt: timestampToDateRequired,
   reminderDuration: z.number().optional(),

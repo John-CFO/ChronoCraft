@@ -10,6 +10,7 @@ import React from "react";
 import { AntDesign } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { doc, deleteDoc } from "firebase/firestore";
+import { useTranslation } from "react-i18next";
 
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { useService } from "../components/contexts/ServiceContext";
@@ -31,6 +32,10 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
   if (!note) {
     return null;
   }
+
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // declare the useService hook
   const { serviceId } = useService();
 
@@ -43,21 +48,21 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
   );
 
   // function to handle note deletion in firestore
-  const handleDeletComment = async () => {
+  const handleDeleteComment = async () => {
     if (!serviceId) return;
 
     useAlertStore
       .getState()
       .showAlert(
-        "Attention!",
-        "Do you really want to delete the note? This action cannot be undone.",
+        t("notes.deleteConfirmationTitle"),
+        t("notes.deleteConfirmationMessage"),
         [
           {
-            text: "Cancel",
+            text: t("notes.cancel"),
             style: "cancel",
           },
           {
-            text: "Delete",
+            text: t("notes.deleteError"),
             onPress: async () => {
               const user = FIREBASE_AUTH.currentUser;
               if (!user) {
@@ -99,9 +104,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
     // card container
     <View
       accessible={true}
-      accessibilityLabel={`Note added at ${note.createdAt.toLocaleString()}. ${
-        note.comment
-      }`}
+      accessibilityLabel={`${t("notes.addedAt")} ${note.createdAt.toLocaleString()}. ${note.comment}`}
       style={{
         backgroundColor: "#191919",
         minWidth: 320,
@@ -124,7 +127,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
       <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
         {/*date information*/}
         <Text
-          accessibilityLabel={`Added at ${note.createdAt.toLocaleString()}`}
+          accessibilityLabel={`${t("notes.addedAt")} ${note.createdAt.toLocaleString()}`}
           style={{
             fontFamily: accessMode
               ? "MPLUSLatin_Bold"
@@ -133,14 +136,14 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
             color: accessMode ? "white" : "darkgrey",
           }}
         >
-          added at: {note.createdAt.toLocaleString()}
+          {t("notes.addedAt")}: {note.createdAt.toLocaleString()}
         </Text>
         {/*delete button*/}
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel="Delete this note"
-          accessibilityHint="Deletes the current note from the list"
-          onPress={handleDeletComment}
+          accessibilityLabel={t("notes.delete")}
+          accessibilityHint={t("notes.deleteHint")}
+          onPress={handleDeleteComment}
         >
           <AntDesign
             name="delete"
@@ -151,7 +154,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
       </View>
       {/*note content*/}
       <Text
-        accessibilityLabel={`Note text: ${note.comment}`}
+        accessibilityLabel={`${t("notes.content")}: ${note.comment}`}
         style={{
           fontFamily: "MPLUSLatin_Bold",
           fontSize: accessMode ? 20 : 18,

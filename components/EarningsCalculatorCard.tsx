@@ -18,6 +18,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { RouteProp, useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
+import { useTranslation } from "react-i18next";
 
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { updateProjectData } from "../components/FirestoreService";
@@ -52,6 +53,9 @@ const CopilotWalkthroughView = walkthroughable(View);
 const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
   projectId,
 }) => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // navigation
   const navigation = useNavigation();
   const { serviceId } = useService();
@@ -156,7 +160,12 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
   const handleSave = async () => {
     const user = FIREBASE_AUTH.currentUser;
     if (!user) {
-      useAlertStore.getState().showAlert("Error", "Authentication required");
+      useAlertStore
+        .getState()
+        .showAlert(
+          t("earningsCalculator.alerts.error"),
+          t("earningsCalculator.alerts.authenticationRequired"),
+        );
       return;
     }
 
@@ -171,18 +180,21 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
     if (!inputValidation.success) {
       const errorMessage =
         inputValidation.error.issues[0]?.message || "Invalid input";
-      useAlertStore.getState().showAlert("Invalid Input", errorMessage);
+      useAlertStore
+        .getState()
+        .showAlert(t("earningsCalculator.alerts.invalidInput"), errorMessage);
       return;
     }
 
     // logic validation
     if (rate < MIN_HOURLY_RATE || rate > MAX_HOURLY_RATE) {
-      useAlertStore
-        .getState()
-        .showAlert(
-          "Invalid Rate",
-          `Hourly rate must be between ${MIN_HOURLY_RATE} and ${MAX_HOURLY_RATE}`,
-        );
+      useAlertStore.getState().showAlert(
+        t("earningsCalculator.alerts.invalidRate"),
+        t("earningsCalculator.alerts.rateRange", {
+          min: MIN_HOURLY_RATE,
+          max: MAX_HOURLY_RATE,
+        }),
+      );
       return;
     }
     setSaving(true);
@@ -200,7 +212,12 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
       setRateInput("");
     } catch (error) {
       logError("EarningsCalculatorCard/saveHourlyRate", error);
-      useAlertStore.getState().showAlert("Error", "Failed to save hourly rate");
+      useAlertStore
+        .getState()
+        .showAlert(
+          t("earningsCalculator.alerts.error"),
+          t("earningsCalculator.alerts.saveFailed"),
+        );
     }
     setSaving(false);
   };
@@ -211,16 +228,18 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
       <CopilotStep
         name="Earnings-Calculator"
         order={3}
-        text="In this card you can set the hourly rate and the earnings will be calculated based on the time tracked by the Time-Tracker Card."
+        text={t("details.earningsCalculator.tourText")}
       >
         {/* Earnings Calculator Card */}
         <CopilotWalkthroughView
           accessible={true}
-          accessibilityLabel={`Earnings calculator. Total earnings ${Number(
-            totalEarnings || 0,
-          ).toFixed(2)} dollars. Your hourly rate is ${
-            hourlyRate || "not set yet"
-          }.`}
+          accessibilityLabel={t(
+            "details.earningsCalculator.accessibilityLabel",
+            {
+              totalEarnings: Number(totalEarnings || 0).toFixed(2),
+              hourlyRate: hourlyRate || t("details.earningsCalculator.notSet"),
+            },
+          )}
           style={{
             height: 420,
             marginBottom: 20,
@@ -244,14 +263,14 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
               textAlign: "center",
             }}
           >
-            Earnings-Calculator
+            {t("details.earningsCalculator.title")}
           </Text>
           {/* Total Earnings viewport */}
           <View
             accessible={true}
-            accessibilityLabel={`Total earnings ${Number(
-              totalEarnings || 0,
-            ).toFixed(2)} dollars`}
+            accessibilityLabel={t("details.earningsCalculator.totalEarnings", {
+              amount: Number(totalEarnings || 0).toFixed(2),
+            })}
             style={{
               width: "80%",
               height: 100,
@@ -284,8 +303,10 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
           >
             <TextInput
               accessible={true}
-              accessibilityLabel="Enter your hourly rate"
-              placeholder="Enter your hourly rate"
+              accessibilityLabel={t(
+                "details.earningsCalculator.hourlyRateInput",
+              )}
+              placeholder={t("details.earningsCalculator.hourlyRateInput")}
               placeholderTextColor={accessMode ? "white" : "grey"}
               keyboardType="numeric"
               value={rateInput}
@@ -311,7 +332,9 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
             <TouchableOpacity
               accessible={true}
               accessibilityLabel={
-                saving ? "Saving your hourly rate" : "Save hourly rate"
+                saving
+                  ? t("details.earningsCalculator.savingHourlyRate")
+                  : t("details.earningsCalculator.saveHourlyRate")
               }
               onPress={handleSave}
               style={{
@@ -343,7 +366,9 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
                     paddingRight: 10,
                   }}
                 >
-                  {saving ? "Saving..." : "Save"}
+                  {saving
+                    ? t("details.earningsCalculator.saving")
+                    : t("details.earningsCalculator.save")}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -352,8 +377,10 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
               accessible={true}
               accessibilityLabel={
                 hourlyRate
-                  ? `Your hourly rate is ${hourlyRate} dollars`
-                  : `No hourly rate set`
+                  ? t("details.earningsCalculator.currentHourlyRate", {
+                      hourlyRate,
+                    })
+                  : t("details.earningsCalculator.noHourlyRate")
               }
               style={{
                 width: "100%",
@@ -387,7 +414,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
                     fontFamily: "MPLUSLatin_Bold",
                   }}
                 >
-                  Your Hourly Rate:{" "}
+                  {t("details.earningsCalculator.yourHourlyRate")}:{" "}
                 </Text>
                 {hourlyRate}
               </Text>

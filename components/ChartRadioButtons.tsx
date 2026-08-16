@@ -6,6 +6,7 @@
 
 import { View, Text, TouchableOpacity } from "react-native";
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 
@@ -22,9 +23,12 @@ const ChartRadioButtons: React.FC<ChartRadioButtonsProps> = ({
   chartType,
   setChartType,
 }) => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
 
   return (
@@ -63,7 +67,7 @@ const ChartRadioButtons: React.FC<ChartRadioButtonsProps> = ({
           )}
         </View>
         <Text style={{ fontSize: accessMode ? 18 : 16, color: "white" }}>
-          Week
+          {t("chart.week")}
         </Text>
       </TouchableOpacity>
 
@@ -95,7 +99,7 @@ const ChartRadioButtons: React.FC<ChartRadioButtonsProps> = ({
           )}
         </View>
         <Text style={{ fontSize: accessMode ? 18 : 16, color: "white" }}>
-          Month
+          {t("chart.month")}
         </Text>
       </TouchableOpacity>
 
@@ -127,7 +131,7 @@ const ChartRadioButtons: React.FC<ChartRadioButtonsProps> = ({
           )}
         </View>
         <Text style={{ fontSize: accessMode ? 18 : 16, color: "white" }}>
-          Year
+          {t("chart.year")}
         </Text>
       </TouchableOpacity>
     </View>

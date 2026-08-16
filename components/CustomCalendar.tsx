@@ -13,6 +13,7 @@ import React, {
 } from "react";
 import { Calendar } from "react-native-calendars";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
+import { useTranslation } from "react-i18next";
 
 import { useCalendarStore } from "../components/CalendarState";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
@@ -38,12 +39,15 @@ const CopilotTouchableView = walkthroughable(View);
 
 const CustomCalendar = forwardRef<CustomCalendarRef, CustomCalendarProps>(
   (_, ref) => {
+    // useTranslation hook to access translations
+    const { t } = useTranslation();
+
     // initialize the useCalendarStore and setCurrentMonth
     const { markedDates } = useCalendarStore();
 
     // initialize the accessibility store
     const accessMode = useAccessibilityStore(
-      (state) => state.accessibilityEnabled
+      (state) => state.accessibilityEnabled,
     );
 
     // initialize currentMonth state
@@ -57,7 +61,7 @@ const CustomCalendar = forwardRef<CustomCalendarRef, CustomCalendarProps>(
     // hook to set the currentMonth when the earliestMarkedDate changes
     useEffect(() => {
       setCurrentMonth(
-        earliestMarkedDate || new Date().toISOString().split("T")[0]
+        earliestMarkedDate || new Date().toISOString().split("T")[0],
       );
     }, [earliestMarkedDate]);
 
@@ -78,13 +82,13 @@ const CustomCalendar = forwardRef<CustomCalendarRef, CustomCalendarProps>(
       <>
         {/* VacationScreen copilot tour step 1 */}
         <CopilotStep
-          name="Calendar"
+          name={t("calendar.title")}
           order={1}
-          text="In this area you can view your vacation-calendar."
+          text={t("calendar.tourText")}
         >
           <CopilotTouchableView
             accessible={true}
-            accessibilityLabel="Vacation calendar showing marked vacation days. Swipe left or right to change month."
+            accessibilityLabel={t("calendar.accessibilityLabel")}
           >
             {/* Calendar - style and handle options*/}
             <Calendar
@@ -143,7 +147,7 @@ const CustomCalendar = forwardRef<CustomCalendarRef, CustomCalendarProps>(
         </CopilotStep>
       </>
     );
-  }
+  },
 );
 
 export default CustomCalendar;

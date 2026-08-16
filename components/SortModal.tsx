@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import React, { useEffect, useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
+import { useTranslation } from "react-i18next";
 
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 
@@ -28,25 +29,26 @@ type SortModalFABProps = {
 
 /////////////////////////////////////////////////////////////////////////////
 
-// options to sort the projects
-const sortOptions = [
-  { label: "Newest first", value: "DATE_DESC" },
-  { label: "Oldest first", value: "DATE_ASC" },
-  { label: "Name A–Z", value: "NAME_ASC" },
-  { label: "Name Z–A", value: "NAME_DESC" },
-];
-
 const SortModalFAB = ({
   currentSort,
   onSortChange,
   onClose,
 }: SortModalFABProps) => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
+  // options to sort the projects
+  const sortOptions = [
+    { label: t("sort.options.newestFirst"), value: "DATE_DESC" },
+    { label: t("sort.options.oldestFirst"), value: "DATE_ASC" },
+    { label: t("sort.options.nameAZ"), value: "NAME_ASC" },
+    { label: t("sort.options.nameZA"), value: "NAME_DESC" },
+  ];
+
   // hook to announce accessibility
   useEffect(() => {
-    AccessibilityInfo.announceForAccessibility(
-      "Sort Modal opened. Please select a sort option.",
-    );
-  }, []);
+    AccessibilityInfo.announceForAccessibility(t("sort.modalOpened"));
+  }, [t]);
 
   // ref to navigate to sort title
   const sortTitleRef = useRef(null);
@@ -94,7 +96,7 @@ const SortModalFAB = ({
       {/* header */}
       <View
         accessibilityRole="header"
-        accessibilityLabel="Sort your projects"
+        accessibilityLabel={t("sort.title")}
         style={{
           width: 330,
           height: 80,
@@ -114,7 +116,7 @@ const SortModalFAB = ({
             marginRight: 9,
           }}
         >
-          Sort your projects
+          {t("sort.navigationText")}
         </Text>
       </View>
 
@@ -136,7 +138,9 @@ const SortModalFAB = ({
               }}
               onPress={() => handleSelect(item.value)}
               accessibilityRole="button"
-              accessibilityLabel={`Sort option: ${item.label}${isSelected ? ", selected" : ""}`}
+              accessibilityLabel={`${t("sort.optionAccessibility")}: ${item.label}${
+                isSelected ? `, ${t("sort.selected")}` : ""
+              }`}
               accessibilityState={{ selected: isSelected }}
             >
               {isSelected ? (
@@ -197,8 +201,8 @@ const SortModalFAB = ({
       >
         <Text
           accessible
-          accessibilityLabel="Navigation tip"
-          accessibilityHint="Swipe up or down to close"
+          accessibilityLabel={t("sort.navigationTip")}
+          accessibilityHint={t("sort.navigationHint")}
           style={{
             fontSize: accessMode ? 20 : 18,
             color: accessMode ? "white" : "lightgrey",
@@ -207,7 +211,7 @@ const SortModalFAB = ({
               : "MPLUSLatin_ExtraLight",
           }}
         >
-          swipe up or down to close
+          {t("sort.navigationText")}
         </Text>
       </View>
     </View>

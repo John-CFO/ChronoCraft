@@ -5,6 +5,7 @@
 //////////////////////////////////////////////////////////////////
 
 import { z } from "zod";
+import i18n from "../components/services/lacalization/i18n";
 
 //////////////////////////////////////////////////////////////////
 
@@ -20,8 +21,14 @@ const isValidLocalDocId = (id: unknown): id is string => {
  */
 export const MaxWorkHoursSchema = z.object({
   maxWorkHours: z.number().int().min(1).max(10000),
-  projectId: z.string().min(1).refine(isValidLocalDocId, "Invalid project ID"),
-  userId: z.string().min(1).refine(isValidLocalDocId, "Invalid user ID"),
+  projectId: z
+    .string()
+    .min(1)
+    .refine(isValidLocalDocId, i18n.t("validation.invalidProjectId")),
+  userId: z
+    .string()
+    .min(1)
+    .refine(isValidLocalDocId, i18n.t("validation.invalidUserId")),
 });
 
 export type MaxWorkHoursInput = z.infer<typeof MaxWorkHoursSchema>;

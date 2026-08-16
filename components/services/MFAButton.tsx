@@ -7,6 +7,7 @@
 import { View, Text, TouchableOpacity } from "react-native";
 import React from "react";
 import { AntDesign } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
 ////////////////////////////////////////////////////////////////////
 
@@ -23,10 +24,13 @@ const MFAButton: React.FC<MFAButtonProps> = ({
   isEnrolled,
   disabled,
 }) => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   return (
     <TouchableOpacity
       accessibilityRole="button"
-      accessibilityLabel="Multi Factor Authentication Settings"
+      accessibilityLabel={t("mfa.accessibility")}
       onPress={onPress}
       disabled={!!disabled}
       style={{ opacity: disabled ? 0.5 : 1 }}
@@ -52,7 +56,7 @@ const MFAButton: React.FC<MFAButtonProps> = ({
             fontSize: 22,
           }}
         >
-          {`MFA Settings ${isEnrolled ? "On" : "Off"}`}
+          {`${t("mfa.settings")} ${isEnrolled ? t("mfa.on") : t("mfa.off")}`}
         </Text>
       </View>
     </TouchableOpacity>

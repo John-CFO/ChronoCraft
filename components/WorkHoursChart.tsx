@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
+import { useTranslation } from "react-i18next";
 
 import WorkHoursState from "../components/WorkHoursState";
 import ChartRadioButtons from "./ChartRadioButtons";
@@ -31,6 +32,9 @@ import { logWarn } from "../lib/loggerClient";
 const CopilotWalkthroughView = walkthroughable(View);
 
 const WorkHoursChart = () => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // get the data from the WorkHoursState
   const { data } = WorkHoursState();
 
@@ -226,7 +230,7 @@ const WorkHoursChart = () => {
       const monthName = dateForMonth
         .toLocaleDateString("en-GB", { month: "short" })
         .replace(".", "");
-      return {
+      const chartItem = {
         label: monthName,
         originalDate: dateForMonth.toISOString(),
         plannedHours: monthlySums[key].planned,
@@ -234,6 +238,11 @@ const WorkHoursChart = () => {
           { value: monthlySums[key].expected, color: "gray" },
           { value: monthlySums[key].over, color: "aqua", marginBottom: 2 },
         ],
+      };
+
+      return {
+        ...chartItem,
+        accessibilityLabel: getAccessibilityBarLabel(chartItem),
       };
     });
   } else {
@@ -257,14 +266,19 @@ const WorkHoursChart = () => {
         // Excess: only if the time worked exceeds the planned hours
         const extraValue =
           workedDuration > plannedHours ? workedDuration - plannedHours : 0;
-        return {
+        const chartItem = {
           label: formattedDate,
           originalDate: item.workDay,
-          plannedHours, // for the tooltip needed
+          plannedHours,
           stacks: [
             { value: baseValue, color: "gray" },
             { value: extraValue, color: "aqua", marginBottom: 2 },
           ],
+        };
+
+        return {
+          ...chartItem,
+          accessibilityLabel: getAccessibilityBarLabel(chartItem),
         };
       })
       .filter((item: any) => item !== null);
@@ -329,13 +343,46 @@ const WorkHoursChart = () => {
     ? Math.max(2, Math.round(dynamicMaxValue)) // one section per hour
     : 4;
 
+  // function to calculate the accessibility bar label
+  const getAccessibilityBarLabel = (item: any) => {
+    const baseValue = item.stacks?.[0]?.value || 0;
+    const overHours = item.stacks?.[1]?.value || 0;
+    const planned = item.plannedHours || 0;
+
+    return t("workHoursChart.accessibilityBar", {
+      date: formatTooltipDate(item.originalDate, chartType),
+      worked: formatTime(baseValue),
+      expected: formatTime(planned),
+      over: formatTime(overHours),
+    });
+  };
+
+  // function to calculate the accessibility entry label
+  const getAccessibilityEntryLabel = (item: any) => {
+    const baseValue = item.stacks?.[0]?.value || 0;
+    const overHours = item.stacks?.[1]?.value || 0;
+    const planned = item.plannedHours || 0;
+
+    return t("workHoursChart.accessibilityEntry", {
+      date: formatTooltipDate(item.originalDate, chartType),
+      expected: formatTime(planned),
+      worked: formatTime(baseValue),
+      over:
+        overHours > 0
+          ? t("workHoursChart.accessibilityOverHours", {
+              hours: formatTime(overHours),
+            })
+          : "",
+    });
+  };
+
   return (
     <>
       {/* Worktime-Tracker Screen copilot tour step 2 */}
       <CopilotStep
         name="Work-Hours Chart"
         order={3}
-        text="This card shows the workhours and you overhours for the selected period. You can push on a bar to see the tracked details."
+        text={t("workHoursChart.copilotDescription")}
       >
         <CopilotWalkthroughView>
           {/* TouchableWithoutFeedback to close the tooltip */}
@@ -367,7 +414,7 @@ const WorkHoursChart = () => {
                   textAlign: "center",
                 }}
               >
-                Work-Hours Chart
+                {t("workHoursChart.title")}
               </Text>
 
               <ChartRadioButtons
@@ -451,7 +498,7 @@ const WorkHoursChart = () => {
                       color: "white",
                     }}
                   >
-                    Expected Hours
+                    {t("workHoursChart.expectedHours")}
                   </Text>
                 </View>
                 <View
@@ -476,7 +523,7 @@ const WorkHoursChart = () => {
                       color: "white",
                     }}
                   >
-                    Over Hours
+                    {t("workHoursChart.overHours")}
                   </Text>
                 </View>
               </View>
@@ -501,7 +548,7 @@ const WorkHoursChart = () => {
                     paddingHorizontal: 8,
                   }}
                   accessible={true}
-                  accessibilityLabel="Arbeitszeiten Übersicht"
+                  accessibilityLabel={t("workHoursChart.accessibilityOverview")}
                 >
                   {/* Header */}
                   <View style={{ width: "100%", alignItems: "center" }}>
@@ -515,7 +562,7 @@ const WorkHoursChart = () => {
                       }}
                       accessibilityRole="header"
                     >
-                      Worktime Overview
+                      {t("workHoursChart.overview")}
                     </Text>
                   </View>
 
@@ -538,10 +585,7 @@ const WorkHoursChart = () => {
                           alignItems: "center",
                         }}
                         accessible={true}
-                        accessibilityLabel={`${formatTooltipDate(item.originalDate, chartType)}, 
-            planed: ${formatTime(planned)} Hours,
-            worked: ${formatTime(baseValue)} Hours
-            ${overHours > 0 ? `, over: ${formatTime(overHours)} Hours` : ""}`}
+                        accessibilityLabel={getAccessibilityEntryLabel(item)}
                       >
                         {/* Date*/}
                         <Text
@@ -572,7 +616,7 @@ const WorkHoursChart = () => {
                                 fontSize: accessMode ? 16 : 14,
                               }}
                             >
-                              🎯 Expected:
+                              {t("workHoursChart.expected")}:
                             </Text>
                             <Text
                               style={{
@@ -599,7 +643,7 @@ const WorkHoursChart = () => {
                                 fontSize: accessMode ? 16 : 14,
                               }}
                             >
-                              ⏳ Worked:
+                              {t("workHoursChart.worked")}:
                             </Text>
                             <Text
                               style={{
@@ -626,7 +670,7 @@ const WorkHoursChart = () => {
                                   fontSize: accessMode ? 16 : 14,
                                 }}
                               >
-                                🚀 Over:
+                                {t("workHoursChart.over")}:
                               </Text>
                               <Text
                                 style={{
@@ -669,13 +713,21 @@ const WorkHoursChart = () => {
                   >
                     {`📅 ${formatTooltipDate(tooltipData.date, chartType)}`}
                   </Text>
+
                   <Text style={{ fontSize: 11, color: "white" }}>
                     {tooltipData.baseValue < tooltipData.plannedHours
-                      ? `⏳ Worked: ${formatTime(tooltipData.baseValue)}h`
-                      : `⏳ Expected: ${formatTime(tooltipData.baseValue)}h`}
+                      ? t("workHoursChart.tooltipWorked", {
+                          hours: formatTime(tooltipData.baseValue),
+                        })
+                      : t("workHoursChart.tooltipExpected", {
+                          hours: formatTime(tooltipData.baseValue),
+                        })}
                   </Text>
+
                   <Text style={{ fontSize: 11, color: "aqua" }}>
-                    {`🚀 Over: ${formatTime(tooltipData.overHours || 0)}h`}
+                    {t("workHoursChart.tooltipOver", {
+                      hours: formatTime(tooltipData.overHours || 0),
+                    })}
                   </Text>
                 </View>
               )}

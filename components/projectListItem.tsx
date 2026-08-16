@@ -15,6 +15,7 @@ import {
 import * as Animatable from "react-native-animatable";
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 import dayjs from "dayjs";
+import { useTranslation } from "react-i18next";
 
 import { normalizeCreatedAt } from "../components/helper/normalizeCreatedAt.helper";
 import { Project } from "../components/types/Project";
@@ -53,6 +54,9 @@ const ProjectListItem: React.FC<Props> = ({
   onAddNote,
   setLastItemHeight,
 }) => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // calculate animation
   const inputRange = [
     -1,
@@ -120,10 +124,14 @@ const ProjectListItem: React.FC<Props> = ({
         <TouchableOpacity
           onPress={() => onPress(item.id, item.name)}
           accessibilityRole="button"
-          accessibilityLabel={`Project ${item.name}, created on ${
-            dateObj ? dayjs(dateObj).format("DD MMMM YYYY") : "unknown date"
+          accessibilityLabel={`${t("projectListItem.project")} ${item.name}, ${t(
+            "projectListItem.createdOn",
+          )} ${
+            dateObj
+              ? dayjs(dateObj).format("DD MMMM YYYY")
+              : t("projectListItem.unknownDate")
           }`}
-          accessibilityHint="Tap to view project details"
+          accessibilityHint={t("projectListItem.viewDetails")}
           style={{ flex: 1 }}
         >
           <View style={{ height: "100%", width: "100%" }}>
@@ -139,7 +147,7 @@ const ProjectListItem: React.FC<Props> = ({
               </Text>
             ) : (
               <Text style={{ color: "gray", fontSize: 13 }}>
-                No date available
+                {t("projectListItem.noDate")}
               </Text>
             )}
             {/* Project name in the project container */}
@@ -173,8 +181,8 @@ const ProjectListItem: React.FC<Props> = ({
               onDelete(item.id);
             }}
             accessibilityRole="button"
-            accessibilityLabel="Delete the project"
-            accessibilityHint="Delete the project"
+            accessibilityLabel={t("projectListItem.delete")}
+            accessibilityHint={t("projectListItem.delete")}
           >
             <AntDesign
               name="delete"
@@ -186,8 +194,8 @@ const ProjectListItem: React.FC<Props> = ({
           <TouchableOpacity
             onPress={() => onAddNote(item.id)}
             accessibilityRole="button"
-            accessibilityLabel="Add a note"
-            accessibilityHint="Add a note. You can watch it in the details screen"
+            accessibilityLabel={t("projectListItem.addNote")}
+            accessibilityHint={t("projectListItem.addNoteHint")}
           >
             <MaterialIcons
               name="edit-note"

@@ -38,6 +38,7 @@ import {
   CopilotStep,
   walkthroughable,
 } from "react-native-copilot";
+import { useTranslation } from "react-i18next";
 
 import {
   FIREBASE_FIRESTORE,
@@ -85,6 +86,9 @@ const WalkthroughTouchableOpacity = walkthroughable(TouchableOpacity);
 const CopilotView = walkthroughable(View);
 
 const HomeScreen: React.FC = () => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // initialize the copilot offset
   const offset = useCopilotOffset();
 
@@ -273,8 +277,8 @@ const HomeScreen: React.FC = () => {
       useAlertStore
         .getState()
         .showAlert(
-          "Error",
-          "serviceId is missing. ServiceContext is not ready.",
+          t("homeScreen.alerts.error"),
+          t("homeScreen.alerts.serviceIdMissing"),
         );
       return;
     }
@@ -284,12 +288,20 @@ const HomeScreen: React.FC = () => {
     if (!trimmedName) {
       useAlertStore
         .getState()
-        .showAlert("Sorry", "Add a project title first to continue.");
+        .showAlert(
+          t("homeScreen.alerts.addProjectTitle"),
+          t("homeScreen.alerts.addProjectTitleMessage"),
+        );
       return;
     }
 
     if (trimmedName.length > 100) {
-      useAlertStore.getState().showAlert("Error", "Project name too long");
+      useAlertStore
+        .getState()
+        .showAlert(
+          t("homeScreen.alerts.error"),
+          t("homeScreen.alerts.projectNameTooLong"),
+        );
       return;
     }
 
@@ -318,7 +330,12 @@ const HomeScreen: React.FC = () => {
       Keyboard.dismiss();
     } catch (error) {
       logError("HomeScreen/createProject", error);
-      useAlertStore.getState().showAlert("Error", "Could not add project.");
+      useAlertStore
+        .getState()
+        .showAlert(
+          t("homeScreen.alerts.error"),
+          t("homeScreen.alerts.projectAddFailed"),
+        );
     }
   };
 
@@ -328,16 +345,16 @@ const HomeScreen: React.FC = () => {
       useAlertStore
         .getState()
         .showAlert(
-          "Attention!",
-          "Do you really want to delete the project? If you delete the project, all notes will be deleted as well.",
+          t("homeScreen.alerts.deleteConfirmationTitle"),
+          t("homeScreen.alerts.deleteConfirmationMessage"),
           [
             {
-              text: "Cancel",
+              text: t("common.cancel"),
               style: "cancel",
               onPress: () => {},
             },
             {
-              text: "Delete",
+              text: t("common.delete"),
               style: "destructive",
               onPress: async () => {
                 try {
@@ -543,7 +560,7 @@ const HomeScreen: React.FC = () => {
                 <View
                   accessible
                   accessibilityRole="header"
-                  accessibilityLabel="Your Projects"
+                  accessibilityLabel={t("homeScreen.title")}
                   style={{
                     width: "100%",
                     height: 50,
@@ -560,13 +577,13 @@ const HomeScreen: React.FC = () => {
                       color: "white",
                     }}
                   >
-                    - Your Projects -
+                    {`- ${t("homeScreen.title")} -`}
                   </Text>
                 </View>
 
                 {/* CopilotStep wrapped around the SortModal button - Step 1 */}
                 <CopilotStep
-                  text="Here you can sort your projects by priority"
+                  text={t("homeScreen.tour.sort")}
                   name="sort"
                   order={1}
                 >
@@ -591,8 +608,8 @@ const HomeScreen: React.FC = () => {
                     onPress={openSortModal}
                     activeOpacity={0.7}
                     accessibilityRole="button"
-                    accessibilityLabel="Sort"
-                    accessibilityHint="Sort your projects by priority"
+                    accessibilityLabel={t("homeScreen.sort")}
+                    accessibilityHint={t("homeScreen.sortHint")}
                     accessibilityState={{ expanded: true }}
                   >
                     <LinearGradient
@@ -668,7 +685,7 @@ const HomeScreen: React.FC = () => {
                   >
                     <Text
                       accessible
-                      accessibilityLabel="You haven't any projects yet."
+                      accessibilityLabel={t("homeScreen.emptyProjects")}
                       style={{
                         textAlign: "center",
                         color: "white",
@@ -678,7 +695,7 @@ const HomeScreen: React.FC = () => {
                           : "MPLUSLatin_ExtraLight",
                       }}
                     >
-                      You haven't any projects yet.
+                      {t("homeScreen.emptyProjects")}
                     </Text>
                   </View>
                 )}
@@ -721,13 +738,13 @@ const HomeScreen: React.FC = () => {
                         color: "white",
                         backgroundColor: "#191919",
                       }}
-                      placeholder={`Add new Project${dots}`}
+                      placeholder={t("homeScreen.projectInput", { dots })}
                       placeholderTextColor={accessMode ? "white" : "grey"}
                       accessible={true}
                       importantForAccessibility="yes"
                       returnKeyType="next"
-                      accessibilityLabel="Project input"
-                      accessibilityHint="Enter the name of your project here."
+                      accessibilityLabel={t("homeScreen.projectInputLabel")}
+                      accessibilityHint={t("homeScreen.projectInputHint")}
                       editable={true}
                       onChangeText={(text) =>
                         setNewProjectName(sanitizeTitle(text))
@@ -738,7 +755,7 @@ const HomeScreen: React.FC = () => {
 
                     {/* Copilot tour for the HomeScreen step 2 */}
                     <CopilotStep
-                      text="Enter the name of your project here."
+                      text={t("homeScreen.tour.projectName")}
                       order={2}
                       name="Add Name"
                     >
@@ -759,7 +776,7 @@ const HomeScreen: React.FC = () => {
 
                   {/* Copilot tour for the HomeScreen step 3 */}
                   <CopilotStep
-                    text="Add the project."
+                    text={t("homeScreen.tour.addProject")}
                     order={3}
                     name="Add Project"
                   >
@@ -769,8 +786,8 @@ const HomeScreen: React.FC = () => {
                       onPress={handleAddProject}
                       activeOpacity={0.7}
                       accessibilityRole="button"
-                      accessibilityLabel="Add Project"
-                      accessibilityHint="Button to add a new project"
+                      accessibilityLabel={t("homeScreen.addProject")}
+                      accessibilityHint={t("homeScreen.addProjectHint")}
                       style={{
                         width: 50,
                         height: 50,

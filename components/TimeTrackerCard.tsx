@@ -31,6 +31,7 @@ import { useRoute, RouteProp } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
+import { useTranslation } from "react-i18next";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { computeEarnings } from "./utils/earnings";
@@ -88,6 +89,9 @@ function formatTime(seconds: number, showMs = false): string {
 }
 
 const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // initialize the routing
   const route = useRoute<TimeTrackerRouteProp>();
 
@@ -617,9 +621,9 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
       useAlertStore
         .getState()
         .showAlert(
-          "Attention!",
-          "Please stop the project first before resetting it.",
-          [{ text: "OK", style: "default" }],
+          t("timeTracker.attention"),
+          t("timeTracker.resetStopFirst"),
+          [{ text: t("common.ok"), style: "default" }],
         );
       return;
     }
@@ -627,16 +631,16 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
     useAlertStore
       .getState()
       .showAlert(
-        "Attention!",
-        "Do you really want to reset the project? If you reset the project, all data will be deleted.",
+        t("timeTracker.attention"),
+        t("timeTracker.resetConfirmation"),
         [
           {
-            text: "Cancel",
+            text: t("common.cancel"),
             onPress: () => {},
             style: "cancel",
           },
           {
-            text: "Reset",
+            text: t("common.reset"),
             style: "destructive",
             onPress: async () => {
               try {
@@ -671,9 +675,9 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
     <View>
       {/* DetailsScreen copilot tour step 4 */}
       <CopilotStep
-        name="Time-Tracker"
+        name={t("timeTracker.copilot.name")}
         order={4}
-        text="The Time Tracker Card lets you track your working time on this project and shows the session state."
+        text={t("timeTracker.copilot.text")}
       >
         {/* Time Tracker Card */}
         <CopilotWalkthroughView
@@ -691,7 +695,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
           <Text
             accessible={true}
             accessibilityRole="header"
-            accessibilityLabel="Time-Tracker"
+            accessibilityLabel={t("timeTracker.title")}
             style={{
               fontFamily: "MPLUSLatin_Bold",
               fontSize: accessMode ? 28 : 25,
@@ -700,7 +704,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
               textAlign: "center",
             }}
           >
-            Time-Tracker
+            {t("timeTracker.title")}
           </Text>
 
           <View
@@ -714,7 +718,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
             {/* Timer */}
             <Text
               accessible={true}
-              accessibilityLabel={`Tracking Time: ${formattedTime}`}
+              accessibilityLabel={t("timeTracker.trackingTime")}
               style={{
                 fontWeight: "bold",
                 fontSize: 55,
@@ -743,6 +747,11 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
             {/* Start Button | Stop Button */}
             <TouchableOpacity
               onPress={isRunning ? handleStop : handleStart}
+              accessibilityLabel={
+                isRunning
+                  ? t("timeTracker.stopTracking")
+                  : t("timeTracker.startTracking")
+              }
               activeOpacity={0.8}
               style={{
                 width: 140,
@@ -816,8 +825,12 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
             <TouchableOpacity
               accessible={true}
               accessibilityRole="button"
-              accessibilityLabel={resetting ? "Resetting" : "Reset the project"}
-              accessibilityHint="Press to reset the project"
+              accessibilityLabel={
+                resetting ? t("timeTracker.resetting") : t("timeTracker.reset")
+              }
+              accessibilityHint={t("timeTracker.resetHint")}
+              accessibilityState={{ disabled: resetting, busy: resetting }}
+              disabled={resetting}
               onPress={handleReset}
               style={{
                 width: screenWidth * 0.7,
@@ -849,7 +862,9 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
                     paddingRight: 10,
                   }}
                 >
-                  {resetting ? "Resetting..." : "Reset"}
+                  {resetting
+                    ? t("timeTracker.resetting")
+                    : t("timeTracker.reset")}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -877,8 +892,10 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
               accessible={true}
               accessibilityLabel={
                 endTime instanceof Date
-                  ? `Last session ended on ${endTime.toLocaleString()}`
-                  : `No last session available`
+                  ? t("timeTracker.lastSessionEnded", {
+                      date: endTime.toLocaleString(),
+                    })
+                  : t("timeTracker.noLastSession")
               }
             >
               <Text
@@ -889,8 +906,11 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
                   marginBottom: 5,
                 }}
               >
-                <Text style={{ color: accessMode ? "white" : "grey" }}>
-                  Last Session:
+                <Text
+                  accessible={false}
+                  style={{ color: accessMode ? "white" : "grey" }}
+                >
+                  {t("timeTracker.lastSession")}
                 </Text>
                 {"\n"}
                 {endTime instanceof Date ? endTime.toLocaleString() : "- - - "}
@@ -902,8 +922,10 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
               accessible={true}
               accessibilityLabel={
                 lastStartTime instanceof Date
-                  ? `Last tracking started on ${lastStartTime.toLocaleString()}`
-                  : `No tracking start time available`
+                  ? t("timeTracker.lastTrackingStarted", {
+                      date: lastStartTime.toLocaleString(),
+                    })
+                  : t("timeTracker.noTrackingStartTime")
               }
             >
               <Text
@@ -914,8 +936,11 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
                   marginBottom: 5,
                 }}
               >
-                <Text style={{ color: accessMode ? "white" : "grey" }}>
-                  Last Tracking Started:
+                <Text
+                  accessible={false}
+                  style={{ color: accessMode ? "white" : "grey" }}
+                >
+                  {t("timeTracker.lastTrackingStartedLabel")}
                 </Text>
                 {"\n"}
                 {lastStartTime instanceof Date
@@ -929,8 +954,10 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
               accessible={true}
               accessibilityLabel={
                 originalStartTime instanceof Date
-                  ? `Original tracking started on ${originalStartTime.toLocaleString()}`
-                  : `No original tracking start time available`
+                  ? t("timeTracker.originalTrackingStarted", {
+                      date: originalStartTime.toLocaleString(),
+                    })
+                  : t("timeTracker.noOriginalTrackingStartTime")
               }
             >
               <Text
@@ -941,8 +968,11 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
                   marginBottom: 5,
                 }}
               >
-                <Text style={{ color: accessMode ? "white" : "grey" }}>
-                  Original Tracking Started:
+                <Text
+                  accessible={false}
+                  style={{ color: accessMode ? "white" : "grey" }}
+                >
+                  {t("timeTracker.originalTrackingStartedLabel")}
                 </Text>
                 {"\n"}
                 {originalStartTime instanceof Date

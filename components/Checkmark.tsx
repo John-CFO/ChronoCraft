@@ -14,6 +14,7 @@ import {
   Dimensions,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useTranslation } from "react-i18next";
 
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 
@@ -29,12 +30,15 @@ const CheckmarkReminder: React.FC<CheckmarkReminderProps> = ({
   onSelect,
   selectedOption,
 }) => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
   // console.log("accessMode in LoginScreen:", accessMode);
 
@@ -116,7 +120,13 @@ const CheckmarkReminder: React.FC<CheckmarkReminderProps> = ({
           <TouchableOpacity
             accessible={true}
             accessibilityRole="button"
-            accessibilityLabel={`Reminder ${["in 1 Day", "in 3 Days", "in 7 Days"][index]}`}
+            accessibilityLabel={
+              [
+                t("reminder.in1Day"),
+                t("reminder.in3Days"),
+                t("reminder.in7Days"),
+              ][index]
+            }
             accessibilityState={{ selected: selectedOption === index }}
             key={index}
             onPress={() => handlePress(index)}
@@ -163,7 +173,11 @@ const CheckmarkReminder: React.FC<CheckmarkReminderProps> = ({
           maxWidth: 350,
         }}
       >
-        {["1 Day", "3 Days", "7 Days"].map((label, index) => (
+        {[
+          t("reminder.oneDay"),
+          t("reminder.threeDays"),
+          t("reminder.sevenDays"),
+        ].map((label, index) => (
           <Text
             accessible={false} // disable accessibility for the text because screen reader reads the checkmark points
             key={index}

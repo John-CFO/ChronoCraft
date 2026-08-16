@@ -31,6 +31,7 @@ import {
   AlertNotificationRoot,
 } from "react-native-alert-notification";
 import { BlurView } from "expo-blur";
+import { useTranslation } from "react-i18next";
 
 import { NotificationManager } from "../components/services/PushNotifications";
 import { FIREBASE_APP } from "../firebaseConfig";
@@ -62,6 +63,9 @@ type RegisterScreenNavigationProp = StackNavigationProp<
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 const LoginScreen: React.FC = () => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
 
@@ -90,8 +94,9 @@ const LoginScreen: React.FC = () => {
   const validateLoginInputs = () => {
     const parsed = LoginInputSchema.safeParse({ email, password });
     if (!parsed.success) {
-      const msg = parsed.error.issues[0]?.message ?? "Invalid input";
-      useAlertStore.getState().showAlert("Validation Error", msg);
+      const msg = parsed.error.issues[0]?.message ?? t("auth.invalidInput");
+
+      useAlertStore.getState().showAlert(t("auth.validationError"), msg);
       return false;
     }
     return true;
@@ -101,8 +106,9 @@ const LoginScreen: React.FC = () => {
   const validateRegisterInputs = () => {
     const parsed = RegisterInputSchema.safeParse({ email, password });
     if (!parsed.success) {
-      const msg = parsed.error.issues[0]?.message ?? "Invalid input";
-      useAlertStore.getState().showAlert("Validation Error", msg);
+      const msg = parsed.error.issues[0]?.message ?? t("auth.invalidInput");
+
+      useAlertStore.getState().showAlert(t("auth.validationError"), msg);
       return false;
     }
     return true;
@@ -124,7 +130,7 @@ const LoginScreen: React.FC = () => {
       logError("LoginScreen/login", error);
       useAlertStore
         .getState()
-        .showAlert("Login failed", "Something went wrong, please try again!");
+        .showAlert(t("auth.loginFailed"), t("auth.somethingWentWrongTryAgain"));
     } finally {
       setLoading(false);
     }
@@ -175,8 +181,8 @@ const LoginScreen: React.FC = () => {
         useAlertStore
           .getState()
           .showAlert(
-            "Access restricted",
-            "This application is currently available only for invited reviewers.",
+            t("auth.accessRestricted"),
+            t("auth.invitedReviewersOnly"),
           );
         return;
       }
@@ -184,8 +190,8 @@ const LoginScreen: React.FC = () => {
       useAlertStore
         .getState()
         .showAlert(
-          "Registration failed",
-          "Registration could not be completed. Please check your email address and try again.",
+          t("auth.registrationFailed"),
+          t("auth.registrationCouldNotBeCompleted"),
         );
     } finally {
       setLoading(false);

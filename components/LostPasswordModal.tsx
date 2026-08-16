@@ -16,6 +16,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import Modal from "react-native-modal";
 import { httpsCallable } from "firebase/functions";
+import { useTranslation } from "react-i18next";
 
 import { FIREBASE_FUNCTIONS } from "../firebaseConfig";
 import { useAlertStore } from "./services/customAlert/alertStore";
@@ -36,6 +37,9 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
   visible,
   onClose,
 }) => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
 
@@ -60,7 +64,10 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
       // condition: if no email is entered show an alert
       useAlertStore
         .getState()
-        .showAlert("Error", "Please enter a valid email address.");
+        .showAlert(
+          t("passwordReset.alerts.error"),
+          t("passwordReset.alerts.invalidEmail"),
+        );
       sendingRef.current = false;
       setSending(false);
       return;
@@ -77,21 +84,21 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
       useAlertStore
         .getState()
         .showAlert(
-          "Email sent",
-          "If an account exists for that email, you will receive instructions to reset your password.",
+          t("passwordReset.alerts.emailSent"),
+          t("passwordReset.alerts.emailSentMessage"),
         );
 
       onClose();
 
       // cooldown for 1 minute
       setCooldown(60);
-      const t = setInterval(
+      const cooldownInterval = setInterval(
         () => setCooldown((c) => (c && c > 0 ? c - 1 : null)),
         1000,
       );
 
       setTimeout(() => {
-        clearInterval(t);
+        clearInterval(cooldownInterval);
         setCooldown(null);
       }, 60000);
     } catch (err: any) {
@@ -101,8 +108,8 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
         useAlertStore
           .getState()
           .showAlert(
-            "Too many attempts",
-            "Please wait a minute before trying again.",
+            t("passwordReset.alerts.tooManyAttempts"),
+            t("passwordReset.alerts.rateLimitMessage"),
           );
         return;
       }
@@ -110,8 +117,8 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
       useAlertStore
         .getState()
         .showAlert(
-          "Error",
-          "Something went wrong. Please try again later. If the problem persists, contact support.",
+          t("passwordReset.alerts.error"),
+          t("passwordReset.alerts.generalError"),
         );
     } finally {
       sendingRef.current = false;
@@ -132,8 +139,8 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
     <Modal
       accessible={true}
       accessibilityViewIsModal={true}
-      accessibilityLabel="Reset password modal"
-      accessibilityHint="Modal dialog to reset your password."
+      accessibilityLabel={t("passwordReset.modal")}
+      accessibilityHint={t("passwordReset.modalHint")}
       isVisible={visible}
       backdropColor="black"
       onBackdropPress={onClose}
@@ -169,7 +176,7 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
               marginBottom: 11,
             }}
           >
-            Reset Password
+            {t("passwordReset.title")}
           </Text>
 
           {/* email input */}
@@ -198,7 +205,7 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
             }}
           >
             <TextInput
-              placeholder={`E-Mail Adress${dots}`}
+              placeholder={`${t("passwordReset.emailPlaceholder")}${dots}`}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -207,8 +214,8 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
               accessible={true}
               importantForAccessibility="yes"
               returnKeyType="next"
-              accessibilityLabel="Email input"
-              accessibilityHint="Please enter your email address to receive a password reset link."
+              accessibilityLabel={t("passwordReset.emailInput")}
+              accessibilityHint={t("passwordReset.emailInputHint")}
               style={{
                 borderColor: "aqua",
                 borderWidth: 1.5,
@@ -229,8 +236,8 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
           <TouchableOpacity
             onPress={handlePasswordReset}
             accessibilityRole="button"
-            accessibilityLabel="Reset Password"
-            accessibilityHint="Send E-Mail to get a reset link"
+            accessibilityLabel={t("passwordReset.resetButton")}
+            accessibilityHint={t("passwordReset.resetButtonHint")}
             accessibilityState={{ disabled: sending ? true : false }}
             style={{
               width: screenWidth * 0.7, // use 70% of the screen width
@@ -281,7 +288,7 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
                         width: 100,
                       }}
                     >
-                      Sending
+                      {t("passwordReset.sending")}
                     </Text>
                     <Text
                       style={{
@@ -306,7 +313,7 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
                       textAlign: "center",
                     }}
                   >
-                    Send Reset Link
+                    {t("passwordReset.sendResetLink")}
                   </Text>
                 )}
               </View>
@@ -316,8 +323,8 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
           {/* navigation tip */}
           <Text
             accessible
-            accessibilityLabel="Navigation tip"
-            accessibilityHint="Swipe up or down to close"
+            accessibilityLabel={t("passwordReset.navigationTip")}
+            accessibilityHint={t("passwordReset.navigationHint")}
             style={{
               marginTop: 20,
               fontSize: accessMode ? 20 : 18,
@@ -327,7 +334,7 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
                 : "MPLUSLatin_ExtraLight",
             }}
           >
-            swipe up or down to close
+            {t("passwordReset.navigationHint")}
           </Text>
         </View>
       </View>

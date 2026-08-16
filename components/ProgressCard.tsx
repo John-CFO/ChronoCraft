@@ -11,7 +11,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   useWindowDimensions,
   Animated,
 } from "react-native";
@@ -20,6 +19,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import CircularProgress from "react-native-circular-progress-indicator";
 import { doc, updateDoc, getDoc } from "firebase/firestore";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
+import { useTranslation } from "react-i18next";
 
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useService } from "../components/contexts/ServiceContext";
@@ -48,6 +48,9 @@ const CopilotWalkthroughView = walkthroughable(View);
 
 const ProgressCard: React.FC<ProgressCardProps> = memo(
   ({ projectId, onSaveSuccess }) => {
+    // useTranslation hook to access translations
+    const { t } = useTranslation();
+
     // initialize the navigation
     const navigation = useNavigation();
     const { serviceId } = useService();
@@ -116,8 +119,10 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
         if (!user) {
           useAlertStore
             .getState()
-            .showAlert("Error", "Authentication required");
-
+            .showAlert(
+              t("progress.alerts.error"),
+              t("progress.alerts.authenticationRequired"),
+            );
           logError("ProgressCard:auth", "Missing authentication");
           return;
         }
@@ -136,7 +141,12 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
 
           const projectSnap = await getDoc(projectRef);
           if (!projectSnap.exists()) {
-            useAlertStore.getState().showAlert("Error", "Project not found");
+            useAlertStore
+              .getState()
+              .showAlert(
+                t("progress.alerts.error"),
+                t("progress.alerts.notAuthorized"),
+              );
 
             logError("ProgressCard:updateMaxWorkHours", "Project not found");
             return;
@@ -144,7 +154,12 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
 
           const projectData = projectSnap.data();
           if (projectData.userId !== user.uid) {
-            useAlertStore.getState().showAlert("Error", "Not authorized");
+            useAlertStore
+              .getState()
+              .showAlert(
+                t("progress.alerts.error"),
+                t("progress.alerts.notAuthorized"),
+              );
 
             logError(
               "ProgressCard:updateMaxWorkHours",
@@ -162,7 +177,10 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
 
           useAlertStore
             .getState()
-            .showAlert("Error", "Failed to save. Try again.");
+            .showAlert(
+              t("progress.alerts.error"),
+              t("progress.alerts.saveFailed"),
+            );
         }
       }, 500),
       [projectId, setProjectData, onSaveSuccess, serviceId],
@@ -172,7 +190,12 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
     const handleSave = () => {
       const user = FIREBASE_AUTH.currentUser;
       if (!user) {
-        useAlertStore.getState().showAlert("Error", "Authentication required");
+        useAlertStore
+          .getState()
+          .showAlert(
+            t("progress.alerts.error"),
+            t("progress.alerts.authenticationRequired"),
+          );
 
         logError("ProgressCard:auth", "Missing authentication");
         return;
@@ -190,7 +213,10 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
       if (!validationResult.success) {
         useAlertStore
           .getState()
-          .showAlert("Invalid input", "Please enter hours between 1 and 10000");
+          .showAlert(
+            t("progress.alerts.invalidInput"),
+            t("progress.alerts.hoursRange"),
+          );
 
         logError("ProgressCard:invalidInput", "Invalid input");
 
@@ -237,8 +263,8 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
       if (progressPercent >= 100 && !hasNotifiedRef.current) {
         hasNotifiedRef.current = true;
         NotificationManager.scheduleNotification(
-          "Target reached 🎯",
-          "You reached your Deathline target!",
+          t("progress.notification.targetReached"),
+          t("progress.notification.targetReachedMessage"),
           { seconds: 5 },
         );
       }
@@ -300,18 +326,19 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
       <View>
         {/* DetailsScreen copilot tour step 4*/}
         <CopilotStep
-          name="Deathline Tracker"
+          name={t("progress.copilot.name")}
           order={4}
-          text="The Deathline-Tracker shows you how close you are to your deadline. Add your maximum of workhours to your project."
+          text={t("progress.copilot.text")}
         >
           <CopilotWalkthroughView
             accessible={true}
             accessibilityLabel={
               maxWorkHours > 0 && timer > 0
-                ? `Deadline tracker. ${(displayProgress * 100).toFixed(
-                    1,
-                  )} percent of your maximum work time used. Your deadline is ${maxWorkHours} hours.`
-                : `Deadline tracker. No deadline set.`
+                ? t("progress.progress.tracker", {
+                    percent: (displayProgress * 100).toFixed(1),
+                    hours: maxWorkHours,
+                  })
+                : t("progress.progress.noDeadline")
             }
             style={{
               alignSelf: "center",
@@ -344,7 +371,7 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
                 textAlign: "center",
               }}
             >
-              Deadline-Tracker
+              {t("progress.title")}
             </Text>
             {/* Instructions */}
             <Text
@@ -359,13 +386,13 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
                 marginBottom: 10,
               }}
             >
-              "Add your maximum allowed work time"
+              {t("progress.instructions")}
             </Text>
             {/* Input field to enter max work hours */}
             <TextInput
               accessible={true}
-              accessibilityLabel="Enter your maximum allowed work hours"
-              placeholder="(e.g. 5 hours)"
+              accessibilityLabel={t("progress.inputAccessibility")}
+              placeholder={t("progress.inputPlaceholder")}
               placeholderTextColor={accessMode ? "white" : "grey"}
               value={inputMaxWorkHours}
               keyboardType="numeric"
@@ -394,8 +421,8 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
               accessible={true}
               accessibilityLabel={
                 saving
-                  ? "Saving your maximum work hours"
-                  : "Save maximum work hours"
+                  ? t("progress.savingAccessibility")
+                  : t("progress.saveAccessibility")
               }
               onPress={handleSave}
               disabled={saving}
@@ -430,7 +457,7 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
                     paddingRight: 10,
                   }}
                 >
-                  {saving ? "Saving..." : "Save"}
+                  {saving ? t("progress.saving") : t("progress.save")}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -440,8 +467,10 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
               accessible={true}
               accessibilityLabel={
                 progressValueInteger != null
-                  ? `Progress ${progressValueInteger} percent`
-                  : `No progress yet`
+                  ? t("progress.progress.label", {
+                      percent: progressValueInteger,
+                    })
+                  : t("progress.progress.noProgress")
               }
               style={{
                 position: "relative",
@@ -510,9 +539,9 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
             {maxWorkHours > 0 && timer > 0 && (
               <Text
                 accessible={true}
-                accessibilityLabel={`${(displayProgress * 100).toFixed(
-                  1,
-                )} percent of your maximum work time used`}
+                accessibilityLabel={t("progress.progress.used", {
+                  percent: (displayProgress * 100).toFixed(1),
+                })}
                 style={{
                   color: "white",
                   fontFamily: accessMode
@@ -532,13 +561,15 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
                 >
                   {(displayProgress * 100).toFixed(1)}%{" "}
                 </Text>{" "}
-                of your max work time used
+                {t("progress.progress.usedShort")}
               </Text>
             )}
             {/* Deadline Info */}
             <View
               accessible={true}
-              accessibilityLabel={`Your deadline is ${maxWorkHours} hours`}
+              accessibilityLabel={t("progress.deadline.accessibility", {
+                hours: maxWorkHours,
+              })}
               style={{
                 width: "100%",
                 height: 50,
@@ -567,7 +598,7 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
                   marginRight: 5,
                 }}
               >
-                Your Deadline:
+                {t("progress.deadline.label")}
               </Text>
               <Text
                 style={{

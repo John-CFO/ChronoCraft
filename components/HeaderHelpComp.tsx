@@ -7,12 +7,16 @@
 import React, { useState } from "react";
 import { View, TouchableOpacity } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
 import HelpMenu from "./HelpMenu";
 
 /////////////////////////////////////////////////////////////////////////
 
 const HeaderHelpComponent = ({ navigation }: { navigation: any }) => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // initial state
   const [isHelpMenuVisible, setHelpMenuVisible] = useState(false);
   // function to open or close the help menu
@@ -24,8 +28,8 @@ const HeaderHelpComponent = ({ navigation }: { navigation: any }) => {
       <TouchableOpacity
         onPress={openDropdown}
         accessibilityRole="button"
-        accessibilityLabel="Help Menu"
-        accessibilityHint="Opens the help menu to inform us about any issues or bugs"
+        accessibilityLabel={t("help.titleAccessibility")}
+        accessibilityHint={t("help.openHint")}
         accessibilityState={{ expanded: isHelpMenuVisible }}
         style={{ marginRight: 10 }}
       >

@@ -6,6 +6,7 @@
 ////////////////////////////////////////////////////////////////////////
 
 import { z } from "zod";
+import i18n from "../components/services/lacalization/i18n";
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -19,14 +20,14 @@ export const FirestoreUserUpdateSchema = z
       .optional()
       .transform((s) => (s === "" ? undefined : s))
       .refine((s) => s === undefined || (s.length >= 1 && s.length <= 100), {
-        message: "Display name must be between 1 and 100 chars",
+        message: i18n.t("validation.displayNameLength"),
       }),
     personalNumber: z
       .string()
       .optional()
       .transform((s) => (s === "" ? undefined : s))
       .refine((s) => s === undefined || /^[0-9A-Za-z\-_]{4,30}$/.test(s), {
-        message: "Invalid personal ID",
+        message: i18n.t("validation.invalidPersonalId"),
       }),
     photoURL: z.url().optional(),
   })

@@ -6,6 +6,7 @@
 
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
+import { useTranslation } from "react-i18next";
 
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 
@@ -24,6 +25,9 @@ const YearSelector: React.FC<YearSelectorProps> = ({
   selectedYear,
   onChange,
 }) => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   const accessMode = useAccessibilityStore(
     (state) => state.accessibilityEnabled,
   );
@@ -50,6 +54,9 @@ const YearSelector: React.FC<YearSelectorProps> = ({
       }}
     >
       <Text
+        accessible={true}
+        accessibilityRole="header"
+        accessibilityLabel={t("yearSelector.title")}
         style={{
           color: "white",
           fontSize: accessMode ? 18 : 16,
@@ -57,7 +64,7 @@ const YearSelector: React.FC<YearSelectorProps> = ({
           marginBottom: 8,
         }}
       >
-        Year
+        {t("yearSelector.title")}
       </Text>
 
       <View
@@ -68,6 +75,17 @@ const YearSelector: React.FC<YearSelectorProps> = ({
         }}
       >
         <TouchableOpacity
+          accessible={true}
+          accessibilityRole="button"
+          accessibilityLabel={t("yearSelector.previousYear")}
+          accessibilityHint={
+            currentIndex >= years.length - 1
+              ? t("yearSelector.previousYearUnavailable")
+              : t("yearSelector.previousYearHint")
+          }
+          accessibilityState={{
+            disabled: currentIndex >= years.length - 1,
+          }}
           onPress={selectPreviousYear}
           disabled={currentIndex >= years.length - 1}
           style={{
@@ -76,6 +94,7 @@ const YearSelector: React.FC<YearSelectorProps> = ({
           }}
         >
           <Text
+            accessible={false}
             style={{
               color: currentIndex >= years.length - 1 ? "gray" : "aqua",
               fontSize: 24,
@@ -86,6 +105,11 @@ const YearSelector: React.FC<YearSelectorProps> = ({
         </TouchableOpacity>
 
         <View
+          accessible={true}
+          accessibilityRole="text"
+          accessibilityLabel={t("yearSelector.selectedYear", {
+            year: selectedYear,
+          })}
           style={{
             minWidth: 90,
             paddingVertical: 8,
@@ -98,6 +122,7 @@ const YearSelector: React.FC<YearSelectorProps> = ({
           }}
         >
           <Text
+            accessible={false}
             style={{
               color: "white",
               fontSize: accessMode ? 18 : 16,
@@ -109,6 +134,17 @@ const YearSelector: React.FC<YearSelectorProps> = ({
         </View>
 
         <TouchableOpacity
+          accessible={true}
+          accessibilityRole="button"
+          accessibilityLabel={t("yearSelector.nextYear")}
+          accessibilityHint={
+            currentIndex <= 0
+              ? t("yearSelector.nextYearUnavailable")
+              : t("yearSelector.nextYearHint")
+          }
+          accessibilityState={{
+            disabled: currentIndex <= 0,
+          }}
           onPress={selectNextYear}
           disabled={currentIndex <= 0}
           style={{
@@ -117,6 +153,7 @@ const YearSelector: React.FC<YearSelectorProps> = ({
           }}
         >
           <Text
+            accessible={false}
             style={{
               color: currentIndex <= 0 ? "gray" : "aqua",
               fontSize: 24,

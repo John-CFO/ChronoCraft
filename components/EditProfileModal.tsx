@@ -21,6 +21,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { getAuth } from "firebase/auth";
 import * as ImagePicker from "expo-image-picker";
 import { doc, getDoc } from "firebase/firestore";
+import { useTranslation } from "react-i18next";
 
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { MergedUser } from "../components/types/CustomUser";
@@ -49,9 +50,12 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   onClose,
   user,
 }) => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // hook to announce accessibility
   useEffect(() => {
-    AccessibilityInfo.announceForAccessibility("Edit profile modal opened");
+    AccessibilityInfo.announceForAccessibility(t("profile.edit.modalOpened"));
   }, []);
 
   // ref to navigate to the profile title
@@ -119,8 +123,8 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
         useAlertStore
           .getState()
           .showAlert(
-            "Permission Error",
-            "Sorry, we need camera roll permissions to make this work!",
+            t("profile.edit.alerts.permissionError"),
+            t("profile.edit.alerts.cameraRollPermission"),
           );
       }
     };
@@ -141,7 +145,10 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
     } else {
       useAlertStore
         .getState()
-        .showAlert("No Image Selected", "You did not select any image.");
+        .showAlert(
+          t("profile.edit.alerts.noImageSelected"),
+          t("profile.edit.alerts.noImageSelectedMessage"),
+        );
     }
   };
 
@@ -203,7 +210,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
           <View
             accessible
             accessibilityRole="header"
-            accessibilityLabel="Profile Settings"
+            accessibilityLabel={t("profile.edit.modal")}
             style={{
               width: 330,
               height: 80,
@@ -223,7 +230,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 marginBottom: 11,
               }}
             >
-              Profile Settings
+              {t("profile.edit.title")}
             </Text>
           </View>
 
@@ -242,8 +249,8 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
               <TouchableOpacity
                 onPress={pickImage}
                 accessibilityRole="button"
-                accessibilityLabel="Upload profile image"
-                accessibilityHint="Button to upload a profile image"
+                accessibilityLabel={t("profile.edit.uploadImage")}
+                accessibilityHint={t("profile.edit.uploadImageHint")}
               >
                 <View
                   style={{
@@ -308,9 +315,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
             >
               <TextInput
                 accessible
-                accessibilityLabel="Name Input"
-                accessibilityHint="Enter your name"
-                placeholder="Name"
+                accessibilityLabel={t("profile.edit.nameInput")}
+                accessibilityHint={t("profile.edit.nameInputHint")}
+                placeholder={t("profile.edit.name")}
                 placeholderTextColor={accessMode ? "white" : "grey"}
                 value={newName}
                 onChangeText={(text) => setNewName(sanitizeName(text))}
@@ -344,9 +351,9 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
               <TextInput
                 accessible
-                accessibilityLabel="Personal ID Input"
-                accessibilityHint="Enter your personal ID"
-                placeholder="Personal-ID"
+                accessibilityLabel={t("profile.edit.personalIdInput")}
+                accessibilityHint={t("profile.edit.personalIdInputHint")}
+                placeholder={t("profile.edit.personalId")}
                 placeholderTextColor={accessMode ? "white" : "grey"}
                 value={newPersonalNumber}
                 onChangeText={(text) =>
@@ -384,9 +391,11 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
               <TouchableOpacity
                 accessibilityRole="button"
                 accessibilityLabel={
-                  saving ? "Updating profile" : "Save changes"
+                  saving
+                    ? t("profile.edit.updatingProfile")
+                    : t("profile.edit.saveChanges")
                 }
-                accessibilityHint="Saves your updated name and personal ID"
+                accessibilityHint={t("profile.edit.saveChangesHint")}
                 accessibilityState={{ busy: saving }}
                 onPress={handleSave}
                 style={{
@@ -438,7 +447,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                             width: 100,
                           }}
                         >
-                          Updating
+                          {t("profile.edit.updating")}
                         </Text>
                         <Text
                           style={{
@@ -463,7 +472,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                           textAlign: "center",
                         }}
                       >
-                        Update
+                        {t("profile.edit.update")}
                       </Text>
                     )}
                   </View>
@@ -482,8 +491,8 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
               {/* navigation tip */}
               <Text
                 accessible
-                accessibilityLabel="Navigation tip"
-                accessibilityHint="Swipe up or down to close"
+                accessibilityLabel={t("profile.edit.navigationTip")}
+                accessibilityHint={t("profile.edit.navigationTipHint")}
                 style={{
                   marginTop: accessMode ? 10 : 20,
                   fontSize: accessMode ? 20 : 18,
@@ -493,7 +502,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                     : "MPLUSLatin_ExtraLight",
                 }}
               >
-                swipe up or down to close
+                {t("profile.edit.swipeToClose")}
               </Text>
             </View>
           </View>

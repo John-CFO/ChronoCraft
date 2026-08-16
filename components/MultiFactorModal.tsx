@@ -18,6 +18,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import QRCode from "react-native-qrcode-svg";
 import { getAuth } from "firebase/auth";
 import { httpsCallable } from "firebase/functions";
+import { useTranslation } from "react-i18next";
 
 import { FIREBASE_APP, FIREBASE_FUNCTIONS } from "../firebaseConfig";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
@@ -66,6 +67,9 @@ const MultiFactorModal: React.FC<Props> = ({
   onEnrolled,
   onDisabled,
 }) => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // declarations
   const auth = getAuth(FIREBASE_APP);
   const user = auth.currentUser;
@@ -117,35 +121,33 @@ const MultiFactorModal: React.FC<Props> = ({
           useAlertStore
             .getState()
             .showAlert(
-              "TOTP Enrollment Started",
-              "Scan the QR code with your authenticator app.",
+              t("mfaModal.enrollmentStarted"),
+              t("mfaModal.enrollmentStartedMessage"),
               [
                 {
-                  text: "OK",
+                  text: t("mfaModal.ok"),
                   style: "default",
                 },
               ],
             );
         });
       } else {
-        throw new Error("No OTP URL received from server");
+        throw new Error(t("mfaModal.noOtpUrl"));
       }
     } catch (error: any) {
       logError("MultiFactorModal/startEnroll", error);
 
-      let errorMessage =
-        error.message || "Cannot start TOTP enrollment. Please try again.";
+      let errorMessage = t("mfaModal.cannotStart");
 
       // spezific error handling messages
       if (error.code === "functions/not-found") {
-        errorMessage =
-          "Function not found. Please make sure the function is deployed.";
+        errorMessage = t("mfaModal.functionNotFound");
       } else if (error.code === "functions/permission-denied") {
-        errorMessage = "Permission denied. Please log in again.";
+        errorMessage = t("mfaModal.permissionDenied");
       }
 
       InteractionManager.runAfterInteractions(() => {
-        useAlertStore.getState().showAlert("Error", errorMessage);
+        useAlertStore.getState().showAlert(t("mfaModal.error"), errorMessage);
       });
     } finally {
       setLoading(false);
@@ -158,7 +160,7 @@ const MultiFactorModal: React.FC<Props> = ({
     if (tokenInput.length !== 6) {
       useAlertStore
         .getState()
-        .showAlert("Error", "Please enter a valid 6-digit code.");
+        .showAlert(t("mfaModal.error"), t("mfaModal.invalidCode"));
       return;
     }
 
@@ -207,30 +209,29 @@ const MultiFactorModal: React.FC<Props> = ({
 
           useAlertStore
             .getState()
-            .showAlert(
-              "Success",
-              "Multi-factor-authentication enabled successfully!",
-            );
+            .showAlert(t("mfaModal.success"), t("mfaModal.enabled"));
         }, 0);
 
         return;
       } else {
         useAlertStore
           .getState()
-          .showAlert("Error", data.message || "Invalid TOTP code");
+          .showAlert(
+            t("mfaModal.error"),
+            data.message || t("mfaModal.invalidTotpCode"),
+          );
       }
     } catch (error: any) {
       logError("MultiFactorModal/confirmEnroll", error);
 
-      let errorMessage = error.message || "Failed to verify TOTP";
+      let errorMessage = t("mfaModal.verifyFailed");
       if (error.code === "functions/invalid-argument") {
-        errorMessage =
-          "Invalid TOTP code. Please enter a valid 6-digit number.";
+        errorMessage = t("mfaModal.invalidTotpCodeDetailed");
       } else if (error.code === "functions/failed-precondition") {
-        errorMessage = "TOTP not initialized. Please activate TOTP first.";
+        errorMessage = t("mfaModal.totpNotInitialized");
       }
 
-      useAlertStore.getState().showAlert("Error", errorMessage);
+      useAlertStore.getState().showAlert(t("mfaModal.error"), errorMessage);
     } finally {
       if (isMounted.current) setLoading(false);
     }
@@ -275,10 +276,7 @@ const MultiFactorModal: React.FC<Props> = ({
 
           useAlertStore
             .getState()
-            .showAlert(
-              "Multi-factor-authentication deactivated",
-              data.message || "MFA disabled successfully!",
-            );
+            .showAlert(t("mfaModal.disabled"), t("mfaModal.disabledMessage"));
 
           // release UI freeze after alert is shown
           freezeRef.current = false;
@@ -292,7 +290,7 @@ const MultiFactorModal: React.FC<Props> = ({
       logError("MultiFactorModal/disableTotp", err);
       useAlertStore
         .getState()
-        .showAlert("Error", err.message || "Cannot disable MFA.");
+        .showAlert(t("mfaModal.error"), t("mfaModal.cannotDisable"));
     } finally {
       if (isMounted.current) setLoading(false);
     }
@@ -324,7 +322,7 @@ const MultiFactorModal: React.FC<Props> = ({
       <View
         accessibilityViewIsModal={true}
         accessible={true}
-        accessibilityLabel="Multi-Factor-Authentication Dialog"
+        accessibilityLabel={t("mfa.modal")}
         style={{
           flex: 1,
           justifyContent: "center",
@@ -357,7 +355,7 @@ const MultiFactorModal: React.FC<Props> = ({
               marginBottom: 11,
             }}
           >
-            Multi Factor Authentication
+            {t("mfa.modal")}
           </Text>
 
           <View
@@ -379,7 +377,7 @@ const MultiFactorModal: React.FC<Props> = ({
             <>
               <Text
                 accessibilityRole="text"
-                accessibilityLabel="Multi-factor-authentication is currently enabled."
+                accessibilityLabel={t("mfa.enabled")}
                 style={{
                   textAlign: "center",
                   marginBottom: accessMode ? 20 : 10,
@@ -390,15 +388,15 @@ const MultiFactorModal: React.FC<Props> = ({
                     : "MPLUSLatin_ExtraLight",
                 }}
               >
-                Multi-Factor Authentication is currently enabled.
+                {t("mfa.enabled")}
               </Text>
 
               {/* DISABLE Button */}
               <TouchableOpacity
                 accessible={true}
                 accessibilityRole="button"
-                accessibilityLabel="Disable Multi Factor"
-                accessibilityHint="Disables multi factor authentication"
+                accessibilityLabel={t("mfa.disableAccessibility")}
+                accessibilityHint={t("mfa.disableHint")}
                 accessibilityState={{ busy: loading }}
                 onPress={disableTotp}
                 style={{
@@ -451,7 +449,7 @@ const MultiFactorModal: React.FC<Props> = ({
                             flexShrink: 0,
                           }}
                         >
-                          Disabling
+                          {t("mfa.disabling")}
                         </Text>
 
                         <Text
@@ -478,7 +476,7 @@ const MultiFactorModal: React.FC<Props> = ({
                           textAlign: "center",
                         }}
                       >
-                        DISABLE
+                        {t("mfa.disable")}
                       </Text>
                     )}
                   </View>
@@ -489,7 +487,7 @@ const MultiFactorModal: React.FC<Props> = ({
               <TouchableOpacity
                 accessible={true}
                 accessibilityRole="button"
-                accessibilityLabel="Close"
+                accessibilityLabel={t("mfa.close")}
                 onPress={onClose}
                 style={{
                   width: screenWidth * 0.7,
@@ -522,7 +520,7 @@ const MultiFactorModal: React.FC<Props> = ({
                       textAlign: "center",
                     }}
                   >
-                    CLOSE
+                    {t("mfa.close")}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -533,7 +531,7 @@ const MultiFactorModal: React.FC<Props> = ({
                 <>
                   <Text
                     accessibilityRole="text"
-                    accessibilityLabel="Setting up TOTP with an authenticator app (Google Authenticator, Authy)."
+                    accessibilityLabel={t("mfa.setupDescription")}
                     style={{
                       marginBottom: 30,
                       textAlign: "center",
@@ -545,16 +543,15 @@ const MultiFactorModal: React.FC<Props> = ({
                         : "MPLUSLatin_ExtraLight",
                     }}
                   >
-                    Setting up TOTP with an authenticator app (Google
-                    Authenticator, Authy).
+                    {t("mfa.setupDescription")}
                   </Text>
 
                   {/* ACTIVATE */}
                   <TouchableOpacity
                     accessible={true}
                     accessibilityRole="button"
-                    accessibilityLabel="Activate Multi Factor"
-                    accessibilityHint="Activates multi factor authentication"
+                    accessibilityLabel={t("mfa.activateAccessibility")}
+                    accessibilityHint={t("mfa.activateHint")}
                     accessibilityState={{ busy: loading }}
                     onPress={startEnroll}
                     style={{
@@ -608,7 +605,7 @@ const MultiFactorModal: React.FC<Props> = ({
                                 flexShrink: 0,
                               }}
                             >
-                              Activating
+                              {t("mfa.activating")}
                             </Text>
 
                             <Text
@@ -635,7 +632,7 @@ const MultiFactorModal: React.FC<Props> = ({
                               textAlign: "center",
                             }}
                           >
-                            ACTIVATE
+                            {t("mfa.activate")}
                           </Text>
                         )}
                       </View>
@@ -646,7 +643,7 @@ const MultiFactorModal: React.FC<Props> = ({
                   <TouchableOpacity
                     accessible={true}
                     accessibilityRole="button"
-                    accessibilityLabel="Skip"
+                    accessibilityLabel={t("mfa.skip")}
                     onPress={onClose}
                     style={{
                       width: screenWidth * 0.7,
@@ -686,7 +683,7 @@ const MultiFactorModal: React.FC<Props> = ({
                             textAlign: "center",
                           }}
                         >
-                          SKIP
+                          {t("mfa.skip")}
                         </Text>
                       </View>
                     </LinearGradient>
@@ -698,7 +695,7 @@ const MultiFactorModal: React.FC<Props> = ({
                   {otpUrl && (
                     <View
                       accessible={true}
-                      accessibilityLabel="QR Code for the Multi Factor Authentication"
+                      accessibilityLabel={t("mfa.qrCodeAccessibility")}
                       accessibilityRole="image"
                       style={{
                         marginBottom: 20,
@@ -717,8 +714,7 @@ const MultiFactorModal: React.FC<Props> = ({
                       paddingHorizontal: 10,
                     }}
                   >
-                    Scan this QR code with your authenticator app (Google
-                    Authenticator, Authy, etc.)
+                    {t("mfa.scanQrCode")}
                   </Text>
 
                   <OTPInput
@@ -730,8 +726,8 @@ const MultiFactorModal: React.FC<Props> = ({
                   <TouchableOpacity
                     accessible={true}
                     accessibilityRole="button"
-                    accessibilityLabel="Confirm TOTP"
-                    accessibilityHint="Confirms the TOTP code"
+                    accessibilityLabel={t("mfa.confirmAccessibility")}
+                    accessibilityHint={t("mfa.confirmHint")}
                     accessibilityState={{ busy: loading }}
                     onPress={confirmEnroll}
                     style={{
@@ -790,7 +786,7 @@ const MultiFactorModal: React.FC<Props> = ({
                                 flexShrink: 0,
                               }}
                             >
-                              Confirming
+                              {t("mfa.confirming")}
                             </Text>
 
                             <Text
@@ -816,7 +812,7 @@ const MultiFactorModal: React.FC<Props> = ({
                               textAlign: "center",
                             }}
                           >
-                            CONFIRM
+                            {t("mfa.confirm")}
                           </Text>
                         )}
                       </View>
@@ -827,7 +823,7 @@ const MultiFactorModal: React.FC<Props> = ({
                   <TouchableOpacity
                     accessible={true}
                     accessibilityRole="button"
-                    accessibilityLabel="Cancel TOTP enrollment"
+                    accessibilityLabel={t("mfa.cancelAccessibility")}
                     onPress={() => {
                       setOtpUrl(null);
                       setEnrollmentStarted(false);
@@ -864,7 +860,7 @@ const MultiFactorModal: React.FC<Props> = ({
                           textAlign: "center",
                         }}
                       >
-                        CANCEL
+                        {t("mfa.cancel")}
                       </Text>
                     </LinearGradient>
                   </TouchableOpacity>

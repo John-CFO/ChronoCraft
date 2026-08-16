@@ -11,6 +11,7 @@ import { getAuth, Auth } from "firebase/auth";
 import { doc } from "firebase/firestore";
 import { CopilotProvider } from "react-native-copilot";
 import { getDoc } from "firebase/firestore";
+import { useTranslation } from "react-i18next";
 
 import { FIREBASE_APP, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import WorkHoursInput from "../components/WorkHoursInput";
@@ -34,6 +35,9 @@ type WorkHoursScreenRouteProps = {
 //////////////////////////////////////////////////////////////////////////////////////
 
 const WorkHoursScreen: React.FC<WorkHoursScreenRouteProps> = () => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // initialize the copilot offset
   const offset = useCopilotOffset();
 
@@ -169,7 +173,7 @@ const WorkHoursScreen: React.FC<WorkHoursScreenRouteProps> = () => {
               <Text
                 accessibilityRole="header"
                 accessible
-                accessibilityLabel="Workhours Management"
+                accessibilityLabel={t("workHoursScreen.header")}
                 style={{
                   fontSize: 25,
                   fontFamily: "MPLUSLatin_Bold",
@@ -177,7 +181,7 @@ const WorkHoursScreen: React.FC<WorkHoursScreenRouteProps> = () => {
                   marginBottom: 50,
                 }}
               >
-                - Workhours Management -
+                - {t("workHoursScreen.header")} -
               </Text>
               {/* WorkHours Input */}
               <WorkHoursInput />

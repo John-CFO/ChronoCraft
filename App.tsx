@@ -29,6 +29,7 @@ import { CopilotProvider } from "react-native-copilot";
 import { AccessibilityInfo } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { doc, getDoc } from "firebase/firestore";
+import { useTranslation } from "react-i18next";
 
 import MfaScreen from "./Screens/MfaScreen";
 import LoginScreen from "./Screens/LoginScreen";
@@ -69,6 +70,9 @@ const Drawer = createDrawerNavigator();
 
 // function to create the app drawer navigator
 const AppDrawerNavigator = () => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   return (
     <CopilotProvider>
       <Drawer.Navigator
@@ -100,7 +104,10 @@ const AppDrawerNavigator = () => {
           // function to change the icon color when focused
           options={{
             drawerLabel: ({ focused }) => (
-              <CustomDrawerLabel focused={focused} title="Home" />
+              <CustomDrawerLabel
+                focused={focused}
+                title={t("drawer.navigation.home")}
+              />
             ),
             drawerActiveTintColor: "white",
             drawerInactiveTintColor: "darkgrey",
@@ -109,7 +116,7 @@ const AppDrawerNavigator = () => {
                 name="home"
                 size={26}
                 color={focused ? "white" : "darkgrey"}
-                accessibilityLabel="Home"
+                accessibilityLabel={t("drawer.navigation.home")}
                 accessibilityRole="image"
                 accessibilityState={{ selected: focused }}
               />
@@ -126,14 +133,17 @@ const AppDrawerNavigator = () => {
             drawerInactiveTintColor: "darkgrey",
 
             drawerLabel: ({ focused }) => (
-              <CustomDrawerLabel focused={focused} title="Work-Hours" />
+              <CustomDrawerLabel
+                focused={focused}
+                title={t("drawer.navigation.workHours")}
+              />
             ),
             drawerIcon: ({ focused }) => (
               <MaterialCommunityIcons
                 name="clock-edit-outline"
                 size={24}
                 color={focused ? "white" : "darkgrey"}
-                accessibilityLabel="Work Hours"
+                accessibilityLabel={t("drawer.navigation.workHours")}
                 accessibilityRole="image"
                 accessibilityState={{ selected: focused }}
               />
@@ -146,7 +156,10 @@ const AppDrawerNavigator = () => {
           options={{
             // function to change the icon color when focused
             drawerLabel: ({ focused }) => (
-              <CustomDrawerLabel focused={focused} title="Vacation" />
+              <CustomDrawerLabel
+                focused={focused}
+                title={t("drawer.navigation.vacation")}
+              />
             ),
             drawerActiveTintColor: "white",
             drawerInactiveTintColor: "darkgrey",
@@ -155,7 +168,7 @@ const AppDrawerNavigator = () => {
                 name="island"
                 size={24}
                 color={focused ? "white" : "darkgrey"}
-                accessibilityLabel="Vacation"
+                accessibilityLabel={t("drawer.navigation.vacation")}
                 accessibilityRole="image"
                 accessibilityState={{ selected: focused }}
               />
@@ -188,6 +201,9 @@ SplashScreen.preventAutoHideAsync();
 
 // AppNavigator - reads Context for Routing
 const AppNavigator = () => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   const { serviceId } = useService();
   const { stage, isMFAEnabled } = useContext(AuthContext);
   const lastRouteRef = React.useRef<string | null>(null);
@@ -279,8 +295,8 @@ const AppNavigator = () => {
                     useAlertStore
                       .getState()
                       .showAlert(
-                        "Project is still running.",
-                        "You can't leave the app. Please stop the project first.",
+                        t("alerts.projectStillRunning.title"),
+                        t("alerts.projectStillRunning.message"),
                       );
                   } else {
                     navigation.goBack();
@@ -291,8 +307,8 @@ const AppNavigator = () => {
                 }
               }}
               accessibilityRole="button"
-              accessibilityLabel="Back"
-              accessibilityHint="Button to go back to the previous screen"
+              accessibilityLabel={t("drawer.navigation.back")}
+              accessibilityHint={t("drawer.navigation.backHint")}
               accessibilityState={{ expanded: true }}
               style={{ marginLeft: 20 }}
             >
