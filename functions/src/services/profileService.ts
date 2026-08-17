@@ -9,6 +9,7 @@
 import { UserRepo } from "../repos/userRepo";
 import { logEvent } from "../utils/logger";
 import { ValidationError } from "../errors/domain.errors";
+import { getTranslation } from "../services/localization/i18n";
 
 // /////////////////////////////////////////////////////////////////////////////////
 
@@ -22,15 +23,18 @@ type ProfileUpdateInput = {
 export class ProfileService {
   private userRepo = new UserRepo();
 
-  async updateProfile(uid: string, data: ProfileUpdateInput) {
+  async updateProfile(request: any, uid: string, data: ProfileUpdateInput) {
+    // use getTranslation to get the current language
+    const t = await getTranslation(request.data?.language);
+
     // UID validation
     if (!uid || typeof uid !== "string" || !/^[a-zA-Z0-9_-]+$/.test(uid)) {
-      throw new ValidationError("Invalid UID");
+      throw new ValidationError(t("validation.invalidUid"));
     }
 
     // payload validation
     if (typeof data !== "object" || data === null || Array.isArray(data)) {
-      throw new ValidationError("Invalid payload.");
+      throw new ValidationError(t("validation.invalidPayload"));
     }
 
     const allowedFields = ["displayName", "personalNumber"];
@@ -39,24 +43,24 @@ export class ProfileService {
     // reject unknown fields (security boundary)
     for (const key of Object.keys(data)) {
       if (!allowedFields.includes(key)) {
-        throw new ValidationError(`Unknown field: ${key}`);
+        throw new ValidationError(t("validation.unknownField", { field: key }));
       }
     }
 
     // displayName
     if (data.displayName != null) {
       if (typeof data.displayName !== "string") {
-        throw new ValidationError("displayName must be a string");
+        throw new ValidationError(t("validation.displayNameMustBeString"));
       }
 
       const value = data.displayName.trim();
 
       if (value.length === 0) {
-        throw new ValidationError("displayName cannot be empty");
+        throw new ValidationError(t("validation.displayNameCannotBeEmpty"));
       }
 
       if (value.length > 80) {
-        throw new ValidationError("displayName too long");
+        throw new ValidationError(t("validation.displayNameTooLong"));
       }
 
       sanitizedData.displayName = value;
@@ -65,24 +69,24 @@ export class ProfileService {
     // personalNumber
     if (data.personalNumber != null) {
       if (typeof data.personalNumber !== "string") {
-        throw new ValidationError("personalNumber must be a string");
+        throw new ValidationError(t("validation.personalNumberMustBeString"));
       }
 
       const value = data.personalNumber.trim();
 
       if (value.length === 0) {
-        throw new ValidationError("personalNumber cannot be empty");
+        throw new ValidationError(t("validation.personalNumberCannotBeEmpty"));
       }
 
       if (value.length > 64) {
-        throw new ValidationError("personalNumber too long");
+        throw new ValidationError(t("validation.personalNumberTooLong"));
       }
 
       sanitizedData.personalNumber = value;
     }
 
     if (Object.keys(sanitizedData).length === 0) {
-      throw new ValidationError("Nothing to update.");
+      throw new ValidationError(t("validation.nothingToUpdate"));
     }
 
     await this.userRepo.updateUser(uid, sanitizedData);

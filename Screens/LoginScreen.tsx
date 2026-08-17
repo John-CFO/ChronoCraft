@@ -52,6 +52,7 @@ import {
   isFirebaseError,
   FIREBASE_ERROR_CODES,
 } from "../functions/src/errors/firebaseErrors";
+import i18n from "../components/services/lacalization/i18n";
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -120,7 +121,10 @@ const LoginScreen: React.FC = () => {
     setLoading(true);
     try {
       const { user } = await signInWithEmailAndPassword(auth, email, password);
-      const result = await authValidator({ action: "login" });
+      const result = await authValidator({
+        action: "login",
+        language: i18n.language,
+      });
       const { nextStage } = result.data as { nextStage: AuthStage };
 
       // === Single state transition point ===
@@ -146,7 +150,10 @@ const LoginScreen: React.FC = () => {
         email,
         password,
       );
-      const result = await authValidator({ action: "register" });
+      const result = await authValidator({
+        action: "register",
+        language: i18n.language,
+      });
       const { nextStage } = result.data as { nextStage: AuthStage };
       // Navigation
       setUser(response.user);

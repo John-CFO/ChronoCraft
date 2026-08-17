@@ -9,12 +9,16 @@ import { CallableRequest, HttpsError } from "firebase-functions/v2/https";
 import { ProjectService } from "../services/projectService";
 import { handleFunctionError } from "../errors/handleFunctionError";
 import { ValidationError } from "../errors/domain.errors";
+import { getTranslation } from "../services/localization/i18n";
 
 /////////////////////////////////////////////////////////////////////////////////////
 
 export async function projectsAndWorkValidatorLogic(
   request: CallableRequest<any>,
 ) {
+  // use getTranslation to get the current language
+  const t = await getTranslation(request.data?.language);
+
   try {
     const uid = request.auth?.uid;
     const { action, payload } = request.data ?? {};
@@ -23,12 +27,12 @@ export async function projectsAndWorkValidatorLogic(
 
     // Auth-Check
     if (!uid) {
-      throw new HttpsError("unauthenticated", "Not logged in");
+      throw new HttpsError("unauthenticated", t("errors.notLoggedIn"));
     }
 
     // Action required
     if (!action) {
-      throw new HttpsError("invalid-argument", "Missing action");
+      throw new HttpsError("invalid-argument", t("validation.missingAction"));
     }
 
     if (action === "getProjects") {
@@ -37,17 +41,21 @@ export async function projectsAndWorkValidatorLogic(
         payload === null ||
         Array.isArray(payload)
       ) {
-        throw new ValidationError("payload must be an object");
+        throw new ValidationError(t("validation.payloadMustBeObject"));
       }
 
       if (
         typeof payload.serviceId !== "string" ||
         payload.serviceId.trim().length === 0
       ) {
-        throw new ValidationError("serviceId must be a non-empty string");
+        throw new ValidationError(t("validation.serviceIdRequired"));
       }
 
-      const result = await projectService.getProjects(uid, payload.serviceId);
+      const result = await projectService.getProjects(
+        uid,
+        payload.serviceId,
+        request,
+      );
 
       return {
         projects: result?.projects ?? [],
@@ -60,21 +68,21 @@ export async function projectsAndWorkValidatorLogic(
         payload === null ||
         Array.isArray(payload)
       ) {
-        throw new ValidationError("payload must be an object");
+        throw new ValidationError(t("validation.payloadMustBeObject"));
       }
 
       if (
         typeof payload.projectId !== "string" ||
         payload.projectId.trim().length === 0
       ) {
-        throw new ValidationError("projectId must be a non-empty string");
+        throw new ValidationError(t("validation.projectIdRequired"));
       }
 
       if (
         typeof payload.serviceId !== "string" ||
         payload.serviceId.trim().length === 0
       ) {
-        throw new ValidationError("serviceId must be a non-empty string");
+        throw new ValidationError(t("validation.serviceIdRequired"));
       }
 
       return await projectService.deleteProject(
@@ -90,14 +98,14 @@ export async function projectsAndWorkValidatorLogic(
         payload === null ||
         Array.isArray(payload)
       ) {
-        throw new ValidationError("payload must be an object");
+        throw new ValidationError(t("validation.payloadMustBeObject"));
       }
 
       if (
         typeof payload.serviceId !== "string" ||
         payload.serviceId.trim() === ""
       ) {
-        throw new ValidationError("serviceId must be a non-empty string");
+        throw new ValidationError(t("validation.serviceIdRequired"));
       }
 
       const result = await projectService.createProject(
@@ -115,14 +123,14 @@ export async function projectsAndWorkValidatorLogic(
         payload === null ||
         Array.isArray(payload)
       ) {
-        throw new ValidationError("payload must be an object");
+        throw new ValidationError(t("validation.payloadMustBeObject"));
       }
 
       if (
         typeof payload.serviceId !== "string" ||
         payload.serviceId.trim().length === 0
       ) {
-        throw new ValidationError("serviceId must be a non-empty string");
+        throw new ValidationError(t("validation.serviceIdRequired"));
       }
 
       try {
@@ -131,6 +139,7 @@ export async function projectsAndWorkValidatorLogic(
           payload.serviceId,
           payload.projectId,
           payload,
+          request,
         );
       } catch (error) {
         throw handleFunctionError(error, "projectsAndWorkValidator");
@@ -143,25 +152,25 @@ export async function projectsAndWorkValidatorLogic(
         payload === null ||
         Array.isArray(payload)
       ) {
-        throw new ValidationError("payload must be an object");
+        throw new ValidationError(t("validation.payloadMustBeObject"));
       }
 
       if (
         typeof payload.serviceId !== "string" ||
         payload.serviceId.trim().length === 0
       ) {
-        throw new ValidationError("serviceId must be a non-empty string");
+        throw new ValidationError(t("validation.serviceIdRequired"));
       }
 
       if (
         typeof payload.projectId !== "string" ||
         payload.projectId.trim().length === 0
       ) {
-        throw new ValidationError("projectId must be a non-empty string");
+        throw new ValidationError(t("validation.projectIdRequired"));
       }
 
       if (typeof payload.rate !== "number" || Number.isNaN(payload.rate)) {
-        throw new ValidationError("rate must be a number");
+        throw new ValidationError(t("validation.rateMustBeNumber"));
       }
 
       return await projectService.setHourlyRate(
@@ -169,10 +178,11 @@ export async function projectsAndWorkValidatorLogic(
         payload.serviceId,
         payload.projectId,
         payload.rate,
+        request,
       );
     }
 
-    throw new HttpsError("invalid-argument", "Unknown action");
+    throw new HttpsError("invalid-argument", t("errors.unknownAction"));
   } catch (error) {
     throw handleFunctionError(error, "projectsAndWorkValidator");
   }

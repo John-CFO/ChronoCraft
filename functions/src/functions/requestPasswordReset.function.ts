@@ -14,6 +14,7 @@ import { handleFunctionError } from "../errors/handleFunctionError";
 import { logEvent } from "../utils/logger";
 import { sendPasswordResetEmail } from "../services/emailService";
 import { buildRateLimitContext } from "../utils/rateLimitContext";
+import { getTranslation } from "../services/localization/i18n";
 
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -22,6 +23,9 @@ function hashEmail(normalizedEmail: string): string {
 }
 
 export const requestPasswordResetHandler = async (request: CallableRequest) => {
+  // use getTranslation to get the current language
+  const t = await getTranslation(request.data?.language);
+
   const rateLimit = getRateLimit();
 
   try {
@@ -128,8 +132,7 @@ export const requestPasswordResetHandler = async (request: CallableRequest) => {
 
     return {
       success: true,
-      message:
-        "If an account exists for that email, you will receive instructions to reset your password.",
+      message: t("auth.passwordResetInstructions"),
     };
   } catch (error) {
     logEvent("RESET_FAILED", "error");

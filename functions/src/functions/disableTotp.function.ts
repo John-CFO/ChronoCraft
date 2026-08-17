@@ -9,11 +9,17 @@ import * as admin from "firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { HttpsError } from "firebase-functions/v2/https";
 
+import { getTranslation } from "../services/localization/i18n";
+
 //////////////////////////////////////////////////////////////////////////////////
 
 export const disableTotpHandler = async (req: any) => {
+  // use getTranslation to get the current language
+  const t = await getTranslation(req.data?.language);
+
   const uid = req.auth?.uid;
-  if (!uid) throw new HttpsError("unauthenticated", "Unauthenticated");
+  if (!uid)
+    throw new HttpsError("unauthenticated", t("errors.notAuthenticated"));
 
   const db = admin.firestore();
   const userRef = db.collection("Users").doc(uid);
@@ -32,5 +38,5 @@ export const disableTotpHandler = async (req: any) => {
 
   await batch.commit();
 
-  return { success: true, message: "TOTP disabled successfully" };
+  return { success: true, message: t("success.totpDisabled") };
 };

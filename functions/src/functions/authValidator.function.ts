@@ -10,11 +10,15 @@ import { AuthService } from "../services/authService";
 import { secureFunction, InputValidator } from "./security";
 import { ValidationError } from "../errors/domain.errors";
 import { verifyTotpLoginHandler } from "./totp";
+import { getTranslation } from "../services/localization/i18n";
 
 //////////////////////////////////////////////////////////////////////////////////
 
 // Pure handler function
 export const authValidatorHandler = async (request: CallableRequest) => {
+  // use getTranslation to get the current language
+  const t = await getTranslation(request.data?.language);
+
   const { action, payload } = request.data ?? {};
   const uid = request.auth?.uid;
   const authService = new AuthService();
@@ -27,7 +31,7 @@ export const authValidatorHandler = async (request: CallableRequest) => {
   }
 
   if (action === "verifyTotpLogin") {
-    if (!uid) throw new HttpsError("unauthenticated", "Not logged in");
+    if (!uid) throw new HttpsError("unauthenticated", t("errors.notLoggedIn"));
     InputValidator.validateRequired(request.data, "payload");
     InputValidator.validateString(request.data, "payload", 6, 6);
 
@@ -39,15 +43,22 @@ export const authValidatorHandler = async (request: CallableRequest) => {
     return result;
   }
 
-  throw new ValidationError("Unknown action");
+  throw new ValidationError(t("errors.unknownAction"));
 };
 
 // Callable export (Gen-2)
 export const authValidator = secureFunction(authValidatorHandler, {
   requireAuth: true, // everything except login/register/verifyTotp needs Auth
-  validation: (data: unknown) => {
+  validation: async (data: unknown) => {
+    // use getTranslation to get the current language
+    const t = await getTranslation(
+      typeof data === "object" && data !== null && "language" in data
+        ? (data as { language?: string }).language
+        : undefined,
+    );
+
     if (!data || typeof data !== "object") {
-      throw new HttpsError("invalid-argument", "Invalid action");
+      throw new HttpsError("invalid-argument", t("errors.invalidAction"));
     }
 
     const d = data as { action?: string };
@@ -58,7 +69,7 @@ export const authValidator = secureFunction(authValidatorHandler, {
         d.action,
       )
     ) {
-      throw new HttpsError("invalid-argument", "Invalid action");
+      throw new HttpsError("invalid-argument", t("errors.invalidAction"));
     }
   },
 });

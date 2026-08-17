@@ -3,6 +3,7 @@
 import { ValidationError } from "../errors/domain.errors";
 import { handleFunctionError } from "../errors/handleFunctionError";
 import { secureCore } from "./secureCore";
+import { getTranslation } from "../services/localization/i18n";
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -29,23 +30,26 @@ try {
 
 // Input validation utilities
 export class InputValidator {
-  static validateRequired(data: any, field: string): void {
+  static async validateRequired(data: any, field: string): Promise<void> {
+    // use getTranslation to get the current language
+    const t = await getTranslation(data?.language);
+
     if (
       data[field] === undefined ||
       data[field] === null ||
       data[field] === ""
     ) {
-      throw new ValidationError(`Field '${field}' is required`);
+      throw new ValidationError(t("validation.fieldRequired", { field }));
     }
   }
 
-  static validateString(
+  static async validateString(
     data: any,
     field: string,
     minLength?: number,
     maxLength?: number,
-  ): void {
-    this.validateRequired(data, field);
+  ): Promise<void> {
+    await this.validateRequired(data, field);
 
     if (typeof data[field] !== "string") {
       throw new ValidationError(`Field '${field}' must be a string`);
@@ -73,23 +77,38 @@ export class InputValidator {
     }
   }
 
-  static validateNumber(
+  static async validateNumber(
     data: any,
     field: string,
     min?: number,
     max?: number,
-  ): void {
-    this.validateRequired(data, field);
+  ): Promise<void> {
+    await this.validateRequired(data, field);
+
+    const t = await getTranslation(data?.language);
 
     const value = Number(data[field]);
+
     if (isNaN(value)) {
-      throw new ValidationError(`Field '${field}' must be a number`);
+      throw new ValidationError(t("validation.fieldMustBeNumber", { field }));
     }
+
     if (min !== undefined && value < min) {
-      throw new ValidationError(`Field '${field}' must be at least ${min}`);
+      throw new ValidationError(
+        t("validation.fieldMinValue", {
+          field,
+          min,
+        }),
+      );
     }
+
     if (max !== undefined && value > max) {
-      throw new ValidationError(`Field '${field}' must be at most ${max}`);
+      throw new ValidationError(
+        t("validation.fieldMaxValue", {
+          field,
+          max,
+        }),
+      );
     }
   }
 
@@ -119,7 +138,7 @@ export const secureFunctionInternal = (
   options?: {
     requireAuth?: boolean;
     rateLimit?: any;
-    validation?: (data: any) => void;
+    validation?: (data: any) => void | Promise<void>;
   },
 ) => {
   return async (request: CallableRequest) => {

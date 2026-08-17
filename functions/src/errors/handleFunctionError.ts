@@ -10,23 +10,17 @@ import { HttpsError } from "firebase-functions/v2/https";
 import { FirebaseFunctionErrorCode } from "./firebaseErrors";
 import { DomainError } from "./domain.errors";
 import { logEvent } from "../utils/logger";
-import { RateLimitError } from "../errors/domain.errors";
+import { getTranslation } from "../services/localization/i18n";
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-export function handleFunctionError(
+export async function handleFunctionError(
   error: any,
   functionName?: string,
-): HttpsError {
-  // RateLimitError
-  if (error instanceof RateLimitError) {
-    logEvent("Rate limit exceeded", "warn");
-
-    return new HttpsError(
-      "resource-exhausted",
-      error.userMessage || error.message,
-    );
-  }
+  language?: string | null,
+): Promise<HttpsError> {
+  // use getTranslation to get the current language
+  const t = await getTranslation(language);
 
   // handle DomainError
   if (error instanceof DomainError) {
@@ -40,7 +34,7 @@ export function handleFunctionError(
 
     return new HttpsError(
       firebaseErrorCode,
-      error.userMessage || error.message,
+      t(error.userMessageKey ?? "errors.unexpected"),
     );
   }
 
@@ -64,41 +58,34 @@ export function handleFunctionError(
   // Cases for HttpsError
   switch (code) {
     case "invalid-argument":
-      return new HttpsError(
-        "invalid-argument",
-        "Invalid entry. Please check your details.",
-      );
+      return new HttpsError("invalid-argument", t("errors.invalidEntry"));
+
     case "failed-precondition":
       return new HttpsError(
         "failed-precondition",
-        "The request could not be processed due to a precondition.",
+        t("errors.failedPrecondition"),
       );
+
     case "permission-denied":
-      return new HttpsError(
-        "permission-denied",
-        "You do not have permission to perform this action.",
-      );
+      return new HttpsError("permission-denied", t("errors.permissionDenied"));
+
     case "unauthenticated":
-      return new HttpsError("unauthenticated", "Please log in again.");
+      return new HttpsError("unauthenticated", t("errors.unauthenticated"));
+
     case "not-found":
-      return new HttpsError(
-        "not-found",
-        "The requested resource was not found.",
-      );
+      return new HttpsError("not-found", t("errors.resourceNotFound"));
+
     case "resource-exhausted":
-      return new HttpsError(
-        "resource-exhausted",
-        "Too many requests. Please try again later.",
-      );
+      return new HttpsError("resource-exhausted", t("errors.tooManyRequests"));
+
     case "internal":
-      return new HttpsError("internal", "Internal server error.");
+      return new HttpsError("internal", t("errors.internal"));
+
     case "unavailable":
-      return new HttpsError(
-        "unavailable",
-        "The service is not available. Please try again later.",
-      );
+      return new HttpsError("unavailable", t("errors.unavailable"));
+
     default:
-      return new HttpsError("internal", "Unexpected error");
+      return new HttpsError("internal", t("errors.unexpected"));
   }
 }
 
