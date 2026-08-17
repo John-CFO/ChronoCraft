@@ -32,8 +32,8 @@ export const requestPasswordResetHandler = async (request: CallableRequest) => {
     const email = request.data?.email;
 
     // 1. INPUT VALIDATION (deny early)
-    InputValidator.validateRequired(request.data, "email");
-    InputValidator.validateString(request.data, "email");
+    await InputValidator.validateRequired(request.data, "email");
+    await InputValidator.validateString(request.data, "email");
 
     const normalizedEmail = String(email).trim().toLowerCase();
     const emailHash = hashEmail(normalizedEmail);
@@ -137,7 +137,7 @@ export const requestPasswordResetHandler = async (request: CallableRequest) => {
   } catch (error) {
     logEvent("RESET_FAILED", "error");
 
-    throw handleFunctionError(error, "requestPasswordReset");
+    throw await handleFunctionError(error, "requestPasswordReset");
   }
 };
 

@@ -142,7 +142,7 @@ export async function projectsAndWorkValidatorLogic(
           request,
         );
       } catch (error) {
-        throw handleFunctionError(error, "projectsAndWorkValidator");
+        throw await handleFunctionError(error, "projectsAndWorkValidator");
       }
     }
 
@@ -184,6 +184,6 @@ export async function projectsAndWorkValidatorLogic(
 
     throw new HttpsError("invalid-argument", t("errors.unknownAction"));
   } catch (error) {
-    throw handleFunctionError(error, "projectsAndWorkValidator");
+    throw await handleFunctionError(error, "projectsAndWorkValidator");
   }
 }
