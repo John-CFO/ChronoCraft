@@ -145,7 +145,7 @@ export const secureFunctionInternal = (
     try {
       return await secureCore(request, handler, options);
     } catch (error) {
-      throw handleFunctionError(error);
+      throw await handleFunctionError(error);
     }
   };
 };

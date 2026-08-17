@@ -23,17 +23,17 @@ export const authValidatorHandler = async (request: CallableRequest) => {
   const uid = request.auth?.uid;
   const authService = new AuthService();
 
-  InputValidator.validateRequired(request.data, "action");
-  InputValidator.validateString(request.data, "action");
+  await InputValidator.validateRequired(request.data, "action");
+  await InputValidator.validateString(request.data, "action");
 
   if (action === "login" || action === "register") {
-    return authService.loginOrRegister(action, uid);
+    return authService.loginOrRegister(action, request, uid);
   }
 
   if (action === "verifyTotpLogin") {
     if (!uid) throw new HttpsError("unauthenticated", t("errors.notLoggedIn"));
-    InputValidator.validateRequired(request.data, "payload");
-    InputValidator.validateString(request.data, "payload", 6, 6);
+    await InputValidator.validateRequired(request.data, "payload");
+    await InputValidator.validateString(request.data, "payload", 6, 6);
 
     const result = await verifyTotpLoginHandler({
       auth: request.auth,

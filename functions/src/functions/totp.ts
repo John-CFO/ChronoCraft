@@ -354,7 +354,7 @@ export const verifyTotpTokenHandler = async (request: any) => {
 
     return { valid: true, message: t("totp.enabledSuccessfully") };
   } catch (error: any) {
-    throw handleFunctionError(error, "verifyTotpTokenHandler");
+    throw await handleFunctionError(error, "verifyTotpTokenHandler");
   }
 };
 
@@ -543,6 +543,6 @@ export const verifyTotpLoginHandler = async (request: any) => {
     return { valid: true, message: t("totp.verificationSuccessful") };
   } catch (error) {
     console.error("Error in verifyTotpLoginHandler:", error);
-    throw handleFunctionError(error, "verifyTotpLoginHandler");
+    throw await handleFunctionError(error, "verifyTotpLoginHandler");
   }
 };
