@@ -26,6 +26,10 @@ const ownerUid = `owner-${randomUUID()}`;
 const serviceId = `race-service-${randomUUID()}`;
 const projectId = `race-project-${randomUUID()}`;
 
+const testRequest = {
+  data: {},
+};
+
 // get project ref
 const projectRef = (id: string) =>
   admin
@@ -72,10 +76,16 @@ describe("Race Condition: concurrent project updates", () => {
       participants: 20,
       jitterMs: 10,
       operation: async (index) => {
-        return service.updateProject(ownerUid, serviceId, projectId, {
-          name: `update-${index}`,
-          isTracking: index % 2 === 0,
-        });
+        return service.updateProject(
+          ownerUid,
+          serviceId,
+          projectId,
+          {
+            name: `update-${index}`,
+            isTracking: index % 2 === 0,
+          },
+          testRequest,
+        );
       },
     });
 
@@ -107,7 +117,13 @@ describe("Race Condition: mixed field updates", () => {
             ? { name: `name-${index}` }
             : { isTracking: index % 3 === 0 };
 
-        return service.updateProject(ownerUid, serviceId, projectId, payload);
+        return service.updateProject(
+          ownerUid,
+          serviceId,
+          projectId,
+          payload,
+          testRequest,
+        );
       },
     });
 
@@ -141,7 +157,13 @@ describe("Race Condition: earnings idempotent writes", () => {
       participants: 20,
       jitterMs: 5,
       operation: async () => {
-        return service.setHourlyRate(ownerUid, serviceId, projectId, 100);
+        return service.setHourlyRate(
+          ownerUid,
+          serviceId,
+          projectId,
+          100,
+          testRequest,
+        );
       },
     });
 
@@ -178,7 +200,13 @@ describe("Race Condition: idempotent updates", () => {
       participants: 20,
       jitterMs: 5,
       operation: async () => {
-        return service.updateProject(ownerUid, serviceId, projectId, payload);
+        return service.updateProject(
+          ownerUid,
+          serviceId,
+          projectId,
+          payload,
+          testRequest,
+        );
       },
     });
 
@@ -218,6 +246,7 @@ describe("Race Condition: earnings write + project deletion", () => {
             serviceId,
             projectId,
             100,
+            testRequest,
           );
         } catch (error: any) {
           if (
@@ -285,7 +314,13 @@ describe("Race Condition: delete vs earnings update timing", () => {
           await service.deleteProject(ownerUid, serviceId, projectId);
         }
 
-        return service.setHourlyRate(ownerUid, serviceId, projectId, 120);
+        return service.setHourlyRate(
+          ownerUid,
+          serviceId,
+          projectId,
+          120,
+          testRequest,
+        );
       },
     });
 

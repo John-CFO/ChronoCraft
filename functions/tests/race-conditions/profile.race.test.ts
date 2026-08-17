@@ -18,6 +18,10 @@ jest.setTimeout(30000);
 // ISOLATED UID GENERATOR (fixes cross-test contamination)
 const createUid = (tag: string) => `race-profile-${tag}-${randomUUID()}`;
 
+const testRequest = {
+  data: {},
+};
+
 const seedUser = async (uid: string) => {
   const ref = admin.firestore().collection("Users").doc(uid);
 
@@ -46,7 +50,7 @@ describe("Race Condition: profile concurrent updates", () => {
       participants: 20,
       jitterMs: 25,
       operation: async (index) => {
-        return service.updateProfile(uid, {
+        return service.updateProfile(testRequest, uid, {
           displayName: `user-${index}`,
           personalNumber: `${index}`,
         });
@@ -80,12 +84,12 @@ describe("Race Condition: profile concurrent updates", () => {
       jitterMs: 25,
       operation: async (index) => {
         if (index % 2 === 0) {
-          return service.updateProfile(uid, {
+          return service.updateProfile(testRequest, uid, {
             displayName: `name-${index}`,
           });
         }
 
-        return service.updateProfile(uid, {
+        return service.updateProfile(testRequest, uid, {
           personalNumber: `${index}`,
         });
       },
@@ -118,12 +122,12 @@ describe("Race Condition: profile concurrent updates", () => {
       jitterMs: 25,
       operation: async (index) => {
         if (index % 2 === 0) {
-          return service.updateProfile(uid, {
+          return service.updateProfile(testRequest, uid, {
             displayName: `valid-${index}`,
           });
         }
 
-        return service.updateProfile(uid, {
+        return service.updateProfile(testRequest, uid, {
           displayName: "",
         });
       },
