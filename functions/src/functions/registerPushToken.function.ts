@@ -37,7 +37,6 @@ export const registerPushToken = async (
   const previousToken = snap.exists ? snap.data()?.pushToken : null;
 
   const isFirstRegistration = !previousToken;
-
   await userRef.set(
     {
       pushToken: token,
@@ -47,7 +46,7 @@ export const registerPushToken = async (
   );
 
   if (isFirstRegistration) {
-    await fetch("https://exp.host/--/api/v2/push/send", {
+    const response = await fetch("https://exp.host/--/api/v2/push/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -56,7 +55,15 @@ export const registerPushToken = async (
         body: t("push.welcomeBody"),
       }),
     });
-  }
 
-  return { success: true };
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new HttpsError(
+        "internal",
+        `Expo Push API error: ${JSON.stringify(result)}`,
+      );
+    }
+  }
+  return { success: true, previousToken };
 };
