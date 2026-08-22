@@ -266,6 +266,7 @@ const VacationList = () => {
           <View
             style={{
               width: "auto",
+              height: 60,
               marginTop: 20,
               justifyContent: "center",
               alignItems: "center",
@@ -355,7 +356,11 @@ const VacationList = () => {
                         shadowRadius: 3,
                       }}
                     >
-                      <View style={{ flex: 1 }}>
+                      <View
+                        style={{
+                          flex: 1,
+                        }}
+                      >
                         <Text
                           style={{
                             fontFamily: "MPLUSLatin_Bold",
@@ -425,7 +430,7 @@ const VacationList = () => {
               <View
                 style={{
                   width: 330,
-                  height: 50,
+                  height: 60,
                   alignItems: "center",
                 }}
               >

@@ -62,7 +62,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, projectId, onDelete }) => {
             style: "cancel",
           },
           {
-            text: t("notes.deleteError"),
+            text: t("notes.deleteConfirmation"),
             onPress: async () => {
               const user = FIREBASE_AUTH.currentUser;
               if (!user) {

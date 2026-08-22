@@ -436,17 +436,19 @@ const MultiFactorModal: React.FC<Props> = ({
                           flexDirection: "row",
                           alignItems: "center",
                           justifyContent: "center",
-                          paddingHorizontal: 12,
+                          paddingHorizontal: 8,
                           overflow: "hidden",
                         }}
                       >
                         <Text
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
                           style={{
                             fontFamily: "MPLUSLatin_Bold",
                             fontSize: 22,
                             color: "white",
                             textAlign: "center",
-                            flexShrink: 0,
+                            flexShrink: 1,
                           }}
                         >
                           {t("mfa.disabling")}

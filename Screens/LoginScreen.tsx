@@ -44,8 +44,8 @@ import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import AuthForm from "../components/AuthForm";
 import {
-  LoginInputSchema,
-  RegisterInputSchema,
+  createLoginInputSchema,
+  createRegisterInputSchema,
 } from "../validation/authSchemas";
 import { logError } from "../lib/loggerClient";
 import {
@@ -93,7 +93,7 @@ const LoginScreen: React.FC = () => {
 
   // function to validate the inputs
   const validateLoginInputs = () => {
-    const parsed = LoginInputSchema.safeParse({ email, password });
+    const parsed = createLoginInputSchema().safeParse({ email, password });
     if (!parsed.success) {
       const msg = parsed.error.issues[0]?.message ?? t("auth.invalidInput");
 
@@ -105,7 +105,7 @@ const LoginScreen: React.FC = () => {
 
   // Registration
   const validateRegisterInputs = () => {
-    const parsed = RegisterInputSchema.safeParse({ email, password });
+    const parsed = createRegisterInputSchema().safeParse({ email, password });
     if (!parsed.success) {
       const msg = parsed.error.issues[0]?.message ?? t("auth.invalidInput");
 
@@ -168,7 +168,7 @@ const LoginScreen: React.FC = () => {
             functions,
             "registerPushTokenFunction",
           );
-          await registerPushToken({ token });
+          await registerPushToken({ token, language: i18n.language });
         } catch (error) {
           logError("LoginScreen/registerPushToken", error);
         }

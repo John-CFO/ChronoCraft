@@ -383,7 +383,7 @@ const HomeScreen: React.FC = () => {
           ],
         );
     },
-    [serviceId],
+    [serviceId, t],
   );
 
   // function to navigate to the details screen if user pressed an a listed project

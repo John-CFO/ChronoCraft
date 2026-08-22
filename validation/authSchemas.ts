@@ -13,39 +13,40 @@ import i18n from "../components/services/lacalization/i18n";
 /**
  * @AppSec // only for CLI-Purpose, kno real Security-Enforcement
  */
-export const LoginInputSchema = z.object({
-  email: z.email({
-    message: i18n.t("validation.invalidEmail"),
-  }),
-  password: z.string().min(1, {
-    message: i18n.t("validation.passwordEmpty"),
-  }),
-});
+export const createLoginInputSchema = () =>
+  z.object({
+    email: z.email({
+      message: i18n.t("validation.invalidEmail"),
+    }),
+    password: z.string().min(1, {
+      message: i18n.t("validation.passwordEmpty"),
+    }),
+  });
 
 // validate register schema
 /**
  * @AppSec // only for CLI-Purpose, kno real Security-Enforcement
  */
-export const RegisterInputSchema = z.object({
-  email: z.email({
-    message: i18n.t("validation.invalidEmail"),
-  }),
-  password: z
-    .string()
-    .min(8, {
-      message: i18n.t("validation.passwordMinLength"),
-    })
-    .refine(
-      (pw) => (pw.match(/[-_!@#$%^&*(),.?\":{}|<>]/g) ?? []).length >= 2,
-      {
-        message: i18n.t("validation.passwordSpecialCharacters"),
-      },
-    )
-    .refine((pw) => /\d/.test(pw), {
-      message: i18n.t("validation.passwordNumber"),
+export const createRegisterInputSchema = () =>
+  z.object({
+    email: z.email({
+      message: i18n.t("validation.invalidEmail"),
     }),
-});
-
+    password: z
+      .string()
+      .min(8, {
+        message: i18n.t("validation.passwordMinLength"),
+      })
+      .refine(
+        (pw) => (pw.match(/[-_!@#$%^&*(),.?":{}|<>]/g) ?? []).length >= 2,
+        {
+          message: i18n.t("validation.passwordSpecialCharacters"),
+        },
+      )
+      .refine((pw) => /\d/.test(pw), {
+        message: i18n.t("validation.passwordNumber"),
+      }),
+  });
 // validate totp schema
 /**
  * @AppSec // only for CLI-Purpose, kno real Security-Enforcement

@@ -538,15 +538,15 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                     useAlertStore
                       .getState()
                       .showAlert(
-                        t("alerts.deleteAccount.title"),
-                        t("alerts.deleteAccount.message"),
+                        t("faq.deleteConfirmation.title"),
+                        t("faq.deleteConfirmation.message"),
                         [
                           {
-                            text: t("alerts.cancel"),
+                            text: t("faq.deleteConfirmation.cancel"),
                             style: "cancel",
                           },
                           {
-                            text: t("alerts.delete"),
+                            text: t("faq.deleteConfirmation.delete"),
                             style: "destructive",
                             onPress: handleDeleteAccount,
                           },
@@ -593,13 +593,12 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                         >
                           <Text
                             style={{
-                              marginLeft: 100,
                               marginBottom: 5,
                               fontFamily: "MPLUSLatin_Bold",
                               fontSize: 22,
                               color: "white",
-                              textAlign: "center",
-                              width: 100,
+                              width: 160,
+                              textAlign: "right",
                             }}
                           >
                             {t("faq.deleteAccount.deleting")}
@@ -610,7 +609,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                               fontFamily: "MPLUSLatin_Bold",
                               fontSize: 22,
                               color: "white",
-                              width: 100,
+                              width: 40,
                               textAlign: "left",
                             }}
                           >

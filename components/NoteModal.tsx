@@ -302,7 +302,6 @@ const NoteModal: React.FC<NoteModalProps> = ({
               end={{ x: 1, y: 1 }}
               style={{
                 height: 45,
-                paddingVertical: 6,
                 justifyContent: "center",
                 alignItems: "center",
               }}
@@ -342,7 +341,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
                 : "MPLUSLatin_ExtraLight",
             }}
           >
-            {t("notes.navigationHint")}
+            {t("notes.navigationTip")}
           </Text>
         </View>
       </View>

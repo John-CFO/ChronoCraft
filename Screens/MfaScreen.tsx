@@ -176,7 +176,7 @@ const MfaScreen: React.FC = () => {
           textAlign: "center",
         }}
       >
-        {t("common:mfa.screenTitle")}
+        {t("common:mfa.required")}
       </Text>
 
       <Text
@@ -190,7 +190,7 @@ const MfaScreen: React.FC = () => {
           marginBottom: 20,
         }}
       >
-        {t("common:mfa.screenDescription")}
+        {t("common:mfa.enterCode")}
       </Text>
 
       <OTPInput length={6} onChangeCode={setTokenInput} />
@@ -284,21 +284,21 @@ const MfaScreen: React.FC = () => {
       <TouchableOpacity
         onPress={handleCancel}
         accessibilityRole="button"
-        accessibilityLabel={t("common:mfa.cancelLoginAccessibility")}
+        accessibilityLabel={t("common:mfa.cancelAndReturn")}
         style={{
           marginTop: 20,
           padding: 10,
         }}
       >
         <Text
-          accessibilityHint={t("common:mfa.cancelLoginHint")}
+          accessibilityHint={t("common:mfa.cancelAndReturnHint")}
           style={{
             color: accessMode ? "white" : "#999",
             fontSize: accessMode ? 20 : 16,
             fontFamily: "MPLUSLatin_Regular",
           }}
         >
-          {t("common:mfa.cancelLogin")}
+          {t("common:mfa.cancelAndReturnText")}
         </Text>
       </TouchableOpacity>
 
@@ -314,8 +314,7 @@ const MfaScreen: React.FC = () => {
               : "MPLUSLatin_ExtraLight",
           }}
         >
-          Note: This screen cannot be bypassed. You must enter the correct TOTP
-          code to continue.
+          {t("common:mfa.bypassNotice")}
         </Text>
       </View>
     </View>

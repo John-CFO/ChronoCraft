@@ -682,7 +682,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
         {/* Time Tracker Card */}
         <CopilotWalkthroughView
           style={{
-            height: 650,
+            height: 660,
             marginBottom: 20,
             backgroundColor: "#191919",
             borderWidth: 1,
@@ -873,7 +873,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
           <View
             style={{
               width: "100%",
-              height: 165,
+              height: 175,
               padding: 5,
               paddingLeft: 15,
               borderRadius: 10,

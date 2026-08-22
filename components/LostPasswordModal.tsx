@@ -170,6 +170,7 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
         >
           <Text
             style={{
+              textAlign: "center",
               color: "white",
               fontSize: 32,
               fontFamily: "MPLUSLatin_Bold",
@@ -334,7 +335,7 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
                 : "MPLUSLatin_ExtraLight",
             }}
           >
-            {t("passwordReset.navigationHint")}
+            {t("passwordReset.navigationTip")}
           </Text>
         </View>
       </View>

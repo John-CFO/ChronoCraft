@@ -457,7 +457,6 @@ const WorkTimeTracker = () => {
   useEffect(() => {
     const fetchListData = async () => {
       if (!serviceId || !user) {
-        logError("WorkTimeTracker.fetchListData", "No serviceId or user found");
         return;
       }
 

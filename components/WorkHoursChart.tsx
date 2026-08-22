@@ -33,7 +33,7 @@ const CopilotWalkthroughView = walkthroughable(View);
 
 const WorkHoursChart = () => {
   // useTranslation hook to access translations
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   // get the data from the WorkHoursState
   const { data } = WorkHoursState();
@@ -172,6 +172,20 @@ const WorkHoursChart = () => {
     });
   };
 
+  // function to calculate the accessibility bar label
+  const getAccessibilityBarLabel = (item: any) => {
+    const baseValue = item.stacks?.[0]?.value || 0;
+    const overHours = item.stacks?.[1]?.value || 0;
+    const planned = item.plannedHours || 0;
+
+    return t("workHoursChart.accessibilityBar", {
+      date: formatTooltipDate(item.originalDate, chartType, i18n.language),
+      worked: formatTime(baseValue),
+      expected: formatTime(planned),
+      over: formatTime(overHours),
+    });
+  };
+
   // filter the data by chart type
   const filteredData = filterDataByChartType(data, chartType);
 
@@ -228,7 +242,7 @@ const WorkHoursChart = () => {
       const dateForMonth = new Date(Number(year), Number(month), 1);
       // format the date
       const monthName = dateForMonth
-        .toLocaleDateString("en-GB", { month: "short" })
+        .toLocaleDateString(i18n.language, { month: "short" })
         .replace(".", "");
       const chartItem = {
         label: monthName,
@@ -342,20 +356,6 @@ const WorkHoursChart = () => {
   const computedNoOfSections = dynamicMaxValue
     ? Math.max(2, Math.round(dynamicMaxValue)) // one section per hour
     : 4;
-
-  // function to calculate the accessibility bar label
-  const getAccessibilityBarLabel = (item: any) => {
-    const baseValue = item.stacks?.[0]?.value || 0;
-    const overHours = item.stacks?.[1]?.value || 0;
-    const planned = item.plannedHours || 0;
-
-    return t("workHoursChart.accessibilityBar", {
-      date: formatTooltipDate(item.originalDate, chartType),
-      worked: formatTime(baseValue),
-      expected: formatTime(planned),
-      over: formatTime(overHours),
-    });
-  };
 
   // function to calculate the accessibility entry label
   const getAccessibilityEntryLabel = (item: any) => {
@@ -596,7 +596,12 @@ const WorkHoursChart = () => {
                           }}
                           accessibilityRole="header"
                         >
-                          📅 {formatTooltipDate(item.originalDate, chartType)}
+                          📅{" "}
+                          {formatTooltipDate(
+                            item.originalDate,
+                            chartType,
+                            i18n.language,
+                          )}
                         </Text>
 
                         {/* Hour-Data */}
@@ -693,8 +698,8 @@ const WorkHoursChart = () => {
                 <View
                   style={{
                     position: "absolute",
-                    width: 120,
-                    height: 90,
+                    width: 150,
+                    height: 105,
                     justifyContent: "space-around",
                     top: tooltipData.y,
                     left: tooltipData.x,
@@ -711,7 +716,7 @@ const WorkHoursChart = () => {
                   <Text
                     style={{ fontSize: 14, color: "white", fontWeight: "bold" }}
                   >
-                    {`📅 ${formatTooltipDate(tooltipData.date, chartType)}`}
+                    {`📅 ${formatTooltipDate(tooltipData.date, chartType, i18n.language)}`}
                   </Text>
 
                   <Text style={{ fontSize: 11, color: "white" }}>

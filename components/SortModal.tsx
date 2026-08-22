@@ -116,7 +116,7 @@ const SortModalFAB = ({
             marginRight: 9,
           }}
         >
-          {t("sort.navigationText")}
+          {t("sort.title")}
         </Text>
       </View>
 

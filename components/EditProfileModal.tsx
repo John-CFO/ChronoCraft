@@ -431,32 +431,38 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                     {saving ? (
                       <View
                         style={{
+                          height: 45,
+                          width: "100%",
                           flexDirection: "row",
                           alignItems: "center",
                           justifyContent: "center",
+                          paddingHorizontal: 8,
+                          overflow: "hidden",
                         }}
                       >
                         <Text
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
                           style={{
-                            marginLeft: 100,
-                            marginBottom: 5,
                             fontFamily: "MPLUSLatin_Bold",
                             fontSize: 22,
                             color: "white",
-                            textAlign: "center",
-                            width: 100,
+                            textAlign: "right",
+                            flexShrink: 1,
                           }}
                         >
                           {t("profile.edit.updating")}
                         </Text>
+
                         <Text
                           style={{
-                            marginBottom: 5,
+                            marginLeft: 2,
                             fontFamily: "MPLUSLatin_Bold",
-                            fontSize: 22,
+                            fontSize: 18,
                             color: "white",
-                            width: 100,
                             textAlign: "left",
+                            minWidth: 36,
+                            flexShrink: 0,
                           }}
                         >
                           {dots}
