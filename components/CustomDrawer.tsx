@@ -330,6 +330,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         contentContainerStyle={{
           backgroundColor: "black",
           paddingBottom: 320,
+          marginTop: -20,
         }}
       >
         <DrawerItemList {...props} />

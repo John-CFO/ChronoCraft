@@ -682,7 +682,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
         {/* Time Tracker Card */}
         <CopilotWalkthroughView
           style={{
-            height: 660,
+            height: 690,
             marginBottom: 20,
             backgroundColor: "#191919",
             borderWidth: 1,
@@ -910,7 +910,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
                   accessible={false}
                   style={{ color: accessMode ? "white" : "grey" }}
                 >
-                  {t("timeTracker.lastSession")}
+                  {t("timeTracker.lastSessionText")}
                 </Text>
                 {"\n"}
                 {endTime instanceof Date ? endTime.toLocaleString() : "- - - "}
@@ -940,7 +940,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
                   accessible={false}
                   style={{ color: accessMode ? "white" : "grey" }}
                 >
-                  {t("timeTracker.lastTrackingStartedLabel")}
+                  {t("timeTracker.lastTrackingStartedText")}
                 </Text>
                 {"\n"}
                 {lastStartTime instanceof Date
@@ -972,7 +972,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
                   accessible={false}
                   style={{ color: accessMode ? "white" : "grey" }}
                 >
-                  {t("timeTracker.originalTrackingStartedLabel")}
+                  {t("timeTracker.originalTrackingStartedText")}
                 </Text>
                 {"\n"}
                 {originalStartTime instanceof Date

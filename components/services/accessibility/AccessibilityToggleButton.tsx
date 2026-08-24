@@ -123,7 +123,6 @@ const AccessibilityToggleButton = () => {
         }}
       >
         {t("accessibility.toggle")}{" "}
-        {isAccessible ? t("accessibility.on") : t("accessibility.off")}
       </Text>
     </TouchableOpacity>
   );

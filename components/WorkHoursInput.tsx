@@ -492,6 +492,7 @@ const WorkHoursInput = () => {
               >
                 {t("workHoursInput.expectedWorkHours")}
               </Text>
+              {"  "}
               {expectedHours || "- - -"}
             </Text>
           </View>

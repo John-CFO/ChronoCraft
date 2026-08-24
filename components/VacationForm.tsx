@@ -165,12 +165,12 @@ const VacationForm = () => {
           <View
             style={{
               paddingTop: 15,
+              paddingHorizontal: 10,
               alignItems: "center",
               borderTopColor: "grey",
               borderWidth: 0.5,
-              backgroundColor: "black",
+              backgroundColor: "#000",
               width: "100%",
-              height: 80,
               justifyContent: "center",
             }}
           >
@@ -178,7 +178,7 @@ const VacationForm = () => {
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                gap: 25,
+                gap: 10,
               }}
             >
               {/* Start Date and End Date Buttons */}
@@ -365,15 +365,16 @@ const VacationForm = () => {
           )}
           <View
             style={{
-              height: 80,
+              width: "100%",
+              paddingHorizontal: 10,
+              paddingVertical: 10,
               flexDirection: "row",
-              justifyContent: "space-around",
-              paddingHorizontal: 70,
+              justifyContent: "center",
               alignItems: "center",
+              gap: 10,
               borderBottomColor: "grey",
               borderWidth: 0.5,
-              backgroundColor: "black",
-              gap: 20,
+              backgroundColor: "#000",
             }}
           >
             {/* Save Button */}
@@ -384,9 +385,9 @@ const VacationForm = () => {
               onPress={handleSave}
               activeOpacity={0.7}
               style={{
-                height: 45,
-                width: 120,
-                borderRadius: 14,
+                height: 50,
+                width: 160,
+                borderRadius: 12,
                 borderWidth: 1.5,
                 borderColor: "aqua",
                 backgroundColor: "transparent",
@@ -405,7 +406,7 @@ const VacationForm = () => {
                   flex: 1,
                   justifyContent: "center",
                   alignItems: "center",
-                  borderRadius: 12,
+                  borderRadius: 10,
                 }}
               >
                 <Text
@@ -428,9 +429,9 @@ const VacationForm = () => {
               onPress={handleCancel}
               activeOpacity={0.7}
               style={{
-                height: 45,
-                width: 120,
-                borderRadius: 14,
+                height: 50,
+                width: 160,
+                borderRadius: 12,
                 borderWidth: 1.5,
                 borderColor: "aqua",
                 backgroundColor: "transparent",
@@ -449,7 +450,7 @@ const VacationForm = () => {
                   flex: 1,
                   justifyContent: "center",
                   alignItems: "center",
-                  borderRadius: 12,
+                  borderRadius: 10,
                 }}
               >
                 <Text

@@ -241,7 +241,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
             },
           )}
           style={{
-            height: 420,
+            height: 450,
             marginBottom: 20,
             backgroundColor: "#191919",
             borderWidth: 1,
