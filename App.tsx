@@ -1,5 +1,5 @@
 /////////////////////app navigator and stack navigator///////////////////////
-//NOTE - finish client logging
+
 // This file is used to create the app navigator and the stack navigator
 // It includes the whole app three(stack navigator, drawer navigator and app navigator)
 // Also it inclues the dropdown menu for the help button nad the global provider for the Copilot guided tour
@@ -50,7 +50,7 @@ import {
   ServiceProvider,
   useService,
 } from "./components/contexts/ServiceContext";
-import { initI18n } from "./components/services/lacalization/i18n";
+import { initI18n } from "./components/services/localization/i18n";
 import { navigationRef } from "./navigation/NavigationRef";
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "./firebaseConfig";
 

@@ -1,8 +1,15 @@
+////////////////////////// i18n.ts  //////////////////////////
+
+// This file is used to configure i18next and export it globally
+
+//////////////////////////////////////////////////////////////
+
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Localization from "expo-localization";
 
+import "./calendarLocales";
 import en from "./locales/en/common.json";
 import de from "./locales/de/common.json";
 import fr from "./locales/fr/common.json";
@@ -18,6 +25,8 @@ import {
   LANGUAGE_OPTIONS,
   type SupportedLanguage,
 } from "./languages";
+
+///////////////////////////////////////////////////////////////////////
 
 const LANGUAGE_STORAGE_KEY = "appLanguage";
 

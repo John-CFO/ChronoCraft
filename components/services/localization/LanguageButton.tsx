@@ -1,3 +1,9 @@
+///////////////////////////// LanguageButton.tsx //////////////////////////////
+
+// This component creates a button to open the language selection from the drawer
+
+//////////////////////////////////////////////////////////////////////////////////////
+
 import React from "react";
 import { TouchableOpacity, Text, View } from "react-native";
 import AntDesign from "@expo/vector-icons/AntDesign";

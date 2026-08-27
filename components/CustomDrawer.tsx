@@ -36,8 +36,8 @@ import { useAccessibilityStore } from "../components/services/accessibility/acce
 import MFAButton from "./services/MFAButton";
 import MultiFactorModal from "./MultiFactorModal";
 import { logError } from "../lib/loggerClient";
-import LanguageButton from "./services/lacalization/LanguageButton";
-import LanguageModal from "./services/lacalization/LanguageModal";
+import LanguageButton from "./services/localization/LanguageButton";
+import LanguageModal from "./services/localization/LanguageModal";
 
 ////////////////////////////////////////////////////////////////////////////////////////
 

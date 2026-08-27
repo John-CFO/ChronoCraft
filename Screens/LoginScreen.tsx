@@ -52,7 +52,7 @@ import {
   isFirebaseError,
   FIREBASE_ERROR_CODES,
 } from "../functions/src/errors/firebaseErrors";
-import i18n from "../components/services/lacalization/i18n";
+import i18n from "../components/services/localization/i18n";
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
