@@ -9,6 +9,7 @@ import { View, Text, TouchableOpacity, Dimensions } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { getAuth, signOut } from "firebase/auth";
+import { useTranslation } from "react-i18next";
 
 import { AuthContext } from "../components/contexts/AuthContext";
 import { FIREBASE_APP } from "../firebaseConfig";
@@ -30,6 +31,9 @@ interface AuthValidatorResponse {
 ///////////////////////////////////////////////////////////////////////////////////
 
 const MfaScreen: React.FC = () => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // declare variables
   const auth = getAuth(FIREBASE_APP);
   const functions = getFunctions(FIREBASE_APP);
@@ -64,7 +68,10 @@ const MfaScreen: React.FC = () => {
     if (!user || tokenInput.length !== 6) {
       useAlertStore
         .getState()
-        .showAlert("Error", "Please enter a valid 6-digit code.");
+        .showAlert(
+          t("common:mfa.alerts.error"),
+          t("common:mfa.alerts.invalidCode"),
+        );
       return;
     }
 
@@ -84,7 +91,10 @@ const MfaScreen: React.FC = () => {
         );
         useAlertStore
           .getState()
-          .showAlert("Error", "No response from server. Please try again.");
+          .showAlert(
+            t("common:mfa.alerts.error"),
+            t("common:mfa.alerts.noServerResponse"),
+          );
         return;
       }
 
@@ -93,7 +103,10 @@ const MfaScreen: React.FC = () => {
 
         useAlertStore
           .getState()
-          .showAlert("Success", "Authentication successful.");
+          .showAlert(
+            t("common:mfa.alerts.success"),
+            t("common:mfa.alerts.authenticationSuccessful"),
+          );
 
         setStage("authenticated");
       } else {
@@ -101,27 +114,30 @@ const MfaScreen: React.FC = () => {
           .getState()
           .showAlert(
             "Error",
-            res.data.message || "Invalid authentication code.",
+            res.data.message ||
+              t("common:mfa.alerts.invalidAuthenticationCode"),
           );
       }
     } catch (e: any) {
       logError("MfaScreen/verifyTotp", e);
 
-      let errorMessage = "Invalid authentication code.";
+      let errorMessage = t("common:mfa.alerts.invalidAuthenticationCode");
 
       if (e.code === "functions/failed-precondition") {
-        errorMessage = e.message || "TOTP is not enabled for your account.";
+        errorMessage = e.message || t("common:mfa.alerts.totpNotEnabled");
       } else if (e.code === "functions/not-found") {
-        errorMessage = "User not found. Please try logging in again.";
+        errorMessage = t("common:mfa.alerts.userNotFound");
       } else if (e.code === "functions/unauthenticated") {
-        errorMessage = "Session expired. Please log in again.";
+        errorMessage = t("common:mfa.alerts.sessionExpired");
         setStage("loggedOut");
       } else if (e.code === "functions/invalid-argument") {
-        errorMessage = e.message || "Invalid TOTP code format.";
+        errorMessage = e.message || t("common:mfa.alerts.invalidTotpFormat");
       } else if (e.code === "rate-limit-exceeded") {
         // UX-Alert for RateLimit
         const retry = e.retryAfterSeconds
-          ? ` Wait ${e.retryAfterSeconds}s.`
+          ? ` ${t("common:mfa.alerts.rateLimitWait", {
+              seconds: e.retryAfterSeconds,
+            })}`
           : "";
         errorMessage = e.userMessage + retry;
       }
@@ -160,7 +176,7 @@ const MfaScreen: React.FC = () => {
           textAlign: "center",
         }}
       >
-        Two-Factor Authentication Required
+        {t("common:mfa.required")}
       </Text>
 
       <Text
@@ -174,7 +190,7 @@ const MfaScreen: React.FC = () => {
           marginBottom: 20,
         }}
       >
-        Enter the 6-digit code from your authenticator app.
+        {t("common:mfa.enterCode")}
       </Text>
 
       <OTPInput length={6} onChangeCode={setTokenInput} />
@@ -183,8 +199,8 @@ const MfaScreen: React.FC = () => {
       <TouchableOpacity
         onPress={verifyTotp}
         accessibilityRole="button"
-        accessibilityLabel="Confirm TOTP"
-        accessibilityHint="Confirms the TOTP code"
+        accessibilityLabel={t("common:mfa.confirmAccessibility")}
+        accessibilityHint={t("common:mfa.confirmHint")}
         accessibilityState={{
           busy: loading,
           disabled: tokenInput.length !== 6 || loading,
@@ -233,7 +249,7 @@ const MfaScreen: React.FC = () => {
                   flexShrink: 0,
                 }}
               >
-                Verifying
+                {t("common:mfa.verifying")}
               </Text>
               <Text
                 style={{
@@ -258,7 +274,7 @@ const MfaScreen: React.FC = () => {
                 textAlign: "center",
               }}
             >
-              CONFIRM
+              {t("common:mfa.confirm")}
             </Text>
           )}
         </LinearGradient>
@@ -268,21 +284,21 @@ const MfaScreen: React.FC = () => {
       <TouchableOpacity
         onPress={handleCancel}
         accessibilityRole="button"
-        accessibilityLabel="Cancel and go back to login"
+        accessibilityLabel={t("common:mfa.cancelAndReturn")}
         style={{
           marginTop: 20,
           padding: 10,
         }}
       >
         <Text
-          accessibilityHint="Signs out and returns to the login screen"
+          accessibilityHint={t("common:mfa.cancelAndReturnHint")}
           style={{
             color: accessMode ? "white" : "#999",
             fontSize: accessMode ? 20 : 16,
             fontFamily: "MPLUSLatin_Regular",
           }}
         >
-          Cancel and return to login
+          {t("common:mfa.cancelAndReturnText")}
         </Text>
       </TouchableOpacity>
 
@@ -298,8 +314,7 @@ const MfaScreen: React.FC = () => {
               : "MPLUSLatin_ExtraLight",
           }}
         >
-          Note: This screen cannot be bypassed. You must enter the correct TOTP
-          code to continue.
+          {t("common:mfa.bypassNotice")}
         </Text>
       </View>
     </View>

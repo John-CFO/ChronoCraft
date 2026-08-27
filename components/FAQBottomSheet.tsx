@@ -29,6 +29,7 @@ import { reauthenticateWithCredential } from "firebase/auth";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { ScrollView } from "react-native-gesture-handler";
 import { getFunctions, httpsCallable } from "firebase/functions";
+import { useTranslation } from "react-i18next";
 
 import { FIREBASE_AUTH } from "../firebaseConfig";
 import { useAlertStore } from "./services/customAlert/alertStore";
@@ -46,6 +47,9 @@ interface FAQBottomSheetProps {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // FAQ section states
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
@@ -53,6 +57,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
     faq1: false,
     faq2: false,
     faq3: false,
+    faq4: false,
   });
 
   // screensize for dynamic size calculation
@@ -88,7 +93,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
     } catch {
       useAlertStore
         .getState()
-        .showAlert("Error", "Failed to close FAQ sheet. Please try again.");
+        .showAlert(t("faq.alerts.error"), t("faq.alerts.closeFailed"));
     }
   };
 
@@ -117,8 +122,8 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
       useAlertStore
         .getState()
         .showAlert(
-          "No Password",
-          "Please enter your password before deleting your account.",
+          t("faq.alerts.noPassword"),
+          t("faq.alerts.passwordRequired"),
         );
       return false;
     }
@@ -126,7 +131,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
     if (!user || !user.uid) {
       useAlertStore
         .getState()
-        .showAlert("Error", "No authenticated user found.");
+        .showAlert(t("faq.alerts.error"), t("faq.alerts.noAuthenticatedUser"));
       return false;
     }
 
@@ -136,7 +141,10 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
       if (!currentUser) {
         useAlertStore
           .getState()
-          .showAlert("Error", "No authenticated user found.");
+          .showAlert(
+            t("faq.alerts.error"),
+            t("faq.alerts.noAuthenticatedUser"),
+          );
         setLoading(false);
         return false;
       }
@@ -155,7 +163,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
 
       useAlertStore
         .getState()
-        .showAlert("Success", "Your account has been deleted.");
+        .showAlert(t("faq.alerts.success"), t("faq.alerts.accountDeleted"));
       closeFAQSheet();
       setLoading(false);
 
@@ -168,12 +176,10 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
 
       return true;
     } catch (error: any) {
+      logError("FAQBottomSheet/deleteAccount", error);
       useAlertStore
         .getState()
-        .showAlert(
-          "Error",
-          `There was an issue deleting your account. ${error?.code ?? ""} ${error?.message ?? ""}`,
-        );
+        .showAlert(t("faq.alerts.error"), t("faq.alerts.deleteFailed"));
       setLoading(false);
       return false;
     }
@@ -186,16 +192,12 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
   // define the dot animation with a delay
   const dots = useDotAnimation(loading, 700);
 
-  // define the alternative method for MFA workflow
-  const mfaFaqOneDevice =
-    "The QR code used to set up your authenticator app is usually intended to be scanned with a second device. If you only have one smartphone, you can use the following alternative method:\n\n1. Take a screenshot of the displayed QR code.\n2. Open your authenticator app.\n3. Use the option to import a QR code from an image or your gallery.\n4. Select the screenshot and complete the setup process.\n\nPlease note that not every authenticator app supports importing QR codes from images. Google Authenticator supports importing QR codes from saved images depending on the app version.\n\nAfter successfully enabling MFA, you should delete the screenshot. The QR code contains your secret TOTP key, which is used to generate your MFA codes. Anyone who gains access to this key could generate valid MFA codes for your account.";
-
   return (
     <View
       accessibilityViewIsModal
       accessible={true}
-      accessibilityLabel="Frequently Asked Questions sheet"
-      accessibilityHint="Contains frequently asked questions."
+      accessibilityLabel={t("faq.sheetAccessibility")}
+      accessibilityHint={t("faq.sheetHint")}
       style={{
         flex: 1,
         width: "100%",
@@ -214,7 +216,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
       >
         <Text
           accessibilityRole="header"
-          accessibilityLabel="Frequently Asked Questions"
+          accessibilityLabel={t("faq.titleAccessibility")}
           style={{
             color: accessMode ? "white" : "gray",
             fontSize: accessMode ? 22 : 20,
@@ -222,14 +224,14 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
             textAlign: "center",
           }}
         >
-          Frequently Asked Questions
+          {t("faq.title")}
         </Text>
         {/* Close Button */}
         <TouchableOpacity
           accessible={true}
           accessibilityRole="button"
-          accessibilityLabel="Close FAQ"
-          accessibilityHint="Closes the frequently asked questions"
+          accessibilityLabel={t("faq.close")}
+          accessibilityHint={t("faq.closeHint")}
           onPress={closeFAQSheet}
           style={{
             position: "absolute",
@@ -289,10 +291,10 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
             <TouchableOpacity
               accessible={true}
               accessibilityRole="button"
-              accessibilityLabel={`How to close the tooltip on the Workhours Chart? ${
-                expandedSections.faq1 ? "Expanded" : "Collapsed"
+              accessibilityLabel={`${t("faq.workhoursTooltip.question")} ${
+                expandedSections.faq1 ? t("faq.expanded") : t("faq.collapsed")
               }`}
-              accessibilityHint="Toggles the answer for how to close the tooltip"
+              accessibilityHint={t("faq.workhoursTooltip.hint")}
               accessibilityState={{ expanded: !!expandedSections.faq1 }}
               onPress={() => {
                 // announce planned new state (compute new state before toggle to have correct announcement)
@@ -301,7 +303,9 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                 AccessibilityInfo.isScreenReaderEnabled().then((enabled) => {
                   if (enabled)
                     AccessibilityInfo.announceForAccessibility(
-                      willBeExpanded ? "Answer opened" : "Answer closed",
+                      willBeExpanded
+                        ? t("faq.answerOpened")
+                        : t("faq.answerClosed"),
                     );
                 });
               }}
@@ -324,7 +328,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                   marginRight: 16,
                 }}
               >
-                How to close the tooltip on the Workhours Chart?
+                {t("faq.workhoursTooltip.question")}
               </Text>
               <Text style={{ color: "aqua", fontSize: accessMode ? 28 : 20 }}>
                 {expandedSections.faq1 ? "−" : "+"}
@@ -334,7 +338,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
               <Text
                 accessible={true}
                 accessibilityLiveRegion="polite"
-                accessibilityLabel="To close the tooltip, simply tap anywhere outside the chart area but inside the card. The entire card is set up to listen for taps outside of the chart."
+                accessibilityLabel={t("faq.workhoursTooltip.answer")}
                 style={{
                   paddingTop: 12,
                   fontSize: accessMode ? 18 : 14,
@@ -342,19 +346,17 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                   lineHeight: 20,
                 }}
               >
-                To close the tooltip, simply tap anywhere outside the chart area
-                but inside the card. The entire card is set up to listen for
-                taps outside of the chart.
+                {t("faq.workhoursTooltip.answer")}
               </Text>
             </Collapsible>
-            {/* FAQ 1: How to change your password */}
+            {/* FAQ 2: How to change your password */}
             <TouchableOpacity
               accessible={true}
               accessibilityRole="button"
-              accessibilityLabel={`How to change my password? ${
-                expandedSections.faq2 ? "Expanded" : "Collapsed"
+              accessibilityLabel={`${t("faq.changePassword.question")} ${
+                expandedSections.faq2 ? t("faq.expanded") : t("faq.collapsed")
               }`}
-              accessibilityHint="Toggles instructions to change your password"
+              accessibilityHint={t("faq.changePassword.hint")}
               accessibilityState={{ expanded: !!expandedSections.faq2 }}
               onPress={() => {
                 const willBeExpanded = !expandedSections.faq2;
@@ -362,7 +364,9 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                 AccessibilityInfo.isScreenReaderEnabled().then((enabled) => {
                   if (enabled)
                     AccessibilityInfo.announceForAccessibility(
-                      willBeExpanded ? "Answer opened" : "Answer closed",
+                      willBeExpanded
+                        ? t("faq.answerOpened")
+                        : t("faq.answerClosed"),
                     );
                 });
               }}
@@ -385,7 +389,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                   marginRight: 16,
                 }}
               >
-                How to change my password?
+                {t("faq.changePassword.question")}
               </Text>
               <Text
                 accessible={false}
@@ -398,7 +402,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
               <Text
                 accessible={true}
                 accessibilityLiveRegion="polite"
-                accessibilityLabel="Leave the app with Logout and you will navigate to the login screen. There you can change your password by pressing forgot password. We will send you an email with instructions on how to reset your password."
+                accessibilityLabel={t("faq.changePassword.answer")}
                 style={{
                   paddingTop: 12,
                   fontSize: accessMode ? 18 : 14,
@@ -406,10 +410,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                   lineHeight: 20,
                 }}
               >
-                Leaf the app with Logout and you will navigate to the login
-                screen. There you can change your password with press on forgot
-                password. Whe will send you an email with instructions on how to
-                reset your password.
+                {t("faq.changePassword.answer")}
               </Text>
             </Collapsible>
 
@@ -417,10 +418,10 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
             <TouchableOpacity
               accessible={true}
               accessibilityRole="button"
-              accessibilityLabel={`How to delete my account? ${
-                expandedSections.faq3 ? "Expanded" : "Collapsed"
+              accessibilityLabel={`${t("faq.deleteAccount.question")} ${
+                expandedSections.faq3 ? t("faq.expanded") : t("faq.collapsed")
               }`}
-              accessibilityHint="Toggles instructions to delete your account"
+              accessibilityHint={t("faq.deleteAccount.hint")}
               accessibilityState={{ expanded: !!expandedSections.faq3 }}
               onPress={() => {
                 const willBeExpanded = !expandedSections.faq3;
@@ -428,7 +429,9 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                 AccessibilityInfo.isScreenReaderEnabled().then((enabled) => {
                   if (enabled)
                     AccessibilityInfo.announceForAccessibility(
-                      willBeExpanded ? "Answer opened" : "Answer closed",
+                      willBeExpanded
+                        ? t("faq.answerOpened")
+                        : t("faq.answerClosed"),
                     );
                 });
               }}
@@ -451,7 +454,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                   marginRight: 16,
                 }}
               >
-                How to delete my account?
+                {t("faq.deleteAccount.question")}
               </Text>
               <Text
                 accessible={false}
@@ -464,7 +467,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
               <Text
                 accessible={true}
                 accessibilityLiveRegion="polite"
-                accessibilityLabel="To delete your account, you must confirm your password. All data will be permanently removed."
+                accessibilityLabel={t("faq.deleteAccount.answer")}
                 style={{
                   paddingTop: 12,
                   fontSize: accessMode ? 18 : 14,
@@ -472,8 +475,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                   lineHeight: 20,
                 }}
               >
-                To delete your account, you must confirm your password. All data
-                will be permanently removed from our servers.
+                {t("faq.deleteAccount.answer")}
               </Text>
               <View style={{ alignItems: "center", justifyContent: "center" }}>
                 <View
@@ -484,8 +486,8 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                 >
                   <TextInput
                     accessible={true}
-                    accessibilityLabel="Enter your password to confirm account deletion"
-                    placeholder="Enter your password"
+                    accessibilityLabel={t("faq.deleteAccount.passwordInput")}
+                    placeholder={t("faq.deleteAccount.passwordPlaceholder")}
                     placeholderTextColor={accessMode ? "white" : "#888"}
                     secureTextEntry={passwordVisibility}
                     value={password}
@@ -511,9 +513,11 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                     accessible={true}
                     accessibilityRole="button"
                     accessibilityLabel={
-                      passwordVisibility ? "Show password" : "Hide password"
+                      passwordVisibility
+                        ? t("faq.deleteAccount.showPassword")
+                        : t("faq.deleteAccount.hidePassword")
                     }
-                    accessibilityHint="Toggles password visibility"
+                    accessibilityHint={t("faq.deleteAccount.visibilityHint")}
                     onPress={deleteAccountVisibility}
                     style={{ position: "absolute", right: 15, top: 25 }}
                   >
@@ -527,21 +531,24 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                 <TouchableOpacity
                   accessible={true}
                   accessibilityRole="button"
-                  accessibilityLabel="Delete Account"
-                  accessibilityHint="Deletes your account permanently after confirmation"
+                  accessibilityLabel={t("faq.deleteAccount.deleteButton")}
+                  accessibilityHint={t("faq.deleteAccount.deleteButtonHint")}
                   accessibilityState={{ busy: loading }}
                   onPress={() =>
                     useAlertStore
                       .getState()
                       .showAlert(
-                        "Delete Account",
-                        "Are you sure you want to delete your account?",
+                        t("faq.deleteConfirmation.title"),
+                        t("faq.deleteConfirmation.message"),
                         [
-                          { text: "Cancel", style: "cancel" },
                           {
-                            text: "Delete",
+                            text: t("faq.deleteConfirmation.cancel"),
+                            style: "cancel",
+                          },
+                          {
+                            text: t("faq.deleteConfirmation.delete"),
                             style: "destructive",
-                            onPress: handleDeleteAccount, // placed here to garantee first the animation
+                            onPress: handleDeleteAccount,
                           },
                         ],
                       )
@@ -586,16 +593,15 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                         >
                           <Text
                             style={{
-                              marginLeft: 100,
                               marginBottom: 5,
                               fontFamily: "MPLUSLatin_Bold",
                               fontSize: 22,
                               color: "white",
-                              textAlign: "center",
-                              width: 100,
+                              width: 160,
+                              textAlign: "right",
                             }}
                           >
-                            Deleting
+                            {t("faq.deleteAccount.deleting")}
                           </Text>
                           <Text
                             style={{
@@ -603,7 +609,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                               fontFamily: "MPLUSLatin_Bold",
                               fontSize: 22,
                               color: "white",
-                              width: 100,
+                              width: 40,
                               textAlign: "left",
                             }}
                           >
@@ -620,7 +626,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                             textAlign: "center",
                           }}
                         >
-                          Delete Account
+                          {t("faq.deleteAccount.deleteButton")}
                         </Text>
                       )}
                     </View>
@@ -632,10 +638,10 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
             <TouchableOpacity
               accessible={true}
               accessibilityRole="button"
-              accessibilityLabel={`How can I set up MFA if I only have one smartphone? ${
-                expandedSections.faq4 ? "Expanded" : "Collapsed"
+              accessibilityLabel={`${t("faq.mfaOneDevice.question")} ${
+                expandedSections.faq4 ? t("faq.expanded") : t("faq.collapsed")
               }`}
-              accessibilityHint="Toggles the answer for how to close the tooltip"
+              accessibilityHint={t("faq.mfaOneDevice.hint")}
               accessibilityState={{ expanded: !!expandedSections.faq4 }}
               onPress={() => {
                 // announce planned new state (compute new state before toggle to have correct announcement)
@@ -644,7 +650,9 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                 AccessibilityInfo.isScreenReaderEnabled().then((enabled) => {
                   if (enabled)
                     AccessibilityInfo.announceForAccessibility(
-                      willBeExpanded ? "Answer opened" : "Answer closed",
+                      willBeExpanded
+                        ? t("faq.answerOpened")
+                        : t("faq.answerClosed"),
                     );
                 });
               }}
@@ -667,7 +675,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                   marginRight: 16,
                 }}
               >
-                How can I set up MFA if I only have one smartphone?
+                {t("faq.mfaOneDevice.question")}
               </Text>
               <Text style={{ color: "aqua", fontSize: accessMode ? 28 : 20 }}>
                 {expandedSections.faq4 ? "−" : "+"}
@@ -677,7 +685,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
               <Text
                 accessible={true}
                 accessibilityLiveRegion="polite"
-                accessibilityLabel={mfaFaqOneDevice}
+                accessibilityLabel={t("faq.mfaOneDevice.answer")}
                 style={{
                   paddingTop: 12,
                   fontSize: accessMode ? 18 : 14,
@@ -685,7 +693,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                   lineHeight: 20,
                 }}
               >
-                {mfaFaqOneDevice}
+                {t("faq.mfaOneDevice.answer")}
               </Text>
             </Collapsible>
           </View>

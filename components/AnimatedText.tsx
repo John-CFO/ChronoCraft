@@ -10,16 +10,20 @@
 
 import React from "react";
 import { TypeAnimation } from "react-native-type-animation";
+import { useTranslation } from "react-i18next";
 
 ////////////////////////////////////////////////////////////////////
 
 const AnimatedText = () => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   return (
     <TypeAnimation
       sequence={[
-        { text: "Timetracking" },
-        { text: "Efficiency" },
-        { text: "Analytics" },
+        { text: t("animatedText.timetracking") },
+        { text: t("animatedText.efficiency") },
+        { text: t("animatedText.analytics") },
       ]}
       loop
       style={{

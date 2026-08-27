@@ -31,6 +31,7 @@ import {
   AlertNotificationRoot,
 } from "react-native-alert-notification";
 import { BlurView } from "expo-blur";
+import { useTranslation } from "react-i18next";
 
 import { NotificationManager } from "../components/services/PushNotifications";
 import { FIREBASE_APP } from "../firebaseConfig";
@@ -43,14 +44,15 @@ import { useAlertStore } from "../components/services/customAlert/alertStore";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import AuthForm from "../components/AuthForm";
 import {
-  LoginInputSchema,
-  RegisterInputSchema,
+  createLoginInputSchema,
+  createRegisterInputSchema,
 } from "../validation/authSchemas";
 import { logError } from "../lib/loggerClient";
 import {
   isFirebaseError,
   FIREBASE_ERROR_CODES,
 } from "../functions/src/errors/firebaseErrors";
+import i18n from "../components/services/localization/i18n";
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -62,6 +64,9 @@ type RegisterScreenNavigationProp = StackNavigationProp<
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 const LoginScreen: React.FC = () => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
 
@@ -88,10 +93,11 @@ const LoginScreen: React.FC = () => {
 
   // function to validate the inputs
   const validateLoginInputs = () => {
-    const parsed = LoginInputSchema.safeParse({ email, password });
+    const parsed = createLoginInputSchema().safeParse({ email, password });
     if (!parsed.success) {
-      const msg = parsed.error.issues[0]?.message ?? "Invalid input";
-      useAlertStore.getState().showAlert("Validation Error", msg);
+      const msg = parsed.error.issues[0]?.message ?? t("auth.invalidInput");
+
+      useAlertStore.getState().showAlert(t("auth.validationError"), msg);
       return false;
     }
     return true;
@@ -99,10 +105,11 @@ const LoginScreen: React.FC = () => {
 
   // Registration
   const validateRegisterInputs = () => {
-    const parsed = RegisterInputSchema.safeParse({ email, password });
+    const parsed = createRegisterInputSchema().safeParse({ email, password });
     if (!parsed.success) {
-      const msg = parsed.error.issues[0]?.message ?? "Invalid input";
-      useAlertStore.getState().showAlert("Validation Error", msg);
+      const msg = parsed.error.issues[0]?.message ?? t("auth.invalidInput");
+
+      useAlertStore.getState().showAlert(t("auth.validationError"), msg);
       return false;
     }
     return true;
@@ -114,7 +121,10 @@ const LoginScreen: React.FC = () => {
     setLoading(true);
     try {
       const { user } = await signInWithEmailAndPassword(auth, email, password);
-      const result = await authValidator({ action: "login" });
+      const result = await authValidator({
+        action: "login",
+        language: i18n.language,
+      });
       const { nextStage } = result.data as { nextStage: AuthStage };
 
       // === Single state transition point ===
@@ -124,7 +134,7 @@ const LoginScreen: React.FC = () => {
       logError("LoginScreen/login", error);
       useAlertStore
         .getState()
-        .showAlert("Login failed", "Something went wrong, please try again!");
+        .showAlert(t("auth.loginFailed"), t("auth.somethingWentWrongTryAgain"));
     } finally {
       setLoading(false);
     }
@@ -140,7 +150,10 @@ const LoginScreen: React.FC = () => {
         email,
         password,
       );
-      const result = await authValidator({ action: "register" });
+      const result = await authValidator({
+        action: "register",
+        language: i18n.language,
+      });
       const { nextStage } = result.data as { nextStage: AuthStage };
       // Navigation
       setUser(response.user);
@@ -155,7 +168,7 @@ const LoginScreen: React.FC = () => {
             functions,
             "registerPushTokenFunction",
           );
-          await registerPushToken({ token });
+          await registerPushToken({ token, language: i18n.language });
         } catch (error) {
           logError("LoginScreen/registerPushToken", error);
         }
@@ -175,8 +188,8 @@ const LoginScreen: React.FC = () => {
         useAlertStore
           .getState()
           .showAlert(
-            "Access restricted",
-            "This application is currently available only for invited reviewers.",
+            t("auth.accessRestricted"),
+            t("auth.invitedReviewersOnly"),
           );
         return;
       }
@@ -184,8 +197,8 @@ const LoginScreen: React.FC = () => {
       useAlertStore
         .getState()
         .showAlert(
-          "Registration failed",
-          "Registration could not be completed. Please check your email address and try again.",
+          t("auth.registrationFailed"),
+          t("auth.registrationCouldNotBeCompleted"),
         );
     } finally {
       setLoading(false);

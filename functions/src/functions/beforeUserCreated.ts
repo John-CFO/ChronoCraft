@@ -9,10 +9,15 @@ import { beforeUserCreated } from "firebase-functions/v2/identity";
 import { HttpsError } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
 
+import { getTranslation } from "../services/localization/i18n";
+
 /////////////////////////////////////////////////////////////////////////////
 
 // function to validate user registration
 export const validateReviewerEmail = async (email?: string) => {
+  // use getTranslation to get the current language
+  const t = await getTranslation();
+
   const db = getFirestore();
 
   const normalizedEmail = email?.trim().toLowerCase();
@@ -20,7 +25,10 @@ export const validateReviewerEmail = async (email?: string) => {
   // if no email is provided, throw an error
   if (!normalizedEmail) {
     console.log("BLOCK: missing email");
-    throw new HttpsError("permission-denied", "Registration is not allowed");
+    throw new HttpsError(
+      "permission-denied",
+      t("errors.registrationNotAllowed"),
+    );
   }
 
   const whitelistSnapshot = await db
@@ -33,7 +41,10 @@ export const validateReviewerEmail = async (email?: string) => {
   // if the user is not whitelisted, throw an error
   if (!whitelistSnapshot.exists) {
     console.log("BLOCK: whitelist missing", normalizedEmail);
-    throw new HttpsError("permission-denied", "Registration is not allowed");
+    throw new HttpsError(
+      "permission-denied",
+      t("errors.registrationNotAllowed"),
+    );
   }
 
   // set data from snapshot
@@ -42,7 +53,10 @@ export const validateReviewerEmail = async (email?: string) => {
   // if the user is not active, throw an error
   if (data?.active !== true) {
     console.log("BLOCK: inactive reviewer", normalizedEmail, data);
-    throw new HttpsError("permission-denied", "Registration is not allowed");
+    throw new HttpsError(
+      "permission-denied",
+      t("errors.registrationNotAllowed"),
+    );
   }
 };
 export const validateReviewerRegistration = beforeUserCreated(async (event) => {

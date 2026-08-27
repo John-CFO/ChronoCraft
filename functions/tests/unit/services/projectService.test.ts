@@ -29,6 +29,12 @@ describe("ProjectService Unit Tests", () => {
   let service: ProjectService;
   let repo: jest.Mocked<ProjectRepo>;
 
+  const request = {
+    data: {
+      language: "en",
+    },
+  };
+
   beforeEach(() => {
     repo = new ProjectRepo() as jest.Mocked<ProjectRepo>;
     service = new ProjectService();
@@ -51,6 +57,7 @@ describe("ProjectService Unit Tests", () => {
         "serviceId",
         "project1",
         { name: "New Name" },
+        request,
       );
 
       expect(repo.updateProject).toHaveBeenCalledWith(
@@ -70,7 +77,7 @@ describe("ProjectService Unit Tests", () => {
       repo.updateProject.mockRejectedValue(new Error("DB error"));
 
       await expect(
-        service.updateProject("user123", "serviceId", "project1", {
+        service.updateProject("user123", "serviceId", "project1", request, {
           name: "New Name",
         }),
       ).rejects.toThrow("DB error");
@@ -78,15 +85,15 @@ describe("ProjectService Unit Tests", () => {
 
     it("should throw if input is invalid (missing ids)", async () => {
       await expect(
-        service.updateProject("", "serviceId", "user123", {}),
+        service.updateProject("", "serviceId", "user123", request, {}),
       ).rejects.toThrow("Invalid input");
 
       await expect(
-        service.updateProject("project1", "", "user123", {}),
+        service.updateProject("project1", "", "user123", request, {}),
       ).rejects.toThrow("Invalid input");
 
       await expect(
-        service.updateProject("project1", "serviceId", "", {}),
+        service.updateProject("project1", "serviceId", "", request, {}),
       ).rejects.toThrow("Invalid input");
     });
   });
@@ -100,6 +107,7 @@ describe("ProjectService Unit Tests", () => {
         "service1",
         "project1",
         50,
+        request,
       );
 
       expect(repo.setProjectHourlyRate).toHaveBeenCalledWith(
@@ -119,7 +127,7 @@ describe("ProjectService Unit Tests", () => {
       repo.setProjectHourlyRate.mockRejectedValue(new Error("DB error"));
 
       await expect(
-        service.setHourlyRate("user123", "service1", "project1", 50),
+        service.setHourlyRate("user123", "service1", "project1", 50, request),
       ).rejects.toThrow("DB error");
     });
 
@@ -127,17 +135,17 @@ describe("ProjectService Unit Tests", () => {
       repo.setProjectHourlyRate.mockRejectedValue(new Error("DB error"));
 
       await expect(
-        service.setHourlyRate("user123", "service1", "project1", 50),
+        service.setHourlyRate("user123", "service1", "project1", 50, request),
       ).rejects.toThrow("DB error");
     });
 
     it("should throw on invalid input", async () => {
       await expect(
-        service.setHourlyRate("", "service1", "project1", 50),
+        service.setHourlyRate("", "service1", "project1", 50, request),
       ).rejects.toThrow("Invalid input");
 
       await expect(
-        service.setHourlyRate("user123", "service1", "project1", NaN),
+        service.setHourlyRate("user123", "service1", "project1", NaN, request),
       ).rejects.toThrow("Invalid input");
     });
   });

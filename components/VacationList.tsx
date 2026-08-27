@@ -21,6 +21,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { AntDesign } from "@expo/vector-icons";
 import Entypo from "@expo/vector-icons/Entypo";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
+import { useTranslation } from "react-i18next";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useService } from "../components/contexts/ServiceContext";
@@ -37,7 +38,10 @@ import { logError, logEvent, logWarn } from "../lib/loggerClient";
 const CopilotTouchableView = walkthroughable(View);
 
 const VacationList = () => {
-  //set state for vacations
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
+  // set state for vacations
   const [vacations, setVacations] = useState<
     { id: string; markedDates: string[]; reminderActive: boolean }[]
   >([]);
@@ -131,8 +135,8 @@ const VacationList = () => {
         useAlertStore
           .getState()
           .showAlert(
-            "Error loading vacations",
-            "Could not fetch vacation data. Please try again.",
+            t("vacationList.loadErrorTitle"),
+            t("vacationList.loadErrorMessage"),
           );
       },
     );
@@ -142,56 +146,60 @@ const VacationList = () => {
   // function to delete vacation dates
   const handleDeleteDate = async (vacationId: string) => {
     if (!serviceId) {
-      logWarn("VacationRemindModal.handleSaveReminder", "Missing serviceId");
+      logWarn("VacationList.handleDeleteDate", "Missing serviceId");
       return;
     }
     // alert to confirm deletion
     useAlertStore
       .getState()
-      .showAlert("Attention!", "Do you really want to delete the vacation?", [
-        {
-          text: "Cancel",
-          onPress: () => console.log("Vacation deletion canceled"),
-          style: "cancel",
-        },
-        {
-          text: "Delete",
-          onPress: async () => {
-            try {
-              const vacationDoc = doc(
-                FIREBASE_FIRESTORE,
-                "Users",
-                user.uid,
-                "Services",
-                serviceId,
-                "Vacations",
-                vacationId,
-              );
-
-              // firestore batch for atomic updates
-              const batch = writeBatch(FIREBASE_FIRESTORE);
-
-              // conditionally delete the reminderDuration field
-              const vacationData = await getDoc(vacationDoc);
-              if (vacationData.exists()) {
-                const data = vacationData.data();
-                if (data && data.reminderDuration) {
-                  batch.update(vacationDoc, {
-                    reminderDuration: deleteField(), // delete the reminderDuration field
-                  });
-                }
-              }
-              // delete the vacation
-              batch.delete(vacationDoc);
-              // commit the batch to the database
-              await batch.commit();
-            } catch (error) {
-              logError("VacationList.handleDeleteDate", error);
-            }
+      .showAlert(
+        t("vacationList.attention"),
+        t("vacationList.deleteConfirmation"),
+        [
+          {
+            text: t("vacationList.cancel"),
+            onPress: () => {},
+            style: "cancel",
           },
-          style: "destructive", // to visually indicate a destructive action
-        },
-      ]);
+          {
+            text: t("vacationList.delete"),
+            onPress: async () => {
+              try {
+                const vacationDoc = doc(
+                  FIREBASE_FIRESTORE,
+                  "Users",
+                  user.uid,
+                  "Services",
+                  serviceId,
+                  "Vacations",
+                  vacationId,
+                );
+
+                // firestore batch for atomic updates
+                const batch = writeBatch(FIREBASE_FIRESTORE);
+
+                // conditionally delete the reminderDuration field
+                const vacationData = await getDoc(vacationDoc);
+                if (vacationData.exists()) {
+                  const data = vacationData.data();
+                  if (data && data.reminderDuration) {
+                    batch.update(vacationDoc, {
+                      reminderDuration: deleteField(), // delete the reminderDuration field
+                    });
+                  }
+                }
+                // delete the vacation
+                batch.delete(vacationDoc);
+                // commit the batch to the database
+                await batch.commit();
+              } catch (error) {
+                logError("VacationList.handleDeleteDate", error);
+              }
+            },
+            style: "destructive", // to visually indicate a destructive action
+          },
+        ],
+      );
   };
 
   // function to show the reminder-modal
@@ -204,9 +212,9 @@ const VacationList = () => {
     <>
       {/* VacationScreen copilot tour step 3*/}
       <CopilotStep
-        name="Booked Vacations"
+        name={t("vacationList.copilot.name")}
         order={3}
-        text="This card shows your vacations. You can delete them here and you can also set a reminder date."
+        text={t("vacationList.copilot.text")}
       >
         {/* vacation list container */}
         <CopilotTouchableView
@@ -244,20 +252,21 @@ const VacationList = () => {
             <Text
               accessible={true}
               accessibilityRole="header"
-              accessibilityLabel="Booked Vacations"
+              accessibilityLabel={t("vacationList.title")}
               style={{
                 fontSize: 25,
                 fontFamily: "MPLUSLatin_Bold",
                 color: "white",
               }}
             >
-              Booked Vacations
+              {t("vacationList.title")}
             </Text>
           </View>
 
           <View
             style={{
               width: "auto",
+              height: 60,
               marginTop: 20,
               justifyContent: "center",
               alignItems: "center",
@@ -312,12 +321,18 @@ const VacationList = () => {
                       accessibilityRole="text"
                       accessibilityLabel={
                         sortedDates.length > 1
-                          ? `Vacation from ${displayRange}${
-                              item.reminderActive ? ", reminder active" : ""
-                            }`
-                          : `Vacation on ${displayRange}${
-                              item.reminderActive ? ", reminder active" : ""
-                            }`
+                          ? t("vacationList.vacationFrom", {
+                              date: displayRange,
+                            }) +
+                            (item.reminderActive
+                              ? `, ${t("vacationList.reminderActive")}`
+                              : "")
+                          : t("vacationList.vacationOn", {
+                              date: displayRange,
+                            }) +
+                            (item.reminderActive
+                              ? `, ${t("vacationList.reminderActive")}`
+                              : "")
                       }
                       style={{
                         height: 60,
@@ -341,7 +356,11 @@ const VacationList = () => {
                         shadowRadius: 3,
                       }}
                     >
-                      <View style={{ flex: 1 }}>
+                      <View
+                        style={{
+                          flex: 1,
+                        }}
+                      >
                         <Text
                           style={{
                             fontFamily: "MPLUSLatin_Bold",
@@ -357,7 +376,7 @@ const VacationList = () => {
                               fontSize: accessMode ? 18 : 16,
                             }}
                           >
-                            Date:
+                            {t("vacationList.date")}:
                           </Text>{" "}
                           {displayRange || "No marked dates"}
                         </Text>
@@ -367,8 +386,8 @@ const VacationList = () => {
                         accessibilityRole="button"
                         accessibilityLabel={
                           item.reminderActive
-                            ? "Reminder is active. Tap to deactivate reminder"
-                            : "Reminder is inactive. Tap to activate reminder"
+                            ? t("vacationList.reminderActive")
+                            : t("vacationList.reminderInactive")
                         }
                         style={{
                           paddingHorizontal: 10,
@@ -393,7 +412,7 @@ const VacationList = () => {
                       <TouchableOpacity
                         accessible={true}
                         accessibilityRole="button"
-                        accessibilityLabel="Delete vacation"
+                        accessibilityLabel={t("vacationList.deleteVacation")}
                         onPress={() => handleDeleteDate(item.id)}
                       >
                         <AntDesign
@@ -411,13 +430,13 @@ const VacationList = () => {
               <View
                 style={{
                   width: 330,
-                  height: 50,
+                  height: 60,
                   alignItems: "center",
                 }}
               >
                 <Text
                   accessible={true}
-                  accessibilityLabel="You haven't booked any vacation days yet. Book some."
+                  accessibilityLabel={t("vacationList.noVacations")}
                   style={{
                     textAlign: "center",
                     color: "white",
@@ -427,7 +446,7 @@ const VacationList = () => {
                       : "MPLUSLatin_ExtraLight",
                   }}
                 >
-                  "You haven't booked any vacation days yet. Book some."
+                  {t("vacationList.noVacations")}
                 </Text>
               </View>
             )}

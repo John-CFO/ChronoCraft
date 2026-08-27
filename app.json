@@ -6,12 +6,10 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.yourcompany.yourapp"
     },
-
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
@@ -23,6 +21,12 @@
         "WAKE_LOCK",
         "POST_NOTIFICATIONS"
       ]
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "481d68c9-3b59-4eac-8ee4-d89d19ea9ea8"
+      }
+    },
+    "owner": "john-cfo"
   }
 }

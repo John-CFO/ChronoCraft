@@ -10,6 +10,7 @@ import * as admin from "firebase-admin";
 
 import { ProjectRepo } from "../repos/projectRepo";
 import { ValidationError } from "../errors/domain.errors";
+import { getTranslation } from "../services/localization/i18n";
 
 ////////////////////////////////////////////////////////////////////////////////////
 
@@ -22,9 +23,13 @@ export class ProjectService {
     serviceId: string,
     projectId: string,
     data: any,
+    request: any,
   ) {
+    // use getTranslation to get the current language
+    const t = await getTranslation(request.data?.language);
+
     if (!userId || !serviceId || !projectId) {
-      throw new ValidationError("Invalid input");
+      throw new ValidationError(t("validation.invalidInput"));
     }
 
     const { projectId: _, userId: __, serviceId: ___, ...updateData } = data;
@@ -35,9 +40,12 @@ export class ProjectService {
     });
   }
 
-  async getProjects(userId: string, serviceId: string) {
+  async getProjects(userId: string, serviceId: string, request: any) {
+    // use getTranslation to get the current language
+    const t = await getTranslation(request.data?.language);
+
     if (!userId || !serviceId) {
-      throw new ValidationError("Invalid input");
+      throw new ValidationError(t("validation.invalidInput"));
     }
 
     const res = await this.projectRepo.getProjects(userId, serviceId);
@@ -60,7 +68,11 @@ export class ProjectService {
     serviceId: string,
     projectId: string,
     rate: number,
+    request: any,
   ) {
+    // use getTranslation to get the current language
+    const t = await getTranslation(request.data?.language);
+
     if (
       !userId ||
       !serviceId ||
@@ -68,7 +80,7 @@ export class ProjectService {
       typeof rate !== "number" ||
       Number.isNaN(rate)
     ) {
-      throw new ValidationError("Invalid input");
+      throw new ValidationError(t("validation.invalidInput"));
     }
 
     const lockRef = admin
@@ -78,7 +90,7 @@ export class ProjectService {
     const lockSnap = await lockRef.get();
 
     if (lockSnap.exists) {
-      throw new ValidationError("Project deletion in progress");
+      throw new ValidationError(t("validation.projectDeletionInProgress"));
     }
 
     return this.projectRepo.setProjectHourlyRate(userId, serviceId, projectId, {

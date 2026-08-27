@@ -5,6 +5,7 @@
 //////////////////////////////////////////////////////////////
 
 import { z } from "zod";
+import i18n from "../components/services/localization/i18n";
 
 //////////////////////////////////////////////////////////////
 
@@ -12,33 +13,44 @@ import { z } from "zod";
 /**
  * @AppSec // only for CLI-Purpose, kno real Security-Enforcement
  */
-export const LoginInputSchema = z.object({
-  email: z.email({ message: "Please enter a valid E-Mail." }),
-  password: z.string().min(1, { message: "Password cannot be empty." }),
-});
+export const createLoginInputSchema = () =>
+  z.object({
+    email: z.email({
+      message: i18n.t("validation.invalidEmail"),
+    }),
+    password: z.string().min(1, {
+      message: i18n.t("validation.passwordEmpty"),
+    }),
+  });
 
 // validate register schema
 /**
  * @AppSec // only for CLI-Purpose, kno real Security-Enforcement
  */
-export const RegisterInputSchema = z.object({
-  email: z.email({ message: "Please enter a valid E-Mail." }),
-  password: z
-    .string()
-    .min(8, { message: "The password must be at least 8 characters long." })
-    .refine(
-      (pw) => (pw.match(/[-_!@#$%^&*(),.?\":{}|<>]/g) ?? []).length >= 2,
-      { message: "The password must contain at least 2 special characters." }
-    )
-    .refine((pw) => /\d/.test(pw), {
-      message: "The password must contain at least 1 number.",
+export const createRegisterInputSchema = () =>
+  z.object({
+    email: z.email({
+      message: i18n.t("validation.invalidEmail"),
     }),
-});
-
+    password: z
+      .string()
+      .min(8, {
+        message: i18n.t("validation.passwordMinLength"),
+      })
+      .refine(
+        (pw) => (pw.match(/[-_!@#$%^&*(),.?":{}|<>]/g) ?? []).length >= 2,
+        {
+          message: i18n.t("validation.passwordSpecialCharacters"),
+        },
+      )
+      .refine((pw) => /\d/.test(pw), {
+        message: i18n.t("validation.passwordNumber"),
+      }),
+  });
 // validate totp schema
 /**
  * @AppSec // only for CLI-Purpose, kno real Security-Enforcement
  */
-export const TotpCodeSchema = z
-  .string()
-  .regex(/^\d{6}$/, { message: "TOTP must be 6 digits" });
+export const TotpCodeSchema = z.string().regex(/^\d{6}$/, {
+  message: i18n.t("validation.totpDigits"),
+});

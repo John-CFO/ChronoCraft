@@ -8,6 +8,8 @@
 import * as admin from "firebase-admin";
 import { HttpsError } from "firebase-functions/v2/https";
 
+import { getTranslation } from "../services/localization/i18n";
+
 ///////////////////////////////////////////////////////////////////////////
 
 type FirebaseConfig = {
@@ -69,10 +71,13 @@ async function deleteStorageObjects(uid: string) {
 ///////////////////////////////////////////////////////////////////////////
 
 export const deleteUserDataHandler = async (request: any) => {
+  // use getTranslation to get the current language
+  const t = await getTranslation(request.data?.language);
+
   const uid = request.auth?.uid;
 
   if (!uid || typeof uid !== "string") {
-    throw new HttpsError("unauthenticated", "Not logged in");
+    throw new HttpsError("unauthenticated", t("errors.notLoggedIn"));
   }
 
   const db = admin.firestore();

@@ -9,6 +9,7 @@ import { TouchableOpacity, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { doc, setDoc, getDoc } from "firebase/firestore";
+import { useTranslation } from "react-i18next";
 
 import { useAccessibilityStore } from "./accessibilityStore";
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../../../firebaseConfig";
@@ -19,6 +20,10 @@ import { logError } from "../../../lib/loggerClient";
 const STORAGE_KEY = "uiAccessibilityMode";
 
 const AccessibilityToggleButton = () => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
+  // useAccessibilityStore hook to access accessibility state
   const isAccessible = useAccessibilityStore(
     (state) => state.accessibilityEnabled,
   );
@@ -95,8 +100,8 @@ const AccessibilityToggleButton = () => {
     <TouchableOpacity
       onPress={toggleAccessibility}
       accessibilityRole="button"
-      accessibilityLabel="Toggle Accessibility Mode"
-      accessibilityHint="Activates or deactivates screen reader optimized mode"
+      accessibilityLabel={t("accessibility.toggle")}
+      accessibilityHint={t("accessibility.toggleHint")}
       style={{
         flexDirection: "row",
         alignItems: "center",
@@ -117,7 +122,7 @@ const AccessibilityToggleButton = () => {
           fontFamily: "MPLUSLatin_Regular",
         }}
       >
-        Accessibility {isAccessible ? "On" : "Off"}
+        {t("accessibility.toggle")}{" "}
       </Text>
     </TouchableOpacity>
   );

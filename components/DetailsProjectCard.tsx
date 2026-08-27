@@ -8,6 +8,7 @@ import { View, Text } from "react-native";
 import React from "react";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
+import { useTranslation } from "react-i18next";
 
 import DigitalClock from "../components/DigitalClock";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
@@ -30,13 +31,16 @@ interface DetailsProjectCardProps {
 const CopilotTouchableView = walkthroughable(View);
 
 const DetailsProjectCard: React.FC<DetailsProjectCardProps> = () => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // route params
   const route = useRoute<DetailsProjectRouteProps>();
   const { projectName } = route.params;
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
 
   return (
@@ -54,7 +58,7 @@ const DetailsProjectCard: React.FC<DetailsProjectCardProps> = () => {
         <Text
           accessible={true}
           accessibilityRole="header"
-          accessibilityLabel="- Project Details -"
+          accessibilityLabel={t("projectDetails.title")}
           style={{
             fontFamily: "MPLUSLatin_Bold",
             fontSize: 25,
@@ -62,14 +66,14 @@ const DetailsProjectCard: React.FC<DetailsProjectCardProps> = () => {
             marginBottom: 20,
           }}
         >
-          - Project Details -
+          - {t("projectDetails.title")} -
         </Text>
       </View>
       {/* DetailsScreen copilot tour step 1 */}
       <CopilotStep
-        name="Title and Time"
+        name={t("projectDetails.titleAndTime")}
         order={1}
-        text="This Info Card shows the name of the project and your local time."
+        text={t("projectDetails.tourText")}
       >
         {/* project name */}
         <CopilotTouchableView
@@ -87,7 +91,9 @@ const DetailsProjectCard: React.FC<DetailsProjectCardProps> = () => {
         >
           <Text
             accessible={true}
-            accessibilityLabel={`Project Name: ${projectName}`}
+            accessibilityLabel={t("projectDetails.projectName", {
+              name: projectName,
+            })}
             style={{
               fontFamily: "MPLUSLatin_Bold",
               fontSize: 32,
@@ -109,7 +115,7 @@ const DetailsProjectCard: React.FC<DetailsProjectCardProps> = () => {
               marginTop: 30,
             }}
           >
-            "Current Time"
+            {t("projectDetails.currentTime")}
           </Text>
 
           <DigitalClock />

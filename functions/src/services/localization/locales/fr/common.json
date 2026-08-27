@@ -1,0 +1,99 @@
+{
+  "errors": {
+    "notLoggedIn": "Non connecté",
+    "unknownAction": "Action inconnue",
+    "invalidAction": "Action non valide",
+    "registrationNotAllowed": "L'inscription n'est pas autorisée",
+    "notAuthenticated": "Non authentifié",
+    "authenticationRequired": "Authentification requise",
+    "invalidEntry": "Saisie invalide. Veuillez vérifier vos informations.",
+    "failedPrecondition": "La requête n'a pas pu être traitée en raison d'une précondition.",
+    "permissionDenied": "Vous n'êtes pas autorisé à effectuer cette action.",
+    "unauthenticated": "Veuillez vous reconnecter.",
+    "resourceNotFound": "La ressource demandée est introuvable.",
+    "tooManyRequests": "Trop de requêtes. Veuillez réessayer plus tard.",
+    "internal": "Erreur interne du serveur.",
+    "unavailable": "Le service n'est pas disponible. Veuillez réessayer plus tard.",
+    "unexpected": "Erreur inattendue",
+    "invalidActionForLoginOrRegister": "Action non valide pour loginOrRegister",
+    "uidRequired": "L'UID est requis",
+    "invalidTotpCode": "Code TOTP invalide",
+    "totpNotConfigured": "Veuillez configurer votre TOTP."
+  },
+
+  "auth": {
+    "passwordResetInstructions": "Si un compte existe pour cet e-mail, vous recevrez des instructions pour réinitialiser votre mot de passe.",
+    "passwordResetSubject": "Réinitialisez votre mot de passe",
+    "passwordResetRequested": "Vous avez demandé une réinitialisation de mot de passe.",
+    "passwordResetMostRecent": "Utilisez l'e-mail le plus récent si vous avez demandé plusieurs réinitialisations.",
+    "passwordResetOlderLinks": "Les liens plus anciens peuvent ne plus fonctionner.",
+    "passwordResetLink": "Cliquez ici pour réinitialiser votre mot de passe",
+    "passwordResetIgnore": "Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail."
+  },
+
+  "success": {
+    "totpDisabled": "TOTP désactivé avec succès"
+  },
+
+  "validation": {
+    "missingData": "Données manquantes",
+    "missingUserId": "ID utilisateur manquant",
+    "missingServiceId": "ID service manquant",
+    "invalidToken": "Jeton invalide",
+    "missingRequestData": "Données de la requête manquantes.",
+    "missingAction": "Action manquante",
+    "payloadMustBeObject": "La charge utile doit être un objet",
+    "serviceIdRequired": "Service ID doit être une chaîne non vide",
+    "projectIdRequired": "Project ID doit être une chaîne non vide",
+    "rateMustBeNumber": "Le taux doit être un nombre",
+    "fieldRequired": "Le champ '{{field}}' est requis",
+    "fieldMustBeString": "Le champ '{{field}}' doit être une chaîne de caractères",
+    "fieldMinLength": "Le champ '{{field}}' doit comporter au moins {{minLength}} caractères",
+    "fieldMaxLength": "Le champ '{{field}}' doit comporter au plus {{maxLength}} caractères",
+    "fieldMustBeEmail": "Le champ '{{field}}' doit être une adresse e-mail valide",
+    "fieldMustBeNumber": "Le champ '{{field}}' doit être un nombre",
+    "fieldMinValue": "Le champ '{{field}}' doit être au moins {{min}}",
+    "fieldMaxValue": "Le champ '{{field}}' doit être au plus {{max}}",
+    "invalidInput": "Saisie invalide",
+    "invalidUid": "UID invalide",
+    "invalidPayload": "Charge utile invalide",
+    "unknownField": "Champ inconnu : {{field}}",
+    "displayNameMustBeString": "displayName doit être une chaîne de caractères",
+    "displayNameCannotBeEmpty": "displayName ne peut pas être vide",
+    "displayNameTooLong": "displayName trop long",
+    "personalNumberMustBeString": "personalNumber doit être une chaîne de caractères",
+    "personalNumberCannotBeEmpty": "personalNumber ne peut pas être vide",
+    "personalNumberTooLong": "personalNumber trop long",
+    "nothingToUpdate": "Rien à mettre à jour",
+    "projectDeletionInProgress": "Suppression du projet en cours"
+  },
+
+  "push": {
+    "welcomeTitle": "Bienvenue sur ChronoCraft ! ⏱️",
+    "welcomeBody": "Nous sommes ravis que vous nous ayez rejoint. Suivons le temps comme des pros."
+  },
+
+  "permission": {
+    "cannotDeleteOthersData": "Impossible de supprimer les données d'autres utilisateurs"
+  },
+
+  "totp": {
+    "userEmailNotAvailable": "L'e-mail de l'utilisateur n'est pas disponible",
+    "userNotFound": "Utilisateur non trouvé",
+    "alreadyEnabled": "TOTP est déjà activé pour cet utilisateur.",
+    "scanQrCode": "Scannez le code QR avec votre application d'authentification. Ce secret expire dans 1 heure.",
+    "invalidToken": "Jeton TOTP invalide",
+    "cannotAccessEnrollment": "Impossible d'accéder à la session d'inscription",
+    "enrollmentSessionNotFound": "Session d'inscription non trouvée",
+    "enrollmentSessionExpired": "Session d'inscription expirée",
+    "enrollmentTooManyAttempts": "Trop de tentatives échouées. La session d'inscription a été réinitialisée.",
+    "invalidCode": "Code TOTP invalide",
+    "alreadyConfigured": "TOTP est déjà configuré",
+    "enabledSuccessfully": "TOTP activé avec succès !",
+    "tooManyAttempts": "Trop de tentatives. Réessayez dans {{seconds}} secondes.",
+    "verificationNotCompleted": "La vérification TOTP n'est pas terminée",
+    "configurationNotFound": "Configuration TOTP non trouvée",
+    "alreadyUsed": "TOTP déjà utilisé",
+    "verificationSuccessful": "Vérification TOTP réussie"
+  }
+}

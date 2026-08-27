@@ -37,6 +37,12 @@ describe("AuthService Unit Tests", () => {
   let mockVerifyTotp: jest.MockedFunction<typeof verifyTotp>;
   let mockLogEvent: jest.MockedFunction<typeof logEvent>;
 
+  const request = {
+    data: {
+      language: "en",
+    },
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
 
@@ -65,42 +71,48 @@ describe("AuthService Unit Tests", () => {
 
   describe("loginOrRegister", () => {
     it("should log event and return success for login", async () => {
-      const result = await authService.loginOrRegister("login", "user123");
+      const result = await authService.loginOrRegister(
+        "login",
+        request,
+        "user123",
+      );
       expect(mockLogEvent).toHaveBeenCalledWith("auth login", "info");
       expect(result).toEqual({ nextStage: "authenticated" });
     });
-
     it("should log event and return success for register", async () => {
-      const result = await authService.loginOrRegister("register", "user123");
+      const result = await authService.loginOrRegister(
+        "register",
+        request,
+        "user123",
+      );
       expect(mockLogEvent).toHaveBeenCalledWith("auth register", "info");
       expect(result).toEqual({ nextStage: "authenticated" });
     });
-
     it("should handle undefined uid", async () => {
       await expect(
-        authService.loginOrRegister("login", undefined),
-      ).rejects.toThrow("UID required");
-
+        authService.loginOrRegister("login", request, undefined),
+      ).rejects.toThrow("UID is required");
       await expect(
-        authService.loginOrRegister("login", undefined),
-      ).rejects.toMatchObject({
-        message: "UID required",
-      });
+        authService.loginOrRegister("login", request, undefined),
+      ).rejects.toMatchObject({ message: "UID is required" });
     });
-
     it("should throw error for unknown action", async () => {
       await expect(
         authService.loginOrRegister(
           "delete" as "login" | "register",
+          request,
           "user123",
         ),
-      ).rejects.toThrow("Invalid action for loginOrRegister");
+      ).rejects.toThrow("Invalid action");
     });
-
     it("should throw error for empty action", async () => {
       await expect(
-        authService.loginOrRegister("" as "login" | "register", "user123"),
-      ).rejects.toThrow("Invalid action for loginOrRegister");
+        authService.loginOrRegister(
+          "" as "login" | "register",
+          request,
+          "user123",
+        ),
+      ).rejects.toThrow("Invalid action");
     });
   });
 
@@ -118,11 +130,12 @@ describe("AuthService Unit Tests", () => {
 
       const spyCheck = jest.spyOn(rateLimit, "check");
 
-      const result = await authService.verifyTotp(uid, code);
+      const result = await authService.verifyTotp(request, uid, code);
 
       expect(spyCheck).toHaveBeenCalledWith(
         "mfa_totp",
         "verify",
+
         {
           uid,
           ip: "unknown",
@@ -147,9 +160,9 @@ describe("AuthService Unit Tests", () => {
     it("should throw on invalid TOTP format", async () => {
       const uid = "user123";
 
-      await expect(authService.verifyTotp(uid, "wrong")).rejects.toThrow(
-        "Invalid TOTP code",
-      );
+      await expect(
+        authService.verifyTotp(request, uid, "wrong"),
+      ).rejects.toThrow("Invalid TOTP code");
 
       expect(rateLimit.check).not.toHaveBeenCalled();
       expect(mockLogEvent).not.toHaveBeenCalled();
@@ -163,7 +176,7 @@ describe("AuthService Unit Tests", () => {
         null,
       );
 
-      await expect(authService.verifyTotp(uid, code)).rejects.toThrow(
+      await expect(authService.verifyTotp(request, uid, code)).rejects.toThrow(
         new BusinessRuleError("TOTP not configured"),
       );
 
@@ -178,7 +191,7 @@ describe("AuthService Unit Tests", () => {
         .spyOn(rateLimit, "check")
         .mockRejectedValueOnce(new Error("Rate limit exceeded"));
 
-      await expect(authService.verifyTotp(uid, code)).rejects.toThrow(
+      await expect(authService.verifyTotp(request, uid, code)).rejects.toThrow(
         "Rate limit exceeded",
       );
     });
@@ -191,7 +204,7 @@ describe("AuthService Unit Tests", () => {
         new NotFoundError("User"),
       );
 
-      await expect(authService.verifyTotp(uid, code)).rejects.toThrow(
+      await expect(authService.verifyTotp(request, uid, code)).rejects.toThrow(
         new NotFoundError("User"),
       );
 
@@ -200,7 +213,7 @@ describe("AuthService Unit Tests", () => {
 
     it("should throw when uid is undefined", async () => {
       await expect(
-        authService.verifyTotp(undefined as any, "123456"),
+        authService.verifyTotp(request, undefined as any, "123456"),
       ).rejects.toThrow();
     });
 
@@ -210,9 +223,9 @@ describe("AuthService Unit Tests", () => {
       const cases = ["123", "1234567", 123456 as any];
 
       for (const code of cases) {
-        await expect(authService.verifyTotp(uid, code as any)).rejects.toThrow(
-          "Invalid TOTP code",
-        );
+        await expect(
+          authService.verifyTotp(request, uid, code as any),
+        ).rejects.toThrow("Invalid TOTP code");
       }
     });
   });

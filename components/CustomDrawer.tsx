@@ -5,14 +5,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-import {
-  View,
-  Text,
-  ImageBackground,
-  Image,
-  ScrollView,
-  TouchableOpacity,
-} from "react-native";
+import { View, Text, Image, ScrollView, TouchableOpacity } from "react-native";
 import React, {
   useRef,
   useMemo,
@@ -30,6 +23,7 @@ import { Feather } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
 import Modal from "react-native-modal";
 import { getDoc, doc, onSnapshot } from "firebase/firestore";
+import { useTranslation } from "react-i18next";
 
 import { AuthContext } from "../components/contexts/AuthContext";
 import EditProfileModal from "./EditProfileModal";
@@ -42,6 +36,8 @@ import { useAccessibilityStore } from "../components/services/accessibility/acce
 import MFAButton from "./services/MFAButton";
 import MultiFactorModal from "./MultiFactorModal";
 import { logError } from "../lib/loggerClient";
+import LanguageButton from "./services/localization/LanguageButton";
+import LanguageModal from "./services/localization/LanguageModal";
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -51,6 +47,9 @@ interface CustomDrawerProps extends DrawerContentComponentProps {}
 ////////////////////////////////////////////////////////////////////////////////////////
 
 const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
     (state) => state.accessibilityEnabled,
@@ -67,6 +66,9 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
 
   // declare the auth context
   const { setUser, setStage } = useContext(AuthContext);
+
+  // declare state for language modal
+  const [languageModalVisible, setLanguageModalVisible] = useState(false);
 
   // declare state for 2FA modal
   const [mfaModalVisible, setMfaModalVisible] = useState(false);
@@ -190,7 +192,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
       {/*edit profile button*/}
       <TouchableOpacity
         accessibilityRole="button"
-        accessibilityLabel="Edit Profile"
+        accessibilityLabel={t("drawer.profile.edit")}
         onPress={() => {
           setProfileModalVisible(true);
           // console.log("EditProfileModal opened");
@@ -216,7 +218,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
 
       <Modal
         accessibilityViewIsModal
-        accessibilityLabel="Edit Profile Modal"
+        accessibilityLabel={t("modal.editProfile")}
         isVisible={profileModalVisible}
         backdropColor="black"
         onBackdropPress={closeProfileModal}
@@ -242,7 +244,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
       {/* TwoFactorModal */}
       <Modal
         accessibilityViewIsModal
-        accessibilityLabel="Two Factor Authentication Modal"
+        accessibilityLabel={t("modal.twoFactor")}
         isVisible={mfaModalVisible}
         backdropColor="black"
         onBackdropPress={closeTfaModal}
@@ -269,8 +271,8 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
           accessibilityRole="image"
           accessibilityLabel={
             user?.displayName
-              ? `Profile picture of ${user.displayName}`
-              : "Default profile picture"
+              ? t("drawer.profile.picture", { name: user.displayName })
+              : t("drawer.profile.defaultPicture")
           }
           source={
             profileImageUrl // render user image or default image
@@ -292,16 +294,18 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
       <View style={{ margin: 20 }}>
         {/* render user name or unknown */}
         <Text
-          accessibilityLabel={`Employee ${user?.displayName || "Unknown"}`}
+          accessibilityLabel={t("drawer.profile.employeeAccessibility", {
+            name: user?.displayName || t("drawer.profile.unknown"),
+          })}
           style={{
             color: "#a9a9a9",
             fontFamily: accessMode ? "MPLUSLatin_Bold" : "MPLUSLatin_Regular",
             fontSize: accessMode ? 22 : 18,
           }}
         >
-          Employee:{" "}
+          {t("drawer.profile.employeee")}:{" "}
           <Text style={{ color: "white" }}>
-            {user?.displayName || "Unknown"}
+            {user?.displayName || t("drawer.profile.unknown")}
           </Text>
         </Text>
 
@@ -313,9 +317,9 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
             fontSize: accessMode ? 18 : 14,
           }}
         >
-          Personal-ID:{" "}
+          {t("drawer.profile.personalId")}:{" "}
           <Text style={{ color: "white" }}>
-            {user?.personalNumber || "Unknown"}
+            {user?.personalNumber || t("drawer.profile.unknown")}
           </Text>
         </Text>
       </View>
@@ -326,6 +330,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         contentContainerStyle={{
           backgroundColor: "black",
           paddingBottom: 320,
+          marginTop: -20,
         }}
       >
         <DrawerItemList {...props} />
@@ -357,10 +362,16 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         >
           <RestartTourButton userId={user?.uid || ""} />
           <AccessibilityToggleButton />
+          <LanguageButton onPress={() => setLanguageModalVisible(true)} />
           <MFAButton
             onPress={() => setMfaModalVisible(true)}
             isEnrolled={isEnrolled}
             disabled={isEnrolled === null}
+          />
+          {/* LanguageModal */}
+          <LanguageModal
+            visible={languageModalVisible}
+            onClose={() => setLanguageModalVisible(false)}
           />
         </View>
 
@@ -383,7 +394,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
 
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel="Frequently Asked Questions"
+          accessibilityLabel={t("drawer.navigation.faq")}
           onPress={handlePresentModalPress}
         >
           <View
@@ -408,14 +419,14 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
                 fontSize: 24,
               }}
             >
-              FAQ
+              {t("drawer.navigation.faq")}
             </Text>
           </View>
           {/* Logout button */}
         </TouchableOpacity>
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel="Logout"
+          accessibilityLabel={t("drawer.navigation.logout")}
           onPress={async () => {
             try {
               await FIREBASE_AUTH.signOut(); // Firebase Logout
@@ -448,7 +459,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
                 fontSize: 24,
               }}
             >
-              Logout
+              {t("drawer.navigation.logout")}
             </Text>
           </View>
         </TouchableOpacity>

@@ -19,6 +19,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Foundation } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
 import { useAccessibilityStore } from "./services/accessibility/accessibilityStore";
 
@@ -37,6 +38,9 @@ const MENU_HEIGHT = 400;
 const OFFSCREEN_X = MENU_WIDTH + 24; // start slightly offscreen
 
 const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // ref  to animate the help menu sliding
   const translateX = useRef(new Animated.Value(OFFSCREEN_X)).current;
   // ref to manage opacity
@@ -46,13 +50,13 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
 
   // function to get accessibility mode
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
 
   // open animation
   useEffect(() => {
     AccessibilityInfo.announceForAccessibility(
-      "Help menu opened. You can close it by pressing the close button."
+      "Help menu opened. You can close it by pressing the close button.",
     );
     // animate the sliding
     Animated.parallel([
@@ -174,8 +178,8 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
             <TouchableOpacity
               onPress={closeWithAnimation}
               accessibilityRole="button"
-              accessibilityLabel="Close"
-              accessibilityHint="Closes the help menu"
+              accessibilityLabel={t("help.close")}
+              accessibilityHint={t("help.closeHint")}
               activeOpacity={0.7}
               style={{
                 position: "absolute",
@@ -238,7 +242,7 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
               ref={helpTitleRef}
               accessible
               accessibilityRole="header"
-              accessibilityLabel="Help Menu"
+              accessibilityLabel={t("help.titleAccessibility")}
               style={{ alignItems: "center" }}
             >
               <Text
@@ -249,15 +253,15 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
                   fontFamily: "MPLUSLatin_Bold",
                 }}
               >
-                Help
+                {t("help.title")}
               </Text>
             </View>
 
             {/* info text */}
             <Text
               accessible
-              accessibilityLabel="Info Text"
-              accessibilityHint="If you encounter issues or have suggestions for improvements, feel free to hit a Logo and reach out to us:"
+              accessibilityLabel={t("help.info")}
+              accessibilityHint={t("help.infoText")}
               style={{
                 textAlign: "center",
                 fontFamily: accessMode
@@ -267,8 +271,7 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
                 fontSize: accessMode ? 18 : 16,
               }}
             >
-              If you encounter issues or have suggestions for improvements, feel
-              free to hit a Logo and reach out to us:
+              {t("help.infoText")}
             </Text>
           </View>
 
@@ -277,7 +280,7 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
             style={{
               flexDirection: "row",
               justifyContent: "space-evenly",
-              paddingTop: 20,
+              paddingTop: accessMode ? 50 : 20,
             }}
           >
             <TouchableOpacity
@@ -314,8 +317,8 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
             }}
           >
             <Text
-              accessibilityLabel="Thanks Text"
-              accessibilityHint="Thanks for your feedback!"
+              accessibilityLabel={t("help.thanksAccessibility")}
+              accessibilityHint={t("help.thanks")}
               style={{
                 textAlign: "center",
                 fontFamily: accessMode
@@ -325,7 +328,7 @@ const HelpMenu: React.FC<HelpMenuProps> = ({ onClose }) => {
                 fontSize: accessMode ? 18 : 14,
               }}
             >
-              Thanks for your feedback! 🚀
+              {t("help.thanks")}
             </Text>
           </View>
         </ImageBackground>

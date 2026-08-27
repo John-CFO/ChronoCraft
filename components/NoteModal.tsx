@@ -22,6 +22,7 @@ import {
   serverTimestamp,
   collection,
 } from "firebase/firestore";
+import { useTranslation } from "react-i18next";
 
 import { FIREBASE_FIRESTORE, FIREBASE_AUTH } from "../firebaseConfig";
 import { useAlertStore } from "./services/customAlert/alertStore";
@@ -46,13 +47,14 @@ const NoteModal: React.FC<NoteModalProps> = ({
   projectId,
   onClose,
 }: NoteModalProps) => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   const [comment, setComment] = useState("");
 
   // hook to announce accessibility
   useEffect(() => {
-    AccessibilityInfo.announceForAccessibility(
-      "Note Modal opened. Please write your comment and press send.",
-    );
+    AccessibilityInfo.announceForAccessibility(t("notes.modalOpened"));
   }, []);
 
   // ref to navigate to notes header
@@ -95,10 +97,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
     if (!comment.trim()) {
       useAlertStore
         .getState()
-        .showAlert(
-          "Sorry",
-          "Please write a comment first before pressing send.",
-        );
+        .showAlert(t("notes.alerts.sorry"), t("notes.alerts.emptyComment"));
       return;
     }
 
@@ -118,7 +117,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
         logError("NoteModal/validation", inputValidation.error);
         useAlertStore
           .getState()
-          .showAlert("Error", "Invalid note data provided");
+          .showAlert(t("notes.alerts.error"), t("notes.alerts.invalidData"));
         return;
       }
 
@@ -129,7 +128,9 @@ const NoteModal: React.FC<NoteModalProps> = ({
           "NoteModal/auth",
           new Error("Authentication or authorization failed"),
         );
-        useAlertStore.getState().showAlert("Error", "Not authorized");
+        useAlertStore
+          .getState()
+          .showAlert(t("notes.alerts.error"), t("notes.alerts.notAuthorized"));
         return;
       }
 
@@ -145,7 +146,12 @@ const NoteModal: React.FC<NoteModalProps> = ({
           "NoteModal/projectNotFound",
           new Error(`Project not found: ${projectId}`),
         );
-        useAlertStore.getState().showAlert("Error", "Project not found");
+        useAlertStore
+          .getState()
+          .showAlert(
+            t("notes.alerts.error"),
+            t("notes.alerts.projectNotFound"),
+          );
         return;
       }
 
@@ -166,7 +172,9 @@ const NoteModal: React.FC<NoteModalProps> = ({
       onClose();
     } catch (error) {
       logError("NoteModal/saveComment", error);
-      useAlertStore.getState().showAlert("Error", "Failed to save note");
+      useAlertStore
+        .getState()
+        .showAlert(t("notes.alerts.error"), t("notes.alerts.saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -204,7 +212,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
         <View
           accessible
           accessibilityRole="header"
-          accessibilityLabel="Project Notes"
+          accessibilityLabel={t("notes.title")}
           style={{
             width: 330,
             height: 80,
@@ -225,7 +233,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
               marginRight: 9,
             }}
           >
-            Project Notes
+            {t("notes.title")}
           </Text>
         </View>
         {/*note text*/}
@@ -252,9 +260,9 @@ const NoteModal: React.FC<NoteModalProps> = ({
               backgroundColor: "#191919",
             }}
             accessible
-            accessibilityLabel="Project comment input field"
-            accessibilityHint="Write a comment to add a note to the project"
-            placeholder={`Write a comment${dots}`}
+            accessibilityLabel={t("notes.commentInput")}
+            accessibilityHint={t("notes.commentHint")}
+            placeholder={`${t("notes.commentPlaceholder")}${dots}`}
             placeholderTextColor={accessMode ? "white" : "grey"}
             multiline={true}
             value={comment}
@@ -265,8 +273,12 @@ const NoteModal: React.FC<NoteModalProps> = ({
 
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel={saving ? "Updating profile" : "Save note"}
-            accessibilityHint="Saves the note to the project"
+            accessibilityLabel={
+              saving
+                ? t("notes.savingAccessibility")
+                : t("notes.saveAccessibility")
+            }
+            accessibilityHint={t("notes.saveHint")}
             accessibilityState={{ busy: saving }}
             onPress={() => {
               const user = FIREBASE_AUTH.currentUser;
@@ -290,7 +302,6 @@ const NoteModal: React.FC<NoteModalProps> = ({
               end={{ x: 1, y: 1 }}
               style={{
                 height: 45,
-                paddingVertical: 6,
                 justifyContent: "center",
                 alignItems: "center",
               }}
@@ -303,7 +314,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
                   paddingRight: 10,
                 }}
               >
-                {saving ? "Saving..." : "Save"}
+                {saving ? `${t("notes.saving")}...` : t("notes.save")}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -320,8 +331,8 @@ const NoteModal: React.FC<NoteModalProps> = ({
         >
           <Text
             accessible
-            accessibilityLabel="Navigation tip"
-            accessibilityHint="Swipe up or down to close"
+            accessibilityLabel={t("notes.navigationTip")}
+            accessibilityHint={t("notes.navigationHint")}
             style={{
               fontSize: accessMode ? 20 : 18,
               color: accessMode ? "white" : "lightgrey",
@@ -330,7 +341,7 @@ const NoteModal: React.FC<NoteModalProps> = ({
                 : "MPLUSLatin_ExtraLight",
             }}
           >
-            swipe up or down to close
+            {t("notes.navigationTip")}
           </Text>
         </View>
       </View>

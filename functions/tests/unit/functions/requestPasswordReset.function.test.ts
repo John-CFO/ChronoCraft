@@ -132,7 +132,7 @@ describe("requestPasswordResetHandler (unit)", () => {
 
   it("should throw on missing email", async () => {
     await expect(requestPasswordResetHandler(buildRequest({}))).rejects.toThrow(
-      "Invalid input. Please check your data.",
+      "Invalid entry. Please check your details.",
     );
   });
 });

@@ -5,6 +5,7 @@
 //////////////////////////////////////////////////////////////
 
 import { z } from "zod";
+import i18n from "../components/services/localization/i18n";
 
 //////////////////////////////////////////////////////////////
 
@@ -19,16 +20,16 @@ const isValidLocalDocId = (id: unknown): id is string => {
 export const NoteInputSchema = z.object({
   comment: z
     .string()
-    .min(1, "Comment cannot be empty")
-    .max(1000, "Comment too long"),
+    .min(1, i18n.t("validation.commentEmpty"))
+    .max(1000, i18n.t("validation.commentTooLong")),
   projectId: z
     .string()
-    .min(1, "Project ID is required")
-    .refine(isValidLocalDocId, "Invalid project ID"),
+    .min(1, i18n.t("validation.projectIdRequired"))
+    .refine(isValidLocalDocId, i18n.t("validation.invalidProjectId")),
   userId: z
     .string()
-    .min(1, "User ID is required")
-    .refine(isValidLocalDocId, "Invalid user ID"),
+    .min(1, i18n.t("validation.userIdRequired"))
+    .refine(isValidLocalDocId, i18n.t("validation.invalidUserId")),
 });
 
 export type NoteInput = z.infer<typeof NoteInputSchema>;

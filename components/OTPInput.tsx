@@ -8,6 +8,7 @@
 
 import React, { useRef, useState, useEffect } from "react";
 import { View, TextInput, Animated, TouchableOpacity } from "react-native";
+import { useTranslation } from "react-i18next";
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -24,6 +25,9 @@ const OTPInput: React.FC<Props> = ({
   onChangeCode,
   autoFocus = true,
 }) => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // declare states
   const [values, setValues] = useState<string[]>(
     Array.from({ length }, () => ""),
@@ -158,10 +162,13 @@ const OTPInput: React.FC<Props> = ({
                   textContentType="oneTimeCode"
                   autoComplete="one-time-code"
                   accessibilityValue={{
-                    text: values[index] ? "Entered" : "Empty",
+                    text: values[index] ? t("otp.entered") : t("otp.empty"),
                   }}
-                  accessibilityLabel={`Number ${index + 1} from ${length}`}
-                  accessibilityHint="Enter one digit of the authentication code"
+                  accessibilityLabel={t("otp.number", {
+                    current: index + 1,
+                    total: length,
+                  })}
+                  accessibilityHint={t("otp.hint")}
                   ref={(r) => (inputs.current[index] = r)}
                   value={values[index]}
                   onChangeText={(t) => handleChange(t, index)}

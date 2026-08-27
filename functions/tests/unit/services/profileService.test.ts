@@ -28,6 +28,12 @@ describe("ProfileService Unit Tests", () => {
   let mockUserRepo: jest.Mocked<UserRepo>;
   let mockLogEvent: jest.MockedFunction<typeof logEvent>;
 
+  const request = {
+    data: {
+      language: "en",
+    },
+  };
+
   beforeEach(() => {
     mockUserRepo = new UserRepo() as jest.Mocked<UserRepo>;
     mockLogEvent = logEvent as jest.MockedFunction<typeof logEvent>;
@@ -51,7 +57,11 @@ describe("ProfileService Unit Tests", () => {
 
       mockUserRepo.updateUser.mockResolvedValue(undefined);
 
-      const result = await profileService.updateProfile(uid, updateData);
+      const result = await profileService.updateProfile(
+        request,
+        uid,
+        updateData,
+      );
 
       expect(mockUserRepo.updateUser).toHaveBeenCalledWith(uid, updateData);
       expect(mockLogEvent).toHaveBeenCalledWith("profile updated", "info", {
@@ -65,7 +75,7 @@ describe("ProfileService Unit Tests", () => {
       const updateData = {};
 
       await expect(
-        profileService.updateProfile(uid, updateData),
+        profileService.updateProfile(request, uid, updateData),
       ).rejects.toThrow("Nothing to update.");
 
       expect(mockUserRepo.updateUser).not.toHaveBeenCalled();
@@ -79,7 +89,7 @@ describe("ProfileService Unit Tests", () => {
       mockUserRepo.updateUser.mockRejectedValue(new Error("Database error"));
 
       await expect(
-        profileService.updateProfile(uid, updateData),
+        profileService.updateProfile(request, uid, updateData),
       ).rejects.toThrow("Database error");
     });
 
@@ -93,7 +103,7 @@ describe("ProfileService Unit Tests", () => {
 
       mockUserRepo.updateUser.mockResolvedValue(undefined);
 
-      await profileService.updateProfile(uid, updateData);
+      await profileService.updateProfile(request, uid, updateData);
 
       expect(mockUserRepo.updateUser).toHaveBeenCalledWith(uid, {
         displayName: "New Name",
@@ -106,7 +116,7 @@ describe("ProfileService Unit Tests", () => {
         const updateData = { displayName: "New Name" };
         // @ts-ignore
         await expect(
-          profileService.updateProfile(undefined as any, updateData),
+          profileService.updateProfile(request, undefined as any, updateData),
         ).rejects.toThrow();
       });
 
@@ -114,14 +124,14 @@ describe("ProfileService Unit Tests", () => {
         const updateData = { displayName: "New Name" };
         // @ts-ignore
         await expect(
-          profileService.updateProfile(null as any, updateData),
+          profileService.updateProfile(request, null as any, updateData),
         ).rejects.toThrow();
       });
 
       it("should throw if uid is empty string", async () => {
         const updateData = { displayName: "New Name" };
         await expect(
-          profileService.updateProfile("", updateData),
+          profileService.updateProfile(request, "", updateData),
         ).rejects.toThrow();
       });
 
@@ -129,7 +139,7 @@ describe("ProfileService Unit Tests", () => {
         const updateData = { displayName: "New Name" };
         const invalidUid = "user!@#";
         await expect(
-          profileService.updateProfile(invalidUid, updateData),
+          profileService.updateProfile(request, invalidUid, updateData),
         ).rejects.toThrow();
       });
     });

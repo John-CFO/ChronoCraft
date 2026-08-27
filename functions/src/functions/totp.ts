@@ -22,6 +22,7 @@ import {
 } from "../errors/domain.errors";
 import { handleFunctionError } from "../errors/handleFunctionError";
 import { FailedPreconditionError } from "../errors/domain.errors";
+import { getTranslation } from "../services/localization/i18n";
 
 //////////////////////////////////////////////////////////////
 
@@ -91,6 +92,8 @@ export function decrypt(encryptedData: string, rawKey: string): string {
 
 // Check TOTP Status - Handler only
 export const checkTotpStatusHandler = async (request: any) => {
+  // use getTranslation to get the current language
+  const t = await getTranslation(request.data?.language);
   try {
     if (!request.auth) {
       throw new AuthenticationError();
@@ -111,6 +114,9 @@ export const checkTotpStatusHandler = async (request: any) => {
 
 // Start Enrollment
 export const createTotpSecretHandler = async (request: any) => {
+  // use getTranslation to get the current language
+  const t = await getTranslation(request.data?.language);
+
   try {
     if (!request.auth) {
       throw new AuthenticationError();
@@ -120,18 +126,18 @@ export const createTotpSecretHandler = async (request: any) => {
     const email = request.auth.token.email;
 
     if (!email) {
-      throw new ValidationError("User email not available");
+      throw new ValidationError(t("totp.userEmailNotAvailable"));
     }
 
     const userRef = firestore.collection("Users").doc(uid);
     const userSnap = await userRef.get();
-    if (!userSnap.exists) throw new NotFoundError("User");
+    if (!userSnap.exists) throw new NotFoundError(t("totp.userNotFound"));
 
     const userData = userSnap.data() || {};
     if (userData.totp?.enabled) {
       throw new BusinessRuleError(
-        "TOTP already enabled",
-        "TOTP is already enabled for this user.",
+        "TOTP_ALREADY_ENABLED",
+        t("totp.alreadyEnabled"),
       );
     }
 
@@ -187,8 +193,7 @@ export const createTotpSecretHandler = async (request: any) => {
     return {
       enrollmentId,
       otpAuthUrl: buildOtpAuthUrl(email, secret),
-      message:
-        "Scan the QR code with your authenticator app. This secret expires in 1 hour.",
+      message: t("totp.scanQrCode"),
     };
   } catch (error) {
     console.error("Error in createTotpSecretHandler:", error);
@@ -198,6 +203,9 @@ export const createTotpSecretHandler = async (request: any) => {
 
 // Confirm Enrollment + Enable TOTP
 export const verifyTotpTokenHandler = async (request: any) => {
+  // use getTranslation to get the current language
+  const t = await getTranslation(request.data?.language);
+
   try {
     if (!request.auth) {
       throw new AuthenticationError();
@@ -206,7 +214,7 @@ export const verifyTotpTokenHandler = async (request: any) => {
     const { token, enrollmentId: providedEnrollmentId } = request.data ?? {};
 
     if (!token || token.length !== 6 || !/^\d+$/.test(token)) {
-      throw new ValidationError("Invalid TOTP token");
+      throw new ValidationError(t("totp.invalidToken"));
     }
 
     const uid = request.auth.uid;
@@ -249,10 +257,10 @@ export const verifyTotpTokenHandler = async (request: any) => {
           .get();
 
         if (!ownPendingQuery.empty) {
-          throw new PermissionError("access enrollment");
+          throw new PermissionError(t("totp.cannotAccessEnrollment"));
         }
 
-        throw new NotFoundError("Enrollment session");
+        throw new NotFoundError(t("totp.enrollmentSessionNotFound"));
       }
     } else {
       const pendingQuery = await firestore
@@ -263,7 +271,7 @@ export const verifyTotpTokenHandler = async (request: any) => {
         .get();
 
       if (pendingQuery.empty) {
-        throw new NotFoundError("Enrollment session");
+        throw new NotFoundError(t("totp.enrollmentSessionNotFound"));
       }
 
       pendingRef = pendingQuery.docs[0].ref;
@@ -273,18 +281,18 @@ export const verifyTotpTokenHandler = async (request: any) => {
       const pendingSnap = await tx.get(pendingRef);
 
       if (!pendingSnap.exists) {
-        throw new NotFoundError("Enrollment session");
+        throw new NotFoundError(t("totp.enrollmentSessionNotFound"));
       }
 
       const pendingData = pendingSnap.data()!;
 
       if (pendingData.uid !== uid) {
-        throw new PermissionError("access enrollment");
+        throw new PermissionError(t("totp.cannotAccessEnrollment"));
       }
 
       if (pendingData.expiresAt.toDate() < new Date()) {
         tx.delete(pendingRef);
-        throw new ValidationError("Enrollment session expired");
+        throw new ValidationError(t("totp.enrollmentSessionExpired"));
       }
 
       const FAILED_LIMIT = 5;
@@ -301,7 +309,8 @@ export const verifyTotpTokenHandler = async (request: any) => {
       if (failedAttempts >= FAILED_LIMIT) {
         tx.delete(pendingRef);
         throw new BusinessRuleError(
-          "Too many failed attempts. Enrollment reset.",
+          "TOTP_ENROLLMENT_TOO_MANY_ATTEMPTS",
+          t("totp.enrollmentTooManyAttempts"),
         );
       }
 
@@ -314,12 +323,12 @@ export const verifyTotpTokenHandler = async (request: any) => {
           failedAttempts: FieldValue.increment(1),
           lastFailedAttempt: FieldValue.serverTimestamp(),
         });
-        throw new ValidationError("Invalid TOTP code");
+        throw new ValidationError(t("totp.invalidCode"));
       }
 
       const existing = await tx.get(totpRef);
       if (existing.exists) {
-        throw new ConflictError("TOTP already configured");
+        throw new ConflictError(t("totp.alreadyConfigured"));
       }
 
       tx.set(totpRef, {
@@ -343,14 +352,17 @@ export const verifyTotpTokenHandler = async (request: any) => {
       );
     });
 
-    return { valid: true, message: "TOTP enabled successfully!" };
+    return { valid: true, message: t("totp.enabledSuccessfully") };
   } catch (error: any) {
-    throw handleFunctionError(error, "verifyTotpTokenHandler");
+    throw await handleFunctionError(error, "verifyTotpTokenHandler");
   }
 };
 
 // Login Verification + Custom Claims
 export const verifyTotpLoginHandler = async (request: any) => {
+  // use getTranslation to get the current language
+  const t = await getTranslation(request.data?.language);
+
   try {
     if (!request.auth) {
       throw new AuthenticationError();
@@ -359,7 +371,7 @@ export const verifyTotpLoginHandler = async (request: any) => {
     const { token, deviceId } = request.data ?? {};
 
     if (!token || token.length !== 6 || !/^\d+$/.test(token)) {
-      throw new ValidationError("Invalid TOTP token");
+      throw new ValidationError(t("totp.invalidToken"));
     }
 
     const uid = request.auth.uid;
@@ -420,7 +432,9 @@ export const verifyTotpLoginHandler = async (request: any) => {
       if (err instanceof RateLimitError) {
         return {
           valid: false,
-          message: `Too many attempts. Try again in ${err.retryAfterSeconds}s`,
+          message: t("totp.tooManyAttempts", {
+            seconds: err.retryAfterSeconds,
+          }),
           retryAfterSeconds: err.retryAfterSeconds,
         };
       }
@@ -441,9 +455,9 @@ export const verifyTotpLoginHandler = async (request: any) => {
 
     if (!totpSnap.exists) {
       if (!pendingSnap.empty) {
-        throw new FailedPreconditionError("TOTP verification not completed");
+        throw new FailedPreconditionError(t("totp.verificationNotCompleted"));
       }
-      throw new NotFoundError("TOTP configuration");
+      throw new NotFoundError(t("totp.configurationNotFound"));
     }
 
     const totpData = totpSnap.data()!;
@@ -466,7 +480,7 @@ export const verifyTotpLoginHandler = async (request: any) => {
           { merge: true },
         );
 
-      return { valid: false, message: "Invalid TOTP code" };
+      return { valid: false, message: t("totp.invalidCode") };
     }
 
     const matchedStep = verification.matchedStep!;
@@ -478,7 +492,7 @@ export const verifyTotpLoginHandler = async (request: any) => {
         const totpDoc = await tx.get(totpRef);
 
         if (!totpDoc.exists) {
-          throw new NotFoundError("TOTP configuration");
+          throw new NotFoundError(t("totp.configurationNotFound"));
         }
 
         const data = totpDoc.data()!;
@@ -486,7 +500,7 @@ export const verifyTotpLoginHandler = async (request: any) => {
 
         // Replay Protection
         if (lastUsedStep >= matchedStep) {
-          throw new ConflictError("TOTP already used");
+          throw new ConflictError(t("totp.alreadyUsed"));
         }
 
         const userRef = firestore.collection("Users").doc(uid);
@@ -510,7 +524,7 @@ export const verifyTotpLoginHandler = async (request: any) => {
     } catch (error) {
       // Replay‑Protection: ConflictError goes to a invalid answer
       if (error instanceof ConflictError) {
-        return { valid: false, message: "TOTP already used" };
+        return { valid: false, message: t("totp.alreadyUsed") };
       }
       // throw other errors
       throw error;
@@ -526,9 +540,9 @@ export const verifyTotpLoginHandler = async (request: any) => {
       mfa_verified_at: Date.now(),
     });
 
-    return { valid: true, message: "TOTP verification successful" };
+    return { valid: true, message: t("totp.verificationSuccessful") };
   } catch (error) {
     console.error("Error in verifyTotpLoginHandler:", error);
-    throw handleFunctionError(error, "verifyTotpLoginHandler");
+    throw await handleFunctionError(error, "verifyTotpLoginHandler");
   }
 };

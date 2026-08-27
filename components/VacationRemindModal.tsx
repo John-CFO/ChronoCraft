@@ -17,6 +17,7 @@ import {
 import Modal from "react-native-modal";
 import { LinearGradient } from "expo-linear-gradient";
 import { doc, setDoc, getDoc } from "firebase/firestore";
+import { useTranslation } from "react-i18next";
 
 import { NotificationManager } from "./services/PushNotifications";
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
@@ -43,10 +44,13 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
   onClose,
   vacationId,
 }) => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // hook to announce accessibility
   useEffect(() => {
     AccessibilityInfo.announceForAccessibility(
-      "Vacation Remind Modal opened. Please select a reminder duration and press save.",
+      t("vacationReminder.modalOpened"),
     );
   }, []);
 
@@ -107,7 +111,12 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
           "VacationRemindModal.handleSaveReminder",
           "Missing vacation id",
         );
-        useAlertStore.getState().showAlert("Error", "No vacation selected.");
+        useAlertStore
+          .getState()
+          .showAlert(
+            t("vacationReminder.error"),
+            t("vacationReminder.noVacationSelected"),
+          );
         return;
       }
 
@@ -116,7 +125,10 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
         logWarn("VacationRemindModal.handleSaveReminder", "User not logged in");
         useAlertStore
           .getState()
-          .showAlert("Error", "You must be logged in to save a reminder.");
+          .showAlert(
+            t("vacationReminder.error"),
+            t("vacationReminder.loginRequired"),
+          );
         return;
       }
 
@@ -128,7 +140,10 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
       ) {
         useAlertStore
           .getState()
-          .showAlert("Error", "Please select a reminder duration.");
+          .showAlert(
+            t("vacationReminder.error"),
+            t("vacationReminder.selectDuration"),
+          );
         return;
       }
       const reminderDuration = reminderDurations[chosenIndex];
@@ -139,14 +154,24 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
       const userDoc = userSnap.exists() ? userSnap.data() : null;
 
       if (!userDoc) {
-        useAlertStore.getState().showAlert("Error", "User document missing.");
+        useAlertStore
+          .getState()
+          .showAlert(
+            t("vacationReminder.error"),
+            t("vacationReminder.userDocumentMissing"),
+          );
         return;
       }
 
       const pushToken = (userDoc as any).pushToken;
       if (!pushToken) {
         logWarn("VacationRemindModal.handleSaveReminder", "Missing push token");
-        useAlertStore.getState().showAlert("Error", "Push Token not found.");
+        useAlertStore
+          .getState()
+          .showAlert(
+            t("vacationReminder.error"),
+            t("vacationReminder.pushTokenNotFound"),
+          );
         return;
       }
 
@@ -168,7 +193,12 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
           "VacationRemindModal.handleSaveReminder",
           "Vacation not found in Firestore",
         );
-        useAlertStore.getState().showAlert("Error", "Vacation not found.");
+        useAlertStore
+          .getState()
+          .showAlert(
+            t("vacationReminder.error"),
+            t("vacationReminder.vacationNotFound"),
+          );
         return;
       }
 
@@ -182,8 +212,8 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
         useAlertStore
           .getState()
           .showAlert(
-            "Error",
-            "Vacation already has a reminder. Delete and create a new one to change it.",
+            t("vacationReminder.error"),
+            t("vacationReminder.reminderAlreadyExists"),
           );
         return;
       }
@@ -197,7 +227,10 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
         );
         useAlertStore
           .getState()
-          .showAlert("Error", "Invalid vacation start date.");
+          .showAlert(
+            t("vacationReminder.error"),
+            t("vacationReminder.invalidStartDate"),
+          );
         return;
       }
 
@@ -216,8 +249,10 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
       reminderDate.setDate(reminderDate.getDate() - reminderDuration);
 
       await NotificationManager.scheduleVacationReminder(
-        "Vacation Reminder",
-        `Your vacation starts in ${reminderDuration} days. Don't forget to take your time off.`,
+        t("vacationReminder.notificationTitle"),
+        t("vacationReminder.notificationBody", {
+          days: reminderDuration,
+        }),
         reminderDate,
         pushToken,
       );
@@ -225,13 +260,19 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
       setSelectedOption(null);
       useAlertStore
         .getState()
-        .showAlert("Success", "Reminder saved successfully.");
+        .showAlert(
+          t("vacationReminder.success"),
+          t("vacationReminder.reminderSaved"),
+        );
       if (typeof onClose === "function") onClose();
     } catch (err) {
       logError("VacationRemindModal.handleSaveReminder", err);
       useAlertStore
         .getState()
-        .showAlert("Error", "Failed to save reminder. Please try again.");
+        .showAlert(
+          t("vacationReminder.error"),
+          t("vacationReminder.saveFailed"),
+        );
     } finally {
       setSaving(false);
     }
@@ -270,7 +311,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
           {/* header*/}
           <View
             accessibilityRole="header"
-            accessibilityLabel="Vacation Reminder"
+            accessibilityLabel={t("vacationReminder.title")}
             style={{
               width: 320,
               height: 80,
@@ -284,7 +325,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
             <Text
               ref={remindTitleRef}
               accessibilityRole="header"
-              accessibilityLabel="Vacation Reminder"
+              accessibilityLabel={t("vacationReminder.title")}
               style={{
                 color: "white",
                 fontSize: 32,
@@ -292,7 +333,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
                 marginBottom: 11,
               }}
             >
-              Vacation Reminder
+              {t("vacationReminder.title")}
             </Text>
           </View>
 
@@ -304,9 +345,13 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
           {/* Save Button */}
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel={saving ? "Saving reminder" : "Save reminder"}
+            accessibilityLabel={
+              saving ? t("vacationReminder.saving") : t("vacationReminder.save")
+            }
             accessibilityHint={
-              saving ? "Please wait" : "Saves the reminder and closes this view"
+              saving
+                ? t("vacationReminder.pleaseWait")
+                : t("vacationReminder.saveHint")
             }
             accessibilityState={{ disabled: saving }}
             style={{
@@ -350,7 +395,9 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
                   paddingRight: 10,
                 }}
               >
-                {saving ? "Saving..." : "Save"}
+                {saving
+                  ? t("vacationReminder.saving")
+                  : t("vacationReminder.save")}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -368,7 +415,9 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
             <Text
               accessible
               accessibilityRole="text"
-              accessibilityLabel="Navigation tip. Swipe up or down to close."
+              accessibilityLabel={t(
+                "vacationReminder.navigationTipAccessibility",
+              )}
               style={{
                 fontSize: accessMode ? 20 : 18,
                 color: accessMode ? "white" : "lightgrey",
@@ -377,7 +426,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
                   : "MPLUSLatin_ExtraLight",
               }}
             >
-              Swipe up or down to close
+              {t("vacationReminder.navigationTip")}
             </Text>
           </View>
         </View>

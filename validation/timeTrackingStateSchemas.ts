@@ -6,6 +6,7 @@
 
 import { z } from "zod";
 import { ProjectState } from "../components/TimeTrackingState";
+import i18n from "../components/services/localization/i18n";
 
 ////////////////////////////////////////////////////////////////////
 
@@ -51,7 +52,7 @@ export const ProjectStateSchema = z.object({
  */
 export const TimerAndEarningsSchema = z.object({
   projectId: z.string().refine(isValidProjectId, {
-    message: "Invalid projectId format",
+    message: i18n.t("validation.invalidProjectIdFormat"),
   }),
   timer: z.number().min(0).max(315360000),
   totalEarnings: z.number().min(0).max(10000000),
@@ -64,7 +65,7 @@ export const TimerAndEarningsSchema = z.object({
  */
 export const SetProjectDataSchema = z.object({
   projectId: z.string().refine(isValidProjectId, {
-    message: "Invalid projectId format",
+    message: i18n.t("validation.invalidProjectIdFormat"),
   }),
   projectData: ProjectStateSchema,
   uid: z.string(),
@@ -76,7 +77,7 @@ export const SetProjectDataSchema = z.object({
  */
 export const StartTimerSchema = z.object({
   projectId: z.string().refine(isValidProjectId, {
-    message: "Invalid projectId format",
+    message: i18n.t("validation.invalidProjectIdFormat"),
   }),
   options: z
     .object({

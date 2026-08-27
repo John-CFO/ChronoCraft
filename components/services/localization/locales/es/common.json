@@ -1,0 +1,777 @@
+{
+  "drawer": {
+    "profile": {
+      "employeee": "Empleado",
+      "personalId": "Número de personal",
+      "edit": "Editar perfil",
+      "editModal": "Editar perfil",
+      "picture": "Imagen de perfil de {{name}}",
+      "defaultPicture": "Imagen de perfil predeterminada",
+      "unknown": "Desconocido"
+    },
+    "language": "Idioma",
+    "chooseLanguage": "Elegir idioma",
+    "languageModal": "Selección de idioma",
+    "languageModalOpened": "Selección de idioma abierta",
+    "selectLanguage": "Elegir idioma",
+    "currentLanguage": "Idioma actual",
+    "navigationTip": "Sugerencia de navegación",
+    "navigationTipHint": "Desliza hacia arriba o hacia abajo para cerrar el modal.",
+    "swipeToClose": "Desliza para cerrar",
+    "tour": "Reiniciar recorrido",
+    "toggleMfa": "Activar/desactivar MFA",
+    "toggleAccessibility": "Activar/desactivar accesibilidad",
+    "employeeAccessibility": "Empleado {{name}}",
+    "menuButton": "Menú",
+    "menuButtonHint": "Abre el menú de la aplicación para navegar entre pantallas",
+    "navigation": {
+      "home": "Inicio",
+      "workHours": "Horas de trabajo",
+      "vacation": "Vacaciones",
+      "faq": "Preguntas frecuentes",
+      "logout": "Cerrar sesión",
+      "back": "Atrás",
+      "backHint": "Botón para volver a la pantalla anterior"
+    }
+  },
+
+  "profile": {
+    "edit": {
+      "modal": "Editar perfil",
+      "modalOpened": "Modal de edición de perfil abierto",
+      "title": "Ajustes de perfil",
+      "uploadImage": "Subir imagen de perfil",
+      "uploadImageHint": "Botón para subir una imagen de perfil",
+      "name": "Nombre",
+      "nameInput": "Campo de nombre",
+      "nameInputHint": "Introduce tu nombre",
+      "personalId": "Número de personal",
+      "personalIdInput": "Campo de número de personal",
+      "personalIdInputHint": "Introduce tu número de personal",
+      "updatingProfile": "Actualizando perfil",
+      "saveChanges": "Guardar cambios",
+      "saveChangesHint": "Guarda tu nombre y número de personal actualizados",
+      "updating": "Actualizando",
+      "update": "Actualizar",
+      "navigationTip": "Sugerencia de navegación",
+      "navigationTipHint": "Desliza hacia arriba o hacia abajo para cerrar",
+      "swipeToClose": "Desliza para cerrar",
+      "alerts": {
+        "permissionError": "Error de permiso",
+        "cameraRollPermission": "¡Lo sentimos, necesitamos permisos de la galería para que esto funcione!",
+        "noImageSelected": "Ninguna imagen seleccionada",
+        "noImageSelectedMessage": "No seleccionaste ninguna imagen."
+      }
+    }
+  },
+
+  "modal": {
+    "editProfile": "Editar perfil",
+    "twoFactor": "Autenticación de dos factores",
+    "noUser": "Ningún usuario conectado"
+  },
+
+  "accessibility": {
+    "toggle": "Accesibilidad",
+    "toggleHint": "Activa o desactiva el modo optimizado para lectores de pantalla"
+  },
+
+  "mfa": {
+    "accessibility": "Configuración de autenticación de dos factores",
+    "settings": "2FA",
+    "on": "Activo",
+    "off": "Desactivado",
+    "modal": "Autenticación de múltiples factores",
+    "enabled": "La autenticación de múltiples factores está actualmente habilitada.",
+    "disable": "DESACTIVAR",
+    "disableAccessibility": "Deshabilitar autenticación de múltiples factores",
+    "disableHint": "Deshabilita la autenticación de múltiples factores",
+    "disabling": "Desactivando",
+    "close": "CERRAR",
+    "setupDescription": "Configuración de TOTP con una aplicación de autenticación (Google Authenticator, Authy).",
+    "activate": "ACTIVAR",
+    "activating": "Activando",
+    "activateAccessibility": "Activar autenticación de múltiples factores",
+    "activateHint": "Activa la autenticación de múltiples factores",
+    "skip": "SALTAR",
+    "qrCodeAccessibility": "Código QR para la autenticación de múltiples factores",
+    "scanQrCode": "Escanea este código QR con tu aplicación de autenticación (Google Authenticator, Authy, etc.)",
+    "confirm": "CONFIRMAR",
+    "confirmAccessibility": "Confirmar TOTP",
+    "confirmHint": "Confirma el código TOTP",
+    "confirming": "Confirmando",
+    "cancel": "CANCELAR",
+    "cancelAccessibility": "Cancelar registro TOTP",
+    "required": "Autenticación de dos factores requerida",
+    "enterCode": "Introduce el código de 6 dígitos de tu aplicación de autenticación.",
+    "verifying": "Verificando",
+    "cancelAndReturn": "Cancelar y volver al inicio de sesión",
+    "cancelAndReturnHint": "Cierra sesión y vuelve a la pantalla de inicio de sesión",
+    "cancelAndReturnText": "Cancelar y volver al inicio de sesión",
+    "bypassNotice": "Nota: Esta pantalla no se puede omitir. Debes introducir el código TOTP correcto para continuar.",
+    "alerts": {
+      "error": "Error",
+      "invalidCode": "Introduce un código válido de 6 dígitos.",
+      "enrollmentStarted": "Registro TOTP iniciado",
+      "enrollmentStartedMessage": "Escanea el código QR con tu aplicación de autenticación.",
+      "success": "Éxito",
+      "enabled": "¡Autenticación de múltiples factores habilitada con éxito!",
+      "disabled": "Autenticación de múltiples factores desactivada",
+      "disabledMessage": "¡MFA deshabilitada con éxito!",
+      "functionNotFound": "Función no encontrada. Asegúrate de que la función esté desplegada.",
+      "permissionDenied": "Permiso denegado. Vuelve a iniciar sesión.",
+      "noOtpUrl": "No se recibió ninguna URL OTP del servidor",
+      "cannotStart": "No se puede iniciar el registro TOTP. Inténtalo de nuevo.",
+      "failedVerification": "Verificación TOTP fallida",
+      "invalidTotp": "Código TOTP no válido. Introduce un número válido de 6 dígitos.",
+      "notInitialized": "TOTP no inicializado. Activa TOTP primero.",
+      "disableFailed": "Deshabilitación de MFA fallida",
+      "cannotDisable": "No se puede deshabilitar MFA.",
+      "noServerResponse": "No hay respuesta del servidor. Inténtalo de nuevo.",
+      "authenticationSuccessful": "Autenticación exitosa.",
+      "invalidAuthenticationCode": "Código de autenticación no válido.",
+      "totpNotEnabled": "TOTP no está habilitado para tu cuenta.",
+      "userNotFound": "Usuario no encontrado. Intenta iniciar sesión de nuevo.",
+      "sessionExpired": "Sesión expirada. Vuelve a iniciar sesión.",
+      "invalidTotpFormat": "Formato de código TOTP no válido.",
+      "rateLimitWait": "Espera {{seconds}}s."
+    }
+  },
+
+  "otp": {
+    "number": "Número {{current}} de {{total}}",
+    "hint": "Introduce un dígito del código de autenticación",
+    "entered": "Ingresado",
+    "empty": "Vacío"
+  },
+
+  "mfaModal": {
+    "enrollmentStarted": "Registro TOTP iniciado",
+    "enrollmentStartedMessage": "Escanea el código QR con tu aplicación de autenticación.",
+    "ok": "OK",
+    "error": "Error",
+    "invalidCode": "Introduce un código válido de 6 dígitos.",
+    "noOtpUrl": "No se recibió ninguna URL OTP del servidor",
+    "cannotStart": "No se puede iniciar el registro TOTP. Inténtalo de nuevo.",
+    "functionNotFound": "Función no encontrada. Asegúrate de que la función esté desplegada.",
+    "permissionDenied": "Permiso denegado. Vuelve a iniciar sesión.",
+    "success": "Éxito",
+    "enabled": "¡Autenticación de múltiples factores habilitada con éxito!",
+    "invalidTotpCode": "Código TOTP no válido",
+    "verifyFailed": "Verificación TOTP fallida",
+    "invalidTotpCodeDetailed": "Código TOTP no válido. Introduce un número válido de 6 dígitos.",
+    "totpNotInitialized": "TOTP no inicializado. Activa TOTP primero.",
+    "disabled": "Autenticación de múltiples factores desactivada",
+    "disabledMessage": "¡MFA deshabilitada con éxito!",
+    "disableFailed": "Deshabilitación de MFA fallida",
+    "cannotDisable": "No se puede deshabilitar MFA."
+  },
+
+  "auth": {
+    "email": "Correo electrónico",
+    "emailLabel": "Campo de correo electrónico",
+    "emailHint": "Introduce tu dirección de correo electrónico",
+    "password": "Contraseña",
+    "passwordLabel": "Campo de contraseña",
+    "passwordHint": "Introduce tu contraseña. El campo está protegido y la contraseña se ocultará.",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
+    "login": "Iniciar sesión",
+    "loginHint": "Presiona para iniciar sesión en tu cuenta",
+    "register": "Registrarse",
+    "registerHint": "Presiona para registrar una nueva cuenta",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "forgotPasswordHint": "Abre el diálogo de recuperación de contraseña",
+    "validationError": "Error de validación",
+    "invalidInput": "Entrada no válida",
+    "loginFailed": "Inicio de sesión fallido",
+    "somethingWentWrongTryAgain": "Algo salió mal, ¡inténtalo de nuevo!",
+    "accessRestricted": "Acceso restringido",
+    "invitedReviewersOnly": "Esta aplicación está actualmente disponible solo para revisores invitados.",
+    "registrationFailed": "Registro fallido",
+    "registrationCouldNotBeCompleted": "El registro no se pudo completar. Verifica tu dirección de correo electrónico e inténtalo de nuevo."
+  },
+
+  "passwordReset": {
+    "modal": "Restablecer contraseña",
+    "modalHint": "Ventana modal para restablecer tu contraseña.",
+    "title": "Restablecer Contraseña",
+    "emailPlaceholder": "Correo electrónico",
+    "emailInput": "Campo de correo electrónico",
+    "emailInputHint": "Introduce tu dirección de correo electrónico para recibir el enlace de restablecimiento de contraseña.",
+    "resetButton": "Restablecer Contraseña",
+    "resetButtonHint": "Envía un correo electrónico para obtener el enlace de restablecimiento",
+    "sending": "Enviando",
+    "sendResetLink": "Enviar enlace",
+    "navigationTip": "Sugerencia de navegación",
+    "navigationHint": "Desliza hacia arriba o hacia abajo para cerrar",
+    "alerts": {
+      "error": "Error",
+      "invalidEmail": "Introduce una dirección de correo electrónico válida.",
+      "emailSent": "Correo enviado",
+      "emailSentMessage": "Si existe una cuenta asociada a este correo electrónico, recibirás las instrucciones para restablecer tu contraseña.",
+      "tooManyAttempts": "Demasiados intentos",
+      "rateLimitMessage": "Espera un minuto antes de intentarlo de nuevo.",
+      "generalError": "Algo salió mal. Inténtalo de nuevo más tarde. Si el problema persiste, contacta con el soporte."
+    }
+  },
+
+  "animatedText": {
+    "timetracking": "Seguimiento de tiempo",
+    "efficiency": "Eficiencia",
+    "analytics": "Análisis"
+  },
+
+  "homeScreen": {
+    "alerts": {
+      "error": "Error",
+      "serviceIdMissing": "serviceId faltante. ServiceContext no está listo.",
+      "addProjectTitle": "Lo sentimos",
+      "addProjectTitleMessage": "Añade primero un título al proyecto para continuar.",
+      "projectNameTooLong": "Nombre del proyecto demasiado largo",
+      "projectAddFailed": "No se pudo añadir el proyecto.",
+      "deleteConfirmationTitle": "¡Atención!",
+      "deleteConfirmationMessage": "¿Realmente quieres eliminar el proyecto? Si eliminas el proyecto, también se eliminarán todas las notas."
+    },
+    "title": "Tus proyectos",
+    "sort": "Ordenar",
+    "sortHint": "Ordena tus proyectos por prioridad",
+    "emptyProjects": "Todavía no tienes proyectos.",
+    "projectInput": "Añadir nuevo proyecto{{dots}}",
+    "projectInputHint": "Introduce aquí el nombre de tu proyecto.",
+    "addProject": "Añadir proyecto",
+    "projectInputLabel": "Campo de proyecto",
+    "addProjectHint": "Botón para añadir un nuevo proyecto",
+    "tour": {
+      "sort": "Aquí puedes ordenar tus proyectos por prioridad",
+      "projectName": "Introduce aquí el nombre de tu proyecto.",
+      "addProject": "Añade el proyecto."
+    },
+    "loading": "Cargando"
+  },
+
+  "workHoursScreen": {
+    "header": "Horas de trabajo"
+  },
+
+  "workTimeTracker": {
+    "error": "Error",
+    "attention": "Atención",
+    "noServiceId": "No se encontró serviceId",
+    "userIdUnavailable": "ID de usuario no disponible",
+    "fetchDataError": "Se produjo un error al recuperar los datos. Inténtalo de nuevo.",
+    "expectedHoursRequired": "Añade primero tus horas previstas.",
+    "startTrackingError": "No se pudo iniciar el seguimiento",
+    "serviceIdUnavailable": "Service ID no disponible",
+    "noStartTimeOrDoc": "No se encontró hora de inicio o documento",
+    "stopTrackingError": "No se pudo detener el seguimiento",
+    "title": "Seguimiento de tiempo de trabajo",
+    "copilot": {
+      "text": "En esta área puedes realizar el seguimiento de tus horas de trabajo diarias."
+    },
+    "accessibility": {
+      "tracker": "Seguimiento de tiempo de trabajo",
+      "trackerHint": "Inicia o detén el seguimiento de tu tiempo de trabajo",
+      "startWorking": "Comenzar a trabajar",
+      "startWorkingHint": "Inicia el seguimiento de tu tiempo de trabajo",
+      "expectedHoursRequiredHint": "Primero debes introducir las horas previstas",
+      "stopWorking": "Detener trabajo",
+      "stopWorkingHint": "Detiene el seguimiento de tu tiempo de trabajo",
+      "expectedWorkingHoursRequired": "Introduce primero tus horas de trabajo previstas",
+      "elapsedWorkTime": "Tiempo de trabajo transcurrido: {{time}}"
+    },
+    "buttons": {
+      "start": "Iniciar",
+      "stop": "Detener"
+    }
+  },
+
+  "workHoursInput": {
+    "error": "Error",
+    "ok": "OK",
+    "fetchExpectedHoursError": "Carga de horas de trabajo fallida. Inténtalo de nuevo.",
+    "userIdUnavailable": "ID de usuario no disponible",
+    "invalidInput": "Entrada no válida",
+    "invalidHours": "Introduce un número válido mayor que 0.",
+    "trackerRunning": "El seguimiento está en curso",
+    "expectedHoursChangeWhileTracking": "Ya has rastreado {{duration}}. Mientras el seguimiento está en curso, las horas previstas no se pueden modificar.",
+    "changeExpectedHours": "Cambiar horas previstas",
+    "changeExpectedHoursDescription": "Ya has rastreado {{duration}}. Cambiar las horas previstas no afectará al tiempo ya rastreado. ¿Continuar?",
+    "cancel": "Cancelar",
+    "continue": "Continuar",
+    "updateError": "Error al actualizar los datos. Inténtalo de nuevo.",
+    "saveError": "Durante el guardado se produjo un error. Inténtalo de nuevo.",
+    "copilotName": "Horas de trabajo diarias",
+    "copilotDescription": "En esta tarjeta debes establecer las horas de trabajo previstas para hoy y guardarlas.",
+    "title": "Horas de trabajo diarias",
+    "accessibilityEnterHours": "Introduce tus horas",
+    "accessibilityAddMinimumHours": "Añade tus horas de trabajo mínimas",
+    "subtitle": "Añade tus horas de trabajo mínimas",
+    "inputAccessibilityLabel": "Introduce las horas de trabajo previstas. Ejemplo: 8",
+    "inputAccessibilityHint": "Introduce el número de horas que planeas trabajar hoy",
+    "inputPlaceholder": "(ej. 8)",
+    "saving": "Guardando...",
+    "saveExpectedWorkHours": "Guardar horas de trabajo previstas",
+    "saveAccessibilityHint": "Guarda las horas de trabajo diarias ingresadas",
+    "save": "Guardar",
+    "expectedHoursAccessibility": "Tus horas de trabajo previstas son {{hours}}",
+    "notSet": "no establecido",
+    "expectedWorkHours": "Tus horas de trabajo previstas:"
+  },
+
+  "workHoursChart": {
+    "title": "Gráfico de horas",
+    "copilotDescription": "Esta tarjeta muestra tus horas de trabajo y horas extras para el período seleccionado. Presiona una barra para ver los detalles rastreados.",
+    "expectedHours": "Horas previstas",
+    "overHours": "Horas extras",
+    "overview": "Resumen de tiempo de trabajo",
+    "expected": "Previstas",
+    "worked": "Trabajadas",
+    "over": "Extra",
+    "accessibilityOverview": "Resumen de tiempo de trabajo",
+    "accessibilityEntry": "{{date}}, previstas: {{expected}} horas, trabajadas: {{worked}} horas{{over}}",
+    "accessibilityOverHours": ", extra: {{hours}} horas",
+    "accessibilityBar": "{{date}}, trabajadas: {{worked}} horas, previstas: {{expected}} horas, extra: {{over}} horas",
+    "tooltipWorked": "⏳ Trabajadas: {{hours}}h",
+    "tooltipExpected": "⏳ Previstas: {{hours}}h",
+    "tooltipOver": "🚀 Horas extras: {{hours}}h"
+  },
+
+  "chart": {
+    "week": "Semana",
+    "month": "Mes",
+    "year": "Año"
+  },
+
+  "yearSelector": {
+    "title": "Año",
+    "previousYear": "Año anterior",
+    "previousYearHint": "Presiona para seleccionar el año anterior",
+    "nextYear": "Año siguiente",
+    "nextYearHint": "Presiona para seleccionar el año siguiente",
+    "selectedYear": "Año seleccionado {{year}}",
+    "previousYearUnavailable": "No hay año anterior disponible",
+    "nextYearUnavailable": "No hay año siguiente disponible"
+  },
+
+  "reminder": {
+    "in1Day": "en 1 día",
+    "in3Days": "en 3 días",
+    "in7Days": "en 7 días",
+    "oneDay": "1 día",
+    "threeDays": "3 días",
+    "sevenDays": "7 días"
+  },
+
+  "calendar": {
+    "title": "Calendario",
+    "tourText": "En esta área puedes visualizar tu calendario de vacaciones.",
+    "accessibilityLabel": "Calendario de vacaciones con los días de vacaciones marcados. Desliza hacia la izquierda o derecha para cambiar de mes."
+  },
+
+  "sort": {
+    "title": "Ordenar proyectos",
+    "options": {
+      "newestFirst": "Más recientes primero",
+      "oldestFirst": "Más antiguos primero",
+      "nameAZ": "Nombre A–Z",
+      "nameZA": "Nombre Z–A"
+    },
+    "optionAccessibility": "Opción de ordenamiento",
+    "selected": "seleccionado",
+    "navigationTip": "Sugerencia de navegación",
+    "navigationHint": "Desliza hacia arriba o hacia abajo para cerrar",
+    "navigationText": "Desliza para cerrar",
+    "modalOpened": "Modal de ordenamiento abierto. Selecciona una opción de ordenamiento."
+  },
+
+  "projectDetails": {
+    "title": "Detalles del proyecto",
+    "titleAndTime": "Título y hora",
+    "tourText": "Esta tarjeta informativa muestra el nombre del proyecto y la hora local.",
+    "projectName": "Nombre del proyecto: {{name}}",
+    "currentTime": "Hora actual"
+  },
+
+  "timeTracker": {
+    "title": "Seguimiento de tiempo",
+    "copilot": {
+      "name": "Seguimiento de tiempo",
+      "text": "La tarjeta de Seguimiento de tiempo te permite rastrear tu tiempo de trabajo en este proyecto y muestra el estado de la sesión."
+    },
+    "trackingTime": "Tiempo en seguimiento",
+    "startTracking": "Iniciar seguimiento",
+    "stopTracking": "Detener seguimiento",
+    "startHint": "Presiona para iniciar el seguimiento de tu tiempo de trabajo",
+    "stopHint": "Presiona para detener el seguimiento de tu tiempo de trabajo",
+    "reset": "Restablecer",
+    "resetting": "Restableciendo...",
+    "resetHint": "Presiona para restablecer el proyecto",
+    "attention": "¡Atención!",
+    "resetStopFirst": "Detén primero el proyecto antes de restablecerlo.",
+    "resetConfirmation": "¿Realmente quieres restablecer el proyecto? Si restableces el proyecto, se eliminarán todos los datos.",
+    "lastSessionText": "Última sesión:",
+    "lastSessionEnded": "Última sesión finalizada el {{date}}",
+    "noLastSession": "No hay última sesión disponible",
+    "lastTrackingStartedText": "Último seguimiento iniciado:",
+    "lastTrackingStarted": "Último seguimiento iniciado el {{date}}",
+    "noTrackingStartTime": "No hay hora de inicio de seguimiento disponible",
+    "originalTrackingStartedText": "Seguimiento original iniciado:",
+    "originalTrackingStarted": "Seguimiento original iniciado el {{date}}",
+    "noOriginalTrackingStartTime": "No hay hora de inicio de seguimiento original disponible"
+  },
+
+  "projectListItem": {
+    "project": "Proyecto",
+    "createdOn": "creado el",
+    "unknownDate": "fecha desconocida",
+    "noDate": "No hay fecha disponible",
+    "viewDetails": "Toca para ver los detalles del proyecto",
+    "delete": "Eliminar el proyecto",
+    "addNote": "Añadir una nota",
+    "addNoteHint": "Añade una nota. Puedes verla en la pantalla de detalles"
+  },
+
+  "notes": {
+    "addedAt": "Añadido el",
+    "delete": "Eliminar esta nota",
+    "deleteHint": "Elimina la nota actual de la lista",
+    "content": "Texto de la nota",
+    "deleteConfirmationTitle": "¡Atención!",
+    "deleteConfirmationMessage": "¿Realmente quieres eliminar la nota? Esta acción no se puede deshacer.",
+    "cancel": "Cancelar",
+    "deleteConfirmation": "Eliminar",
+    "deleteError": "No se pudo eliminar la nota",
+    "title": "Tus notas",
+    "copilot": {
+      "name": "Tus notas",
+      "text": "Esta tarjeta muestra tus notas para este proyecto, si has añadido alguna en la tarjeta de proyecto de la pantalla principal. Puedes eliminarlas aquí."
+    },
+    "empty": "Todavía no has añadido notas para este proyecto.",
+    "error": "Error",
+    "modalOpened": "Modal de notas abierto. Escribe tu comentario y presiona enviar.",
+    "commentInput": "Campo de ingreso de comentario del proyecto",
+    "commentHint": "Escribe un comentario para añadir una nota al proyecto",
+    "commentPlaceholder": "Escribe un comentario",
+    "save": "Guardar",
+    "saving": "Guardando",
+    "saveHint": "Guarda la nota en el proyecto",
+    "saveAccessibility": "Guardar nota",
+    "savingAccessibility": "Guardando nota",
+    "navigationTip": "Desliza para cerrar",
+    "navigationHint": "Desliza hacia arriba o hacia abajo para cerrar",
+    "invalidData": "Datos de la nota no válidos",
+    "notAuthorized": "No autorizado",
+    "projectNotFound": "Proyecto no encontrado",
+    "saveError": "No se pudo guardar la nota"
+  },
+
+  "details": {
+    "earningsCalculator": {
+      "title": "Calcular ingresos",
+      "tourText": "En esta tarjeta puedes establecer tu tarifa por hora. Tus ingresos se calcularán en función del tiempo rastreado por el Seguimiento de tiempo.",
+      "accessibilityLabel": "Calculadora de ingresos. Ingreso total {{totalEarnings}} dólares. Tu tarifa por hora es {{hourlyRate}}.",
+      "notSet": "aún no establecida",
+      "totalEarnings": "Ingreso total {{amount}} dólares",
+      "hourlyRateInput": "Introduce tu tarifa por hora",
+      "savingHourlyRate": "Guardando tu tarifa por hora",
+      "saveHourlyRate": "Guardar tarifa por hora",
+      "saving": "Guardando...",
+      "save": "Guardar",
+      "currentHourlyRate": "Tu tarifa por hora es {{hourlyRate}} dólares",
+      "noHourlyRate": "No se ha establecido tarifa por hora",
+      "yourHourlyRate": "Tu tarifa por hora",
+      "alerts": {
+        "error": "Error",
+        "authenticationRequired": "Autenticación requerida",
+        "invalidInput": "Entrada no válida",
+        "invalidRate": "Tarifa no válida",
+        "rateRange": "La tarifa por hora debe estar entre {{min}} y {{max}}",
+        "saveFailed": "No se pudo guardar la tarifa por hora"
+      }
+    }
+  },
+
+  "progress": {
+    "title": "Seguimiento de plazo",
+    "copilot": {
+      "name": "Seguimiento de plazo",
+      "text": "El Seguimiento de plazo te muestra qué tan cerca estás de tu plazo. Añade el máximo de horas de trabajo a tu proyecto."
+    },
+    "instructions": "Añade el tiempo de trabajo máximo permitido",
+    "inputAccessibility": "Introduce tus horas de trabajo máximas permitidas",
+    "inputPlaceholder": "(ej. 5 horas)",
+    "saveAccessibility": "Guardar horas de trabajo máximas",
+    "savingAccessibility": "Guardando tus horas de trabajo máximas",
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "progress": {
+      "tracker": "Seguimiento de plazo. {{percent}} por ciento del tiempo de trabajo máximo utilizado. Tu plazo es de {{hours}} horas.",
+      "noDeadline": "Seguimiento de plazo. No se ha establecido ningún plazo.",
+      "label": "Progreso {{percent}} por ciento",
+      "noProgress": "Sin progreso aún",
+      "used": "{{percent}} por ciento del tiempo de trabajo máximo utilizado",
+      "usedShort": "del tiempo de trabajo máximo utilizado"
+    },
+    "deadline": {
+      "label": "Tu plazo:",
+      "accessibility": "Tu plazo es de {{hours}} horas"
+    },
+    "alerts": {
+      "error": "Error",
+      "authenticationRequired": "Autenticación requerida",
+      "projectNotFound": "Proyecto no encontrado",
+      "notAuthorized": "No autorizado",
+      "saveFailed": "Guardado fallido. Inténtalo de nuevo.",
+      "invalidInput": "Entrada no válida",
+      "hoursRange": "Introduce horas entre 1 y 10000"
+    },
+    "notification": {
+      "targetReached": "¡Objetivo alcanzado 🎯!",
+      "targetReachedMessage": "¡Has alcanzado tu objetivo de plazo!"
+    }
+  },
+
+  "vacationScreen": {
+    "title": "Gestión de vacaciones",
+    "slogan": "Deja el trabajo y descansa",
+    "vacationForm": "Formulario de solicitud de vacaciones",
+    "vacationList": "Lista de tus vacaciones planificadas"
+  },
+
+  "vacationForm": {
+    "copilot": {
+      "name": "Seleccionar fechas de vacaciones",
+      "text": "Selecciona las fechas de inicio y fin de tus vacaciones. Luego puedes guardar las fechas en el calendario o cancelar la selección. Guardar las fechas las añadirá a la tarjeta de Vacaciones reservadas."
+    },
+    "startDate": "Inicio",
+    "endDate": "Fin",
+    "startDateSelected": "Fecha de inicio: {{date}}",
+    "startDateNotSelected": "Fecha de inicio no seleccionada",
+    "endDateSelected": "Fecha de fin seleccionada: {{date}}",
+    "selectEndDate": "Seleccionar fecha de fin",
+    "save": "Guardar",
+    "saveVacationDates": "Guardar fechas de vacaciones",
+    "cancel": "Cancelar",
+    "cancelVacationSelection": "Cancelar selección de fechas de vacaciones",
+    "sorry": "Lo sentimos",
+    "selectStartDateFirst": "Selecciona primero una fecha de inicio.",
+    "attention": "¡Atención!",
+    "selectVacationDateFirst": "Selecciona primero una fecha para las vacaciones.",
+    "invalidInput": "Entrada no válida",
+    "invalidData": "Los datos de vacaciones no son válidos. Inténtalo de nuevo.",
+    "error": "Error",
+    "saveFailed": "Guardado de vacaciones fallido.",
+    "ok": "OK"
+  },
+
+  "vacationList": {
+    "attention": "¡Atención!",
+    "deleteConfirmation": "¿Realmente quieres eliminar las vacaciones?",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "loadErrorTitle": "Error al cargar las vacaciones",
+    "loadErrorMessage": "No se pudieron recuperar los datos de vacaciones. Inténtalo de nuevo.",
+    "copilot": {
+      "name": "Vacaciones reservadas",
+      "text": "Esta tarjeta muestra tus vacaciones. Puedes eliminarlas aquí y también puedes establecer una fecha de recordatorio."
+    },
+    "title": "Vacaciones reservadas",
+    "date": "Fecha",
+    "noMarkedDates": "No hay fechas marcadas",
+    "vacationFrom": "Vacaciones desde {{date}}",
+    "vacationOn": "Vacaciones el {{date}}",
+    "reminderActive": "El recordatorio está activo. Toca para desactivar el recordatorio",
+    "reminderInactive": "El recordatorio está inactivo. Toca para activar el recordatorio",
+    "deleteVacation": "Eliminar vacaciones",
+    "noVacations": "Todavía no has reservado días de vacaciones. Reserva algunos."
+  },
+
+  "vacationReminder": {
+    "modalOpened": "Modal de recordatorio de vacaciones abierto. Selecciona una duración para el recordatorio y presiona guardar.",
+    "title": "Recordatorio",
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "saveHint": "Guarda el recordatorio y cierra esta vista",
+    "pleaseWait": "Espera",
+    "navigationTip": "Desliza para cerrar",
+    "navigationTipAccessibility": "Sugerencia de navegación. Desliza hacia arriba o hacia abajo para cerrar",
+    "error": "Error",
+    "success": "Éxito",
+    "noVacationSelected": "No se seleccionaron vacaciones.",
+    "loginRequired": "Debes estar conectado para guardar un recordatorio.",
+    "selectDuration": "Selecciona una duración para el recordatorio.",
+    "userDocumentMissing": "Documento de usuario faltante.",
+    "pushTokenNotFound": "Push Token no encontrado.",
+    "vacationNotFound": "Vacaciones no encontradas.",
+    "reminderAlreadyExists": "Las vacaciones ya tienen un recordatorio. Elimínalo y crea uno nuevo para cambiarlo.",
+    "invalidStartDate": "Fecha de inicio de vacaciones no válida.",
+    "reminderSaved": "Recordatorio guardado con éxito.",
+    "saveFailed": "No se pudo guardar el recordatorio. Inténtalo de nuevo.",
+    "notificationTitle": "Recordatorio de vacaciones",
+    "notificationBody": "Tus vacaciones comienzan en {{days}} días. No olvides tomarte tu tiempo libre.",
+    "reminderActive": "El recordatorio está activo",
+    "reminderInactive": "El recordatorio está inactivo"
+  },
+
+  "tour": {
+    "previous": "ANTERIOR",
+    "next": "SIGUIENTE",
+    "finish": "FINALIZAR",
+    "endTourHint": "Finaliza el recorrido y cierra la sugerencia",
+    "previousStepHint": "Volver al paso anterior",
+    "nextStepHint": "Ir al siguiente paso",
+    "restart": "Reiniciar",
+    "restartAccessibility": "Reinicia el recorrido. El recorrido se mostrará de nuevo en todas las páginas.",
+    "restartAlertTitle": "Reiniciar recorrido",
+    "restartAlertMessage": "El recorrido se mostrará de nuevo al abrir las respectivas pantallas",
+    "introductionActive": "La introducción del recorrido está activa",
+    "introductionModal": "Introducción al recorrido",
+    "introductionTitle": "Iniciar introducción al recorrido",
+    "start": "Iniciar recorrido introductorio",
+    "startHint": "Comienza un recorrido guiado por la aplicación",
+    "play": "INICIAR",
+    "skip": "SALTAR",
+    "skipLabel": "Saltar introducción al recorrido",
+    "skipHint": "Salta el recorrido y vuelve a la aplicación",
+    "skipAlertTitle": "Saltar recorrido",
+    "skipAlertMessage": "Puedes iniciar el recorrido más tarde desde el menú.",
+    "retry": "REINTENTAR",
+    "cancel": "CANCELAR",
+    "errors": {
+      "loading": {
+        "title": "Error de carga",
+        "message": "Espera hasta que el contenido esté completamente cargado."
+      },
+      "general": {
+        "title": "Error del recorrido",
+        "message": "Se produjo un error inesperado. Intenta reiniciar la aplicación."
+      }
+    }
+  },
+
+  "help": {
+    "title": "Ayuda",
+    "titleAccessibility": "Menú de Ayuda",
+    "close": "Cerrar",
+    "openHint": "Abre el menú de Ayuda para informar sobre problemas o errores",
+    "closeHint": "Cierra el menú de Ayuda",
+    "info": "Texto informativo",
+    "infoText": "Si encuentras algún problema o tienes sugerencias para mejoras, no dudes en hacer clic en un logotipo y contactarnos:",
+    "facebook": "Abrir Facebook",
+    "facebookHint": "Abre nuestra página de Facebook en un navegador externo",
+    "linkedin": "Abrir LinkedIn",
+    "linkedinHint": "Abre nuestro perfil de LinkedIn en un navegador externo",
+    "github": "Abrir GitHub",
+    "githubHint": "Abre nuestro repositorio de GitHub en un navegador externo",
+    "thanks": "¡Gracias por tu comentario! 🚀",
+    "thanksAccessibility": "¡Gracias por tu comentario!",
+    "links": {
+      "github": "GitHub",
+      "linkedin": "LinkedIn",
+      "facebook": "Facebook"
+    }
+  },
+
+  "faq": {
+    "title": "Preguntas frecuentes",
+    "titleAccessibility": "Preguntas frecuentes",
+    "sheetAccessibility": "Panel de Preguntas frecuentes",
+    "sheetHint": "Contiene las preguntas frecuentes.",
+    "close": "Cerrar FAQ",
+    "closeHint": "Cierra las preguntas frecuentes",
+    "answerOpened": "Respuesta abierta",
+    "answerClosed": "Respuesta cerrada",
+    "expanded": "Expandido",
+    "collapsed": "Contraído",
+    "workhoursTooltip": {
+      "question": "¿Cómo cierro la sugerencia en el gráfico de horas de trabajo?",
+      "hint": "Muestra/oculta la respuesta sobre cómo cerrar la sugerencia.",
+      "answer": "Para cerrar la sugerencia, simplemente toca en cualquier lugar fuera del área del gráfico pero dentro de la tarjeta. Toda la tarjeta está configurada para detectar toques fuera del gráfico."
+    },
+    "changePassword": {
+      "question": "¿Cómo cambio mi contraseña?",
+      "hint": "Muestra/oculta las instrucciones para cambiar la contraseña.",
+      "answer": "Sal de la aplicación usando Cerrar sesión y serás redirigido a la pantalla de inicio de sesión. Allí puedes cambiar tu contraseña presionando ¿Olvidaste tu contraseña?. Te enviaremos un correo electrónico con las instrucciones sobre cómo restablecer tu contraseña."
+    },
+    "deleteAccount": {
+      "question": "¿Cómo elimino mi cuenta?",
+      "hint": "Muestra/oculta las instrucciones para eliminar la cuenta.",
+      "answer": "Para eliminar tu cuenta, debes confirmar tu contraseña. Todos tus datos serán eliminados permanentemente de nuestros servidores.",
+      "passwordInput": "Introduce tu contraseña para confirmar la eliminación de la cuenta",
+      "passwordPlaceholder": "Contraseña",
+      "showPassword": "Mostrar contraseña",
+      "hidePassword": "Ocultar contraseña",
+      "visibilityHint": "Muestra/oculta la contraseña",
+      "deleteButton": "Eliminar cuenta",
+      "deleteButtonHint": "Elimina permanentemente tu cuenta después de la confirmación",
+      "deleting": "Eliminando"
+    },
+    "mfaOneDevice": {
+      "question": "¿Cómo puedo configurar MFA si solo tengo un teléfono inteligente?",
+      "hint": "Muestra/oculta las instrucciones para configurar MFA con un solo teléfono inteligente.",
+      "answer": "El código QR utilizado para configurar tu aplicación de autenticación generalmente está destinado a ser escaneado con un segundo dispositivo. Si solo tienes un teléfono inteligente, puedes utilizar el siguiente método alternativo:\n\n1. Haz una captura de pantalla del código QR mostrado.\n2. Abre tu aplicación de autenticación.\n3. Utiliza la opción para importar un código QR desde una imagen o tu galería.\n4. Selecciona la captura de pantalla y completa el proceso de configuración.\n\nTen en cuenta que no todas las aplicaciones de autenticación admiten la importación de códigos QR desde imágenes. Google Authenticator admite la importación de códigos QR desde imágenes guardadas según la versión de la aplicación.\n\nDespués de habilitar con éxito MFA, debes eliminar la captura de pantalla. El código QR contiene tu clave secreta TOTP, que se utiliza para generar tus códigos MFA. Cualquier persona que obtenga acceso a esta clave podría generar códigos MFA válidos para tu cuenta."
+    },
+    "deleteConfirmation": {
+      "title": "Eliminar cuenta",
+      "message": "¿Estás seguro de que quieres eliminar tu cuenta?",
+      "cancel": "Cancelar",
+      "delete": "Eliminar"
+    },
+    "alerts": {
+      "error": "Error",
+      "success": "Éxito",
+      "closeFailed": "No se pudo cerrar el panel de FAQ.",
+      "noPassword": "Sin contraseña",
+      "passwordRequired": "Introduce tu contraseña antes de eliminar tu cuenta.",
+      "noAuthenticatedUser": "No se encontró ningún usuario autenticado.",
+      "accountDeleted": "Tu cuenta ha sido eliminada.",
+      "deleteFailed": "Hubo un problema al eliminar tu cuenta."
+    }
+  },
+
+  "validation": {
+    "invalidDateString": "Debe ser una cadena de fecha válida",
+    "invalidDocumentId": "ID de documento no válido",
+    "invalidEmail": "Introduce una dirección de correo electrónico válida.",
+    "passwordEmpty": "La contraseña no puede estar vacía.",
+    "passwordMinLength": "La contraseña debe tener al menos 8 caracteres.",
+    "passwordSpecialCharacters": "La contraseña debe contener al menos 2 caracteres especiales.",
+    "passwordNumber": "La contraseña debe contener al menos 1 número.",
+    "totpDigits": "TOTP debe tener 6 dígitos",
+    "hourlyRateNegative": "La tarifa por hora no puede ser negativa",
+    "hourlyRateMax": "La tarifa por hora no puede superar 300",
+    "hourlyRateInvalid": "La tarifa por hora debe ser un número válido",
+    "projectIdRequired": "Se requiere ID del proyecto",
+    "userIdRequired": "Se requiere ID del usuario",
+    "displayNameLength": "El nombre mostrado debe tener entre 1 y 100 caracteres",
+    "invalidPersonalId": "Número de personal no válido",
+    "commentEmpty": "El comentario no puede estar vacío",
+    "commentTooLong": "Comentario demasiado largo",
+    "invalidProjectId": "ID del proyecto no válido",
+    "invalidUserId": "ID de usuario no válido",
+    "invalidProjectIdFormat": "Formato de projectId no válido",
+    "invalidColor": "Color no válido",
+    "invalidTextColor": "Color del texto no válido",
+    "invalidStartDateFormat": "startDate debe tener el formato YYYY-MM-DD"
+  },
+
+  "errorBoundary": {
+    "message": "Algo salió mal",
+    "refresh": "Reintentar"
+  },
+
+  "alerts": {
+    "opened": "Alerta abierta",
+    "ok": "OK",
+    "projectStillRunning": {
+      "title": "El proyecto sigue en ejecución.",
+      "message": "No puedes salir de la aplicación. Detén primero el proyecto."
+    }
+  },
+
+  "common": {
+    "cancel": "Cancelar",
+    "delete": "Eliminar"
+  }
+}

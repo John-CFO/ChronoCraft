@@ -7,6 +7,7 @@
 import { Resend } from "resend";
 
 import { ConfigurationError } from "../errors/domain.errors";
+import { getTranslation } from "../services/localization/i18n";
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -55,20 +56,27 @@ function getFromAddress(): string {
 }
 
 // function to send a password reset email
-export async function sendPasswordResetEmail(to: string, link: string) {
+export async function sendPasswordResetEmail(
+  to: string,
+  link: string,
+  language?: string | null,
+) {
+  // use getTranslation to get the current language
+  const t = await getTranslation(language);
+
   const resend = getResendClient();
   const from = getFromAddress();
   const result = await resend.emails.send({
     from,
     to,
-    subject: "Reset your password",
+    subject: t("auth.passwordResetSubject"),
     html: `
-      <p>You requested a password reset.</p>
-      <p>Use the most recent email if you requested multiple resets.</p>
-      <p>Older links may no longer work.</p>
-      <p><a href="${link}">Click here to reset your password</a></p>
-      <p>If you didn’t request this, you can ignore this email.</p>
-    `,
+  <p>${t("auth.passwordResetRequested")}</p>
+  <p>${t("auth.passwordResetMostRecent")}</p>
+  <p>${t("auth.passwordResetOlderLinks")}</p>
+  <p><a href="${link}">${t("auth.passwordResetLink")}</a></p>
+  <p>${t("auth.passwordResetIgnore")}</p>
+`,
   });
 
   if (!result || (result as any).error) {

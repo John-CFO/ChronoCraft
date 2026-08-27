@@ -8,6 +8,7 @@ import { useEffect, useRef } from "react";
 import { BackHandler } from "react-native";
 import { doc, onSnapshot } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { useTranslation } from "react-i18next";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useService } from "../components/contexts/ServiceContext";
@@ -17,6 +18,9 @@ import { logError } from "../lib/loggerClient";
 ///////////////////////////////////////////////////////////////////////////////
 
 export function usePreventBackWhileTracking(projectId: string) {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // useRef to store the current value of isTracking
   const isTrackingRef = useRef(false);
   // declare useService hook
@@ -55,8 +59,8 @@ export function usePreventBackWhileTracking(projectId: string) {
         useAlertStore
           .getState()
           .showAlert(
-            "Error",
-            "Failed to fetch project data. Please try again.",
+            t("preventBack.error"),
+            t("preventBack.fetchProjectError"),
           );
       },
     );
@@ -67,8 +71,8 @@ export function usePreventBackWhileTracking(projectId: string) {
         useAlertStore
           .getState()
           .showAlert(
-            "Project is still running.",
-            "You can't leave the app. Please stop the project first.",
+            t("preventBack.projectRunning"),
+            t("preventBack.cannotLeave"),
           );
         return true; // block back navigation
       }
