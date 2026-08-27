@@ -587,22 +587,37 @@ const WorkHoursChart = () => {
                         accessible={true}
                         accessibilityLabel={getAccessibilityEntryLabel(item)}
                       >
-                        {/* Date*/}
-                        <Text
+                        {/* Date */}
+                        <View
                           style={{
-                            color: "white",
-                            fontWeight: "bold",
-                            fontSize: 16,
+                            alignItems: "flex-start",
                           }}
-                          accessibilityRole="header"
                         >
-                          📅{" "}
-                          {formatTooltipDate(
-                            item.originalDate,
-                            chartType,
-                            i18n.language,
-                          )}
-                        </Text>
+                          <Text
+                            style={{
+                              color: "white",
+                              fontWeight: "bold",
+                              fontSize: 16,
+                            }}
+                            accessibilityRole="header"
+                          >
+                            📅
+                          </Text>
+
+                          <Text
+                            style={{
+                              color: "white",
+                              fontWeight: "bold",
+                              fontSize: 16,
+                            }}
+                          >
+                            {formatTooltipDate(
+                              item.originalDate,
+                              chartType,
+                              i18n.language,
+                            )}
+                          </Text>
+                        </View>
 
                         {/* Hour-Data */}
                         <View style={{ marginLeft: 8 }}>
