@@ -58,13 +58,14 @@ export const useCalendarStore = create<CalendarState>((set) => ({
       return;
     }
 
-    const dates: MarkedDates = {};
-    let currentDate = new Date(startDate);
+    const dates: MarkedDates = { ...useCalendarStore.getState().markedDates };
 
+    let currentDate = new Date(startDate);
     const end = new Date(endDate);
 
     while (currentDate <= end) {
       const formattedDate = currentDate.toISOString().split("T")[0];
+
       dates[formattedDate] = {
         customStyles: {
           container: {

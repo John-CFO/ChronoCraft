@@ -110,6 +110,8 @@ const VacationForm = () => {
       });
 
       resetMarkedDates(); // reset marked dates after saving
+      setStartDate("");
+      setEndDate("");
     } catch (error) {
       logError("VacationForm.handleSaveVacation", error);
       useAlertStore
@@ -135,12 +137,19 @@ const VacationForm = () => {
     await handleSaveVacation();
   };
 
+  // cancel function
+  const handleFormCancel = () => {
+    handleCancel();
+    setStartDate("");
+    setEndDate("");
+  };
+
   // hook to render the selected dates and clear the form after selection
   useEffect(() => {
     if (startDate && endDate) {
       handleSelect(startDate, endDate);
-      setStartDate("");
-      setEndDate("");
+      // setStartDate("");
+      // setEndDate("");
     }
   }, [startDate, endDate]);
 
@@ -210,37 +219,29 @@ const VacationForm = () => {
                 <View
                   style={{
                     flexDirection: "row",
-                    position: "relative",
                     alignItems: "center",
-                    justifyContent: "flex-end",
-                    paddingRight: 20,
-                    width: "100%",
+                    gap: 8,
                   }}
                 >
                   {/* form icon for start date */}
                   <MaterialCommunityIcons
                     name="calendar-text"
-                    size={40}
+                    size={32}
                     color="grey"
-                    style={{
-                      position: "absolute",
-                      left: 5,
-                    }}
                   />
                   {/* start date value */}
                   <Text
                     style={{
-                      textAlign: "center",
                       fontSize: 18,
                       fontWeight: "bold",
                       color: "white",
-                      left: 10,
                     }}
                   >
-                    {startDate || t("vacationForm.startDate")}
+                    {startDate || "—"}
                   </Text>
                 </View>
               </TouchableOpacity>
+
               {/* End Date Button */}
               <TouchableOpacity
                 accessible={true}
@@ -266,6 +267,7 @@ const VacationForm = () => {
                       );
                     return;
                   }
+
                   setTempEndDate(new Date().toISOString().split("T")[0]);
                 }}
                 style={{
@@ -277,39 +279,31 @@ const VacationForm = () => {
                   borderColor: "aqua",
                   borderRadius: 8,
                   justifyContent: "center",
+                  alignItems: "center",
                 }}
               >
                 <View
                   style={{
                     flexDirection: "row",
-                    position: "relative",
                     alignItems: "center",
-                    justifyContent: "flex-end",
-                    paddingRight: 20,
-                    width: "100%",
+                    gap: 8,
                   }}
                 >
                   {/* form icon for end date */}
                   <FontAwesome
                     name="arrow-circle-right"
-                    size={40}
+                    size={32}
                     color="grey"
-                    style={{
-                      position: "absolute",
-                      left: 5,
-                    }}
                   />
                   {/* end date value */}
                   <Text
                     style={{
-                      textAlign: "center",
                       fontSize: 18,
                       fontWeight: "bold",
                       color: "white",
-                      left: 10,
                     }}
                   >
-                    {endDate || t("vacationForm.endDate")}
+                    {endDate || "—"}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -426,7 +420,7 @@ const VacationForm = () => {
               accessible={true}
               accessibilityRole="button"
               accessibilityLabel={t("vacationForm.cancelVacationSelection")}
-              onPress={handleCancel}
+              onPress={handleFormCancel}
               activeOpacity={0.7}
               style={{
                 height: 50,
