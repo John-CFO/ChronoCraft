@@ -1,0 +1,777 @@
+{
+  "drawer": {
+    "profile": {
+      "employeee": "従業員",
+      "personalId": "社員番号",
+      "edit": "プロフィールを編集",
+      "editModal": "プロフィールを編集",
+      "picture": "{{name}}のプロフィール画像",
+      "defaultPicture": "デフォルトのプロフィール画像",
+      "unknown": "不明"
+    },
+    "language": "言語",
+    "chooseLanguage": "言語を選択",
+    "languageModal": "言語選択",
+    "languageModalOpened": "言語選択が開かれました",
+    "selectLanguage": "言語を選択",
+    "currentLanguage": "現在の言語",
+    "navigationTip": "ナビゲーションのヒント",
+    "navigationTipHint": "上または下にスワイプしてモーダルを閉じます。",
+    "swipeToClose": "スワイプして閉じる",
+    "tour": "ツアーを再開",
+    "toggleMfa": "MFA設定をオン/オフ",
+    "toggleAccessibility": "アクセシビリティ",
+    "employeeAccessibility": "従業員 {{name}}",
+    "menuButton": "メニュー",
+    "menuButtonHint": "アプリメニューを開いて画面間を移動します",
+    "navigation": {
+      "home": "ホーム",
+      "workHours": "労働時間",
+      "vacation": "休暇",
+      "faq": "よくある質問",
+      "logout": "ログアウト",
+      "back": "戻る",
+      "backHint": "前の画面に戻るボタン"
+    }
+  },
+
+  "profile": {
+    "edit": {
+      "modal": "プロフィールを編集",
+      "modalOpened": "プロフィール編集モーダルが開かれました",
+      "title": "プロフィール設定",
+      "uploadImage": "プロフィール画像をアップロード",
+      "uploadImageHint": "プロフィール画像をアップロードするボタン",
+      "name": "名前",
+      "nameInput": "名前入力フィールド",
+      "nameInputHint": "あなたの名前を入力してください",
+      "personalId": "社員番号",
+      "personalIdInput": "社員番号入力フィールド",
+      "personalIdInputHint": "あなたの社員番号を入力してください",
+      "updatingProfile": "プロフィールを更新中",
+      "saveChanges": "変更を保存",
+      "saveChangesHint": "更新された名前と社員番号を保存します",
+      "updating": "更新中",
+      "update": "更新",
+      "navigationTip": "ナビゲーションのヒント",
+      "navigationTipHint": "上または下にスワイプして閉じる",
+      "swipeToClose": "スワイプして閉じる",
+      "alerts": {
+        "permissionError": "権限エラー",
+        "cameraRollPermission": "申し訳ありませんが、この機能を動作させるにはカメラロールの権限が必要です！",
+        "noImageSelected": "画像が選択されていません",
+        "noImageSelectedMessage": "画像が選択されていませんでした。"
+      }
+    }
+  },
+
+  "modal": {
+    "editProfile": "プロフィールを編集",
+    "twoFactor": "二要素認証",
+    "noUser": "ログインしているユーザーがいません"
+  },
+
+  "accessibility": {
+    "toggle": "アクセシビリティ",
+    "toggleHint": "スクリーンリーダー最適化モードを有効または無効にします"
+  },
+
+  "mfa": {
+    "accessibility": "二要素認証設定",
+    "settings": "2FA",
+    "on": "オン",
+    "off": "オフ",
+    "modal": "多要素認証",
+    "enabled": "多要素認証が現在有効になっています。",
+    "disable": "無効にする",
+    "disableAccessibility": "多要素認証を無効にする",
+    "disableHint": "多要素認証を無効にします",
+    "disabling": "無効化中",
+    "close": "閉じる",
+    "setupDescription": "認証アプリ（Google Authenticator、Authy）でTOTPを設定します。",
+    "activate": "有効にする",
+    "activating": "有効化中",
+    "activateAccessibility": "多要素認証を有効にする",
+    "activateHint": "多要素認証を有効にします",
+    "skip": "スキップ",
+    "qrCodeAccessibility": "多要素認証のQRコード",
+    "scanQrCode": "このQRコードを認証アプリ（Google Authenticator、Authyなど）でスキャンしてください",
+    "confirm": "確認",
+    "confirmAccessibility": "TOTPを確認",
+    "confirmHint": "TOTPコードを確認します",
+    "confirming": "確認中",
+    "cancel": "キャンセル",
+    "cancelAccessibility": "TOTP登録をキャンセル",
+    "required": "二要素認証が必要です",
+    "enterCode": "認証アプリから6桁のコードを入力してください。",
+    "verifying": "検証中",
+    "cancelAndReturn": "キャンセルしてログインに戻る",
+    "cancelAndReturnHint": "ログアウトしてログイン画面に戻ります",
+    "cancelAndReturnText": "キャンセルしてログインに戻る",
+    "bypassNotice": "注意：この画面はスキップできません。続行するには正しいTOTPコードを入力する必要があります。",
+    "alerts": {
+      "error": "エラー",
+      "invalidCode": "有効な6桁のコードを入力してください。",
+      "enrollmentStarted": "TOTP登録が開始されました",
+      "enrollmentStartedMessage": "QRコードを認証アプリでスキャンしてください。",
+      "success": "成功",
+      "enabled": "多要素認証が正常に有効化されました！",
+      "disabled": "多要素認証が無効化されました",
+      "disabledMessage": "MFAが正常に無効化されました！",
+      "functionNotFound": "関数が見つかりません。関数がデプロイされていることを確認してください。",
+      "permissionDenied": "権限が拒否されました。再度ログインしてください。",
+      "noOtpUrl": "サーバーからOTP URLを受信できませんでした",
+      "cannotStart": "TOTP登録を開始できません。もう一度お試しください。",
+      "failedVerification": "TOTPの検証に失敗しました",
+      "invalidTotp": "無効なTOTPコードです。有効な6桁の数字を入力してください。",
+      "notInitialized": "TOTPが初期化されていません。最初にTOTPを有効にしてください。",
+      "disableFailed": "MFAの無効化に失敗しました",
+      "cannotDisable": "MFAを無効にできません。",
+      "noServerResponse": "サーバーからの応答がありません。もう一度お試しください。",
+      "authenticationSuccessful": "認証に成功しました。",
+      "invalidAuthenticationCode": "無効な認証コードです。",
+      "totpNotEnabled": "アカウントでTOTPが有効になっていません。",
+      "userNotFound": "ユーザーが見つかりません。再度ログインしてみてください。",
+      "sessionExpired": "セッションの有効期限が切れました。再度ログインしてください。",
+      "invalidTotpFormat": "無効なTOTPコード形式です。",
+      "rateLimitWait": "{{seconds}}秒お待ちください。"
+    }
+  },
+
+  "otp": {
+    "number": "{{total}}中の{{current}}番",
+    "hint": "認証コードの1桁を入力してください",
+    "entered": "入力済み",
+    "empty": "空"
+  },
+
+  "mfaModal": {
+    "enrollmentStarted": "TOTP登録が開始されました",
+    "enrollmentStartedMessage": "QRコードを認証アプリでスキャンしてください。",
+    "ok": "OK",
+    "error": "エラー",
+    "invalidCode": "有効な6桁のコードを入力してください。",
+    "noOtpUrl": "サーバーからOTP URLを受信できませんでした",
+    "cannotStart": "TOTP登録を開始できません。もう一度お試しください。",
+    "functionNotFound": "関数が見つかりません。関数がデプロイされていることを確認してください。",
+    "permissionDenied": "権限が拒否されました。再度ログインしてください。",
+    "success": "成功",
+    "enabled": "多要素認証が正常に有効化されました！",
+    "invalidTotpCode": "無効なTOTPコードです",
+    "verifyFailed": "TOTPの検証に失敗しました",
+    "invalidTotpCodeDetailed": "無効なTOTPコードです。有効な6桁の数字を入力してください。",
+    "totpNotInitialized": "TOTPが初期化されていません。最初にTOTPを有効にしてください。",
+    "disabled": "多要素認証が無効化されました",
+    "disabledMessage": "MFAが正常に無効化されました！",
+    "disableFailed": "MFAの無効化に失敗しました",
+    "cannotDisable": "MFAを無効にできません。"
+  },
+
+  "auth": {
+    "email": "メールアドレス",
+    "emailLabel": "メールアドレス入力フィールド",
+    "emailHint": "あなたのメールアドレスを入力してください",
+    "password": "パスワード",
+    "passwordLabel": "パスワード入力フィールド",
+    "passwordHint": "パスワードを入力してください。このフィールドは保護されており、パスワードは非表示になります。",
+    "showPassword": "パスワードを表示",
+    "hidePassword": "パスワードを非表示",
+    "login": "ログイン",
+    "loginHint": "押してアカウントにログインします",
+    "register": "登録",
+    "registerHint": "押して新しいアカウントを登録します",
+    "forgotPassword": "パスワードをお忘れですか？",
+    "forgotPasswordHint": "パスワード復元ダイアログを開きます",
+    "validationError": "検証エラー",
+    "invalidInput": "無効な入力です",
+    "loginFailed": "ログインに失敗しました",
+    "somethingWentWrongTryAgain": "問題が発生しました。もう一度お試しください！",
+    "accessRestricted": "アクセス制限",
+    "invitedReviewersOnly": "このアプリケーションは現在、招待されたレビュアーのみが利用できます。",
+    "registrationFailed": "登録に失敗しました",
+    "registrationCouldNotBeCompleted": "登録を完了できませんでした。メールアドレスを確認して、もう一度お試しください。"
+  },
+
+  "passwordReset": {
+    "modal": "パスワードをリセット",
+    "modalHint": "パスワードをリセットするためのモーダルダイアログ。",
+    "title": "パスワードをリセット",
+    "emailPlaceholder": "メールアドレス",
+    "emailInput": "メールアドレス入力フィールド",
+    "emailInputHint": "パスワードリセットリンクを受け取るためにメールアドレスを入力してください。",
+    "resetButton": "パスワードをリセット",
+    "resetButtonHint": "リセットリンクを取得するためにメールを送信します",
+    "sending": "送信中",
+    "sendResetLink": "リンクを送信",
+    "navigationTip": "ナビゲーションのヒント",
+    "navigationHint": "上または下にスワイプして閉じる",
+    "alerts": {
+      "error": "エラー",
+      "invalidEmail": "有効なメールアドレスを入力してください。",
+      "emailSent": "メール送信済み",
+      "emailSentMessage": "そのメールアドレスにアカウントが存在する場合、パスワードリセットの手順が送信されます。",
+      "tooManyAttempts": "試行回数が多すぎます",
+      "rateLimitMessage": "再試行する前に1分間お待ちください。",
+      "generalError": "問題が発生しました。後でもう一度お試しください。問題が解決しない場合は、サポートにお問い合わせください。"
+    }
+  },
+
+  "animatedText": {
+    "timetracking": "時間追跡",
+    "efficiency": "効率性",
+    "analytics": "分析"
+  },
+
+  "homeScreen": {
+    "alerts": {
+      "error": "エラー",
+      "serviceIdMissing": "serviceIdがありません。ServiceContextの準備ができていません。",
+      "addProjectTitle": "申し訳ありません",
+      "addProjectTitleMessage": "続行するには、最初にプロジェクトタイトルを追加してください。",
+      "projectNameTooLong": "プロジェクト名が長すぎます",
+      "projectAddFailed": "プロジェクトを追加できませんでした。",
+      "deleteConfirmationTitle": "注意！",
+      "deleteConfirmationMessage": "本当にプロジェクトを削除しますか？プロジェクトを削除すると、すべてのノートも削除されます。"
+    },
+    "title": "あなたのプロジェクト",
+    "sort": "並べ替え",
+    "sortHint": "プロジェクトを優先度で並べ替えます",
+    "emptyProjects": "まだプロジェクトがありません。",
+    "projectInput": "プロジェクトを追加{{dots}}",
+    "projectInputHint": "ここにプロジェクト名を入力してください。",
+    "addProject": "プロジェクトを追加",
+    "projectInputLabel": "プロジェクト入力フィールド",
+    "addProjectHint": "新しいプロジェクトを追加するボタン",
+    "tour": {
+      "sort": "ここでプロジェクトを優先度で並べ替えできます",
+      "projectName": "ここにプロジェクト名を入力してください。",
+      "addProject": "プロジェクトを追加します。"
+    },
+    "loading": "読み込み中"
+  },
+
+  "workHoursScreen": {
+    "header": "労働時間管理"
+  },
+
+  "workTimeTracker": {
+    "error": "エラー",
+    "attention": "注意",
+    "noServiceId": "serviceIdが見つかりません",
+    "userIdUnavailable": "ユーザーIDが利用できません",
+    "fetchDataError": "データの取得中にエラーが発生しました。もう一度お試しください。",
+    "expectedHoursRequired": "最初に予定労働時間を追加してください。",
+    "startTrackingError": "追跡の開始に失敗しました",
+    "serviceIdUnavailable": "Service IDが利用できません",
+    "noStartTimeOrDoc": "開始時間またはドキュメントが見つかりません",
+    "stopTrackingError": "追跡の停止に失敗しました",
+    "title": "労働時間追跡",
+    "copilot": {
+      "text": "このエリアでは、毎日の労働時間を追跡できます。"
+    },
+    "accessibility": {
+      "tracker": "労働時間追跡",
+      "trackerHint": "労働時間の追跡を開始または停止します",
+      "startWorking": "作業を開始",
+      "startWorkingHint": "労働時間の追跡を開始します",
+      "expectedHoursRequiredHint": "最初に予定労働時間を入力する必要があります",
+      "stopWorking": "作業を停止",
+      "stopWorkingHint": "労働時間の追跡を停止します",
+      "expectedWorkingHoursRequired": "最初に予定労働時間を入力してください",
+      "elapsedWorkTime": "経過労働時間：{{time}}"
+    },
+    "buttons": {
+      "start": "開始",
+      "stop": "停止"
+    }
+  },
+
+  "workHoursInput": {
+    "error": "エラー",
+    "ok": "OK",
+    "fetchExpectedHoursError": "労働時間の読み込みに失敗しました。もう一度お試しください。",
+    "userIdUnavailable": "ユーザーIDが利用できません",
+    "invalidInput": "無効な入力です",
+    "invalidHours": "0より大きい有効な数値を入力してください。",
+    "trackerRunning": "追跡が実行中です",
+    "expectedHoursChangeWhileTracking": "すでに{{duration}}追跡済みです。追跡実行中は予定労働時間を変更できません。",
+    "changeExpectedHours": "予定労働時間を変更",
+    "changeExpectedHoursDescription": "すでに{{duration}}追跡済みです。予定労働時間を変更しても、追跡済みの時間には影響しません。続行しますか？",
+    "cancel": "キャンセル",
+    "continue": "続行",
+    "updateError": "データの更新中にエラーが発生しました。もう一度お試しください。",
+    "saveError": "保存処理中にエラーが発生しました。もう一度お試しください。",
+    "copilotName": "毎日の労働時間",
+    "copilotDescription": "このカードでは、今日の予定労働時間を設定して保存する必要があります。",
+    "title": "毎日の労働時間",
+    "accessibilityEnterHours": "時間を入力してください",
+    "accessibilityAddMinimumHours": "最小労働時間を追加してください",
+    "subtitle": "最小労働時間を追加",
+    "inputAccessibilityLabel": "予定労働時間を入力してください。例：8",
+    "inputAccessibilityHint": "今日働く予定の時間数を入力してください",
+    "inputPlaceholder": "（例：8）",
+    "saving": "保存中...",
+    "saveExpectedWorkHours": "予定労働時間を保存",
+    "saveAccessibilityHint": "入力された毎日の労働時間を保存します",
+    "save": "保存",
+    "expectedHoursAccessibility": "あなたの予定労働時間は{{hours}}時間です",
+    "notSet": "未設定",
+    "expectedWorkHours": "あなたの予定労働時間："
+  },
+
+  "workHoursChart": {
+    "title": "労働時間グラフ",
+    "copilotDescription": "このカードは、選択した期間の労働時間と残業時間を表示します。バーを押すと、追跡された詳細が表示されます。",
+    "expectedHours": "予定時間",
+    "overHours": "残業時間",
+    "overview": "労働時間の概要",
+    "expected": "予定",
+    "worked": "実労働",
+    "over": "残業",
+    "accessibilityOverview": "労働時間の概要",
+    "accessibilityEntry": "{{date}}、予定：{{expected}}時間、実労働：{{worked}}時間{{over}}",
+    "accessibilityOverHours": "、残業：{{hours}}時間",
+    "accessibilityBar": "{{date}}、実労働：{{worked}}時間、予定：{{expected}}時間、残業：{{over}}時間",
+    "tooltipWorked": "⏳ 実労働：{{hours}}時間",
+    "tooltipExpected": "⏳ 予定：{{hours}}時間",
+    "tooltipOver": "🚀 残業：{{hours}}時間"
+  },
+
+  "chart": {
+    "week": "週",
+    "month": "月",
+    "year": "年"
+  },
+
+  "yearSelector": {
+    "title": "年",
+    "previousYear": "前年",
+    "previousYearHint": "押して前年を選択します",
+    "nextYear": "翌年",
+    "nextYearHint": "押して翌年を選択します",
+    "selectedYear": "選択された年 {{year}}",
+    "previousYearUnavailable": "前年は利用できません",
+    "nextYearUnavailable": "翌年は利用できません"
+  },
+
+  "reminder": {
+    "in1Day": "1日後",
+    "in3Days": "3日後",
+    "in7Days": "7日後",
+    "oneDay": "1日",
+    "threeDays": "3日",
+    "sevenDays": "7日"
+  },
+
+  "calendar": {
+    "title": "カレンダー",
+    "tourText": "このエリアでは、休暇カレンダーを表示できます。",
+    "accessibilityLabel": "休暇日がマークされた休暇カレンダー。左または右にスワイプして月を変更します。"
+  },
+
+  "sort": {
+    "title": "並べ替え",
+    "options": {
+      "newestFirst": "新しい順",
+      "oldestFirst": "古い順",
+      "nameAZ": "名前 A–Z",
+      "nameZA": "名前 Z–A"
+    },
+    "optionAccessibility": "並べ替えオプション",
+    "selected": "選択済み",
+    "navigationTip": "ナビゲーションのヒント",
+    "navigationHint": "上または下にスワイプして閉じる",
+    "navigationText": "スワイプして閉じる",
+    "modalOpened": "並べ替えモーダルが開かれました。並べ替えオプションを選択してください。"
+  },
+
+  "projectDetails": {
+    "title": "プロジェクト詳細",
+    "titleAndTime": "タイトルと時間",
+    "tourText": "この情報カードは、プロジェクト名と現在の時刻を表示します。",
+    "projectName": "プロジェクト名：{{name}}",
+    "currentTime": "現在時刻"
+  },
+
+  "timeTracker": {
+    "title": "時間追跡",
+    "copilot": {
+      "name": "時間追跡",
+      "text": "時間追跡カードを使用すると、このプロジェクトでの作業時間を追跡でき、セッションの状態が表示されます。"
+    },
+    "trackingTime": "追跡時間",
+    "startTracking": "追跡を開始",
+    "stopTracking": "追跡を停止",
+    "startHint": "押して作業時間の追跡を開始します",
+    "stopHint": "押して作業時間の追跡を停止します",
+    "reset": "リセット",
+    "resetting": "リセット中...",
+    "resetHint": "押してプロジェクトをリセットします",
+    "attention": "注意！",
+    "resetStopFirst": "リセットする前に、最初にプロジェクトを停止してください。",
+    "resetConfirmation": "本当にプロジェクトをリセットしますか？プロジェクトをリセットすると、すべてのデータが削除されます。",
+    "lastSessionText": "最終セッション：",
+    "lastSessionEnded": "最終セッション終了日：{{date}}",
+    "noLastSession": "最終セッションはありません",
+    "lastTrackingStartedText": "最終追跡開始：",
+    "lastTrackingStarted": "最終追跡開始日：{{date}}",
+    "noTrackingStartTime": "追跡開始時間はありません",
+    "originalTrackingStartedText": "最初の追跡開始：",
+    "originalTrackingStarted": "最初の追跡開始日：{{date}}",
+    "noOriginalTrackingStartTime": "最初の追跡開始時間はありません"
+  },
+
+  "projectListItem": {
+    "project": "プロジェクト",
+    "createdOn": "作成日",
+    "unknownDate": "不明な日付",
+    "noDate": "日付はありません",
+    "viewDetails": "タップしてプロジェクトの詳細を表示",
+    "delete": "プロジェクトを削除",
+    "addNote": "ノートを追加",
+    "addNoteHint": "ノートを追加します。詳細画面で表示できます"
+  },
+
+  "notes": {
+    "addedAt": "追加日",
+    "delete": "このノートを削除",
+    "deleteHint": "リストから現在のノートを削除します",
+    "content": "ノートの内容",
+    "deleteConfirmationTitle": "注意！",
+    "deleteConfirmationMessage": "本当にノートを削除しますか？この操作は元に戻せません。",
+    "cancel": "キャンセル",
+    "deleteConfirmation": "削除",
+    "deleteError": "ノートの削除に失敗しました",
+    "title": "あなたのノート",
+    "copilot": {
+      "name": "あなたのノート",
+      "text": "このカードは、ホーム画面のプロジェクトカードで追加した場合、このプロジェクトのノートを表示します。ここで削除できます。"
+    },
+    "empty": "このプロジェクトにはまだノートを追加していません。",
+    "error": "エラー",
+    "modalOpened": "ノートモーダルが開かれました。コメントを書いて送信を押してください。",
+    "commentInput": "プロジェクトコメント入力フィールド",
+    "commentHint": "コメントを書いてプロジェクトにノートを追加します",
+    "commentPlaceholder": "コメントを書く",
+    "save": "保存",
+    "saving": "保存中",
+    "saveHint": "ノートをプロジェクトに保存します",
+    "saveAccessibility": "ノートを保存",
+    "savingAccessibility": "ノートを保存中",
+    "navigationTip": "スワイプして閉じる",
+    "navigationHint": "上または下にスワイプして閉じる",
+    "invalidData": "無効なノートデータです",
+    "notAuthorized": "権限がありません",
+    "projectNotFound": "プロジェクトが見つかりません",
+    "saveError": "ノートの保存に失敗しました"
+  },
+
+  "details": {
+    "earningsCalculator": {
+      "title": "収入計算機",
+      "tourText": "このカードでは、時給を設定できます。収入は時間追跡によって記録された時間に基づいて計算されます。",
+      "accessibilityLabel": "収入計算機。総収入 {{totalEarnings}} ドル。時給は {{hourlyRate}} です。",
+      "notSet": "まだ設定されていません",
+      "totalEarnings": "総収入 {{amount}} ドル",
+      "hourlyRateInput": "時給を入力してください",
+      "savingHourlyRate": "時給を保存中",
+      "saveHourlyRate": "時給を保存",
+      "saving": "保存中...",
+      "save": "保存",
+      "currentHourlyRate": "現在の時給は {{hourlyRate}} ドルです",
+      "noHourlyRate": "時給が設定されていません",
+      "yourHourlyRate": "あなたの時給",
+      "alerts": {
+        "error": "エラー",
+        "authenticationRequired": "認証が必要です",
+        "invalidInput": "無効な入力です",
+        "invalidRate": "無効なレートです",
+        "rateRange": "時給は {{min}} から {{max}} の間でなければなりません",
+        "saveFailed": "時給の保存に失敗しました"
+      }
+    }
+  },
+
+  "progress": {
+    "title": "期限トラッカー",
+    "copilot": {
+      "name": "期限トラッカー",
+      "text": "期限トラッカーは、期限にどれだけ近づいているかを表示します。プロジェクトに最大労働時間を追加してください。"
+    },
+    "instructions": "最大許容労働時間を追加",
+    "inputAccessibility": "最大許容労働時間を入力してください",
+    "inputPlaceholder": "（例：5時間）",
+    "saveAccessibility": "最大労働時間を保存",
+    "savingAccessibility": "最大労働時間を保存中",
+    "save": "保存",
+    "saving": "保存中...",
+    "progress": {
+      "tracker": "期限トラッカー。最大労働時間の{{percent}}パーセントを使用しました。期限は{{hours}}時間です。",
+      "noDeadline": "期限トラッカー。期限が設定されていません。",
+      "label": "進捗 {{percent}} パーセント",
+      "noProgress": "まだ進捗はありません",
+      "used": "最大労働時間の{{percent}}パーセントを使用しました",
+      "usedShort": "の最大労働時間を使用"
+    },
+    "deadline": {
+      "label": "あなたの期限：",
+      "accessibility": "あなたの期限は{{hours}}時間です"
+    },
+    "alerts": {
+      "error": "エラー",
+      "authenticationRequired": "認証が必要です",
+      "projectNotFound": "プロジェクトが見つかりません",
+      "notAuthorized": "権限がありません",
+      "saveFailed": "保存に失敗しました。もう一度お試しください。",
+      "invalidInput": "無効な入力です",
+      "hoursRange": "1から10000の間の時間数を入力してください"
+    },
+    "notification": {
+      "targetReached": "目標達成 🎯！",
+      "targetReachedMessage": "期限の目標を達成しました！"
+    }
+  },
+
+  "vacationScreen": {
+    "title": "休暇管理",
+    "slogan": "仕事から離れて、心を充電しましょう",
+    "vacationForm": "休暇申請フォーム",
+    "vacationList": "計画された休暇のリスト"
+  },
+
+  "vacationForm": {
+    "copilot": {
+      "name": "休暇日付を選択",
+      "text": "休暇の開始日と終了日を選択します。その後、カレンダーに日付を保存するか、選択をキャンセルできます。日付を保存すると、予約済み休暇カードに追加されます。"
+    },
+    "startDate": "開始日",
+    "endDate": "終了日",
+    "startDateSelected": "開始日：{{date}}",
+    "startDateNotSelected": "開始日が選択されていません",
+    "endDateSelected": "終了日が選択されました：{{date}}",
+    "selectEndDate": "終了日を選択",
+    "save": "保存",
+    "saveVacationDates": "休暇日付を保存",
+    "cancel": "キャンセル",
+    "cancelVacationSelection": "休暇日付選択をキャンセル",
+    "sorry": "申し訳ありません",
+    "selectStartDateFirst": "最初に開始日を選択してください。",
+    "attention": "注意！",
+    "selectVacationDateFirst": "最初に休暇日付を選択してください。",
+    "invalidInput": "無効な入力です",
+    "invalidData": "休暇データが無効です。もう一度お試しください。",
+    "error": "エラー",
+    "saveFailed": "休暇の保存に失敗しました。",
+    "ok": "OK"
+  },
+
+  "vacationList": {
+    "attention": "注意！",
+    "deleteConfirmation": "本当に休暇を削除しますか？",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "loadErrorTitle": "休暇の読み込みエラー",
+    "loadErrorMessage": "休暇データを取得できませんでした。もう一度お試しください。",
+    "copilot": {
+      "name": "予約済み休暇",
+      "text": "このカードはあなたの休暇を表示します。ここで削除でき、リマインダー日付も設定できます。"
+    },
+    "title": "予約済み休暇",
+    "date": "日付",
+    "noMarkedDates": "マークされた日付はありません",
+    "vacationFrom": "{{date}}からの休暇",
+    "vacationOn": "{{date}}の休暇",
+    "reminderActive": "リマインダーが有効です。タップしてリマインダーを無効にします",
+    "reminderInactive": "リマインダーが無効です。タップしてリマインダーを有効にします",
+    "deleteVacation": "休暇を削除",
+    "noVacations": "まだ休暇日を予約していません。予約してください。"
+  },
+
+  "vacationReminder": {
+    "modalOpened": "休暇リマインダーモーダルが開かれました。リマインダー期間を選択して保存を押してください。",
+    "title": "休暇リマインダー",
+    "save": "保存",
+    "saving": "保存中...",
+    "saveHint": "リマインダーを保存してこのビューを閉じます",
+    "pleaseWait": "お待ちください",
+    "navigationTip": "スワイプして閉じる",
+    "navigationTipAccessibility": "ナビゲーションのヒント。上または下にスワイプして閉じる",
+    "error": "エラー",
+    "success": "成功",
+    "noVacationSelected": "休暇が選択されていません。",
+    "loginRequired": "リマインダーを保存するにはログインする必要があります。",
+    "selectDuration": "リマインダー期間を選択してください。",
+    "userDocumentMissing": "ユーザードキュメントがありません。",
+    "pushTokenNotFound": "Push Tokenが見つかりません。",
+    "vacationNotFound": "休暇が見つかりません。",
+    "reminderAlreadyExists": "休暇にはすでにリマインダーが設定されています。変更するには削除して新しく作成してください。",
+    "invalidStartDate": "無効な休暇開始日です。",
+    "reminderSaved": "リマインダーが正常に保存されました。",
+    "saveFailed": "リマインダーの保存に失敗しました。もう一度お試しください。",
+    "notificationTitle": "休暇リマインダー",
+    "notificationBody": "休暇が{{days}}日後に始まります。休暇を取ることを忘れないでください。",
+    "reminderActive": "リマインダーが有効です",
+    "reminderInactive": "リマインダーが無効です"
+  },
+
+  "tour": {
+    "previous": "前へ",
+    "next": "次へ",
+    "finish": "完了",
+    "endTourHint": "ツアーを終了してツールチップを閉じます",
+    "previousStepHint": "前のステップに戻る",
+    "nextStepHint": "次のステップに進む",
+    "restart": "ツアーを再開",
+    "restartAccessibility": "ツアーを再開します。ツアーはすべてのページで再度表示されます。",
+    "restartAlertTitle": "ツアーを再開",
+    "restartAlertMessage": "それぞれの画面を開くとツアーが再度表示されます",
+    "introductionActive": "ツアー紹介が有効です",
+    "introductionModal": "ツアー紹介",
+    "introductionTitle": "ツアー紹介を開始",
+    "start": "紹介ツアーを開始",
+    "startHint": "アプリのウォークスルーを開始します",
+    "play": "開始",
+    "skip": "スキップ",
+    "skipLabel": "紹介ツアーをスキップ",
+    "skipHint": "ツアーをスキップしてアプリに戻ります",
+    "skipAlertTitle": "ツアーをスキップ",
+    "skipAlertMessage": "ツアーは後でメニューから開始できます。",
+    "retry": "再試行",
+    "cancel": "キャンセル",
+    "errors": {
+      "loading": {
+        "title": "読み込みエラー",
+        "message": "コンテンツが完全に読み込まれるまでお待ちください。"
+      },
+      "general": {
+        "title": "ツアーエラー",
+        "message": "予期しないエラーが発生しました。アプリを再起動してみてください。"
+      }
+    }
+  },
+
+  "help": {
+    "title": "ヘルプ",
+    "titleAccessibility": "ヘルプメニュー",
+    "close": "閉じる",
+    "openHint": "問題やバグを報告するためのヘルプメニューを開きます",
+    "closeHint": "ヘルプメニューを閉じます",
+    "info": "情報テキスト",
+    "infoText": "問題が発生した場合や改善の提案がある場合は、ロゴをクリックしてお問い合わせください：",
+    "facebook": "Facebookを開く",
+    "facebookHint": "外部ブラウザでFacebookページを開きます",
+    "linkedin": "LinkedInを開く",
+    "linkedinHint": "外部ブラウザでLinkedInプロフィールを開きます",
+    "github": "GitHubを開く",
+    "githubHint": "外部ブラウザでGitHubリポジトリを開きます",
+    "thanks": "フィードバックありがとうございます！ 🚀",
+    "thanksAccessibility": "フィードバックありがとうございます！",
+    "links": {
+      "github": "GitHub",
+      "linkedin": "LinkedIn",
+      "facebook": "Facebook"
+    }
+  },
+
+  "faq": {
+    "title": "よくある質問",
+    "titleAccessibility": "よくある質問",
+    "sheetAccessibility": "よくある質問シート",
+    "sheetHint": "よくある質問が含まれています。",
+    "close": "FAQを閉じる",
+    "closeHint": "よくある質問を閉じます",
+    "answerOpened": "回答が開かれました",
+    "answerClosed": "回答が閉じられました",
+    "expanded": "展開済み",
+    "collapsed": "折りたたみ済み",
+    "workhoursTooltip": {
+      "question": "労働時間グラフのツールチップを閉じるにはどうすればいいですか？",
+      "hint": "ツールチップを閉じる方法の回答を表示/非表示にします。",
+      "answer": "ツールチップを閉じるには、グラフ領域の外側かつカード内の任意の場所をタップしてください。カード全体がグラフ外のタップを検出するように設定されています。"
+    },
+    "changePassword": {
+      "question": "パスワードを変更するにはどうすればいいですか？",
+      "hint": "パスワード変更手順を表示/非表示にします。",
+      "answer": "ログアウトを使用してアプリを終了すると、ログイン画面に移動します。そこで「パスワードをお忘れですか？」を押すとパスワードを変更できます。パスワードリセット手順が記載されたメールが送信されます。"
+    },
+    "deleteAccount": {
+      "question": "アカウントを削除するにはどうすればいいですか？",
+      "hint": "アカウント削除手順を表示/非表示にします。",
+      "answer": "アカウントを削除するには、パスワードを確認する必要があります。すべてのデータはサーバーから完全に削除されます。",
+      "passwordInput": "アカウント削除を確認するためにパスワードを入力してください",
+      "passwordPlaceholder": "パスワードを入力",
+      "showPassword": "パスワードを表示",
+      "hidePassword": "パスワードを非表示",
+      "visibilityHint": "パスワードの表示/非表示を切り替えます",
+      "deleteButton": "アカウントを削除",
+      "deleteButtonHint": "確認後、アカウントを完全に削除します",
+      "deleting": "削除中"
+    },
+    "mfaOneDevice": {
+      "question": "スマートフォンが1台しかない場合、MFAを設定するにはどうすればいいですか？",
+      "hint": "スマートフォン1台でのMFA設定手順を表示/非表示にします。",
+      "answer": "認証アプリを設定するために使用されるQRコードは、通常2台目のデバイスでスキャンすることを想定しています。スマートフォンが1台しかない場合は、次の代替方法を使用できます：\n\n1. 表示されたQRコードのスクリーンショットを撮ります。\n2. 認証アプリを開きます。\n3. 画像またはギャラリーからQRコードをインポートするオプションを使用します。\n4. スクリーンショットを選択し、設定プロセスを完了します。\n\nすべての認証アプリが画像からのQRコードインポートをサポートしているわけではないことに注意してください。Google Authenticatorは、アプリのバージョンに応じて保存された画像からのQRコードインポートをサポートしています。\n\nMFAを正常に有効にした後は、スクリーンショットを削除する必要があります。QRコードには、MFAコードを生成するために使用される秘密のTOTPキーが含まれています。このキーにアクセスできる人は誰でも、アカウントの有効なMFAコードを生成できる可能性があります。"
+    },
+    "deleteConfirmation": {
+      "title": "アカウントを削除",
+      "message": "本当にアカウントを削除しますか？",
+      "cancel": "キャンセル",
+      "delete": "削除"
+    },
+    "alerts": {
+      "error": "エラー",
+      "success": "成功",
+      "closeFailed": "FAQシートを閉じることができませんでした。",
+      "noPassword": "パスワードがありません",
+      "passwordRequired": "アカウントを削除する前にパスワードを入力してください。",
+      "noAuthenticatedUser": "認証されたユーザーが見つかりません。",
+      "accountDeleted": "アカウントが削除されました。",
+      "deleteFailed": "アカウントの削除中に問題が発生しました。"
+    }
+  },
+
+  "validation": {
+    "invalidDateString": "有効な日付文字列である必要があります",
+    "invalidDocumentId": "無効なドキュメントIDです",
+    "invalidEmail": "有効なメールアドレスを入力してください。",
+    "passwordEmpty": "パスワードを空にすることはできません。",
+    "passwordMinLength": "パスワードは8文字以上である必要があります。",
+    "passwordSpecialCharacters": "パスワードには少なくとも2つの特殊文字を含める必要があります。",
+    "passwordNumber": "パスワードには少なくとも1つの数字を含める必要があります。",
+    "totpDigits": "TOTPは6桁である必要があります",
+    "hourlyRateNegative": "時給は負の値にできません",
+    "hourlyRateMax": "時給は300を超えることはできません",
+    "hourlyRateInvalid": "時給は有効な数値である必要があります",
+    "projectIdRequired": "プロジェクトIDが必要です",
+    "userIdRequired": "ユーザーIDが必要です",
+    "displayNameLength": "表示名は1文字以上100文字以下である必要があります",
+    "invalidPersonalId": "無効な社員番号です",
+    "commentEmpty": "コメントを空にすることはできません",
+    "commentTooLong": "コメントが長すぎます",
+    "invalidProjectId": "無効なプロジェクトIDです",
+    "invalidUserId": "無効なユーザーIDです",
+    "invalidProjectIdFormat": "無効なprojectId形式です",
+    "invalidColor": "無効な色です",
+    "invalidTextColor": "無効なテキストカラーです",
+    "invalidStartDateFormat": "startDateはYYYY-MM-DD形式である必要があります"
+  },
+
+  "errorBoundary": {
+    "message": "問題が発生しました",
+    "refresh": "もう一度試す"
+  },
+
+  "alerts": {
+    "opened": "アラートが開かれました",
+    "ok": "OK",
+    "projectStillRunning": {
+      "title": "プロジェクトがまだ実行中です。",
+      "message": "アプリを終了できません。最初にプロジェクトを停止してください。"
+    }
+  },
+
+  "common": {
+    "cancel": "キャンセル",
+    "delete": "削除"
+  }
+}

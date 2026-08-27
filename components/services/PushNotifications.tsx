@@ -38,7 +38,11 @@ export class NotificationManager {
         }
       }
       // generate the Expo pushtoken
-      const token = (await Notifications.getExpoPushTokenAsync()).data;
+      const token = (
+        await Notifications.getExpoPushTokenAsync({
+          projectId: "481d68c9-3b59-4eac-8ee4-d89d19ea9ea8",
+        })
+      ).data;
 
       if (Platform.OS === "android") {
         // config the notification channel for android devices

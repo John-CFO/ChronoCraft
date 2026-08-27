@@ -49,7 +49,7 @@ export async function secureCore(
 
     // ---------------- VALIDATION ----------------
     if (options?.validation) {
-      options.validation(request.data);
+      await options.validation(request.data);
     }
 
     // ---------------- RATE LIMIT ----------------

@@ -10,18 +10,26 @@ import { rateLimit } from "../utils/rateLimitInstance";
 import { verifyTotp } from "../security/totpCore";
 import { logEvent } from "../utils/logger";
 import { BusinessRuleError, ValidationError } from "../errors/domain.errors";
+import { getTranslation } from "../services/localization/i18n";
 
 ////////////////////////////////////////////////////////////////////////////////
 
 export class AuthService {
   private userRepo = new UserRepo();
 
-  async loginOrRegister(action: "login" | "register", uid?: string) {
+  async loginOrRegister(
+    action: "login" | "register",
+    request: any,
+    uid?: string,
+  ) {
+    // use getTranslation to get the current language
+    const t = await getTranslation(request.data?.language);
+
     if (!["login", "register"].includes(action)) {
-      throw new ValidationError("Invalid action for loginOrRegister");
+      throw new ValidationError(t("errors.invalidAction"));
     }
     if (!uid) {
-      throw new ValidationError("UID required");
+      throw new ValidationError(t("errors.uidRequired"));
     }
 
     if (action === "register") {
@@ -41,13 +49,16 @@ export class AuthService {
     return { nextStage };
   }
 
-  async verifyTotp(uid: string, code: string) {
+  async verifyTotp(request: any, uid: string, code: string) {
+    // use getTranslation to get the current language
+    const t = await getTranslation(request.data?.language);
+
     if (!uid) {
-      throw new ValidationError("UID is required");
+      throw new ValidationError(t("errors.uidRequired"));
     }
 
     if (!code || code.length !== 6 || !/^\d+$/.test(code)) {
-      throw new ValidationError("Invalid TOTP code");
+      throw new ValidationError(t("errors.invalidTotpCode"));
     }
 
     // --- RATE LIMIT (new unified API) ---
@@ -63,7 +74,7 @@ export class AuthService {
     if (!secret) {
       throw new BusinessRuleError(
         "TOTP not configured",
-        "Please configure your TOTP.",
+        t("errors.totpNotConfigured"),
       );
     }
 
@@ -72,7 +83,7 @@ export class AuthService {
     logEvent("verifyTotp", valid ? "info" : "warn", { valid });
 
     if (!valid) {
-      throw new BusinessRuleError("INVALID_TOTP", "Invalid TOTP code");
+      throw new BusinessRuleError("INVALID_TOTP", t("errors.invalidTotpCode"));
     }
 
     return { valid };

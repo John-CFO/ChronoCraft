@@ -14,6 +14,7 @@ import { useIsFocused, useFocusEffect } from "@react-navigation/native";
 import { CopilotProvider } from "react-native-copilot";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { doc, getDoc } from "firebase/firestore";
+import { useTranslation } from "react-i18next";
 
 import CustomCalendar from "../components/CustomCalendar";
 import VacationForm from "../components/VacationForm";
@@ -37,12 +38,15 @@ type VacationScreenRouteProps = {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 const VacationScreen: React.FC<VacationScreenRouteProps> = () => {
+  // use useTranslation to access translations
+  const { t } = useTranslation();
+
   // initialize the copilot offset
   const offset = useCopilotOffset();
 
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
 
   // initialize Firebase Auth
@@ -85,7 +89,7 @@ const VacationScreen: React.FC<VacationScreenRouteProps> = () => {
       };
 
       fetchTourStatus();
-    }, [])
+    }, []),
   );
 
   // simulate loading state
@@ -121,7 +125,7 @@ const VacationScreen: React.FC<VacationScreenRouteProps> = () => {
   const [markedDates, setMarkedDates] = useState<{ [key: string]: any }>({});
   const [currentMonth, setCurrentMonth] = useState(
     // newDate() = add an object with format string (split(T) to get only the date) [0] = to get only the date from the array
-    new Date().toISOString().split("T")[0]
+    new Date().toISOString().split("T")[0],
   );
   const isFocused = useIsFocused();
 
@@ -196,14 +200,14 @@ const VacationScreen: React.FC<VacationScreenRouteProps> = () => {
               <Text
                 accessible={true}
                 accessibilityRole="header"
-                accessibilityLabel="Vacation Management"
+                accessibilityLabel={t("vacationScreen.title")}
                 style={{
                   fontSize: accessMode ? 30 : 25,
                   fontFamily: "MPLUSLatin_Bold",
                   color: "white",
                 }}
               >
-                - Vacation Management -
+                {`- ${t("vacationScreen.title")} -`}
               </Text>
               {/* Lottie animated picture */}
               <View style={{ width: 420, height: 280, alignItems: "center" }}>
@@ -217,15 +221,16 @@ const VacationScreen: React.FC<VacationScreenRouteProps> = () => {
               <View
                 style={{
                   width: 420,
-                  height: 40,
+                  height: 60,
                   marginBottom: 15,
                   alignItems: "center",
                 }}
               >
                 <Text
                   accessible={true}
-                  accessibilityLabel="Unplug from work, recharge your soul"
+                  accessibilityLabel={t("vacationScreen.slogan")}
                   style={{
+                    textAlign: "center",
                     zIndex: 2,
                     fontSize: accessMode ? 20 : 18,
                     fontFamily: accessMode
@@ -234,7 +239,7 @@ const VacationScreen: React.FC<VacationScreenRouteProps> = () => {
                     color: "white",
                   }}
                 >
-                  "Unplug from work, recharge your soul"
+                  {t("vacationScreen.slogan")}
                 </Text>
               </View>
             </View>
@@ -255,7 +260,7 @@ const VacationScreen: React.FC<VacationScreenRouteProps> = () => {
             {/* VacationForm */}
             <View
               accessible={true}
-              accessibilityLabel="Vacation request form"
+              accessibilityLabel={t("vacationScreen.vacationForm")}
               style={{ alignItems: "center", backgroundColor: "black" }}
             >
               <VacationForm />
@@ -263,7 +268,7 @@ const VacationScreen: React.FC<VacationScreenRouteProps> = () => {
             {/* VacationList */}
             <View
               accessible={true}
-              accessibilityLabel="List of your planned vacations"
+              accessibilityLabel={t("vacationScreen.vacationList")}
               style={{
                 flex: 1,
                 height: "10%",

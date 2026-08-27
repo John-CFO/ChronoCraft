@@ -73,11 +73,29 @@ describe("projectsAndWorkValidator", () => {
       ),
     );
 
-    expect(mockUpdateProject).toHaveBeenCalledWith("u1", "s1", "p1", {
-      projectId: "p1",
-      serviceId: "s1",
-      name: "New Name",
-    });
+    expect(mockUpdateProject).toHaveBeenCalledWith(
+      "u1",
+      "s1",
+      "p1",
+      {
+        projectId: "p1",
+        serviceId: "s1",
+        name: "New Name",
+      },
+      expect.objectContaining({
+        auth: { uid: "u1" },
+        data: {
+          action: "updateProject",
+          payload: {
+            projectId: "p1",
+            serviceId: "s1",
+            name: "New Name",
+          },
+        },
+        rawRequest: {},
+      }),
+    );
+
     expect(result).toEqual({ success: true });
   });
 
@@ -94,7 +112,24 @@ describe("projectsAndWorkValidator", () => {
       ),
     );
 
-    expect(mockSetHourlyRate).toHaveBeenCalledWith("u1", "s1", "p1", 50);
+    expect(mockSetHourlyRate).toHaveBeenCalledWith(
+      "u1",
+      "s1",
+      "p1",
+      50,
+      expect.objectContaining({
+        auth: { uid: "u1" },
+        data: {
+          action: "setHourlyRate",
+          payload: {
+            serviceId: "s1",
+            projectId: "p1",
+            rate: 50,
+          },
+        },
+        rawRequest: {},
+      }),
+    );
     expect(result).toEqual({ success: true });
   });
 

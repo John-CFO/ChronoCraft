@@ -13,6 +13,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { FontAwesome } from "@expo/vector-icons";
 import { serverTimestamp, collection, addDoc } from "firebase/firestore";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
+import { useTranslation } from "react-i18next";
 
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useCalendarStore } from "../components/CalendarState";
@@ -27,6 +28,9 @@ import { logError } from "../lib/loggerClient";
 const CopilotTouchableView = walkthroughable(View);
 
 const VacationForm = () => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // declare serviceId
   const { serviceId } = useService();
 
@@ -81,9 +85,9 @@ const VacationForm = () => {
         useAlertStore
           .getState()
           .showAlert(
-            "Invalid Input",
-            "Vacation data is invalid. Please retry.",
-            [{ text: "OK" }],
+            t("vacationForm.invalidInput"),
+            t("vacationForm.invalidData"),
+            [{ text: t("vacationForm.ok") }],
           );
         return;
       }
@@ -110,7 +114,9 @@ const VacationForm = () => {
       logError("VacationForm.handleSaveVacation", error);
       useAlertStore
         .getState()
-        .showAlert("Error", "Saving vacation failed.", [{ text: "OK" }]);
+        .showAlert(t("vacationForm.error"), t("vacationForm.saveFailed"), [
+          { text: t("vacationForm.ok") },
+        ]);
     }
   };
 
@@ -119,9 +125,11 @@ const VacationForm = () => {
     if (!markedDates || Object.keys(markedDates).length === 0) {
       useAlertStore
         .getState()
-        .showAlert("Attention!", "First vote a vacation date.", [
-          { text: "OK" },
-        ]);
+        .showAlert(
+          t("vacationForm.attention"),
+          t("vacationForm.selectVacationDateFirst"),
+          [{ text: t("vacationForm.ok") }],
+        );
       return;
     }
     await handleSaveVacation();
@@ -149,20 +157,20 @@ const VacationForm = () => {
     <ScrollView>
       {/* VacationScreen copilot tour step 2 */}
       <CopilotStep
-        name="Select-Form"
+        name={t("vacationForm.copilot.name")}
         order={2}
-        text="Select the start and end dates of your vacation. You can then save the date in the calendar or cancel it. Saving the date will add it to the Booked Vacation card."
+        text={t("vacationForm.copilot.text")}
       >
         <CopilotTouchableView>
           <View
             style={{
               paddingTop: 15,
+              paddingHorizontal: 10,
               alignItems: "center",
               borderTopColor: "grey",
               borderWidth: 0.5,
-              backgroundColor: "black",
+              backgroundColor: "#000",
               width: "100%",
-              height: 80,
               justifyContent: "center",
             }}
           >
@@ -170,17 +178,17 @@ const VacationForm = () => {
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                gap: 25,
+                gap: 10,
               }}
             >
               {/* Start Date and End Date Buttons */}
               <TouchableOpacity
                 accessibilityLabel={
                   startDate
-                    ? `Start date: ${startDate}`
-                    : "Start Date not selected"
+                    ? t("vacationForm.startDateSelected", { date: startDate })
+                    : t("vacationForm.startDateNotSelected")
                 }
-                accessible={false}
+                accessible={true}
                 // validate start date
                 onPress={() => {
                   if (!tempStartDate) {
@@ -229,7 +237,7 @@ const VacationForm = () => {
                       left: 10,
                     }}
                   >
-                    {startDate || "Start Date"}
+                    {startDate || t("vacationForm.startDate")}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -238,18 +246,24 @@ const VacationForm = () => {
                 accessible={true}
                 accessibilityRole="button"
                 accessibilityLabel={
-                  endDate ? `End date selected: ${endDate}` : "Select end date"
+                  endDate
+                    ? t("vacationForm.endDateSelected", { date: endDate })
+                    : t("vacationForm.selectEndDate")
                 }
                 onPress={() => {
                   // condition to prevent selecting an end date before a start date with an alert
                   if (!startDate) {
                     useAlertStore
                       .getState()
-                      .showAlert("Sorry", "Please select a start date first.", [
-                        {
-                          text: "OK",
-                        },
-                      ]);
+                      .showAlert(
+                        t("vacationForm.sorry"),
+                        t("vacationForm.selectStartDateFirst"),
+                        [
+                          {
+                            text: t("vacationForm.ok"),
+                          },
+                        ],
+                      );
                     return;
                   }
                   setTempEndDate(new Date().toISOString().split("T")[0]);
@@ -295,7 +309,7 @@ const VacationForm = () => {
                       left: 10,
                     }}
                   >
-                    {endDate || "End Date"}
+                    {endDate || t("vacationForm.endDate")}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -312,7 +326,6 @@ const VacationForm = () => {
               accentColor="aqua" //IOS only
               textColor="white" //IOS only
               onChange={(event, selectedDate) => {
-                //console.log("DatePicker event type:", event.type);
                 // condition to delete value if user pressed cancel
                 if (event.type === "dismissed") {
                   setTempStartDate(null);
@@ -337,7 +350,7 @@ const VacationForm = () => {
               textColor="white" //IOS only
               onChange={(event, selectedDate) => {
                 // condition to delete value if user pressed cancel
-                //console.log("DatePicker event type:", event.type);
+
                 if (event.type === "dismissed") {
                   setTempEndDate(null);
                   return;
@@ -352,28 +365,29 @@ const VacationForm = () => {
           )}
           <View
             style={{
-              height: 80,
+              width: "100%",
+              paddingHorizontal: 10,
+              paddingVertical: 10,
               flexDirection: "row",
-              justifyContent: "space-around",
-              paddingHorizontal: 70,
+              justifyContent: "center",
               alignItems: "center",
+              gap: 10,
               borderBottomColor: "grey",
               borderWidth: 0.5,
-              backgroundColor: "black",
-              gap: 20,
+              backgroundColor: "#000",
             }}
           >
             {/* Save Button */}
             <TouchableOpacity
               accessible={true}
               accessibilityRole="button"
-              accessibilityLabel="Save vacation dates"
+              accessibilityLabel={t("vacationForm.saveVacationDates")}
               onPress={handleSave}
               activeOpacity={0.7}
               style={{
-                height: 45,
-                width: 120,
-                borderRadius: 14,
+                height: 50,
+                width: 160,
+                borderRadius: 12,
                 borderWidth: 1.5,
                 borderColor: "aqua",
                 backgroundColor: "transparent",
@@ -392,7 +406,7 @@ const VacationForm = () => {
                   flex: 1,
                   justifyContent: "center",
                   alignItems: "center",
-                  borderRadius: 12,
+                  borderRadius: 10,
                 }}
               >
                 <Text
@@ -402,7 +416,7 @@ const VacationForm = () => {
                     fontFamily: "MPLUSLatin_Bold",
                   }}
                 >
-                  Save
+                  {t("vacationForm.save")}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -411,13 +425,13 @@ const VacationForm = () => {
             <TouchableOpacity
               accessible={true}
               accessibilityRole="button"
-              accessibilityLabel="Cancel vacation date selection"
+              accessibilityLabel={t("vacationForm.cancelVacationSelection")}
               onPress={handleCancel}
               activeOpacity={0.7}
               style={{
-                height: 45,
-                width: 120,
-                borderRadius: 14,
+                height: 50,
+                width: 160,
+                borderRadius: 12,
                 borderWidth: 1.5,
                 borderColor: "aqua",
                 backgroundColor: "transparent",
@@ -436,7 +450,7 @@ const VacationForm = () => {
                   flex: 1,
                   justifyContent: "center",
                   alignItems: "center",
-                  borderRadius: 12,
+                  borderRadius: 10,
                 }}
               >
                 <Text
@@ -446,7 +460,7 @@ const VacationForm = () => {
                     fontFamily: "MPLUSLatin_Bold",
                   }}
                 >
-                  Cancel
+                  {t("vacationForm.cancel")}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>

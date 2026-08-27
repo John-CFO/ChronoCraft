@@ -1,0 +1,99 @@
+{
+  "errors": {
+    "notLoggedIn": "ログインしていません",
+    "unknownAction": "不明なアクション",
+    "invalidAction": "無効なアクション",
+    "registrationNotAllowed": "登録は許可されていません",
+    "notAuthenticated": "認証されていません",
+    "authenticationRequired": "認証が必要です",
+    "invalidEntry": "無効なエントリーです。詳細を確認してください。",
+    "failedPrecondition": "前提条件によりリクエストを処理できませんでした。",
+    "permissionDenied": "このアクションを実行する権限がありません。",
+    "unauthenticated": "再度ログインしてください。",
+    "resourceNotFound": "要求されたリソースが見つかりませんでした。",
+    "tooManyRequests": "リクエストが多すぎます。後でもう一度お試しください。",
+    "internal": "サーバー内部エラー。",
+    "unavailable": "サービスが利用できません。後でもう一度お試しください。",
+    "unexpected": "予期しないエラー",
+    "invalidActionForLoginOrRegister": "loginOrRegisterに対する無効なアクション",
+    "uidRequired": "UIDが必要です",
+    "invalidTotpCode": "無効なTOTPコード",
+    "totpNotConfigured": "TOTPを設定してください。"
+  },
+
+  "auth": {
+    "passwordResetInstructions": "そのメールアドレスにアカウントが存在する場合、パスワードリセットの手順が送信されます。",
+    "passwordResetSubject": "パスワードをリセット",
+    "passwordResetRequested": "パスワードリセットがリクエストされました。",
+    "passwordResetMostRecent": "複数のリセットをリクエストした場合は、最新のメールを使用してください。",
+    "passwordResetOlderLinks": "古いリンクは機能しない場合があります。",
+    "passwordResetLink": "ここをクリックしてパスワードをリセット",
+    "passwordResetIgnore": "このリクエストに心当たりがない場合は、このメールを無視してください。"
+  },
+
+  "success": {
+    "totpDisabled": "TOTPが正常に無効化されました"
+  },
+
+  "validation": {
+    "missingData": "データが不足しています",
+    "missingUserId": "ユーザーIDが不足しています",
+    "missingServiceId": "サービスIDが不足しています",
+    "invalidToken": "無効なトークン",
+    "missingRequestData": "リクエストデータが不足しています。",
+    "missingAction": "アクションが不足しています",
+    "payloadMustBeObject": "ペイロードはオブジェクトである必要があります",
+    "serviceIdRequired": "Service IDは空でない文字列である必要があります",
+    "projectIdRequired": "Project IDは空でない文字列である必要があります",
+    "rateMustBeNumber": "レートは数値である必要があります",
+    "fieldRequired": "フィールド '{{field}}' は必須です",
+    "fieldMustBeString": "フィールド '{{field}}' は文字列である必要があります",
+    "fieldMinLength": "フィールド '{{field}}' は少なくとも {{minLength}} 文字必要です",
+    "fieldMaxLength": "フィールド '{{field}}' は最大 {{maxLength}} 文字までです",
+    "fieldMustBeEmail": "フィールド '{{field}}' は有効なメールアドレスである必要があります",
+    "fieldMustBeNumber": "フィールド '{{field}}' は数値である必要があります",
+    "fieldMinValue": "フィールド '{{field}}' は少なくとも {{min}} である必要があります",
+    "fieldMaxValue": "フィールド '{{field}}' は最大 {{max}} までです",
+    "invalidInput": "無効な入力",
+    "invalidUid": "無効なUID",
+    "invalidPayload": "無効なペイロード",
+    "unknownField": "不明なフィールド: {{field}}",
+    "displayNameMustBeString": "displayNameは文字列である必要があります",
+    "displayNameCannotBeEmpty": "displayNameは空にできません",
+    "displayNameTooLong": "displayNameが長すぎます",
+    "personalNumberMustBeString": "personalNumberは文字列である必要があります",
+    "personalNumberCannotBeEmpty": "personalNumberは空にできません",
+    "personalNumberTooLong": "personalNumberが長すぎます",
+    "nothingToUpdate": "更新する項目はありません",
+    "projectDeletionInProgress": "プロジェクト削除中"
+  },
+
+  "push": {
+    "welcomeTitle": "ChronoCraftへようこそ！ ⏱️",
+    "welcomeBody": "ご参加いただきありがとうございます。プロのように時間を追跡しましょう。"
+  },
+
+  "permission": {
+    "cannotDeleteOthersData": "他のユーザーのデータは削除できません"
+  },
+
+  "totp": {
+    "userEmailNotAvailable": "ユーザーのメールアドレスが利用できません",
+    "userNotFound": "ユーザーが見つかりません",
+    "alreadyEnabled": "このユーザーにはTOTPがすでに有効化されています。",
+    "scanQrCode": "QRコードを認証アプリでスキャンしてください。このシークレットは1時間で有効期限が切れます。",
+    "invalidToken": "無効なTOTPトークン",
+    "cannotAccessEnrollment": "登録セッションにアクセスできません",
+    "enrollmentSessionNotFound": "登録セッションが見つかりません",
+    "enrollmentSessionExpired": "登録セッションの有効期限が切れました",
+    "enrollmentTooManyAttempts": "失敗した試行が多すぎます。登録セッションがリセットされました。",
+    "invalidCode": "無効なTOTPコード",
+    "alreadyConfigured": "TOTPはすでに設定されています",
+    "enabledSuccessfully": "TOTPが正常に有効化されました！",
+    "tooManyAttempts": "試行回数が多すぎます。{{seconds}}秒後に再試行してください。",
+    "verificationNotCompleted": "TOTP検証が完了していません",
+    "configurationNotFound": "TOTP設定が見つかりません",
+    "alreadyUsed": "TOTPはすでに使用されています",
+    "verificationSuccessful": "TOTP検証が成功しました"
+  }
+}

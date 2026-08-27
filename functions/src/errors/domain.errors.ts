@@ -9,7 +9,7 @@ export class DomainError extends Error {
   constructor(
     message: string,
     public code: string,
-    public userMessage?: string,
+    public userMessageKey?: string,
     public readonly details?: any,
   ) {
     super(message);
@@ -23,7 +23,7 @@ export class DomainError extends Error {
       name: this.name,
       code: this.code,
       message: this.message,
-      userMessage: this.userMessage,
+      userMessageKey: this.userMessageKey,
       details: this.details,
       stack: process.env.NODE_ENV === "development" ? this.stack : undefined,
     };
@@ -33,12 +33,7 @@ export class DomainError extends Error {
 // Export specified domain errors with messages and security wrapper
 export class ValidationError extends DomainError {
   constructor(message: string, details?: any) {
-    super(
-      message,
-      "validation-error",
-      "Invalid input. Please check your data.",
-      details,
-    );
+    super(message, "validation-error", "errors.invalidEntry", details);
   }
 }
 
@@ -47,7 +42,7 @@ export class NotFoundError extends DomainError {
     super(
       `${resource} not found`,
       "not-found",
-      `The requested ${resource} was not found.`,
+      "errors.resourceNotFound",
       details,
     );
   }
@@ -58,7 +53,7 @@ export class PermissionError extends DomainError {
     super(
       `Permission denied for ${action}`,
       "permission-denied",
-      "You do not have permission to perform this action.",
+      "errors.permissionDenied",
       details,
     );
   }
@@ -66,31 +61,22 @@ export class PermissionError extends DomainError {
 
 export class FailedPreconditionError extends DomainError {
   constructor(message: string, details?: any) {
-    super(
-      message,
-      "failed-precondition",
-      "The operation cannot be performed in the current state.",
-      details,
-    );
+    super(message, "failed-precondition", "errors.failedPrecondition", details);
   }
 }
 
 export class AuthenticationError extends DomainError {
-  constructor(message: string = "Authentication required", details?: any) {
-    super(
-      message,
-      "authentication-error",
-      "Please log in to continue.",
-      details,
-    );
+  constructor(message = "Authentication required", details?: any) {
+    super(message, "authentication-error", "errors.unauthenticated", details);
   }
 }
 
 export class AuthorizationError extends DomainError {
   constructor(message = "Not authorized") {
-    super(message, "authorization-error", "Not authorized");
+    super(message, "authorization-error", "errors.notAuthorized");
   }
 }
+
 export class RateLimitError extends DomainError {
   public retryAfterSeconds?: number;
 
@@ -98,9 +84,7 @@ export class RateLimitError extends DomainError {
     super(
       "Rate limit exceeded",
       "rate-limit-exceeded",
-      retryAfterSeconds
-        ? `Too many requests. Try again in ${retryAfterSeconds} seconds.`
-        : "Too many requests. Please try again later.",
+      "errors.tooManyRequests",
       details,
     );
 
@@ -111,11 +95,11 @@ export class RateLimitError extends DomainError {
 }
 
 export class BusinessRuleError extends DomainError {
-  constructor(message: string, userMessage?: string, details?: any) {
+  constructor(message: string, userMessageKey?: string, details?: any) {
     super(
       message,
       "business-rule-error",
-      userMessage || "A business rule was violated.",
+      userMessageKey ?? "errors.businessRule",
       details,
     );
   }
@@ -123,18 +107,13 @@ export class BusinessRuleError extends DomainError {
 
 export class ConfigurationError extends DomainError {
   constructor(message: string, details?: any) {
-    super(
-      message,
-      "configuration-error",
-      "System configuration error.",
-      details,
-    );
+    super(message, "configuration-error", "errors.internal", details);
   }
 }
 
 export class DatabaseError extends DomainError {
   constructor(message: string, details?: any) {
-    super(message, "database-error", "A database error occurred.", details);
+    super(message, "database-error", "errors.internal", details);
   }
 }
 
@@ -143,7 +122,7 @@ export class ExternalServiceError extends DomainError {
     super(
       `External service ${service} error`,
       "external-service-error",
-      "An external service is temporarily unavailable.",
+      "errors.unavailable",
       details,
     );
   }
@@ -151,11 +130,6 @@ export class ExternalServiceError extends DomainError {
 
 export class ConflictError extends DomainError {
   constructor(message: string, details?: any) {
-    super(
-      message,
-      "conflict-error",
-      "A conflict occurred with the current state.",
-      details,
-    );
+    super(message, "conflict-error", "errors.conflict", details);
   }
 }

@@ -3,6 +3,10 @@
     "appVersionSource": "local"
   },
   "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
     "android-apk": {
       "android": {
         "buildType": "apk"

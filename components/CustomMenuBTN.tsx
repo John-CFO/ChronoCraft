@@ -10,6 +10,7 @@ import { DrawerActions } from "@react-navigation/native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { MaterialIcons } from "@expo/vector-icons";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
+import { useTranslation } from "react-i18next";
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -24,6 +25,9 @@ type CustomMenuBTNProps = {
 ////////////////////////////////////////////////////////////////////////////////////////
 
 const CustomMenuBTN: React.FC<CustomMenuBTNProps> = () => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // initialize navigation
   const navigation = useNavigation<DrawerNavigationProp<RootStackParamList>>();
 
@@ -37,8 +41,8 @@ const CustomMenuBTN: React.FC<CustomMenuBTNProps> = () => {
       onPress={openDrawer}
       accessible={true}
       accessibilityRole="button"
-      accessibilityLabel="Menu Button"
-      accessibilityHint="Open the menu of the app to navigate between screens"
+      accessibilityLabel={t("drawer.menuButton")}
+      accessibilityHint={t("drawer.menuButtonHint")}
     >
       <MaterialIcons
         accessibilityElementsHidden

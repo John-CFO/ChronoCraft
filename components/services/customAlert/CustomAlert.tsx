@@ -17,6 +17,7 @@ import {
   AccessibilityInfo,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useTranslation } from "react-i18next";
 
 import { useAlertStore } from "./alertStore";
 import { useAccessibilityStore } from "../accessibility/accessibilityStore";
@@ -24,6 +25,9 @@ import { useAccessibilityStore } from "../accessibility/accessibilityStore";
 //////////////////////////////////////////////////////////////////////////////////
 
 const CustomAlert = () => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // get the state from the store
   const { visible, title, message, hideAlert, buttons } = useAlertStore();
 
@@ -50,7 +54,7 @@ const CustomAlert = () => {
 
       // condition to announce the title for the screen reader
       if (accessMode) {
-        AccessibilityInfo.announceForAccessibility(title || "Alert opened");
+        AccessibilityInfo.announceForAccessibility(title || t("alerts.opened"));
       }
 
       Animated.parallel([
@@ -157,7 +161,7 @@ const CustomAlert = () => {
           </Text>
           {/* conditionally render buttons */}
           <View style={{ flexDirection: "row", gap: 12, marginTop: 12 }}>
-            {(buttons || [{ text: "OK", onPress: hideAlert }]).map(
+            {(buttons || [{ text: t("alerts.ok"), onPress: hideAlert }]).map(
               (button, index) => (
                 <TouchableOpacity
                   key={index}

@@ -5,8 +5,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 import {
-  LoginInputSchema,
-  RegisterInputSchema,
+  createLoginInputSchema,
+  createRegisterInputSchema,
   TotpCodeSchema,
 } from "../validation/authSchemas";
 
@@ -14,7 +14,7 @@ import {
 
 describe("LoginInputSchema (client)", () => {
   it("accepts valid login input", () => {
-    const result = LoginInputSchema.safeParse({
+    const result = createLoginInputSchema().safeParse({
       email: "user@test.com",
       password: "secret",
     });
@@ -23,7 +23,7 @@ describe("LoginInputSchema (client)", () => {
   });
 
   it("rejects invalid email", () => {
-    const result = LoginInputSchema.safeParse({
+    const result = createLoginInputSchema().safeParse({
       email: "not-an-email",
       password: "secret",
     });
@@ -32,7 +32,7 @@ describe("LoginInputSchema (client)", () => {
   });
 
   it("rejects empty password", () => {
-    const result = LoginInputSchema.safeParse({
+    const result = createLoginInputSchema().safeParse({
       email: "user@test.com",
       password: "",
     });
@@ -43,7 +43,7 @@ describe("LoginInputSchema (client)", () => {
 
 describe("RegisterInputSchema (client)", () => {
   it("accepts valid registration input", () => {
-    const result = RegisterInputSchema.safeParse({
+    const result = createRegisterInputSchema().safeParse({
       email: "user@test.com",
       password: "Ab!1_cd$",
     });
@@ -52,7 +52,7 @@ describe("RegisterInputSchema (client)", () => {
   });
 
   it("rejects password shorter than 8 characters", () => {
-    const result = RegisterInputSchema.safeParse({
+    const result = createRegisterInputSchema().safeParse({
       email: "user@test.com",
       password: "A!1$a",
     });
@@ -61,7 +61,7 @@ describe("RegisterInputSchema (client)", () => {
   });
 
   it("rejects password with less than 2 special characters", () => {
-    const result = RegisterInputSchema.safeParse({
+    const result = createRegisterInputSchema().safeParse({
       email: "user@test.com",
       password: "Password1!",
     });
@@ -70,7 +70,7 @@ describe("RegisterInputSchema (client)", () => {
   });
 
   it("rejects password without number", () => {
-    const result = RegisterInputSchema.safeParse({
+    const result = createRegisterInputSchema().safeParse({
       email: "user@test.com",
       password: "Password!!",
     });
@@ -79,7 +79,7 @@ describe("RegisterInputSchema (client)", () => {
   });
 
   it("rejects invalid email format", () => {
-    const result = RegisterInputSchema.safeParse({
+    const result = createRegisterInputSchema().safeParse({
       email: "user@",
       password: "Ab!1_cd$",
     });

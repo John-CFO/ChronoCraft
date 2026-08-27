@@ -6,6 +6,7 @@
 ///////////////////////////////////////////////////////////////////////
 
 import { z } from "zod";
+import i18n from "../components/services/localization/i18n";
 
 ///////////////////////////////////////////////////////////////////////
 
@@ -16,11 +17,11 @@ import { z } from "zod";
 export const HourlyRateSchema = z.object({
   hourlyRate: z
     .number()
-    .min(0, "Hourly rate cannot be negative")
-    .max(300, "Hourly rate cannot exceed 300")
-    .refine((val) => !isNaN(val), "Hourly rate must be a valid number"),
-  projectId: z.string().min(1, "Project ID is required"),
-  userId: z.string().min(1, "User ID is required"),
+    .min(0, i18n.t("validation.hourlyRateNegative"))
+    .max(300, i18n.t("validation.hourlyRateMax"))
+    .refine((val) => !isNaN(val), i18n.t("validation.hourlyRateInvalid")),
+  projectId: z.string().min(1, i18n.t("validation.projectIdRequired")),
+  userId: z.string().min(1, i18n.t("validation.userIdRequired")),
 });
 
 // Typen für Client-Input

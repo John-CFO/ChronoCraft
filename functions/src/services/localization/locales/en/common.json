@@ -1,0 +1,99 @@
+{
+  "errors": {
+    "notLoggedIn": "Not logged in",
+    "unknownAction": "Unknown action",
+    "invalidAction": "Invalid action",
+    "registrationNotAllowed": "Registration is not allowed",
+    "notAuthenticated": "Unauthenticated",
+    "authenticationRequired": "Authentication required",
+    "invalidEntry": "Invalid entry. Please check your details.",
+    "failedPrecondition": "The request could not be processed due to a precondition.",
+    "permissionDenied": "You do not have permission to perform this action.",
+    "unauthenticated": "Please log in again.",
+    "resourceNotFound": "The requested resource was not found.",
+    "tooManyRequests": "Too many requests. Please try again later.",
+    "internal": "Internal server error.",
+    "unavailable": "The service is not available. Please try again later.",
+    "unexpected": "Unexpected error",
+    "invalidActionForLoginOrRegister": "Invalid action for loginOrRegister",
+    "uidRequired": "UID is required",
+    "invalidTotpCode": "Invalid TOTP code",
+    "totpNotConfigured": "Please configure your TOTP."
+  },
+
+  "auth": {
+    "passwordResetInstructions": "If an account exists for that email, you will receive instructions to reset your password.",
+    "passwordResetSubject": "Reset your password",
+    "passwordResetRequested": "You requested a password reset.",
+    "passwordResetMostRecent": "Use the most recent email if you requested multiple resets.",
+    "passwordResetOlderLinks": "Older links may no longer work.",
+    "passwordResetLink": "Click here to reset your password",
+    "passwordResetIgnore": "If you didn’t request this, you can ignore this email."
+  },
+
+  "success": {
+    "totpDisabled": "TOTP disabled successfully"
+  },
+
+  "validation": {
+    "missingData": "Missing data",
+    "missingUserId": "Missing user ID",
+    "missingServiceId": "Missing service ID",
+    "invalidToken": "Invalid token",
+    "missingRequestData": "Missing request data.",
+    "missingAction": "Missing action",
+    "payloadMustBeObject": "Payload must be an object",
+    "serviceIdRequired": "Service ID must be a non-empty string",
+    "projectIdRequired": "Project ID must be a non-empty string",
+    "rateMustBeNumber": "Rate must be a number",
+    "fieldRequired": "Field '{{field}}' is required",
+    "fieldMustBeString": "Field '{{field}}' must be a string",
+    "fieldMinLength": "Field '{{field}}' must be at least {{minLength}} characters",
+    "fieldMaxLength": "Field '{{field}}' must be at most {{maxLength}} characters",
+    "fieldMustBeEmail": "Field '{{field}}' must be a valid email address",
+    "fieldMustBeNumber": "Field '{{field}}' must be a number",
+    "fieldMinValue": "Field '{{field}}' must be at least {{min}}",
+    "fieldMaxValue": "Field '{{field}}' must be at most {{max}}",
+    "invalidInput": "Invalid input",
+    "invalidUid": "Invalid UID",
+    "invalidPayload": "Invalid payload.",
+    "unknownField": "Unknown field: {{field}}",
+    "displayNameMustBeString": "displayName must be a string",
+    "displayNameCannotBeEmpty": "displayName cannot be empty",
+    "displayNameTooLong": "displayName too long",
+    "personalNumberMustBeString": "personalNumber must be a string",
+    "personalNumberCannotBeEmpty": "personalNumber cannot be empty",
+    "personalNumberTooLong": "personalNumber too long",
+    "nothingToUpdate": "Nothing to update.",
+    "projectDeletionInProgress": "Project deletion in progress"
+  },
+
+  "push": {
+    "welcomeTitle": "Welcome to ChronoCraft! ⏱️",
+    "welcomeBody": "We're glad you’ve joined. Let’s track time like a pro."
+  },
+
+  "permission": {
+    "cannotDeleteOthersData": "Cannot delete others' data"
+  },
+
+  "totp": {
+    "userEmailNotAvailable": "User email is not available",
+    "userNotFound": "User not found",
+    "alreadyEnabled": "TOTP is already enabled for this user.",
+    "scanQrCode": "Scan the QR code with your authenticator app. This secret expires in 1 hour.",
+    "invalidToken": "Invalid TOTP token",
+    "cannotAccessEnrollment": "Cannot access the enrollment session",
+    "enrollmentSessionNotFound": "Enrollment session not found",
+    "enrollmentSessionExpired": "Enrollment session expired",
+    "enrollmentTooManyAttempts": "Too many failed attempts. The enrollment session has been reset.",
+    "invalidCode": "Invalid TOTP code",
+    "alreadyConfigured": "TOTP is already configured",
+    "enabledSuccessfully": "TOTP enabled successfully!",
+    "tooManyAttempts": "Too many attempts. Try again in {{seconds}} seconds.",
+    "verificationNotCompleted": "TOTP verification not completed",
+    "configurationNotFound": "TOTP configuration not found",
+    "alreadyUsed": "TOTP already used",
+    "verificationSuccessful": "TOTP verification successful"
+  }
+}

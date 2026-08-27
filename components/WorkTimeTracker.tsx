@@ -21,6 +21,7 @@ import { collection, setDoc, getDocs, getDoc, doc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
+import { useTranslation } from "react-i18next";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useService } from "../components/contexts/ServiceContext";
@@ -49,6 +50,9 @@ interface DataPoint {
 const CopilotTouchableView = walkthroughable(View);
 
 const WorkTimeTracker = () => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // state to store the user's time zone
   const [userTimeZone, setUserTimeZone] = useState<string>(dayjs.tz.guess());
 
@@ -158,8 +162,8 @@ const WorkTimeTracker = () => {
         useAlertStore
           .getState()
           .showAlert(
-            "Error",
-            "An error occurred while fetching the data. Please try again.",
+            t("workTimeTracker.error"),
+            t("workTimeTracker.fetchDataError"),
           );
       }
     };
@@ -319,11 +323,19 @@ const WorkTimeTracker = () => {
       } else {
         useAlertStore
           .getState()
-          .showAlert("Attention", "First add your expected hours.");
+          .showAlert(
+            t("workTimeTracker.attention"),
+            t("workTimeTracker.expectedHoursRequired"),
+          );
       }
     } catch (error) {
       logError("WorkTimeTracker.handleStartWork", error);
-      useAlertStore.getState().showAlert("Error", "Failed to start tracking");
+      useAlertStore
+        .getState()
+        .showAlert(
+          t("workTimeTracker.error"),
+          t("workTimeTracker.startTrackingError"),
+        );
     }
   };
 
@@ -390,7 +402,12 @@ const WorkTimeTracker = () => {
       loadState(serviceId);
     } catch (error) {
       logError("WorkTimeTracker.handleStopWork", error);
-      useAlertStore.getState().showAlert("Error", "Failed to stop tracking");
+      useAlertStore
+        .getState()
+        .showAlert(
+          t("workTimeTracker.error"),
+          t("workTimeTracker.stopTrackingError"),
+        );
     }
   };
 
@@ -440,7 +457,6 @@ const WorkTimeTracker = () => {
   useEffect(() => {
     const fetchListData = async () => {
       if (!serviceId || !user) {
-        logError("WorkTimeTracker.fetchListData", "No serviceId or user found");
         return;
       }
 
@@ -626,12 +642,12 @@ const WorkTimeTracker = () => {
       <CopilotStep
         name="Work-Time Tracker"
         order={2}
-        text="In this area you can track your daily work hours."
+        text={t("workTimeTracker.copilot.text")}
       >
         <CopilotTouchableView
           accessible={true}
-          accessibilityLabel="Work Time Tracker"
-          accessibilityHint="Start or stop tracking your work time"
+          accessibilityLabel={t("workTimeTracker.accessibility.tracker")}
+          accessibilityHint={t("workTimeTracker.accessibility.trackerHint")}
           style={{
             width: screenWidth * 0.9, // use 90% of the screen width
             maxWidth: 600,
@@ -652,7 +668,7 @@ const WorkTimeTracker = () => {
           <Text
             accessible={true}
             accessibilityRole="header"
-            accessibilityLabel="Work Time Tracker"
+            accessibilityLabel={t("workTimeTracker.accessibility.tracker")}
             style={{
               fontFamily: "MPLUSLatin_Bold",
               fontSize: 25,
@@ -661,7 +677,7 @@ const WorkTimeTracker = () => {
               textAlign: "center",
             }}
           >
-            Work-Time Tracker
+            {t("workTimeTracker.title")}
           </Text>
           {/* Start/Stop Button with  enable condition when user adds a expected hours */}
           {!isWorking ? (
@@ -669,11 +685,13 @@ const WorkTimeTracker = () => {
               accessible={true}
               accessibilityRole="button"
               accessibilityState={{ disabled: !docExists }}
-              accessibilityLabel="Start working"
+              accessibilityLabel={t(
+                "workTimeTracker.accessibility.startWorking",
+              )}
               accessibilityHint={
                 docExists
-                  ? "Starts tracking your work time"
-                  : "You must first enter expected hours"
+                  ? t("workTimeTracker.accessibility.startWorkingHint")
+                  : t("workTimeTracker.accessibility.expectedHoursRequired")
               }
               onPress={docExists ? handleStartWork : undefined}
               disabled={!docExists}
@@ -718,7 +736,7 @@ const WorkTimeTracker = () => {
                     color: docExists ? "white" : accessMode ? "#222" : "#AAA",
                   }}
                 >
-                  Start
+                  {t("workTimeTracker.buttons.start")}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -727,11 +745,15 @@ const WorkTimeTracker = () => {
               accessible={true}
               accessibilityRole="button"
               accessibilityState={{ disabled: !docExists }}
-              accessibilityLabel="Stop working"
+              accessibilityLabel={t(
+                "workTimeTracker.accessibility.stopWorking",
+              )}
               accessibilityHint={
                 docExists
-                  ? "Stops tracking your work time"
-                  : "Please enter your expected working hours first"
+                  ? t("workTimeTracker.accessibility.stopWorkingHint")
+                  : t(
+                      "workTimeTracker.accessibility.expectedWorkingHoursRequired",
+                    )
               }
               onPress={handleStopWork}
               activeOpacity={0.7}
@@ -770,7 +792,7 @@ const WorkTimeTracker = () => {
                     color: "white",
                   }}
                 >
-                  Stop
+                  {t("workTimeTracker.buttons.stop")}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -782,7 +804,12 @@ const WorkTimeTracker = () => {
           {/* Tracking Time */}
           <Text
             accessible={true}
-            accessibilityLabel={`Elapsed work time: ${formatTime(elapsedTime)}`}
+            accessibilityLabel={t(
+              "workTimeTracker.accessibility.elapsedWorkTime",
+              {
+                time: formatTime(elapsedTime),
+              },
+            )}
             style={{
               fontWeight: "bold",
               fontSize: 55,

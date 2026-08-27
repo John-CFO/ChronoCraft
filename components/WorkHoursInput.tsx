@@ -16,6 +16,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { getAuth } from "firebase/auth";
 import { setDoc, doc, getDoc } from "firebase/firestore";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
+import { useTranslation } from "react-i18next";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useService } from "../components/contexts/ServiceContext";
@@ -32,6 +33,9 @@ import { logError } from "../lib/loggerClient";
 const CopilotWalktroughView = walkthroughable(View);
 
 const WorkHoursInput = () => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // state to store the expected hours
   const [expectedHours, setExpectedHours] = useState("");
   // state to store the current document ID
@@ -106,9 +110,11 @@ const WorkHoursInput = () => {
         logError("WorkHoursInput.fetchExpectedHours", error);
         useAlertStore
           .getState()
-          .showAlert("Error", "Failed to load work hours. Please try again.", [
-            { text: "OK", style: "default" },
-          ]);
+          .showAlert(
+            t("workHoursInput.error"),
+            t("workHoursInput.fetchExpectedHoursError"),
+            [{ text: t("workHoursInput.ok"), style: "default" }],
+          );
       }
     };
 
@@ -185,9 +191,9 @@ const WorkHoursInput = () => {
       useAlertStore
         .getState()
         .showAlert(
-          "Invalid Input",
-          "Please enter a valid number greater than 0.",
-          [{ text: "OK", style: "default" }],
+          t("workHoursInput.invalidInput"),
+          t("workHoursInput.invalidHours"),
+          [{ text: t("workHoursInput.ok"), style: "default" }],
         );
       return;
     }
@@ -196,7 +202,10 @@ const WorkHoursInput = () => {
     try {
       const userId = getAuth().currentUser?.uid;
       if (!userId) {
-        logError("WorkHoursInput.handleSaveMinHours", "User ID not available");
+        logError(
+          "WorkHoursInput.handleSaveMinHours",
+          t("workHoursInput.userIdUnavailable"),
+        );
         setSaving(false);
         return;
       }
@@ -221,61 +230,61 @@ const WorkHoursInput = () => {
 
       if (prevExpected !== hours && duration > 0) {
         if (isWorking) {
-          useAlertStore
-            .getState()
-            .showAlert(
-              "Tracker is running",
-              `You have already ${displayDuration} tracked. While tracker is running, the expected hours can't be changed.`,
-              [{ text: "OK", style: "default" }],
-            );
+          useAlertStore.getState().showAlert(
+            t("workHoursInput.trackerRunning"),
+            t("workHoursInput.expectedHoursChangeWhileTracking", {
+              duration: displayDuration,
+            }),
+            [{ text: t("workHoursInput.ok"), style: "default" }],
+          );
           setSaving(false);
           return;
         }
 
         // Confirmation when user needs to change expected hours
-        useAlertStore
-          .getState()
-          .showAlert(
-            "Change Expected Hours",
-            `You have already ${displayDuration} tracked. Changing expected hours will not affect tracked time. Continue?`,
-            [
-              {
-                text: "Cancel",
-                style: "cancel",
-                onPress: () => setSaving(false),
+        useAlertStore.getState().showAlert(
+          t("workHoursInput.changeExpectedHours"),
+          t("workHoursInput.changeExpectedHoursDescription", {
+            duration: displayDuration,
+          }),
+          [
+            {
+              text: t("workHoursInput.cancel"),
+              style: "cancel",
+              onPress: () => setSaving(false),
+            },
+            {
+              text: t("workHoursInput.continue"),
+              style: "destructive",
+              onPress: async () => {
+                try {
+                  await recalcAndSaveForDay(docRef, duration, hours, {
+                    ...existingData,
+                    expectedHours: hours,
+                    workDay,
+                    userId,
+                  });
+                  setCurrentDocId(docRef.id);
+                  setExpectedHours(hours.toString());
+                  setTempExpectedHours("");
+                  setDocExists(true);
+                  setGlobalDocId(docRef.id);
+                } catch (err) {
+                  console.error(err);
+                  useAlertStore
+                    .getState()
+                    .showAlert(
+                      t("workHoursInput.error"),
+                      t("workHoursInput.updateError"),
+                      [{ text: t("workHoursInput.ok"), style: "default" }],
+                    );
+                } finally {
+                  setSaving(false);
+                }
               },
-              {
-                text: "Continue",
-                style: "destructive",
-                onPress: async () => {
-                  try {
-                    await recalcAndSaveForDay(docRef, duration, hours, {
-                      ...existingData,
-                      expectedHours: hours,
-                      workDay,
-                      userId,
-                    });
-                    setCurrentDocId(docRef.id);
-                    setExpectedHours(hours.toString());
-                    setTempExpectedHours("");
-                    setDocExists(true);
-                    setGlobalDocId(docRef.id);
-                  } catch (err) {
-                    console.error(err);
-                    useAlertStore
-                      .getState()
-                      .showAlert(
-                        "Error",
-                        "Error updating data. Please try again.",
-                        [{ text: "OK", style: "default" }],
-                      );
-                  } finally {
-                    setSaving(false);
-                  }
-                },
-              },
-            ],
-          );
+            },
+          ],
+        );
         return; // Important: exit here because onPress is async
       }
 
@@ -294,11 +303,9 @@ const WorkHoursInput = () => {
       logError("WorkHoursInput.handleSaveMinHours", error);
       useAlertStore
         .getState()
-        .showAlert(
-          "Error",
-          "During the saving process an error occurred. Please try again.",
-          [{ text: "OK", style: "default" }],
-        );
+        .showAlert(t("workHoursInput.error"), t("workHoursInput.saveError"), [
+          { text: t("workHoursInput.ok"), style: "default" },
+        ]);
     } finally {
       setSaving(false);
     }
@@ -308,9 +315,9 @@ const WorkHoursInput = () => {
     <>
       {/* Worktime-Tracker Screen copilot tour step 2 */}
       <CopilotStep
-        name="Daily Work-Hours"
+        name={t("workHoursInput.copilotName")}
         order={1}
-        text="In this card you have to set the expected work hours for today and save them."
+        text={t("workHoursInput.copilotDescription")}
       >
         <CopilotWalktroughView
           style={{
@@ -342,14 +349,16 @@ const WorkHoursInput = () => {
               textAlign: "center",
             }}
           >
-            Daily Work-Hours
+            {t("workHoursInput.title")}
           </Text>
 
           <Text
             accessible={true}
-            accessibilityLabel={
-              accessMode ? "Enter your hours" : "Add your minimum working hours"
-            }
+            accessibilityLabel={t(
+              accessMode
+                ? "workHoursInput.accessibilityEnterHours"
+                : "workHoursInput.accessibilityAddMinimumHours",
+            )}
             numberOfLines={1}
             adjustsFontSizeToFit
             style={{
@@ -362,7 +371,7 @@ const WorkHoursInput = () => {
               marginBottom: 10,
             }}
           >
-            "add your minimum working hours"
+            {t("workHoursInput.subtitle")}
           </Text>
           <View
             style={{
@@ -375,9 +384,9 @@ const WorkHoursInput = () => {
             {/* Text Input to enter the expected hours */}
             <TextInput
               accessible={true}
-              accessibilityLabel="Input expected working hours. Example: 8"
-              accessibilityHint="Enter the number of hours you plan to work today"
-              placeholder="(e.g. 8)"
+              accessibilityLabel={t("workHoursInput.inputAccessibilityLabel")}
+              accessibilityHint={t("workHoursInput.inputAccessibilityHint")}
+              placeholder={t("workHoursInput.inputPlaceholder")}
               placeholderTextColor={accessMode ? "white" : "grey"}
               value={tempExpectedHours}
               keyboardType="numeric"
@@ -403,8 +412,12 @@ const WorkHoursInput = () => {
           <TouchableOpacity
             accessible={true}
             accessibilityRole="button"
-            accessibilityLabel={saving ? "Saving" : "Save expected work hours"}
-            accessibilityHint="Saves the entered daily work hours"
+            accessibilityLabel={t(
+              saving
+                ? "workHoursInput.saving"
+                : "workHoursInput.saveExpectedWorkHours",
+            )}
+            accessibilityHint={t("workHoursInput.saveAccessibilityHint")}
             onPress={handleSaveMinHours}
             style={{
               width: screenWidth * 0.7, // use 70% of the screen width
@@ -435,16 +448,16 @@ const WorkHoursInput = () => {
                   paddingRight: 10,
                 }}
               >
-                {saving ? "Saving..." : "Save"}
+                {saving ? t("workHoursInput.saving") : t("workHoursInput.save")}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
           {/* Hourly Rate info container */}
           <View
             accessible={true}
-            accessibilityLabel={`Your expected work hours are ${
-              expectedHours || "not set"
-            }`}
+            accessibilityLabel={t("workHoursInput.expectedHoursAccessibility", {
+              hours: expectedHours || t("workHoursInput.notSet"),
+            })}
             style={{
               width: "100%",
               height: 50,
@@ -477,8 +490,9 @@ const WorkHoursInput = () => {
                   fontFamily: "MPLUSLatin_Bold",
                 }}
               >
-                Your expected WorkHours:{" "}
+                {t("workHoursInput.expectedWorkHours")}
               </Text>
+              {"  "}
               {expectedHours || "- - -"}
             </Text>
           </View>

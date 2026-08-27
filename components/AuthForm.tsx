@@ -20,6 +20,7 @@ import {
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import { LinearGradient } from "expo-linear-gradient";
 import { FontAwesome5 } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 
 import LostPasswordModal from "../components/LostPasswordModal";
 
@@ -44,10 +45,13 @@ const AuthForm: React.FC<AuthFormProps> = ({
   handleLogin,
   handleRegister,
 }) => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   const [secureTextEntry, setSecureTextEntry] = useState(true);
   // initialize the accessibility store
   const accessMode = useAccessibilityStore(
-    (state) => state.accessibilityEnabled
+    (state) => state.accessibilityEnabled,
   );
 
   // screensize for dynamic size calculation
@@ -72,7 +76,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
       >
         {/* Email input */}
         <TextInput
-          placeholder="Email"
+          placeholder={t("auth.email")}
           placeholderTextColor={accessMode ? "white" : "grey"}
           autoCapitalize="none"
           onChangeText={(text) => setEmail(text)}
@@ -82,8 +86,8 @@ const AuthForm: React.FC<AuthFormProps> = ({
           accessible={true}
           importantForAccessibility="yes"
           returnKeyType="next"
-          accessibilityLabel="Email input"
-          accessibilityHint="Enter your email address"
+          accessibilityLabel={t("auth.emailLabel")}
+          accessibilityHint={t("auth.emailHint")}
           style={{
             borderColor: "aqua",
             borderWidth: 1.5,
@@ -107,7 +111,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
         >
           {/* Password input */}
           <TextInput
-            placeholder="Password"
+            placeholder={t("auth.password")}
             placeholderTextColor={accessMode ? "white" : "grey"}
             autoCapitalize="none"
             secureTextEntry={secureTextEntry}
@@ -115,8 +119,8 @@ const AuthForm: React.FC<AuthFormProps> = ({
             value={password}
             textContentType="password"
             accessible={true}
-            accessibilityLabel="Password input"
-            accessibilityHint="Enter your password. Field is password protected and will be hidden."
+            accessibilityLabel={t("auth.passwordLabel")}
+            accessibilityHint={t("auth.passwordHint")}
             style={{
               borderColor: "aqua",
               borderWidth: 1.5,
@@ -140,7 +144,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
             }}
             accessibilityRole="button"
             accessibilityLabel={
-              secureTextEntry ? "Show password" : "Hide password"
+              secureTextEntry ? t("auth.showPassword") : t("auth.hidePassword")
             }
             accessibilityState={{ expanded: secureTextEntry ? false : true }}
           >
@@ -156,8 +160,8 @@ const AuthForm: React.FC<AuthFormProps> = ({
           <TouchableOpacity
             onPress={handleLogin}
             accessibilityRole="button"
-            accessibilityLabel="Login"
-            accessibilityHint="Press to log in to your account"
+            accessibilityLabel={t("auth.login")}
+            accessibilityHint={t("auth.loginHint")}
             style={{
               width: screenWidth * 0.7, // use 70% of the screen width
               maxWidth: 400,
@@ -188,7 +192,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
                   marginBottom: 5,
                 }}
               >
-                Login
+                {t("auth.login")}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -197,8 +201,8 @@ const AuthForm: React.FC<AuthFormProps> = ({
           <TouchableOpacity
             onPress={handleRegister}
             accessibilityRole="button"
-            accessibilityLabel="Register"
-            accessibilityHint="Press to register a new account"
+            accessibilityLabel={t("auth.register")}
+            accessibilityHint={t("auth.registerHint")}
             style={{
               width: screenWidth * 0.7, // use 70% of the screen width
               maxWidth: 400,
@@ -228,7 +232,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
                   marginBottom: 5,
                 }}
               >
-                Register
+                {t("auth.register")}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -236,8 +240,8 @@ const AuthForm: React.FC<AuthFormProps> = ({
           <TouchableOpacity
             onPress={toggleModal}
             accessibilityRole="button"
-            accessibilityLabel="Lost Password"
-            accessibilityHint="Opens password recovery dialog"
+            accessibilityLabel={t("auth.forgotPassword")}
+            accessibilityHint={t("auth.forgotPasswordHint")}
             accessibilityState={{ expanded: isModalVisible }}
             style={{ marginTop: 50 }}
           >
@@ -248,7 +252,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
                 fontSize: accessMode ? 20 : 16,
               }}
             >
-              Forgot Password?
+              {t("auth.forgotPassword")}
             </Text>
           </TouchableOpacity>
           <LostPasswordModal visible={isModalVisible} onClose={toggleModal} />

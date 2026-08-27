@@ -55,7 +55,6 @@ export const useCalendarStore = create<CalendarState>((set) => ({
   // function to handle date selection to the CustomCalendar
   handleSelect: (startDate, endDate) => {
     if (!startDate || !endDate) {
-      //console.error("start or end date is missing.");
       return;
     }
 
@@ -82,7 +81,6 @@ export const useCalendarStore = create<CalendarState>((set) => ({
     }
 
     useCalendarStore.getState().setMarkedDates(dates); // update store
-    //console.log("Neue markierte Daten:", dates);
   },
 
   // function to cancel date selection

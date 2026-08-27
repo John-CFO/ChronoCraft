@@ -5,6 +5,7 @@
 /////////////////////////////////////////////////////////////////////
 
 import { z } from "zod";
+import i18n from "../components/services/localization/i18n";
 
 /////////////////////////////////////////////////////////////////////
 
@@ -23,7 +24,7 @@ const isoDateStringSchema = z.string().refine((dateString) => {
   } catch {
     return false;
   }
-}, "Must be valid date string");
+}, i18n.t("validation.invalidDateString"));
 
 // Schema for WorkTimeTracker state stored in AsyncStorage
 // Validates the structure and types of locally stored tracking data
@@ -36,7 +37,7 @@ export const AsyncStorageWorkTrackerSchema = z
     accumulatedDuration: z.number().min(0).max(31536000), // Max 10 Years in seconds
     currentDocId: z
       .string()
-      .refine(isValidAsyncStorageDocId, "Invalid document ID")
+      .refine(isValidAsyncStorageDocId, i18n.t("validation.invalidDocumentId"))
       .nullable()
       .optional(),
   })

@@ -1,0 +1,99 @@
+{
+  "errors": {
+    "notLoggedIn": "Не выполнена авторизация",
+    "unknownAction": "Неизвестное действие",
+    "invalidAction": "Неверное действие",
+    "registrationNotAllowed": "Регистрация не разрешена",
+    "notAuthenticated": "Не аутентифицирован",
+    "authenticationRequired": "Требуется аутентификация",
+    "invalidEntry": "Неверный ввод. Проверьте свои данные.",
+    "failedPrecondition": "Запрос не может быть обработан из-за невыполненного условия.",
+    "permissionDenied": "У вас нет прав для выполнения этого действия.",
+    "unauthenticated": "Пожалуйста, войдите снова.",
+    "resourceNotFound": "Запрашиваемый ресурс не найден.",
+    "tooManyRequests": "Слишком много запросов. Пожалуйста, попробуйте позже.",
+    "internal": "Внутренняя ошибка сервера.",
+    "unavailable": "Сервис недоступен. Пожалуйста, попробуйте позже.",
+    "unexpected": "Непредвиденная ошибка",
+    "invalidActionForLoginOrRegister": "Неверное действие для loginOrRegister",
+    "uidRequired": "Требуется UID",
+    "invalidTotpCode": "Неверный код TOTP",
+    "totpNotConfigured": "Настройте TOTP."
+  },
+
+  "auth": {
+    "passwordResetInstructions": "Если для этого адреса электронной почты существует учетная запись, вы получите инструкции по сбросу пароля.",
+    "passwordResetSubject": "Сбросьте ваш пароль",
+    "passwordResetRequested": "Вы запросили сброс пароля.",
+    "passwordResetMostRecent": "Используйте последнее письмо, если вы запрашивали несколько сбросов.",
+    "passwordResetOlderLinks": "Более старые ссылки могут не работать.",
+    "passwordResetLink": "Нажмите здесь, чтобы сбросить пароль",
+    "passwordResetIgnore": "Если вы не запрашивали это, вы можете проигнорировать это письмо."
+  },
+
+  "success": {
+    "totpDisabled": "TOTP успешно отключен"
+  },
+
+  "validation": {
+    "missingData": "Отсутствуют данные",
+    "missingUserId": "Отсутствует ID пользователя",
+    "missingServiceId": "Отсутствует ID сервиса",
+    "invalidToken": "Неверный токен",
+    "missingRequestData": "Отсутствуют данные запроса.",
+    "missingAction": "Отсутствует действие",
+    "payloadMustBeObject": "Полезная нагрузка должна быть объектом",
+    "serviceIdRequired": "Service ID должна быть непустой строкой",
+    "projectIdRequired": "Project ID должна быть непустой строкой",
+    "rateMustBeNumber": "Ставка должна быть числом",
+    "fieldRequired": "Поле '{{field}}' обязательно для заполнения",
+    "fieldMustBeString": "Поле '{{field}}' должно быть строкой",
+    "fieldMinLength": "Поле '{{field}}' должно содержать не менее {{minLength}} символов",
+    "fieldMaxLength": "Поле '{{field}}' должно содержать не более {{maxLength}} символов",
+    "fieldMustBeEmail": "Поле '{{field}}' должно быть действительным адресом электронной почты",
+    "fieldMustBeNumber": "Поле '{{field}}' должно быть числом",
+    "fieldMinValue": "Поле '{{field}}' должно быть не менее {{min}}",
+    "fieldMaxValue": "Поле '{{field}}' должно быть не более {{max}}",
+    "invalidInput": "Неверный ввод",
+    "invalidUid": "Неверный UID",
+    "invalidPayload": "Неверная полезная нагрузка",
+    "unknownField": "Неизвестное поле: {{field}}",
+    "displayNameMustBeString": "displayName должно быть строкой",
+    "displayNameCannotBeEmpty": "displayName не может быть пустым",
+    "displayNameTooLong": "displayName слишком длинное",
+    "personalNumberMustBeString": "personalNumber должно быть строкой",
+    "personalNumberCannotBeEmpty": "personalNumber не может быть пустым",
+    "personalNumberTooLong": "personalNumber слишком длинное",
+    "nothingToUpdate": "Нет данных для обновления.",
+    "projectDeletionInProgress": "Удаление проекта выполняется"
+  },
+
+  "push": {
+    "welcomeTitle": "Добро пожаловать в ChronoCraft! ⏱️",
+    "welcomeBody": "Мы рады, что вы присоединились. Будем отслеживать время как профессионалы."
+  },
+
+  "permission": {
+    "cannotDeleteOthersData": "Нельзя удалять данные других пользователей"
+  },
+
+  "totp": {
+    "userEmailNotAvailable": "Адрес электронной почты пользователя недоступен",
+    "userNotFound": "Пользователь не найден",
+    "alreadyEnabled": "TOTP уже включен для этого пользователя.",
+    "scanQrCode": "Отсканируйте QR-код с помощью вашего приложения-аутентификатора. Этот секрет истекает через 1 час.",
+    "invalidToken": "Неверный токен TOTP",
+    "cannotAccessEnrollment": "Не удается получить доступ к сеансу регистрации",
+    "enrollmentSessionNotFound": "Сеанс регистрации не найден",
+    "enrollmentSessionExpired": "Срок действия сеанса регистрации истек",
+    "enrollmentTooManyAttempts": "Слишком много неудачных попыток. Сеанс регистрации был сброшен.",
+    "invalidCode": "Неверный код TOTP",
+    "alreadyConfigured": "TOTP уже настроен",
+    "enabledSuccessfully": "TOTP успешно включен!",
+    "tooManyAttempts": "Слишком много попыток. Попробуйте снова через {{seconds}} секунд.",
+    "verificationNotCompleted": "Проверка TOTP не завершена",
+    "configurationNotFound": "Конфигурация TOTP не найдена",
+    "alreadyUsed": "TOTP уже использован",
+    "verificationSuccessful": "Проверка TOTP успешна"
+  }
+}

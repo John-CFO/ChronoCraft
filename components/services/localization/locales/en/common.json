@@ -1,0 +1,776 @@
+{
+  "drawer": {
+    "profile": {
+      "employeee": "Employee",
+      "personalId": "Personal Number",
+      "edit": "Edit Profile",
+      "editModal": "Edit Profile",
+      "picture": "Profile picture of {{name}}",
+      "defaultPicture": "Default profile picture",
+      "unknown": "Unknown"
+    },
+    "language": "Language",
+    "chooseLanguage": "Choose language",
+    "languageModal": "Language selection",
+    "languageModalOpened": "Language selection opened",
+    "selectLanguage": "Choose language",
+    "currentLanguage": "Current language",
+    "navigationTip": "Navigation tip",
+    "navigationTipHint": "Swipe up or down to close the modal.",
+    "swipeToClose": "Swipe to close",
+    "tour": "Restart tour",
+    "toggleMfa": "MFA settings on/off",
+    "toggleAccessibility": "Accessibility on/off",
+    "employeeAccessibility": "Employee {{name}}",
+    "menuButton": "Menu",
+    "menuButtonHint": "Opens the app menu to navigate between screens",
+    "navigation": {
+      "home": "Home",
+      "workHours": "Work hours",
+      "vacation": "Vacation",
+      "faq": "FAQ",
+      "logout": "Logout",
+      "back": "Back",
+      "backHint": "Button to go back to the previous screen"
+    }
+  },
+
+  "profile": {
+    "edit": {
+      "modal": "Edit Profile",
+      "modalOpened": "Edit profile modal opened",
+      "title": "Profile Settings",
+      "uploadImage": "Upload profile image",
+      "uploadImageHint": "Button to upload a profile image",
+      "name": "Name",
+      "nameInput": "Name Input",
+      "nameInputHint": "Enter your name",
+      "personalId": "Personal-ID",
+      "personalIdInput": "Personal-ID Input",
+      "personalIdInputHint": "Enter your personal ID",
+      "updatingProfile": "Updating profile",
+      "saveChanges": "Save changes",
+      "saveChangesHint": "Saves your updated name and personal ID",
+      "updating": "Updating",
+      "update": "Update",
+      "navigationTip": "Navigation tip",
+      "navigationTipHint": "Swipe up or down to close",
+      "swipeToClose": "Swipe to close",
+      "alerts": {
+        "permissionError": "Permission Error",
+        "cameraRollPermission": "Sorry, we need camera roll permissions to make this work!",
+        "noImageSelected": "No Image Selected",
+        "noImageSelectedMessage": "You did not select any image."
+      }
+    }
+  },
+
+  "modal": {
+    "editProfile": "Edit Profile",
+    "twoFactor": "Two-Factor Authentication",
+    "noUser": "No user logged in"
+  },
+
+  "accessibility": {
+    "toggle": "Accessibility",
+    "toggleHint": "Activates or deactivates screen reader optimized mode"
+  },
+
+  "mfa": {
+    "accessibility": "Two-Factor-Authentication settings",
+    "settings": "2FA",
+    "on": "On",
+    "off": "Off",
+    "modal": "Multi-Factor Authentication",
+    "enabled": "Multi-Factor Authentication is currently enabled.",
+    "disable": "DISABLE",
+    "disableAccessibility": "Disable Multi Factor",
+    "disableHint": "Disables multi factor authentication",
+    "disabling": "Disabling",
+    "close": "CLOSE",
+    "setupDescription": "Setting up TOTP with an authenticator app (Google Authenticator, Authy).",
+    "activate": "ACTIVATE",
+    "activating": "Activating",
+    "activateAccessibility": "Activate Multi Factor",
+    "activateHint": "Activates multi factor authentication",
+    "skip": "SKIP",
+    "qrCodeAccessibility": "QR Code for the Multi Factor Authentication",
+    "scanQrCode": "Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)",
+    "confirm": "CONFIRM",
+    "confirmAccessibility": "Confirm TOTP",
+    "confirmHint": "Confirms the TOTP code",
+    "confirming": "Confirming",
+    "cancel": "CANCEL",
+    "cancelAccessibility": "Cancel TOTP enrollment",
+    "required": "Two-Factor Authentication Required",
+    "enterCode": "Enter the 6-digit code from your authenticator app.",
+    "verifying": "Verifying",
+    "cancelAndReturn": "Cancel and go back to login",
+    "cancelAndReturnHint": "Signs out and returns to the login screen",
+    "cancelAndReturnText": "Cancel and return to login",
+    "bypassNotice": "Note: This screen cannot be bypassed. You must enter the correct TOTP code to continue.",
+    "alerts": {
+      "error": "Error",
+      "invalidCode": "Please enter a valid 6-digit code.",
+      "enrollmentStarted": "TOTP Enrollment Started",
+      "enrollmentStartedMessage": "Scan the QR code with your authenticator app.",
+      "success": "Success",
+      "enabled": "Multi-factor-authentication enabled successfully!",
+      "disabled": "Multi-factor-authentication deactivated",
+      "disabledMessage": "MFA disabled successfully!",
+      "functionNotFound": "Function not found. Please make sure the function is deployed.",
+      "permissionDenied": "Permission denied. Please log in again.",
+      "noOtpUrl": "No OTP URL received from server",
+      "cannotStart": "Cannot start TOTP enrollment. Please try again.",
+      "failedVerification": "Failed to verify TOTP",
+      "invalidTotp": "Invalid TOTP code. Please enter a valid 6-digit number.",
+      "notInitialized": "TOTP not initialized. Please activate TOTP first.",
+      "disableFailed": "Disabling MFA failed",
+      "cannotDisable": "Cannot disable MFA.",
+      "noServerResponse": "No response from server. Please try again.",
+      "authenticationSuccessful": "Authentication successful.",
+      "invalidAuthenticationCode": "Invalid authentication code.",
+      "totpNotEnabled": "TOTP is not enabled for your account.",
+      "userNotFound": "User not found. Please try logging in again.",
+      "sessionExpired": "Session expired. Please log in again.",
+      "invalidTotpFormat": "Invalid TOTP code format.",
+      "rateLimitWait": "Please wait {{seconds}}s."
+    }
+  },
+
+  "otp": {
+    "number": "Number {{current}} of {{total}}",
+    "hint": "Enter one digit of the authentication code",
+    "entered": "Entered",
+    "empty": "Empty"
+  },
+
+  "mfaModal": {
+    "enrollmentStarted": "TOTP Enrollment Started",
+    "enrollmentStartedMessage": "Scan the QR code with your authenticator app.",
+    "ok": "OK",
+    "error": "Error",
+    "invalidCode": "Please enter a valid 6-digit code.",
+    "noOtpUrl": "No OTP URL received from server",
+    "cannotStart": "Cannot start TOTP enrollment. Please try again.",
+    "functionNotFound": "Function not found. Please make sure the function is deployed.",
+    "permissionDenied": "Permission denied. Please log in again.",
+    "success": "Success",
+    "enabled": "Multi-factor-authentication enabled successfully!",
+    "invalidTotpCode": "Invalid TOTP code",
+    "verifyFailed": "Failed to verify TOTP",
+    "invalidTotpCodeDetailed": "Invalid TOTP code. Please enter a valid 6-digit number.",
+    "totpNotInitialized": "TOTP not initialized. Please activate TOTP first.",
+    "disabled": "Multi-factor-authentication deactivated",
+    "disabledMessage": "MFA disabled successfully!",
+    "disableFailed": "Disabling MFA failed",
+    "cannotDisable": "Cannot disable MFA."
+  },
+
+  "auth": {
+    "email": "Email",
+    "emailLabel": "Email input",
+    "emailHint": "Enter your email address",
+    "password": "Password",
+    "passwordLabel": "Password input",
+    "passwordHint": "Enter your password. The field is password protected and the password will be hidden.",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "login": "Login",
+    "loginHint": "Press to log in to your account",
+    "register": "Register",
+    "registerHint": "Press to register a new account",
+    "forgotPassword": "Forgot Password?",
+    "forgotPasswordHint": "Opens the password recovery dialog",
+    "validationError": "Validation Error",
+    "invalidInput": "Invalid input",
+    "loginFailed": "Login failed",
+    "somethingWentWrongTryAgain": "Something went wrong, please try again!",
+    "accessRestricted": "Access restricted",
+    "invitedReviewersOnly": "This application is currently available only for invited reviewers.",
+    "registrationFailed": "Registration failed",
+    "registrationCouldNotBeCompleted": "Registration could not be completed. Please check your email address and try again."
+  },
+
+  "passwordReset": {
+    "modal": "Reset password",
+    "modalHint": "Modal dialog to reset your password.",
+    "title": "Reset Password",
+    "emailPlaceholder": "Email Address",
+    "emailInput": "Email input",
+    "emailInputHint": "Please enter your email address to receive a password reset link.",
+    "resetButton": "Reset Password",
+    "resetButtonHint": "Send an email to get a reset link",
+    "sending": "Sending",
+    "sendResetLink": "Send Reset Link",
+    "navigationTip": "Navigation tip",
+    "navigationHint": "Swipe up or down to close",
+    "alerts": {
+      "error": "Error",
+      "invalidEmail": "Please enter a valid email address.",
+      "emailSent": "Email sent",
+      "emailSentMessage": "If an account exists for that email, you will receive instructions to reset your password.",
+      "tooManyAttempts": "Too many attempts",
+      "rateLimitMessage": "Please wait a minute before trying again.",
+      "generalError": "Something went wrong. Please try again later. If the problem persists, contact support."
+    }
+  },
+
+  "animatedText": {
+    "timetracking": "Timetracking",
+    "efficiency": "Efficiency",
+    "analytics": "Analytics"
+  },
+
+  "homeScreen": {
+    "alerts": {
+      "error": "Error",
+      "serviceIdMissing": "serviceId is missing. ServiceContext is not ready.",
+      "addProjectTitle": "Sorry",
+      "addProjectTitleMessage": "Add a project title first to continue.",
+      "projectNameTooLong": "Project name too long",
+      "projectAddFailed": "Could not add project.",
+      "deleteConfirmationTitle": "Attention!",
+      "deleteConfirmationMessage": "Do you really want to delete the project? If you delete the project, all notes will be deleted as well."
+    },
+    "title": "Your Projects",
+    "sort": "Sort",
+    "sortHint": "Sort your projects by priority",
+    "emptyProjects": "You haven't any projects yet.",
+    "projectInput": "Add new Project{{dots}}",
+    "projectInputHint": "Enter the name of your project here.",
+    "addProject": "Add Project",
+    "projectInputLabel": "Project input",
+    "addProjectHint": "Button to add a new project",
+    "tour": {
+      "sort": "Here you can sort your projects by priority",
+      "projectName": "Enter the name of your project here.",
+      "addProject": "Add the project."
+    },
+    "loading": "Loading"
+  },
+
+  "workHoursScreen": {
+    "header": "Workhours Management"
+  },
+
+  "workTimeTracker": {
+    "error": "Error",
+    "attention": "Attention",
+    "noServiceId": "No serviceId found",
+    "userIdUnavailable": "User ID not available",
+    "fetchDataError": "An error occurred while fetching the data. Please try again.",
+    "expectedHoursRequired": "First add your expected hours.",
+    "startTrackingError": "Failed to start tracking",
+    "serviceIdUnavailable": "Service ID not available",
+    "noStartTimeOrDoc": "No start time or doc found",
+    "stopTrackingError": "Failed to stop tracking",
+    "title": "Work-Time Tracker",
+    "copilot": {
+      "text": "In this area you can track your daily work hours."
+    },
+    "accessibility": {
+      "tracker": "Work Time Tracker",
+      "trackerHint": "Start or stop tracking your work time",
+      "startWorking": "Start working",
+      "startWorkingHint": "Starts tracking your work time",
+      "expectedHoursRequiredHint": "You must first enter expected hours",
+      "stopWorking": "Stop working",
+      "stopWorkingHint": "Stops tracking your work time",
+      "expectedWorkingHoursRequired": "Please enter your expected working hours first",
+      "elapsedWorkTime": "Elapsed work time: {{time}}"
+    },
+    "buttons": {
+      "start": "Start",
+      "stop": "Stop"
+    }
+  },
+
+  "workHoursInput": {
+    "error": "Error",
+    "ok": "OK",
+    "fetchExpectedHoursError": "Failed to load work hours. Please try again.",
+    "userIdUnavailable": "User ID not available",
+    "invalidInput": "Invalid Input",
+    "invalidHours": "Please enter a valid number greater than 0.",
+    "trackerRunning": "Tracker is running",
+    "expectedHoursChangeWhileTracking": "You have already {{duration}} tracked. While tracker is running, the expected hours can't be changed.",
+    "changeExpectedHours": "Change Expected Hours",
+    "changeExpectedHoursDescription": "You have already {{duration}} tracked. Changing expected hours will not affect tracked time. Continue?",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "updateError": "Error updating data. Please try again.",
+    "saveError": "During the saving process an error occurred. Please try again.",
+    "copilotName": "Daily Work-Hours",
+    "copilotDescription": "In this card you have to set the expected work hours for today and save them.",
+    "title": "Daily Work-Hours",
+    "accessibilityEnterHours": "Enter your hours",
+    "accessibilityAddMinimumHours": "Add your minimum working hours",
+    "subtitle": "Add your minimum working hours",
+    "inputAccessibilityLabel": "Input expected working hours. Example: 8",
+    "inputAccessibilityHint": "Enter the number of hours you plan to work today",
+    "inputPlaceholder": "(e.g. 8)",
+    "saving": "Saving...",
+    "saveExpectedWorkHours": "Save expected work hours",
+    "saveAccessibilityHint": "Saves the entered daily work hours",
+    "save": "Save",
+    "expectedHoursAccessibility": "Your expected work hours are {{hours}}",
+    "notSet": "not set",
+    "expectedWorkHours": "Your expected WorkHours:"
+  },
+
+  "workHoursChart": {
+    "title": "Work-Hours Chart",
+    "copilotDescription": "This card shows your work hours and overtime for the selected period. Press a bar to see the tracked details.",
+    "expectedHours": "Expected Hours",
+    "overHours": "Over Hours",
+    "overview": "Worktime Overview",
+    "expected": "Expected",
+    "worked": "Worked",
+    "over": "Over",
+    "accessibilityOverview": "Worktime Overview",
+    "accessibilityEntry": "{{date}}, expected: {{expected}} hours, worked: {{worked}} hours{{over}}",
+    "accessibilityOverHours": ", over: {{hours}} hours",
+    "accessibilityBar": "{{date}}, worked: {{worked}} hours, expected: {{expected}} hours, over: {{over}} hours",
+    "tooltipWorked": "⏳ Worked: {{hours}}h",
+    "tooltipExpected": "⏳ Expected: {{hours}}h",
+    "tooltipOver": "🚀 Overtime: {{hours}}h"
+  },
+
+  "chart": {
+    "week": "Week",
+    "month": "Month",
+    "year": "Year"
+  },
+
+  "yearSelector": {
+    "title": "Year",
+    "previousYear": "Previous year",
+    "previousYearHint": "Press to select the previous year",
+    "nextYear": "Next year",
+    "nextYearHint": "Press to select the next year",
+    "selectedYear": "Selected year {{year}}",
+    "previousYearUnavailable": "No previous year available",
+    "nextYearUnavailable": "No next year available"
+  },
+
+  "reminder": {
+    "in1Day": "in 1 Day",
+    "in3Days": "in 3 Days",
+    "in7Days": "in 7 Days",
+    "oneDay": "1 Day",
+    "threeDays": "3 Days",
+    "sevenDays": "7 Days"
+  },
+
+  "calendar": {
+    "title": "Calendar",
+    "tourText": "In this area you can view your vacation calendar.",
+    "accessibilityLabel": "Vacation calendar showing marked vacation days. Swipe left or right to change month."
+  },
+
+  "sort": {
+    "title": "Sort your projects",
+    "options": {
+      "newestFirst": "Newest first",
+      "oldestFirst": "Oldest first",
+      "nameAZ": "Name A–Z",
+      "nameZA": "Name Z–A"
+    },
+    "optionAccessibility": "Sort option",
+    "selected": "selected",
+    "navigationTip": "Navigation tip",
+    "navigationHint": "Swipe up or down to close",
+    "navigationText": "Swipe to close",
+    "modalOpened": "Sort Modal opened. Please select a sort option."
+  },
+
+  "projectDetails": {
+    "title": "Project Details",
+    "titleAndTime": "Title and Time",
+    "tourText": "This info card shows the name of the project and your local time.",
+    "projectName": "Project Name: {{name}}",
+    "currentTime": "Current Time"
+  },
+
+  "timeTracker": {
+    "title": "Time-Tracker",
+    "copilot": {
+      "name": "Time-Tracker",
+      "text": "The Time Tracker Card lets you track your working time on this project and shows the session state."
+    },
+    "trackingTime": "Tracking time",
+    "startTracking": "Start tracking",
+    "stopTracking": "Stop tracking",
+    "startHint": "Press to start tracking your working time",
+    "stopHint": "Press to stop tracking your working time",
+    "reset": "Reset",
+    "resetting": "Resetting...",
+    "resetHint": "Press to reset the project",
+    "attention": "Attention!",
+    "resetStopFirst": "Please stop the project first before resetting it.",
+    "resetConfirmation": "Do you really want to reset the project? If you reset the project, all data will be deleted.",
+    "lastSessionText": "Last Session:",
+    "lastSessionEnded": "Last session ended on {{date}}",
+    "noLastSession": "No last session available",
+    "lastTrackingStartedText": "Last Tracking Started:",
+    "lastTrackingStarted": "Last tracking started on {{date}}",
+    "noTrackingStartTime": "No tracking start time available",
+    "originalTrackingStartedText": "Original Tracking Started:",
+    "originalTrackingStarted": "Original tracking started on {{date}}",
+    "noOriginalTrackingStartTime": "No original tracking start time available"
+  },
+
+  "projectListItem": {
+    "project": "Project",
+    "createdOn": "created on",
+    "unknownDate": "unknown date",
+    "noDate": "No date available",
+    "viewDetails": "Tap to view project details",
+    "delete": "Delete the project",
+    "addNote": "Add a note",
+    "addNoteHint": "Add a note. You can view it in the details screen"
+  },
+
+  "notes": {
+    "addedAt": "Added at",
+    "delete": "Delete this note",
+    "deleteHint": "Deletes the current note from the list",
+    "content": "Note text",
+    "deleteConfirmationTitle": "Attention!",
+    "deleteConfirmationMessage": "Do you really want to delete the note? This action cannot be undone.",
+    "cancel": "Cancel",
+    "deleteConfirmation": "Delete",
+    "deleteError": "Failed to delete note",
+    "title": "Your Notes",
+    "copilot": {
+      "name": "Your Notes",
+      "text": "This card shows your notes for this project, if you have added any in the Home-Screen Project-Card. You can delete them here."
+    },
+    "empty": "You haven't added any notes for this project yet.",
+    "error": "Error",
+    "modalOpened": "Note modal opened. Please write your comment and press send.",
+    "commentInput": "Project comment input field",
+    "commentHint": "Write a comment to add a note to the project",
+    "commentPlaceholder": "Write a comment",
+    "save": "Save",
+    "saving": "Saving",
+    "saveHint": "Saves the note to the project",
+    "saveAccessibility": "Save note",
+    "savingAccessibility": "Saving note",
+    "navigationTip": "Swipe to close",
+    "navigationHint": "Swipe up or down to close",
+    "invalidData": "Invalid note data provided",
+    "notAuthorized": "Not authorized",
+    "projectNotFound": "Project not found",
+    "saveError": "Failed to save note"
+  },
+
+  "details": {
+    "earningsCalculator": {
+      "title": "Earnings Calculator",
+      "tourText": "In this card you can set your hourly rate. Your earnings will be calculated based on the time tracked by the Time Tracker.",
+      "accessibilityLabel": "Earnings calculator. Total earnings {{totalEarnings}} dollars. Your hourly rate is {{hourlyRate}}.",
+      "notSet": "not set yet",
+      "totalEarnings": "Total earnings {{amount}} dollars",
+      "hourlyRateInput": "Enter your hourly rate",
+      "savingHourlyRate": "Saving your hourly rate",
+      "saveHourlyRate": "Save hourly rate",
+      "saving": "Saving...",
+      "save": "Save",
+      "currentHourlyRate": "Your hourly rate is {{hourlyRate}} dollars",
+      "noHourlyRate": "No hourly rate set",
+      "yourHourlyRate": "Your Hourly Rate",
+      "alerts": {
+        "error": "Error",
+        "authenticationRequired": "Authentication required",
+        "invalidInput": "Invalid Input",
+        "invalidRate": "Invalid Rate",
+        "rateRange": "Hourly rate must be between {{min}} and {{max}}",
+        "saveFailed": "Failed to save hourly rate"
+      }
+    }
+  },
+
+  "progress": {
+    "title": "Deadline-Tracker",
+    "copilot": {
+      "name": "Deadline Tracker",
+      "text": "The Deadline-Tracker shows you how close you are to your deadline. Add your maximum of workhours to your project."
+    },
+    "instructions": "Add your maximum allowed work time",
+    "inputAccessibility": "Enter your maximum allowed work hours",
+    "inputPlaceholder": "(e.g. 5 hours)",
+    "saveAccessibility": "Save maximum work hours",
+    "savingAccessibility": "Saving your maximum work hours",
+    "save": "Save",
+    "saving": "Saving...",
+    "progress": {
+      "tracker": "Deadline tracker. {{percent}} percent of your maximum work time used. Your deadline is {{hours}} hours.",
+      "noDeadline": "Deadline tracker. No deadline set.",
+      "label": "Progress {{percent}} percent",
+      "noProgress": "No progress yet",
+      "used": "{{percent}} percent of your maximum work time used",
+      "usedShort": "of your max work time used"
+    },
+    "deadline": {
+      "label": "Your Deadline:",
+      "accessibility": "Your deadline is {{hours}} hours"
+    },
+    "alerts": {
+      "error": "Error",
+      "authenticationRequired": "Authentication required",
+      "projectNotFound": "Project not found",
+      "notAuthorized": "Not authorized",
+      "saveFailed": "Failed to save. Try again.",
+      "invalidInput": "Invalid input",
+      "hoursRange": "Please enter hours between 1 and 10000"
+    },
+    "notification": {
+      "targetReached": "Target reached 🎯",
+      "targetReachedMessage": "You reached your Deadline target!"
+    }
+  },
+
+  "vacationScreen": {
+    "title": "Vacation Management",
+    "slogan": "Unplug from work, recharge your soul",
+    "vacationForm": "Vacation request form",
+    "vacationList": "List of your planned vacations"
+  },
+
+  "vacationForm": {
+    "copilot": {
+      "name": "Select vacation dates",
+      "text": "Select the start and end dates of your vacation. You can then save the dates in the calendar or cancel the selection. Saving the dates will add them to the Booked Vacation card."
+    },
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "startDateSelected": "Start date: {{date}}",
+    "startDateNotSelected": "Start Date not selected",
+    "endDateSelected": "End date selected: {{date}}",
+    "selectEndDate": "Select end date",
+    "save": "Save",
+    "saveVacationDates": "Save vacation dates",
+    "cancel": "Cancel",
+    "cancelVacationSelection": "Cancel vacation date selection",
+    "sorry": "Sorry",
+    "selectStartDateFirst": "Please select a start date first.",
+    "attention": "Attention!",
+    "selectVacationDateFirst": "First select a vacation date.",
+    "invalidInput": "Invalid Input",
+    "invalidData": "Vacation data is invalid. Please retry.",
+    "error": "Error",
+    "saveFailed": "Saving vacation failed.",
+    "ok": "OK"
+  },
+
+  "vacationList": {
+    "attention": "Attention!",
+    "deleteConfirmation": "Do you really want to delete the vacation?",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "loadErrorTitle": "Error loading vacations",
+    "loadErrorMessage": "Could not fetch vacation data. Please try again.",
+    "copilot": {
+      "name": "Booked Vacations",
+      "text": "This card shows your vacations. You can delete them here and you can also set a reminder date."
+    },
+    "title": "Booked Vacations",
+    "date": "Date",
+    "noMarkedDates": "No marked dates",
+    "vacationFrom": "Vacation from {{date}}",
+    "vacationOn": "Vacation on {{date}}",
+    "reminderActive": "Reminder is active. Tap to deactivate reminder",
+    "reminderInactive": "Reminder is inactive. Tap to activate reminder",
+    "deleteVacation": "Delete vacation",
+    "noVacations": "You haven't booked any vacation days yet. Book some."
+  },
+
+  "vacationReminder": {
+    "modalOpened": "Vacation Reminder modal opened. Please select a reminder duration and press save.",
+    "title": "Vacation Reminder",
+    "save": "Save",
+    "saving": "Saving...",
+    "saveHint": "Saves the reminder and closes this view",
+    "pleaseWait": "Please wait",
+    "navigationTip": "Swipe to close",
+    "navigationTipAccessibility": "Navigation tip. Swipe up or down to close",
+    "error": "Error",
+    "success": "Success",
+    "noVacationSelected": "No vacation selected.",
+    "loginRequired": "You must be logged in to save a reminder.",
+    "selectDuration": "Please select a reminder duration.",
+    "userDocumentMissing": "User document missing.",
+    "pushTokenNotFound": "Push Token not found.",
+    "vacationNotFound": "Vacation not found.",
+    "reminderAlreadyExists": "Vacation already has a reminder. Delete and create a new one to change it.",
+    "invalidStartDate": "Invalid vacation start date.",
+    "reminderSaved": "Reminder saved successfully.",
+    "saveFailed": "Failed to save reminder. Please try again.",
+    "notificationTitle": "Vacation Reminder",
+    "notificationBody": "Your vacation starts in {{days}} days. Don't forget to take your time off.",
+    "reminderActive": "Reminder is active",
+    "reminderInactive": "Reminder is inactive"
+  },
+
+  "tour": {
+    "previous": "PREVIOUS",
+    "next": "NEXT",
+    "finish": "FINISH",
+    "endTourHint": "End the tour and close the tooltip",
+    "previousStepHint": "Go back to the previous step",
+    "nextStepHint": "Go to the next step",
+    "restart": "Restart Tour",
+    "restartAccessibility": "Restart the tour. The tour will be shown again on all pages.",
+    "restartAlertTitle": "Restart Tour",
+    "restartAlertMessage": "The tour will be shown again when opening the respective screens",
+    "introductionActive": "The tour introduction is active",
+    "introductionModal": "Tour introduction",
+    "introductionTitle": "Start tour introduction",
+    "start": "Start introduction tour",
+    "startHint": "Begins a walkthrough of the app",
+    "play": "START",
+    "skip": "SKIP",
+    "skipLabel": "Skip introduction tour",
+    "skipHint": "Skips the tour and returns to the app",
+    "skipAlertTitle": "Skip Tour",
+    "skipAlertMessage": "You can start the tour later in the menu.",
+    "retry": "RETRY",
+    "cancel": "CANCEL",
+    "errors": {
+      "loading": {
+        "title": "Loading Error",
+        "message": "Please wait until the content is fully loaded."
+      },
+      "general": {
+        "title": "Tour Error",
+        "message": "An unexpected error occurred. Please try restarting the app."
+      }
+    }
+  },
+
+  "help": {
+    "title": "Help",
+    "titleAccessibility": "Help menu",
+    "close": "Close",
+    "openHint": "Opens the help menu to report issues or bugs",
+    "closeHint": "Closes the help menu",
+    "info": "Information text",
+    "infoText": "If you encounter any issues or have suggestions for improvements, feel free to click on a logo and reach out to us:",
+    "facebook": "Open Facebook",
+    "facebookHint": "Opens our Facebook page in an external browser",
+    "linkedin": "Open LinkedIn",
+    "linkedinHint": "Opens our LinkedIn profile in an external browser",
+    "github": "Open GitHub",
+    "githubHint": "Opens our GitHub repository in an external browser",
+    "thanks": "Thanks for your feedback! 🚀",
+    "thanksAccessibility": "Thanks for your feedback!",
+    "links": {
+      "github": "GitHub",
+      "linkedin": "LinkedIn",
+      "facebook": "Facebook"
+    }
+  },
+
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "titleAccessibility": "Frequently Asked Questions",
+    "sheetAccessibility": "Frequently Asked Questions sheet",
+    "sheetHint": "Contains frequently asked questions.",
+    "close": "Close FAQ",
+    "closeHint": "Closes the frequently asked questions",
+    "answerOpened": "Answer opened",
+    "answerClosed": "Answer closed",
+    "expanded": "Expanded",
+    "collapsed": "Collapsed",
+    "workhoursTooltip": {
+      "question": "How do I close the tooltip on the Workhours Chart?",
+      "hint": "Toggles the answer for how to close the tooltip.",
+      "answer": "To close the tooltip, simply tap anywhere outside the chart area but inside the card. The entire card is set up to listen for taps outside of the chart."
+    },
+    "changePassword": {
+      "question": "How do I change my password?",
+      "hint": "Toggles instructions to change your password.",
+      "answer": "Leave the app using Logout and you will navigate to the login screen. There you can change your password by pressing Forgot Password. We will send you an email with instructions on how to reset your password."
+    },
+    "deleteAccount": {
+      "question": "How do I delete my account?",
+      "hint": "Toggles instructions to delete your account.",
+      "answer": "To delete your account, you must confirm your password. All your data will be permanently removed from our servers.",
+      "passwordInput": "Enter your password to confirm account deletion",
+      "passwordPlaceholder": "Enter your password",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
+      "visibilityHint": "Toggles password visibility",
+      "deleteButton": "Delete Account",
+      "deleteButtonHint": "Deletes your account permanently after confirmation",
+      "deleting": "Deleting"
+    },
+    "mfaOneDevice": {
+      "question": "How can I set up MFA if I only have one smartphone?",
+      "hint": "Toggles instructions for setting up MFA with only one smartphone.",
+      "answer": "The QR code used to set up your authenticator app is usually intended to be scanned with a second device. If you only have one smartphone, you can use the following alternative method:\n\n1. Take a screenshot of the displayed QR code.\n2. Open your authenticator app.\n3. Use the option to import a QR code from an image or your gallery.\n4. Select the screenshot and complete the setup process.\n\nPlease note that not every authenticator app supports importing QR codes from images. Google Authenticator supports importing QR codes from saved images depending on the app version.\n\nAfter successfully enabling MFA, you should delete the screenshot. The QR code contains your secret TOTP key, which is used to generate your MFA codes. Anyone who gains access to this key could generate valid MFA codes for your account."
+    },
+    "deleteConfirmation": {
+      "title": "Delete Account",
+      "message": "Are you sure you want to delete your account?",
+      "cancel": "Cancel",
+      "delete": "Delete"
+    },
+    "alerts": {
+      "error": "Error",
+      "success": "Success",
+      "closeFailed": "Failed to close the FAQ sheet.",
+      "noPassword": "No Password",
+      "passwordRequired": "Please enter your password before deleting your account.",
+      "noAuthenticatedUser": "No authenticated user found.",
+      "accountDeleted": "Your account has been deleted.",
+      "deleteFailed": "There was an issue deleting your account."
+    }
+  },
+
+  "validation": {
+    "invalidDateString": "Must be a valid date string",
+    "invalidDocumentId": "Invalid document ID",
+    "invalidEmail": "Please enter a valid E-Mail.",
+    "passwordEmpty": "Password cannot be empty.",
+    "passwordMinLength": "The password must be at least 8 characters long.",
+    "passwordSpecialCharacters": "The password must contain at least 2 special characters.",
+    "passwordNumber": "The password must contain at least 1 number.",
+    "totpDigits": "TOTP must be 6 digits",
+    "hourlyRateNegative": "Hourly rate cannot be negative",
+    "hourlyRateMax": "Hourly rate cannot exceed 300",
+    "hourlyRateInvalid": "Hourly rate must be a valid number",
+    "projectIdRequired": "Project ID is required",
+    "userIdRequired": "User ID is required",
+    "displayNameLength": "Display name must be between 1 and 100 chars",
+    "invalidPersonalId": "Invalid personal ID",
+    "commentEmpty": "Comment cannot be empty",
+    "commentTooLong": "Comment too long",
+    "invalidProjectId": "Invalid project ID",
+    "invalidUserId": "Invalid user ID",
+    "invalidProjectIdFormat": "Invalid projectId format",
+    "invalidColor": "Invalid color",
+    "invalidTextColor": "Invalid text color",
+    "invalidStartDateFormat": "startDate must be YYYY-MM-DD"
+  },
+
+  "errorBoundary": {
+    "message": "Something went wrong",
+    "refresh": "Try again"
+  },
+
+  "alerts": {
+    "opened": "Alert opened",
+    "ok": "OK",
+    "projectStillRunning": {
+      "title": "Project is still running.",
+      "message": "You can't leave the app. Please stop the project first."
+    }
+  },
+  "common": {
+    "cancel": "Cancel",
+    "delete": "Delete"
+  }
+}

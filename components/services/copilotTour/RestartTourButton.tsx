@@ -8,6 +8,7 @@ import React from "react";
 import { TouchableOpacity, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Entypo from "@expo/vector-icons/Entypo";
+import { useTranslation } from "react-i18next";
 
 import { resetTourFlags } from "./TourService";
 import { useAlertStore } from "../customAlert/alertStore";
@@ -22,6 +23,9 @@ interface RestartTourProps {
 ////////////////////////////////////////////////////////////////////////////////////////////
 
 const RestartTourButton: React.FC<RestartTourProps> = ({ userId }) => {
+  // useTranslation hook to access translations
+  const { t } = useTranslation();
+
   // initialize navigation
   const navigation = useNavigation<any>();
 
@@ -36,10 +40,7 @@ const RestartTourButton: React.FC<RestartTourProps> = ({ userId }) => {
       // feedback to the user
       useAlertStore
         .getState()
-        .showAlert(
-          "Restart Tour",
-          "The tour will be shown again when opening the respective screens.",
-        );
+        .showAlert(t("tour.restartAlertTitle"), t("tour.restartAlertMessage"));
 
       //  reload the screen
       navigation.navigate("Inside", {
@@ -54,7 +55,7 @@ const RestartTourButton: React.FC<RestartTourProps> = ({ userId }) => {
   return (
     <TouchableOpacity
       accessibilityRole="button"
-      accessibilityLabel="Restart the tour. The tour will be shown again on all pages."
+      accessibilityLabel={t("tour.restartAccessibility")}
       onPress={handleRestartTour}
     >
       <View
@@ -74,7 +75,7 @@ const RestartTourButton: React.FC<RestartTourProps> = ({ userId }) => {
             fontFamily: "MPLUSLatin_Regular",
           }}
         >
-          Restart Tour
+          {t("tour.restart")}
         </Text>
       </View>
     </TouchableOpacity>
