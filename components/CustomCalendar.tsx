@@ -11,7 +11,7 @@ import React, {
   useState,
   useEffect,
 } from "react";
-import { Calendar } from "react-native-calendars";
+import { Calendar, LocaleConfig } from "react-native-calendars";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
 import { useTranslation } from "react-i18next";
 
@@ -40,7 +40,9 @@ const CopilotTouchableView = walkthroughable(View);
 const CustomCalendar = forwardRef<CustomCalendarRef, CustomCalendarProps>(
   (_, ref) => {
     // useTranslation hook to access translations
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    // set the calendar locale directly during render so it updates immediately when the language changes
+    LocaleConfig.defaultLocale = i18n.language;
 
     // initialize the useCalendarStore and setCurrentMonth
     const { markedDates } = useCalendarStore();
@@ -92,7 +94,7 @@ const CustomCalendar = forwardRef<CustomCalendarRef, CustomCalendarProps>(
           >
             {/* Calendar - style and handle options*/}
             <Calendar
-              key={`${currentMonth}-${accessMode}`}
+              key={`${currentMonth}-${accessMode}-${i18n.language}`}
               current={currentMonth}
               markedDates={useCalendarStore((state) => state.markedDates)}
               onPress={(day: { dateString: any }) => {
