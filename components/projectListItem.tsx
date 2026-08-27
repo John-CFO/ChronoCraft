@@ -141,6 +141,8 @@ const ProjectListItem: React.FC<Props> = ({
                 style={{
                   color: accessMode ? "white" : "grey",
                   fontSize: 14,
+                  marginTop: 5,
+                  marginLeft: 10,
                 }}
               >
                 {dayjs(dateObj).format("DD.MM.YYYY")}
