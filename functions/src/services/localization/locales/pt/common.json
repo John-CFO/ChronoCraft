@@ -1,0 +1,99 @@
+{
+  "errors": {
+    "notLoggedIn": "Não está conectado",
+    "unknownAction": "Ação desconhecida",
+    "invalidAction": "Ação inválida",
+    "registrationNotAllowed": "O registro não é permitido",
+    "notAuthenticated": "Não autenticado",
+    "authenticationRequired": "Autenticação necessária",
+    "invalidEntry": "Entrada inválida. Verifique seus dados.",
+    "failedPrecondition": "A solicitação não pode ser processada devido a uma pré-condição.",
+    "permissionDenied": "Você não tem permissão para realizar esta ação.",
+    "unauthenticated": "Faça login novamente.",
+    "resourceNotFound": "O recurso solicitado não foi encontrado.",
+    "tooManyRequests": "Muitas solicitações. Tente novamente mais tarde.",
+    "internal": "Erro interno do servidor.",
+    "unavailable": "O serviço não está disponível. Tente novamente mais tarde.",
+    "unexpected": "Erro inesperado",
+    "invalidActionForLoginOrRegister": "Ação inválida para loginOrRegister",
+    "uidRequired": "UID é obrigatório",
+    "invalidTotpCode": "Código TOTP inválido",
+    "totpNotConfigured": "Configure seu TOTP."
+  },
+
+  "auth": {
+    "passwordResetInstructions": "Se existir uma conta para este e-mail, você receberá instruções para redefinir sua senha.",
+    "passwordResetSubject": "Redefina sua senha",
+    "passwordResetRequested": "Você solicitou a redefinição de senha.",
+    "passwordResetMostRecent": "Use o e-mail mais recente se você solicitou várias redefinições.",
+    "passwordResetOlderLinks": "Links mais antigos podem não funcionar mais.",
+    "passwordResetLink": "Clique aqui para redefinir sua senha",
+    "passwordResetIgnore": "Se você não solicitou isso, pode ignorar este e-mail."
+  },
+
+  "success": {
+    "totpDisabled": "TOTP desativado com sucesso"
+  },
+
+  "validation": {
+    "missingData": "Dados ausentes",
+    "missingUserId": "ID do usuário ausente",
+    "missingServiceId": "ID do serviço ausente",
+    "invalidToken": "Token inválido",
+    "missingRequestData": "Dados da solicitação ausentes.",
+    "missingAction": "Ação ausente",
+    "payloadMustBeObject": "O payload deve ser um objeto",
+    "serviceIdRequired": "Service ID deve ser uma string não vazia",
+    "projectIdRequired": "Project ID deve ser uma string não vazia",
+    "rateMustBeNumber": "A taxa deve ser um número",
+    "fieldRequired": "O campo '{{field}}' é obrigatório",
+    "fieldMustBeString": "O campo '{{field}}' deve ser uma string",
+    "fieldMinLength": "O campo '{{field}}' deve ter pelo menos {{minLength}} caracteres",
+    "fieldMaxLength": "O campo '{{field}}' deve ter no máximo {{maxLength}} caracteres",
+    "fieldMustBeEmail": "O campo '{{field}}' deve ser um endereço de e-mail válido",
+    "fieldMustBeNumber": "O campo '{{field}}' deve ser um número",
+    "fieldMinValue": "O campo '{{field}}' deve ser pelo menos {{min}}",
+    "fieldMaxValue": "O campo '{{field}}' deve ser no máximo {{max}}",
+    "invalidInput": "Entrada inválida",
+    "invalidUid": "UID inválido",
+    "invalidPayload": "Payload inválido.",
+    "unknownField": "Campo desconhecido: {{field}}",
+    "displayNameMustBeString": "displayName deve ser uma string",
+    "displayNameCannotBeEmpty": "displayName não pode estar vazio",
+    "displayNameTooLong": "displayName muito longo",
+    "personalNumberMustBeString": "personalNumber deve ser uma string",
+    "personalNumberCannotBeEmpty": "personalNumber não pode estar vazio",
+    "personalNumberTooLong": "personalNumber muito longo",
+    "nothingToUpdate": "Nada para atualizar.",
+    "projectDeletionInProgress": "Exclusão do projeto em andamento"
+  },
+
+  "push": {
+    "welcomeTitle": "Bem-vindo ao ChronoCraft! ⏱️",
+    "welcomeBody": "Estamos felizes que você se juntou a nós. Vamos rastrear o tempo como profissionais."
+  },
+
+  "permission": {
+    "cannotDeleteOthersData": "Não é possível excluir dados de outros usuários"
+  },
+
+  "totp": {
+    "userEmailNotAvailable": "O e-mail do usuário não está disponível",
+    "userNotFound": "Usuário não encontrado",
+    "alreadyEnabled": "TOTP já está ativado para este usuário.",
+    "scanQrCode": "Digitalize o código QR com seu aplicativo autenticador. Este segredo expira em 1 hora.",
+    "invalidToken": "Token TOTP inválido",
+    "cannotAccessEnrollment": "Não é possível acessar a sessão de registro",
+    "enrollmentSessionNotFound": "Sessão de registro não encontrada",
+    "enrollmentSessionExpired": "Sessão de registro expirada",
+    "enrollmentTooManyAttempts": "Muitas tentativas falhas. A sessão de registro foi redefinida.",
+    "invalidCode": "Código TOTP inválido",
+    "alreadyConfigured": "TOTP já está configurado",
+    "enabledSuccessfully": "TOTP ativado com sucesso!",
+    "tooManyAttempts": "Muitas tentativas. Tente novamente em {{seconds}} segundos.",
+    "verificationNotCompleted": "Verificação TOTP não concluída",
+    "configurationNotFound": "Configuração TOTP não encontrada",
+    "alreadyUsed": "TOTP já utilizado",
+    "verificationSuccessful": "Verificação TOTP bem-sucedida"
+  }
+}
