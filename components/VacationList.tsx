@@ -122,6 +122,7 @@ const VacationList = () => {
 
         mapped.sort((a, b) => {
           if (!a.markedDates.length || !b.markedDates.length) return 0;
+
           return (
             new Date(a.markedDates[0]).getTime() -
             new Date(b.markedDates[0]).getTime()
@@ -143,6 +144,7 @@ const VacationList = () => {
 
     return () => unsubscribe();
   }, [user, serviceId]);
+
   // function to delete vacation dates
   const handleDeleteDate = async (vacationId: string) => {
     if (!serviceId) {
@@ -266,7 +268,6 @@ const VacationList = () => {
           <View
             style={{
               width: "auto",
-              height: 60,
               marginTop: 20,
               justifyContent: "center",
               alignItems: "center",
