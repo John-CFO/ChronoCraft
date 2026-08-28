@@ -7,18 +7,17 @@
 //////////////////////////////////////////////////////////////////////////////
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useWindowDimensions, PixelRatio, Platform } from "react-native";
+import { useWindowDimensions, PixelRatio } from "react-native";
 import { useEffect, useState } from "react";
 
 //////////////////////////////////////////////////////////////////////////////
 
 export const useCopilotOffset = () => {
   const { top } = useSafeAreaInsets();
-  const { height, width } = useWindowDimensions();
+  const { height } = useWindowDimensions();
   const [offset, setOffset] = useState(25); // default offset
 
   useEffect(() => {
-    const scale = PixelRatio.get();
     let calculatedOffset = Math.min(height * 0.045, 60) + top;
 
     if (height < 700) {

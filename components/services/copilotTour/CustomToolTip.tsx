@@ -27,7 +27,6 @@ const CustomTooltip = () => {
   const accessMode = useAccessibilityStore(
     (state) => state.accessibilityEnabled,
   );
-  // console.log("accessMode in LoginScreen:", accessMode);
 
   // functions to navigate to the next or previous step
   const handleStop = () => {
@@ -54,19 +53,6 @@ const CustomTooltip = () => {
         width: 250,
       }}
     >
-      {/* Tooltip Title */}
-      <Text
-        accessibilityRole="header"
-        style={{
-          fontWeight: "bold",
-          color: "#FFF",
-          fontSize: accessMode ? 28 : 18,
-          marginBottom: 8,
-        }}
-      >
-        {currentStep?.name}
-      </Text>
-
       {/* Tooltip Text */}
       <Text
         style={{
