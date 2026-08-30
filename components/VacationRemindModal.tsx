@@ -415,7 +415,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
                       adjustsFontSizeToFit
                       minimumFontScale={0.8}
                       style={{
-                        marginBottom: 5,
+                        transform: [{ translateY: -3 }],
                         fontFamily: "MPLUSLatin_Bold",
                         fontSize: 22,
                         color: "lightgray",
@@ -427,7 +427,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
                     </Text>
                     <Text
                       style={{
-                        marginBottom: 5,
+                        transform: [{ translateY: -3 }],
                         fontFamily: "MPLUSLatin_Bold",
                         fontSize: 22,
                         color: "lightgray",
@@ -442,7 +442,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
                   // regular save button
                   <Text
                     style={{
-                      marginBottom: 5,
+                      transform: [{ translateY: -3 }],
                       fontFamily: "MPLUSLatin_Bold",
                       fontSize: 22,
                       color: "white",

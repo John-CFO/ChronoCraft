@@ -448,6 +448,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                             fontSize: 22,
                             color: "white",
                             textAlign: "right",
+                            transform: [{ translateY: -3 }],
                             flexShrink: 1,
                           }}
                         >
@@ -457,6 +458,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                         <Text
                           style={{
                             marginLeft: 2,
+                            transform: [{ translateY: -3 }],
                             fontFamily: "MPLUSLatin_Bold",
                             fontSize: 18,
                             color: "white",
@@ -471,7 +473,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                     ) : (
                       <Text
                         style={{
-                          marginBottom: 5,
+                          transform: [{ translateY: -3 }],
                           fontFamily: "MPLUSLatin_Bold",
                           fontSize: 22,
                           color: "white",

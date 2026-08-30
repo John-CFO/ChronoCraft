@@ -238,6 +238,7 @@ const MfaScreen: React.FC = () => {
                 alignItems: "center",
                 paddingHorizontal: 12,
                 overflow: "hidden",
+                transform: [{ translateY: -3 }],
               }}
             >
               <Text
@@ -247,6 +248,7 @@ const MfaScreen: React.FC = () => {
                   color: "white",
                   textAlign: "center",
                   flexShrink: 0,
+                  transform: [{ translateY: -3 }],
                 }}
               >
                 {t("common:mfa.verifying")}
@@ -272,6 +274,7 @@ const MfaScreen: React.FC = () => {
                 fontSize: accessMode ? 24 : 22,
                 color: "white",
                 textAlign: "center",
+                transform: [{ translateY: -3 }],
               }}
             >
               {t("common:mfa.confirm")}
@@ -296,6 +299,9 @@ const MfaScreen: React.FC = () => {
             color: accessMode ? "white" : "#999",
             fontSize: accessMode ? 20 : 16,
             fontFamily: "MPLUSLatin_Regular",
+            marginBottom: 6,
+            textAlign: "center",
+            transform: [{ translateY: -6 }],
           }}
         >
           {t("common:mfa.cancelAndReturnText")}
@@ -309,6 +315,7 @@ const MfaScreen: React.FC = () => {
             color: accessMode ? "white" : "#888",
             fontSize: accessMode ? 18 : 14,
             textAlign: "center",
+
             fontFamily: accessMode
               ? "MPLUSLatin_Regular"
               : "MPLUSLatin_ExtraLight",

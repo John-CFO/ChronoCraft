@@ -881,10 +881,10 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
                         adjustsFontSizeToFit
                         minimumFontScale={0.8}
                         style={{
-                          marginBottom: 5,
+                          transform: [{ translateY: -3 }],
                           fontFamily: "MPLUSLatin_Bold",
                           fontSize: 22,
-                          color: "lightgray",
+                          color: "white",
                           flexShrink: 1,
                           textAlign: "right",
                         }}
@@ -894,10 +894,10 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
                       <Text
                         style={{
-                          marginBottom: 5,
+                          transform: [{ translateY: -3 }],
                           fontFamily: "MPLUSLatin_Bold",
                           fontSize: 22,
-                          color: "lightgray",
+                          color: "white",
                           width: 40,
                           textAlign: "left",
                         }}
@@ -909,7 +909,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
                     // regular reset button
                     <Text
                       style={{
-                        marginBottom: 5,
+                        transform: [{ translateY: -3 }],
                         fontFamily: "MPLUSLatin_Bold",
                         fontSize: 22,
                         color: "white",

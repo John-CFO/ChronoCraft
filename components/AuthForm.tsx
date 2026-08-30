@@ -189,7 +189,8 @@ const AuthForm: React.FC<AuthFormProps> = ({
                   fontFamily: "MPLUSLatin_Bold",
                   fontSize: 22,
                   color: "white",
-                  marginBottom: 5,
+                  textAlign: "center",
+                  transform: [{ translateY: -3 }],
                 }}
               >
                 {t("auth.login")}
@@ -229,7 +230,8 @@ const AuthForm: React.FC<AuthFormProps> = ({
                   fontFamily: "MPLUSLatin_Bold",
                   fontSize: 22,
                   color: "white",
-                  marginBottom: 5,
+                  textAlign: "center",
+                  transform: [{ translateY: -3 }],
                 }}
               >
                 {t("auth.register")}

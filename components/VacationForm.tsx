@@ -421,6 +421,8 @@ const VacationForm = () => {
                     style={{
                       color: "white",
                       fontSize: 22,
+                      textAlign: "center",
+                      transform: [{ translateY: -3 }],
                       fontFamily: "MPLUSLatin_Bold",
                     }}
                   >
@@ -465,6 +467,8 @@ const VacationForm = () => {
                     style={{
                       color: "white",
                       fontSize: 22,
+                      textAlign: "center",
+                      transform: [{ translateY: -3 }],
                       fontFamily: "MPLUSLatin_Bold",
                     }}
                   >
