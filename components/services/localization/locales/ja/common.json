@@ -310,7 +310,7 @@
     "inputAccessibilityLabel": "予定労働時間を入力してください。例：8",
     "inputAccessibilityHint": "今日働く予定の時間数を入力してください",
     "inputPlaceholder": "（例：8）",
-    "saving": "保存中...",
+    "saving": "保存中",
     "saveExpectedWorkHours": "予定労働時間を保存",
     "saveAccessibilityHint": "入力された毎日の労働時間を保存します",
     "save": "保存",
@@ -405,7 +405,7 @@
     "startHint": "押して作業時間の追跡を開始します",
     "stopHint": "押して作業時間の追跡を停止します",
     "reset": "リセット",
-    "resetting": "リセット中...",
+    "resetting": "リセット中",
     "resetHint": "押してプロジェクトをリセットします",
     "attention": "注意！",
     "resetStopFirst": "リセットする前に、最初にプロジェクトを停止してください。",
@@ -473,10 +473,10 @@
       "accessibilityLabel": "収入計算機。総収入 {{totalEarnings}} ドル。時給は {{hourlyRate}} です。",
       "notSet": "まだ設定されていません",
       "totalEarnings": "総収入 {{amount}} ドル",
-      "hourlyRateInput": "時給を入力してください",
+      "hourlyRateInput": "時給",
       "savingHourlyRate": "時給を保存中",
       "saveHourlyRate": "時給を保存",
-      "saving": "保存中...",
+      "saving": "保存中",
       "save": "保存",
       "currentHourlyRate": "現在の時給は {{hourlyRate}} ドルです",
       "noHourlyRate": "時給が設定されていません",
@@ -504,7 +504,7 @@
     "saveAccessibility": "最大労働時間を保存",
     "savingAccessibility": "最大労働時間を保存中",
     "save": "保存",
-    "saving": "保存中...",
+    "saving": "保存中",
     "progress": {
       "tracker": "期限トラッカー。最大労働時間の{{percent}}パーセントを使用しました。期限は{{hours}}時間です。",
       "noDeadline": "期限トラッカー。期限が設定されていません。",
@@ -591,7 +591,7 @@
     "modalOpened": "休暇リマインダーモーダルが開かれました。リマインダー期間を選択して保存を押してください。",
     "title": "休暇リマインダー",
     "save": "保存",
-    "saving": "保存中...",
+    "saving": "保存中",
     "saveHint": "リマインダーを保存してこのビューを閉じます",
     "pleaseWait": "お待ちください",
     "navigationTip": "スワイプして閉じる",
@@ -772,6 +772,7 @@
 
   "common": {
     "cancel": "キャンセル",
-    "delete": "削除"
+    "delete": "削除",
+    "reset": "削除"
   }
 }

@@ -38,6 +38,7 @@ import { computeEarnings } from "./utils/earnings";
 import { useStore, ProjectState } from "./TimeTrackingState";
 import { useService } from "../components/contexts/ServiceContext";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
+import { useDotAnimation } from "../components/DotAnimation";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import { useValidatedStore } from "../validation/useValidatedStore";
 import { logError } from "../lib/loggerClient";
@@ -114,6 +115,12 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
   const accessMode = useAccessibilityStore(
     (state) => state.accessibilityEnabled,
   );
+
+  // state to handle the dot animation
+  const [loading, setLoading] = useState(true);
+
+  // define the dot animation with a delay
+  const dots = useDotAnimation(loading, 700);
 
   useEffect(() => {
     let prev = useStore.getState().projects[projectId];
@@ -848,24 +855,71 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
                 end={{ x: 1, y: 1 }}
                 style={{
                   height: 45,
-                  paddingVertical: 6,
                   justifyContent: "center",
                   alignItems: "center",
                 }}
               >
-                <Text
+                <View
                   style={{
-                    fontFamily: "MPLUSLatin_Bold",
-                    fontSize: 22,
-                    color: resetting ? "lightgray" : "white",
-
-                    paddingRight: 10,
+                    height: 50,
+                    width: 200,
+                    justifyContent: "center",
+                    alignItems: "center",
                   }}
                 >
-                  {resetting
-                    ? t("timeTracker.resetting")
-                    : t("timeTracker.reset")}
-                </Text>
+                  {resetting ? (
+                    // animated reset button
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Text
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                        minimumFontScale={0.8}
+                        style={{
+                          marginBottom: 5,
+                          fontFamily: "MPLUSLatin_Bold",
+                          fontSize: 22,
+                          color: "lightgray",
+                          flexShrink: 1,
+                          textAlign: "right",
+                        }}
+                      >
+                        {t("timeTracker.resetting")}
+                      </Text>
+
+                      <Text
+                        style={{
+                          marginBottom: 5,
+                          fontFamily: "MPLUSLatin_Bold",
+                          fontSize: 22,
+                          color: "lightgray",
+                          width: 40,
+                          textAlign: "left",
+                        }}
+                      >
+                        {dots}
+                      </Text>
+                    </View>
+                  ) : (
+                    // regular reset button
+                    <Text
+                      style={{
+                        marginBottom: 5,
+                        fontFamily: "MPLUSLatin_Bold",
+                        fontSize: 22,
+                        color: "white",
+                        textAlign: "center",
+                      }}
+                    >
+                      {t("timeTracker.reset")}
+                    </Text>
+                  )}
+                </View>
               </LinearGradient>
             </TouchableOpacity>
           </View>

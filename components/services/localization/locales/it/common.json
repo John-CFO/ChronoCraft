@@ -310,7 +310,7 @@
     "inputAccessibilityLabel": "Inserisci le ore di lavoro previste. Esempio: 8",
     "inputAccessibilityHint": "Inserisci il numero di ore che prevedi di lavorare oggi",
     "inputPlaceholder": "(es. 8)",
-    "saving": "Salvataggio...",
+    "saving": "Salvataggio",
     "saveExpectedWorkHours": "Salva ore di lavoro previste",
     "saveAccessibilityHint": "Salva le ore di lavoro giornaliere inserite",
     "save": "Salva",
@@ -396,7 +396,7 @@
     "startHint": "Premi per avviare il tracciamento del tuo tempo di lavoro",
     "stopHint": "Premi per fermare il tracciamento del tuo tempo di lavoro",
     "reset": "Reimposta",
-    "resetting": "Reimpostazione...",
+    "resetting": "Reimpostazione",
     "resetHint": "Premi per reimpostare il progetto",
     "attention": "Attenzione!",
     "resetStopFirst": "Ferma prima il progetto prima di reimpostarlo.",
@@ -467,7 +467,7 @@
       "hourlyRateInput": "Tariffa oraria",
       "savingHourlyRate": "Salvataggio della tua tariffa oraria",
       "saveHourlyRate": "Salva tariffa oraria",
-      "saving": "Salvataggio...",
+      "saving": "Salvataggio",
       "save": "Salva",
       "currentHourlyRate": "La tua tariffa oraria è {{hourlyRate}} dollari",
       "noHourlyRate": "Nessuna tariffa oraria impostata",
@@ -495,7 +495,7 @@
     "saveAccessibility": "Salva ore di lavoro massime",
     "savingAccessibility": "Salvataggio delle tue ore di lavoro massime",
     "save": "Salva",
-    "saving": "Salvataggio...",
+    "saving": "Salvataggio",
     "progress": {
       "tracker": "Tracciamento scadenza. {{percent}} percento del tempo di lavoro massimo utilizzato. La tua scadenza è di {{hours}} ore.",
       "noDeadline": "Tracciamento scadenza. Nessuna scadenza impostata.",
@@ -582,7 +582,7 @@
     "modalOpened": "Modale promemoria ferie aperto. Seleziona una durata per il promemoria e premi salva.",
     "title": "Promemoria ferie",
     "save": "Salva",
-    "saving": "Salvataggio...",
+    "saving": "Salvataggio",
     "saveHint": "Salva il promemoria e chiude questa vista",
     "pleaseWait": "Attendi",
     "navigationTip": "Scorri per chiudere",
@@ -772,6 +772,7 @@
 
   "common": {
     "cancel": "Annulla",
-    "delete": "Elimina"
+    "delete": "Elimina",
+    "reset": "Elimina"
   }
 }

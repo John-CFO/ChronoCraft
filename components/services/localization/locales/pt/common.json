@@ -310,7 +310,7 @@
     "inputAccessibilityLabel": "Insira as horas de trabalho previstas. Exemplo: 8",
     "inputAccessibilityHint": "Insira o número de horas que você planeja trabalhar hoje",
     "inputPlaceholder": "(ex: 8)",
-    "saving": "Salvando...",
+    "saving": "Salvando",
     "saveExpectedWorkHours": "Salvar horas de trabalho previstas",
     "saveAccessibilityHint": "Salva as horas de trabalho diárias inseridas",
     "save": "Salvar",
@@ -405,7 +405,7 @@
     "startHint": "Pressione para iniciar o rastreamento do seu tempo de trabalho",
     "stopHint": "Pressione para parar o rastreamento do seu tempo de trabalho",
     "reset": "Redefinir",
-    "resetting": "Redefinindo...",
+    "resetting": "Redefinindo",
     "resetHint": "Pressione para redefinir o projeto",
     "attention": "Atenção!",
     "resetStopFirst": "Por favor, pare primeiro o projeto antes de redefini-lo.",
@@ -473,10 +473,10 @@
       "accessibilityLabel": "Calculadora de ganhos. Ganhos totais {{totalEarnings}} dólares. Sua taxa horária é {{hourlyRate}}.",
       "notSet": "ainda não definida",
       "totalEarnings": "Ganhos totais {{amount}} dólares",
-      "hourlyRateInput": "Insira sua taxa horária",
+      "hourlyRateInput": "Valor por hora",
       "savingHourlyRate": "Salvando sua taxa horária",
       "saveHourlyRate": "Salvar taxa horária",
-      "saving": "Salvando...",
+      "saving": "Salvando",
       "save": "Salvar",
       "currentHourlyRate": "Sua taxa horária é {{hourlyRate}} dólares",
       "noHourlyRate": "Nenhuma taxa horária definida",
@@ -504,7 +504,7 @@
     "saveAccessibility": "Salvar horas de trabalho máximas",
     "savingAccessibility": "Salvando suas horas de trabalho máximas",
     "save": "Salvar",
-    "saving": "Salvando...",
+    "saving": "Salvando",
     "progress": {
       "tracker": "Rastreador de prazo. {{percent}} por cento do tempo de trabalho máximo utilizado. Seu prazo é de {{hours}} horas.",
       "noDeadline": "Rastreador de prazo. Nenhum prazo definido.",
@@ -591,7 +591,7 @@
     "modalOpened": "Modal de lembrete de férias aberto. Por favor, selecione uma duração de lembrete e pressione salvar.",
     "title": "Lembrete de férias",
     "save": "Salvar",
-    "saving": "Salvando...",
+    "saving": "Salvando",
     "saveHint": "Salva o lembrete e fecha esta visualização",
     "pleaseWait": "Por favor, aguarde",
     "navigationTip": "Deslize para fechar",
@@ -772,6 +772,7 @@
 
   "common": {
     "cancel": "Cancelar",
-    "delete": "Excluir"
+    "delete": "Excluir",
+    "reset": "Apagar"
   }
 }

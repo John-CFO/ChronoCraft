@@ -24,6 +24,7 @@ import dayjs from "../dayjsConfig";
 import WorkHoursState from "../components/WorkHoursState";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { sanitizeHours } from "./InputSanitizers";
+import { useDotAnimation } from "../components/DotAnimation";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import { logError } from "../lib/loggerClient";
 
@@ -35,6 +36,12 @@ const CopilotWalktroughView = walkthroughable(View);
 const WorkHoursInput = () => {
   // useTranslation hook to access translations
   const { t } = useTranslation();
+
+  // state to handle the dot animation
+  const [loading, setLoading] = useState(true);
+
+  // define the dot animation with a delay
+  const dots = useDotAnimation(loading, 700);
 
   // state to store the expected hours
   const [expectedHours, setExpectedHours] = useState("");
@@ -420,7 +427,7 @@ const WorkHoursInput = () => {
             accessibilityHint={t("workHoursInput.saveAccessibilityHint")}
             onPress={handleSaveMinHours}
             style={{
-              width: screenWidth * 0.7, // use 70% of the screen width
+              width: screenWidth * 0.7,
               maxWidth: 400,
               borderRadius: 12,
               overflow: "hidden",
@@ -435,21 +442,71 @@ const WorkHoursInput = () => {
               end={{ x: 1, y: 1 }}
               style={{
                 height: 45,
-                paddingVertical: 6,
                 justifyContent: "center",
                 alignItems: "center",
               }}
             >
-              <Text
+              <View
                 style={{
-                  fontFamily: "MPLUSLatin_Bold",
-                  fontSize: 22,
-                  color: saving ? "lightgray" : "white",
-                  paddingRight: 10,
+                  height: 50,
+                  width: 200,
+                  justifyContent: "center",
+                  alignItems: "center",
                 }}
               >
-                {saving ? t("workHoursInput.saving") : t("workHoursInput.save")}
-              </Text>
+                {saving ? (
+                  // animated saving dots
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text
+                      // adjust font rendering (if a translation is too long)
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.8}
+                      style={{
+                        marginBottom: 5,
+                        fontFamily: "MPLUSLatin_Bold",
+                        fontSize: 22,
+                        color: "lightgray",
+                        width: 120,
+                        textAlign: "right",
+                      }}
+                    >
+                      {t("workHoursInput.saving")}
+                    </Text>
+                    <Text
+                      style={{
+                        marginBottom: 5,
+                        fontFamily: "MPLUSLatin_Bold",
+                        fontSize: 22,
+                        color: "lightgray",
+                        width: 40,
+                        textAlign: "left",
+                      }}
+                    >
+                      {dots}
+                    </Text>
+                  </View>
+                ) : (
+                  // regular save button
+                  <Text
+                    style={{
+                      marginBottom: 5,
+                      fontFamily: "MPLUSLatin_Bold",
+                      fontSize: 22,
+                      color: "white",
+                      textAlign: "center",
+                    }}
+                  >
+                    {t("workHoursInput.save")}
+                  </Text>
+                )}
+              </View>
             </LinearGradient>
           </TouchableOpacity>
           {/* Hourly Rate info container */}

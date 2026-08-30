@@ -24,6 +24,7 @@ import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useService } from "../components/contexts/ServiceContext";
 import CheckmarkAnimation from "./Checkmark";
 import { useAlertStore } from "./services/customAlert/alertStore";
+import { useDotAnimation } from "../components/DotAnimation";
 import { useAccessibilityStore } from "./services/accessibility/accessibilityStore";
 import { FirestoreVacationSchema } from "../validation/vacationSchemas";
 import { logError, logWarn } from "../lib/loggerClient";
@@ -46,6 +47,12 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
 }) => {
   // useTranslation hook to access translations
   const { t } = useTranslation();
+
+  // state to handle the dot animation
+  const [loading, setLoading] = useState(true);
+
+  // define the dot animation with a delay
+  const dots = useDotAnimation(loading, 700);
 
   // hook to announce accessibility
   useEffect(() => {
@@ -309,6 +316,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
           }}
         >
           {/* header*/}
+
           <View
             accessibilityRole="header"
             accessibilityLabel={t("vacationReminder.title")}
@@ -342,6 +350,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
             selectedOption={selectedOption}
             onSelect={handleSelectOption}
           />
+
           {/* Save Button */}
           <TouchableOpacity
             accessibilityRole="button"
@@ -354,19 +363,7 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
                 : t("vacationReminder.saveHint")
             }
             accessibilityState={{ disabled: saving }}
-            style={{
-              width: screenWidth * 0.7, // use 70% of the screen width
-              maxWidth: 400,
-              borderRadius: 12,
-              overflow: "hidden",
-              borderWidth: 2,
-              borderColor: saving ? "lightgray" : "aqua",
-              marginBottom: 30,
-            }}
             onPress={() => {
-              {
-                /* condition to save the reminder */
-              }
               if (vacationId) {
                 handleSaveReminder(
                   vacationId,
@@ -375,30 +372,87 @@ const VacationRemindModal: React.FC<VacationRemindModalProps> = ({
                 );
               }
             }}
+            style={{
+              width: screenWidth * 0.7,
+              maxWidth: 400,
+              borderRadius: 12,
+              overflow: "hidden",
+              borderWidth: 2,
+              borderColor: saving ? "lightgray" : "aqua",
+              marginBottom: 30,
+            }}
           >
             <LinearGradient
               colors={["#00f7f7", "#005757"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={{
-                paddingVertical: 6,
+                height: 45,
                 justifyContent: "center",
                 alignItems: "center",
               }}
             >
-              <Text
+              <View
                 style={{
-                  fontFamily: "MPLUSLatin_Bold",
-                  fontSize: 22,
-                  color: saving ? "lightgray" : "#ffffff",
-                  marginBottom: 5,
-                  paddingRight: 10,
+                  height: 50,
+                  width: 200,
+                  justifyContent: "center",
+                  alignItems: "center",
                 }}
               >
-                {saving
-                  ? t("vacationReminder.saving")
-                  : t("vacationReminder.save")}
-              </Text>
+                {saving ? (
+                  // animated saving dots
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text
+                      // adjust font rendering (if a translation is too long)
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.8}
+                      style={{
+                        marginBottom: 5,
+                        fontFamily: "MPLUSLatin_Bold",
+                        fontSize: 22,
+                        color: "lightgray",
+                        width: 120,
+                        textAlign: "right",
+                      }}
+                    >
+                      {t("vacationReminder.saving")}
+                    </Text>
+                    <Text
+                      style={{
+                        marginBottom: 5,
+                        fontFamily: "MPLUSLatin_Bold",
+                        fontSize: 22,
+                        color: "lightgray",
+                        width: 40,
+                        textAlign: "left",
+                      }}
+                    >
+                      {dots}
+                    </Text>
+                  </View>
+                ) : (
+                  // regular save button
+                  <Text
+                    style={{
+                      marginBottom: 5,
+                      fontFamily: "MPLUSLatin_Bold",
+                      fontSize: 22,
+                      color: "white",
+                      textAlign: "center",
+                    }}
+                  >
+                    {t("vacationReminder.save")}
+                  </Text>
+                )}
+              </View>
             </LinearGradient>
           </TouchableOpacity>
 

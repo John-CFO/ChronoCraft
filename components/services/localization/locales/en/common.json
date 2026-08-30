@@ -310,7 +310,7 @@
     "inputAccessibilityLabel": "Input expected working hours. Example: 8",
     "inputAccessibilityHint": "Enter the number of hours you plan to work today",
     "inputPlaceholder": "(e.g. 8)",
-    "saving": "Saving...",
+    "saving": "Saving",
     "saveExpectedWorkHours": "Save expected work hours",
     "saveAccessibilityHint": "Saves the entered daily work hours",
     "save": "Save",
@@ -405,7 +405,7 @@
     "startHint": "Press to start tracking your working time",
     "stopHint": "Press to stop tracking your working time",
     "reset": "Reset",
-    "resetting": "Resetting...",
+    "resetting": "Resetting",
     "resetHint": "Press to reset the project",
     "attention": "Attention!",
     "resetStopFirst": "Please stop the project first before resetting it.",
@@ -473,10 +473,10 @@
       "accessibilityLabel": "Earnings calculator. Total earnings {{totalEarnings}} dollars. Your hourly rate is {{hourlyRate}}.",
       "notSet": "not set yet",
       "totalEarnings": "Total earnings {{amount}} dollars",
-      "hourlyRateInput": "Enter your hourly rate",
+      "hourlyRateInput": "Hourly rate",
       "savingHourlyRate": "Saving your hourly rate",
       "saveHourlyRate": "Save hourly rate",
-      "saving": "Saving...",
+      "saving": "Saving",
       "save": "Save",
       "currentHourlyRate": "Your hourly rate is {{hourlyRate}} dollars",
       "noHourlyRate": "No hourly rate set",
@@ -504,7 +504,7 @@
     "saveAccessibility": "Save maximum work hours",
     "savingAccessibility": "Saving your maximum work hours",
     "save": "Save",
-    "saving": "Saving...",
+    "saving": "Saving",
     "progress": {
       "tracker": "Deadline tracker. {{percent}} percent of your maximum work time used. Your deadline is {{hours}} hours.",
       "noDeadline": "Deadline tracker. No deadline set.",
@@ -591,7 +591,7 @@
     "modalOpened": "Vacation Reminder modal opened. Please select a reminder duration and press save.",
     "title": "Vacation Reminder",
     "save": "Save",
-    "saving": "Saving...",
+    "saving": "Saving",
     "saveHint": "Saves the reminder and closes this view",
     "pleaseWait": "Please wait",
     "navigationTip": "Swipe to close",
@@ -771,6 +771,7 @@
   },
   "common": {
     "cancel": "Cancel",
-    "delete": "Delete"
+    "delete": "Delete",
+    "reset": "Reset"
   }
 }

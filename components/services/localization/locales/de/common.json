@@ -312,7 +312,7 @@
     "inputAccessibilityLabel": "Sollarbeitszeit eingeben. Beispiel: 8",
     "inputAccessibilityHint": "Geben Sie die Anzahl der Stunden ein, die Sie heute arbeiten möchten.",
     "inputPlaceholder": "(z. B. 8)",
-    "saving": "Speichern...",
+    "saving": "Speichern",
     "saveExpectedWorkHours": "Sollarbeitszeit speichern",
     "saveAccessibilityHint": "Speichert die eingegebene tägliche Arbeitszeit.",
     "save": "Speichern",
@@ -406,8 +406,8 @@
     "stopTracking": "Zeiterfassung stoppen",
     "startHint": "Drücken, um die Erfassung deiner Arbeitszeit zu starten",
     "stopHint": "Drücken, um die Erfassung deiner Arbeitszeit zu stoppen",
-    "reset": "Zurücksetzen",
-    "resetting": "Wird zurückgesetzt...",
+    "reset": "Daten löschen",
+    "resetting": "Wird gelöscht",
     "resetHint": "Drücken, um das Projekt zurückzusetzen",
     "attention": "Achtung!",
     "resetStopFirst": "Bitte stoppe das Projekt zuerst, bevor du es zurücksetzt.",
@@ -478,7 +478,7 @@
       "hourlyRateInput": "Stundenlohn eingeben",
       "savingHourlyRate": "Stundenlohn wird gespeichert",
       "saveHourlyRate": "Stundenlohn speichern",
-      "saving": "Speichern...",
+      "saving": "Speichern",
       "save": "Speichern",
       "currentHourlyRate": "Dein Stundenlohn beträgt {{hourlyRate}} Dollar",
       "noHourlyRate": "Kein Stundenlohn festgelegt",
@@ -506,7 +506,7 @@
     "saveAccessibility": "Maximale Arbeitszeit speichern",
     "savingAccessibility": "Maximale Arbeitszeit wird gespeichert",
     "save": "Speichern",
-    "saving": "Speichern...",
+    "saving": "Speichern",
     "progress": {
       "tracker": "Deadline-Tracker. {{percent}} Prozent deiner maximalen Arbeitszeit wurden verwendet. Deine Deadline beträgt {{hours}} Stunden.",
       "noDeadline": "Deadline-Tracker. Keine Deadline festgelegt.",
@@ -593,7 +593,7 @@
     "modalOpened": "Das Urlaubserinnerungsfenster wurde geöffnet. Bitte wähle eine Erinnerungsdauer und drücke auf Speichern.",
     "title": "Urlaubserinnerung",
     "save": "Speichern",
-    "saving": "Speichern...",
+    "saving": "Speichern",
     "saveHint": "Speichert die Erinnerung und schließt diese Ansicht",
     "pleaseWait": "Bitte warten",
     "navigationTip": "Wischen zum Schließen",
@@ -772,6 +772,7 @@
   },
   "common": {
     "cancel": "Abbrechen",
-    "delete": "Löschen"
+    "delete": "Löschen",
+    "reset": "Löschen"
   }
 }
