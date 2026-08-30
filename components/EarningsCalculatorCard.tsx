@@ -25,6 +25,7 @@ import { updateProjectData } from "../components/FirestoreService";
 import { useService } from "../components/contexts/ServiceContext";
 import { useStore } from "./TimeTrackingState";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
+import { useDotAnimation } from "../components/DotAnimation";
 import { sanitizeRateInput } from "./InputSanitizers";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import { HourlyRateSchema } from "../validation/earningsSchemas";
@@ -59,6 +60,12 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
   // navigation
   const navigation = useNavigation();
   const { serviceId } = useService();
+
+  // state to handle the dot animation
+  const [loading, setLoading] = useState(true);
+
+  // define the dot animation with a delay
+  const dots = useDotAnimation(loading, 700);
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
@@ -338,7 +345,7 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
               }
               onPress={handleSave}
               style={{
-                width: screenWidth * 0.7, // use 70% of the screen width
+                width: screenWidth * 0.7,
                 maxWidth: 400,
                 borderRadius: 12,
                 overflow: "hidden",
@@ -353,23 +360,71 @@ const EarningsCalculatorCard: React.FC<EarningsCalculatorCardProps> = ({
                 end={{ x: 1, y: 1 }}
                 style={{
                   height: 45,
-                  paddingVertical: 6,
                   justifyContent: "center",
                   alignItems: "center",
                 }}
               >
-                <Text
+                <View
                   style={{
-                    fontFamily: "MPLUSLatin_Bold",
-                    fontSize: 22,
-                    color: saving ? "lightgray" : "white",
-                    paddingRight: 10,
+                    height: 50,
+                    width: 200,
+                    justifyContent: "center",
+                    alignItems: "center",
                   }}
                 >
-                  {saving
-                    ? t("details.earningsCalculator.saving")
-                    : t("details.earningsCalculator.save")}
-                </Text>
+                  {saving ? (
+                    // animated saving dots
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Text
+                        // adjust font rendering (if a translation is too long)
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                        minimumFontScale={0.8}
+                        style={{
+                          transform: [{ translateY: -3 }],
+                          fontFamily: "MPLUSLatin_Bold",
+                          fontSize: 22,
+                          color: "lightgray",
+                          width: 120,
+                          textAlign: "right",
+                        }}
+                      >
+                        {t("details.earningsCalculator.saving")}
+                      </Text>
+                      <Text
+                        style={{
+                          transform: [{ translateY: -3 }],
+                          fontFamily: "MPLUSLatin_Bold",
+                          fontSize: 22,
+                          color: "lightgray",
+                          width: 40,
+                          textAlign: "left",
+                        }}
+                      >
+                        {dots}
+                      </Text>
+                    </View>
+                  ) : (
+                    // regular save button
+                    <Text
+                      style={{
+                        transform: [{ translateY: -3 }],
+                        fontFamily: "MPLUSLatin_Bold",
+                        fontSize: 22,
+                        color: "white",
+                        textAlign: "center",
+                      }}
+                    >
+                      {t("details.earningsCalculator.save")}
+                    </Text>
+                  )}
+                </View>
               </LinearGradient>
             </TouchableOpacity>
             {/* Hourly Rate info container */}

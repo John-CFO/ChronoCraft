@@ -448,6 +448,7 @@ const MultiFactorModal: React.FC<Props> = ({
                             fontSize: 22,
                             color: "white",
                             textAlign: "center",
+                            transform: [{ translateY: -3 }],
                             flexShrink: 1,
                           }}
                         >
@@ -461,6 +462,7 @@ const MultiFactorModal: React.FC<Props> = ({
                             fontSize: 18,
                             color: "white",
                             textAlign: "left",
+                            transform: [{ translateY: -3 }],
                             minWidth: 36,
                             flexShrink: 0,
                           }}
@@ -471,11 +473,11 @@ const MultiFactorModal: React.FC<Props> = ({
                     ) : (
                       <Text
                         style={{
-                          marginBottom: 5,
                           fontFamily: "MPLUSLatin_Bold",
                           fontSize: 22,
                           color: "white",
                           textAlign: "center",
+                          transform: [{ translateY: -3 }],
                         }}
                       >
                         {t("mfa.disable")}
@@ -515,11 +517,11 @@ const MultiFactorModal: React.FC<Props> = ({
                 >
                   <Text
                     style={{
-                      marginBottom: 5,
                       fontFamily: "MPLUSLatin_Bold",
                       fontSize: 22,
                       color: "black",
                       textAlign: "center",
+                      transform: [{ translateY: -3 }],
                     }}
                   >
                     {t("mfa.close")}
@@ -604,6 +606,7 @@ const MultiFactorModal: React.FC<Props> = ({
                                 fontSize: 22,
                                 color: "white",
                                 textAlign: "center",
+                                transform: [{ translateY: -3 }],
                                 flexShrink: 0,
                               }}
                             >
@@ -617,6 +620,7 @@ const MultiFactorModal: React.FC<Props> = ({
                                 fontSize: 18,
                                 color: "white",
                                 textAlign: "left",
+                                transform: [{ translateY: -3 }],
                                 minWidth: 36,
                                 flexShrink: 0,
                               }}
@@ -627,11 +631,11 @@ const MultiFactorModal: React.FC<Props> = ({
                         ) : (
                           <Text
                             style={{
-                              marginBottom: 5,
                               fontFamily: "MPLUSLatin_Bold",
                               fontSize: 22,
                               color: "white",
                               textAlign: "center",
+                              transform: [{ translateY: -3 }],
                             }}
                           >
                             {t("mfa.activate")}
@@ -678,11 +682,11 @@ const MultiFactorModal: React.FC<Props> = ({
                       >
                         <Text
                           style={{
-                            marginBottom: 5,
                             fontFamily: "MPLUSLatin_Bold",
                             fontSize: 22,
                             color: "black",
                             textAlign: "center",
+                            transform: [{ translateY: -3 }],
                           }}
                         >
                           {t("mfa.skip")}
@@ -785,6 +789,7 @@ const MultiFactorModal: React.FC<Props> = ({
                                 fontSize: 22,
                                 color: "white",
                                 textAlign: "center",
+                                transform: [{ translateY: -3 }],
                                 flexShrink: 0,
                               }}
                             >
@@ -798,6 +803,7 @@ const MultiFactorModal: React.FC<Props> = ({
                                 fontSize: 18,
                                 color: "white",
                                 textAlign: "left",
+                                transform: [{ translateY: -3 }],
                                 minWidth: 36,
                                 flexShrink: 0,
                               }}
@@ -812,6 +818,7 @@ const MultiFactorModal: React.FC<Props> = ({
                               fontSize: 22,
                               color: "white",
                               textAlign: "center",
+                              transform: [{ translateY: -3 }],
                             }}
                           >
                             {t("mfa.confirm")}
@@ -855,11 +862,11 @@ const MultiFactorModal: React.FC<Props> = ({
                     >
                       <Text
                         style={{
-                          marginBottom: 5,
                           fontFamily: "MPLUSLatin_Bold",
                           fontSize: 22,
                           color: "black",
                           textAlign: "center",
+                          transform: [{ translateY: -3 }],
                         }}
                       >
                         {t("mfa.cancel")}

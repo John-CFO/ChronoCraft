@@ -724,7 +724,6 @@ const WorkTimeTracker = () => {
                 end={{ x: 1, y: 1 }}
                 style={{
                   height: 45,
-                  paddingVertical: 6,
                   justifyContent: "center",
                   alignItems: "center",
                 }}
@@ -733,6 +732,8 @@ const WorkTimeTracker = () => {
                   style={{
                     fontFamily: "MPLUSLatin_Bold",
                     fontSize: 22,
+                    textAlign: "center",
+                    transform: [{ translateY: -6 }],
                     color: docExists ? "white" : accessMode ? "#222" : "#AAA",
                   }}
                 >
@@ -790,6 +791,8 @@ const WorkTimeTracker = () => {
                     fontFamily: "MPLUSLatin_Bold",
                     fontSize: 22,
                     color: "white",
+                    textAlign: "center",
+                    transform: [{ translateY: -6 }],
                   }}
                 >
                   {t("workTimeTracker.buttons.stop")}

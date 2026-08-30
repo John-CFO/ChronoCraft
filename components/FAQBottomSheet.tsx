@@ -593,7 +593,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                         >
                           <Text
                             style={{
-                              marginBottom: 5,
+                              transform: [{ translateY: -3 }],
                               fontFamily: "MPLUSLatin_Bold",
                               fontSize: 22,
                               color: "white",
@@ -605,7 +605,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                           </Text>
                           <Text
                             style={{
-                              marginBottom: 5,
+                              transform: [{ translateY: -3 }],
                               fontFamily: "MPLUSLatin_Bold",
                               fontSize: 22,
                               color: "white",
@@ -619,7 +619,7 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                       ) : (
                         <Text
                           style={{
-                            marginBottom: 5,
+                            transform: [{ translateY: -3 }],
                             fontFamily: "MPLUSLatin_Bold",
                             fontSize: 22,
                             color: "white",

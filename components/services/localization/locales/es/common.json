@@ -310,7 +310,7 @@
     "inputAccessibilityLabel": "Introduce las horas de trabajo previstas. Ejemplo: 8",
     "inputAccessibilityHint": "Introduce el número de horas que planeas trabajar hoy",
     "inputPlaceholder": "(ej. 8)",
-    "saving": "Guardando...",
+    "saving": "Guardando",
     "saveExpectedWorkHours": "Guardar horas de trabajo previstas",
     "saveAccessibilityHint": "Guarda las horas de trabajo diarias ingresadas",
     "save": "Guardar",
@@ -405,7 +405,7 @@
     "startHint": "Presiona para iniciar el seguimiento de tu tiempo de trabajo",
     "stopHint": "Presiona para detener el seguimiento de tu tiempo de trabajo",
     "reset": "Restablecer",
-    "resetting": "Restableciendo...",
+    "resetting": "Restableciendo",
     "resetHint": "Presiona para restablecer el proyecto",
     "attention": "¡Atención!",
     "resetStopFirst": "Detén primero el proyecto antes de restablecerlo.",
@@ -473,10 +473,10 @@
       "accessibilityLabel": "Calculadora de ingresos. Ingreso total {{totalEarnings}} dólares. Tu tarifa por hora es {{hourlyRate}}.",
       "notSet": "aún no establecida",
       "totalEarnings": "Ingreso total {{amount}} dólares",
-      "hourlyRateInput": "Introduce tu tarifa por hora",
+      "hourlyRateInput": "Tarifa por hora",
       "savingHourlyRate": "Guardando tu tarifa por hora",
       "saveHourlyRate": "Guardar tarifa por hora",
-      "saving": "Guardando...",
+      "saving": "Guardando",
       "save": "Guardar",
       "currentHourlyRate": "Tu tarifa por hora es {{hourlyRate}} dólares",
       "noHourlyRate": "No se ha establecido tarifa por hora",
@@ -504,7 +504,7 @@
     "saveAccessibility": "Guardar horas de trabajo máximas",
     "savingAccessibility": "Guardando tus horas de trabajo máximas",
     "save": "Guardar",
-    "saving": "Guardando...",
+    "saving": "Guardando",
     "progress": {
       "tracker": "Seguimiento de plazo. {{percent}} por ciento del tiempo de trabajo máximo utilizado. Tu plazo es de {{hours}} horas.",
       "noDeadline": "Seguimiento de plazo. No se ha establecido ningún plazo.",
@@ -591,7 +591,7 @@
     "modalOpened": "Modal de recordatorio de vacaciones abierto. Selecciona una duración para el recordatorio y presiona guardar.",
     "title": "Recordatorio",
     "save": "Guardar",
-    "saving": "Guardando...",
+    "saving": "Guardando",
     "saveHint": "Guarda el recordatorio y cierra esta vista",
     "pleaseWait": "Espera",
     "navigationTip": "Desliza para cerrar",
@@ -772,6 +772,7 @@
 
   "common": {
     "cancel": "Cancelar",
-    "delete": "Eliminar"
+    "delete": "Eliminar",
+    "reset": "Eliminar"
   }
 }

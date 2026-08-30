@@ -310,7 +310,7 @@
     "inputAccessibilityLabel": "Entrez les heures de travail prévues. Exemple : 8",
     "inputAccessibilityHint": "Entrez le nombre d'heures que vous prévoyez de travailler aujourd'hui",
     "inputPlaceholder": "(ex. 8)",
-    "saving": "Enregistrement...",
+    "saving": "Enregistrement",
     "saveExpectedWorkHours": "Enregistrer les heures de travail prévues",
     "saveAccessibilityHint": "Enregistre les heures de travail quotidiennes saisies",
     "save": "Enregistrer",
@@ -405,7 +405,7 @@
     "startHint": "Appuyez pour démarrer le suivi de votre temps de travail",
     "stopHint": "Appuyez pour arrêter le suivi de votre temps de travail",
     "reset": "Réinitialiser",
-    "resetting": "Réinitialisation...",
+    "resetting": "Réinitialisation",
     "resetHint": "Appuyez pour réinitialiser le projet",
     "attention": "Attention !",
     "resetStopFirst": "Veuillez d'abord arrêter le projet avant de le réinitialiser.",
@@ -473,10 +473,10 @@
       "accessibilityLabel": "Calculateur de gains. Gains totaux {{totalEarnings}} dollars. Votre taux horaire est {{hourlyRate}}.",
       "notSet": "pas encore défini",
       "totalEarnings": "Gains totaux {{amount}} dollars",
-      "hourlyRateInput": "Entrez votre taux horaire",
+      "hourlyRateInput": "Taux horaire",
       "savingHourlyRate": "Enregistrement de votre taux horaire",
       "saveHourlyRate": "Enregistrer le taux horaire",
-      "saving": "Enregistrement...",
+      "saving": "Enregistrement",
       "save": "Enregistrer",
       "currentHourlyRate": "Votre taux horaire est {{hourlyRate}} dollars",
       "noHourlyRate": "Aucun taux horaire défini",
@@ -504,7 +504,7 @@
     "saveAccessibility": "Enregistrer les heures de travail maximales",
     "savingAccessibility": "Enregistrement de vos heures de travail maximales",
     "save": "Enregistrer",
-    "saving": "Enregistrement...",
+    "saving": "Enregistrement",
     "progress": {
       "tracker": "Suivi des délais. {{percent}} pour cent du temps de travail maximum utilisé. Votre échéance est de {{hours}} heures.",
       "noDeadline": "Suivi des délais. Aucune échéance définie.",
@@ -591,7 +591,7 @@
     "modalOpened": "Fenêtre modale de rappel de vacances ouverte. Veuillez sélectionner une durée de rappel et appuyer sur enregistrer.",
     "title": "Rappel de vacances",
     "save": "Enregistrer",
-    "saving": "Enregistrement...",
+    "saving": "Enregistrement",
     "saveHint": "Enregistre le rappel et ferme cette vue",
     "pleaseWait": "Veuillez patienter",
     "navigationTip": "Balayer pour fermer",
@@ -772,6 +772,7 @@
 
   "common": {
     "cancel": "Annuler",
-    "delete": "Supprimer"
+    "delete": "Supprimer",
+    "reset": "Effacer"
   }
 }
