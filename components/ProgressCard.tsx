@@ -26,6 +26,7 @@ import { useService } from "../components/contexts/ServiceContext";
 import { useStore } from "./TimeTrackingState";
 import { sanitizeMaxWorkHours } from "./InputSanitizers";
 import useDebounceValue from "../hooks/useDebounceValue";
+import { useDotAnimation } from "../components/DotAnimation";
 import { NotificationManager } from "./services/PushNotifications";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import { MaxWorkHoursSchema } from "../validation/progressSchemas";
@@ -54,6 +55,12 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
     // initialize the navigation
     const navigation = useNavigation();
     const { serviceId } = useService();
+
+    // state to handle the dot animation
+    const [loading, setLoading] = useState(true);
+
+    // define the dot animation with a delay
+    const dots = useDotAnimation(loading, 700);
 
     // initialize the screensize
     const { width: screenWidth } = useWindowDimensions();
@@ -440,25 +447,73 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
                 colors={["#00f7f7", "#005757"]}
                 style={{
                   height: 45,
-                  paddingVertical: 6,
                   justifyContent: "center",
                   alignItems: "center",
                 }}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <Text
-                  accessible={false}
+                <View
                   style={{
-                    fontFamily: "MPLUSLatin_Bold",
-                    fontSize: 22,
-                    color: saving ? "lightgray" : "white",
-
-                    paddingRight: 10,
+                    height: 50,
+                    width: 200,
+                    justifyContent: "center",
+                    alignItems: "center",
                   }}
                 >
-                  {saving ? t("progress.saving") : t("progress.save")}
-                </Text>
+                  {saving ? (
+                    // animated saving dots
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Text
+                        // adjust font rendering (if a translation is too long)
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                        minimumFontScale={0.8}
+                        style={{
+                          transform: [{ translateY: -3 }],
+                          fontFamily: "MPLUSLatin_Bold",
+                          fontSize: 22,
+                          color: "lightgray",
+                          width: 120,
+                          textAlign: "right",
+                        }}
+                      >
+                        {t("progress.saving")}
+                      </Text>
+                      <Text
+                        style={{
+                          transform: [{ translateY: -3 }],
+                          fontFamily: "MPLUSLatin_Bold",
+                          fontSize: 22,
+                          color: "lightgray",
+                          width: 40,
+                          textAlign: "left",
+                        }}
+                      >
+                        {dots}
+                      </Text>
+                    </View>
+                  ) : (
+                    // regular save button
+                    <Text
+                      style={{
+                        transform: [{ translateY: -3 }],
+                        fontFamily: "MPLUSLatin_Bold",
+                        fontSize: 22,
+                        color: "white",
+                        textAlign: "center",
+                      }}
+                    >
+                      {t("progress.save")}
+                    </Text>
+                  )}
+                </View>
               </LinearGradient>
             </TouchableOpacity>
 

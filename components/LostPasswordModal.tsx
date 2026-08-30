@@ -281,7 +281,7 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
                     <Text
                       style={{
                         marginLeft: 100,
-                        marginBottom: 5,
+                        transform: [{ translateY: -3 }],
                         fontFamily: "MPLUSLatin_Bold",
                         fontSize: 22,
                         color: "white",
@@ -293,7 +293,7 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
                     </Text>
                     <Text
                       style={{
-                        marginBottom: 5,
+                        transform: [{ translateY: -3 }],
                         fontFamily: "MPLUSLatin_Bold",
                         fontSize: 22,
                         color: "white",
@@ -307,7 +307,7 @@ const LostPasswordModal: React.FC<LostPasswordModalProps> = ({
                 ) : (
                   <Text
                     style={{
-                      marginBottom: 5,
+                      transform: [{ translateY: -3 }],
                       fontFamily: "MPLUSLatin_Bold",
                       fontSize: 22,
                       color: "white",

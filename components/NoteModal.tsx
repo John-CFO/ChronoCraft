@@ -270,7 +270,6 @@ const NoteModal: React.FC<NoteModalProps> = ({
           />
 
           {/*submit button*/}
-
           <TouchableOpacity
             accessibilityRole="button"
             accessibilityLabel={
@@ -283,11 +282,10 @@ const NoteModal: React.FC<NoteModalProps> = ({
             onPress={() => {
               const user = FIREBASE_AUTH.currentUser;
               if (!user || !serviceId) return;
-
               handleSubmitComment(projectId, comment, user.uid, serviceId);
             }}
             style={{
-              width: screenWidth * 0.7, // use 70% of the screen width
+              width: screenWidth * 0.7,
               maxWidth: 400,
               borderRadius: 12,
               overflow: "hidden",
@@ -306,16 +304,67 @@ const NoteModal: React.FC<NoteModalProps> = ({
                 alignItems: "center",
               }}
             >
-              <Text
+              <View
                 style={{
-                  fontFamily: "MPLUSLatin_Bold",
-                  fontSize: 22,
-                  color: saving ? "lightgray" : "white",
-                  paddingRight: 10,
+                  height: 50,
+                  width: 200,
+                  justifyContent: "center",
+                  alignItems: "center",
                 }}
               >
-                {saving ? `${t("notes.saving")}...` : t("notes.save")}
-              </Text>
+                {saving ? (
+                  // animatet saving dots
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text
+                      // adjust font rendering (if a translation is too long)
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.8}
+                      style={{
+                        marginBottom: 5,
+                        fontFamily: "MPLUSLatin_Bold",
+                        fontSize: 22,
+                        color: "lightgray",
+                        width: 120,
+                        textAlign: "right",
+                      }}
+                    >
+                      {t("notes.saving")}
+                    </Text>
+                    <Text
+                      style={{
+                        marginBottom: 5,
+                        fontFamily: "MPLUSLatin_Bold",
+                        fontSize: 22,
+                        color: "lightgray",
+                        width: 40,
+                        textAlign: "left",
+                      }}
+                    >
+                      {dots}
+                    </Text>
+                  </View>
+                ) : (
+                  // regular save button
+                  <Text
+                    style={{
+                      marginBottom: 5,
+                      fontFamily: "MPLUSLatin_Bold",
+                      fontSize: 22,
+                      color: "white",
+                      textAlign: "center",
+                    }}
+                  >
+                    {t("notes.save")}
+                  </Text>
+                )}
+              </View>
             </LinearGradient>
           </TouchableOpacity>
         </View>
