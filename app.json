@@ -15,7 +15,7 @@
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#000000"
       },
-      "package": "com.ChronoCraft_Android",
+      "package": "dev.appsecforge.chronocraft",
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
         "WAKE_LOCK",
