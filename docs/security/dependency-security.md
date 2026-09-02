@@ -215,3 +215,66 @@ postcss@8.5.18
 ```
 
 **Status:** Resolved
+
+---
+
+### tar vulnerability
+
+**Package:** tar@6.2.1
+
+**Severity:** Critical
+
+**CVE/Advisories:**
+
+- GHSA-34x7-hfp2-rc4v
+- GHSA-8qq5-rm4j-mr97
+- GHSA-83g3-92jg-28cx
+- GHSA-qffp-2rhf-9h96
+- GHSA-9ppj-qmqm-q256
+- GHSA-r6q2-hw4h-h46w
+- GHSA-vmf3-w455-68vh
+- GHSA-w8wr-v893-vjvp
+- GHSA-23hp-3jrh-7fpw
+- GHSA-8x88-c5mf-7j5w
+- GHSA-gvwx-54wh-qm9j
+- GHSA-r292-9mhp-454m
+
+**Source:**
+
+Transitive dependency introduced by the Expo CLI dependency tree.
+
+Dependency chain:
+
+    expo@50.0.21
+    └── @expo/cli@0.17.13
+        └── tar@6.2.1
+
+**Risk assessment:**
+
+The vulnerable `tar` package is a transitive dependency of the Expo CLI and is required by the currently pinned Expo 50 dependency tree.
+
+The dependency is used by Expo build tooling rather than application business logic. The affected functionality is related to archive extraction and processing within the build tooling context.
+
+The available automatic remediation requires upgrading Expo to a newer major version. `npm audit fix --force` currently proposes an upgrade to Expo 57, which represents a breaking framework upgrade and is outside the scope of the current dependency maintenance change.
+
+No direct application usage of the vulnerable `tar` functionality exists.
+
+**Decision:**
+
+Risk accepted temporarily.
+
+The current Expo 50 dependency tree remains pinned to avoid introducing an unplanned framework migration solely to resolve a transitive build-tooling dependency.
+
+The production dependency security CI check explicitly allows the currently identified `tar` advisories while continuing to fail on other unapproved critical production vulnerabilities.
+
+**Mitigation:**
+
+- Dependency is monitored through `npm audit`.
+- The accepted advisories are explicitly allowlisted in the production dependency security CI check.
+- The CI check continues to fail for critical vulnerabilities outside the documented `tar` exception.
+- Production builds continue using locked dependency versions.
+- The dependency will be reevaluated during the next planned Expo upgrade.
+
+**Review status:** Accepted
+
+**Review trigger:** Next Expo upgrade
