@@ -106,8 +106,10 @@
   },
   "private": true,
   "overrides": {
+    "@react-native/babel-preset": "0.73.21",
+    "@react-native/babel-plugin-codegen": "0.73.4",
+    "@react-native/codegen": "0.73.3",
     "@xmldom/xmldom": "^0.9.10",
-    "tar": "^7.5.20",
     "fast-xml-parser": "^5.7.0",
     "brace-expansion": "^5.0.7",
     "fast-uri": "^3.1.5",
