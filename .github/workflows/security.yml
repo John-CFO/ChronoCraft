@@ -181,7 +181,75 @@ jobs:
         run: npm audit || true
 
       - name: Check production vulnerabilities
-        run: npm audit --omit=dev --audit-level=critical
+        shell: bash
+        run: |
+          npm audit --omit=dev --audit-level=critical --json > audit.json || true
+
+          node <<'NODE'
+          const fs = require("fs");
+
+          const audit = JSON.parse(fs.readFileSync("audit.json", "utf8"));
+
+          const acceptedTarAdvisories = new Set([
+          "1112659",
+          "1113300",
+          "1113375",
+          "1114200",
+          "1114302",
+          "1114680",
+          "1120782",
+          "1123939",
+          "1123940",
+          "1123941",
+          "1123942",
+          "1145647"
+          ]);
+
+          const critical = [];
+
+          for (const [packageName, vulnerability] of Object.entries(
+            audit.vulnerabilities ?? {}
+          )) {
+            if (vulnerability.severity !== "critical") continue;
+
+            const advisories = (vulnerability.via ?? [])
+              .filter(v => typeof v === "object" && v.source)
+              .map(v => v.source);
+
+            const onlyAcceptedTar =
+              packageName === "tar" &&
+              advisories.length > 0 &&
+              advisories.every(id => acceptedTarAdvisories.has(id));
+
+            if (!onlyAcceptedTar) {
+              critical.push({
+                packageName,
+                advisories
+              });
+            }
+          }
+
+          if (critical.length > 0) {
+            console.error("Unhandled critical vulnerabilities:");
+
+            for (const vulnerability of critical) {
+              console.error(
+                `- ${vulnerability.packageName}: ${
+                  vulnerability.advisories.join(", ") || "unknown advisory"
+                }`
+              );
+            }
+
+            process.exit(1);
+          }
+
+          console.log(
+            "No unhandled critical production vulnerabilities found."
+          );
+          console.log(
+            "Known tar vulnerability is accepted because it is currently tied to the Expo 50 dependency tree."
+          );
+          NODE
 
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
