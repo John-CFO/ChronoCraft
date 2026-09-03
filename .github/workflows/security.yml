@@ -214,7 +214,7 @@ jobs:
 
             const advisories = (vulnerability.via ?? [])
               .filter(v => typeof v === "object" && v.source)
-              .map(v => v.source);
+              .map(v => String(v.source));
 
             const onlyAcceptedTar =
               packageName === "tar" &&
