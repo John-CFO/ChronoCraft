@@ -264,6 +264,32 @@ Start in this order:
 
 ---
 
+## App Check Decision
+
+Firebase App Check with Play Integrity is intentionally **not implemented** at this stage.
+
+The application is currently restricted through an explicit user whitelist. Access to protected backend operations additionally requires authentication and is enforced server-side.
+
+The system already provides multiple abuse-prevention and security controls:
+
+- explicit user whitelist
+- server-side authentication
+- TOTP-based authentication
+- context-scoped server-side rate limiting
+- atomic Firestore transaction enforcement
+- strict Firestore security rules and ownership checks
+- fail-closed behavior on security-critical paths
+
+App Check would primarily add an additional attestation layer to verify that requests originate from an authorized application instance.
+
+For the current restricted-access model, this provides limited additional security value compared to the additional native integration complexity required for Play Integrity.
+
+Therefore, App Check is intentionally omitted to keep the security architecture minimal and avoid introducing unnecessary implementation complexity.
+
+This decision should be reconsidered if the application becomes publicly accessible or the threat model changes. In particular, App Check may provide additional value when the application is distributed to an unrestricted user base and backend abuse becomes a larger concern.
+
+---
+
 ## Summary
 
 The system implements a layered security architecture:
