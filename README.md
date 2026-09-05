@@ -7,7 +7,7 @@ Track and analyze personal working hours.
 - Define individual daily minimum working hours
 - Start, pause and resume work sessions
 - Real-time worktime tracking
-- Continues tracking while the application is in the background
+- Continues tracking while the application is running in the background
 - Automatically restores active tracking sessions after application restart
 - Daily, weekly and monthly worktime overview
 - Display worked hours and overtime
@@ -60,6 +60,17 @@ Personalize the application experience.
 
 ---
 
+## Localization
+
+Support multiple languages and regional preferences.
+
+- Automatically detects and uses the device's primary language
+- Language can be changed manually within the application
+- Support for 8 selectable languages
+- Localization implemented with i18next
+
+---
+
 ## Accessibility
 
 Designed for inclusive usage.
@@ -80,6 +91,19 @@ Security and privacy focused account management.
 - Secure logout
 - Complete account deletion
 - Immediate deletion of all associated user data (Privacy by Design)
+
+---
+
+## Reviewer Access
+
+Account registration is restricted through a backend whitelist.
+
+- Reviewers must provide the email address they will use for testing
+- The reviewer email is added to the backend whitelist
+- Only whitelisted email addresses are permitted to create an account
+- After being whitelisted, reviewers can register and use the application normally
+- The whitelist prevents uncontrolled account creation and helps protect the private Firebase project from unexpected usage and associated costs
+- It also provides protection against automated or bot-driven registration attempts
 
 ---
 
