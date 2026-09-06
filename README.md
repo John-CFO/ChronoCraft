@@ -6,11 +6,15 @@ The application combines time tracking, project management, vacation planning, u
 
 ## Google Play Internal Testing
 
+## Google Play Internal Testing
+
 ChronoCraft is currently available through Google Play Internal Testing.
 
-**[Join the internal test](YOUR_GOOGLE_PLAY_TEST_LINK)**
+[**Click here to join the internal test**](https://play.google.com/apps/internaltest/4701751618086111077)
 
-> Access is provided manually. If you want to test ChronoCraft, contact me with the Google account email address you want to use for Google Play testing.
+> **Important:** Open the link on your Android phone. The test cannot be accessed correctly from a desktop browser.
+
+Access is provided manually. If you want to test ChronoCraft, contact me with the Google account email address you want to use for Google Play testing.
 
 ### Current Release
 
