@@ -150,18 +150,38 @@ ChronoCraft uses Firebase as its backend infrastructure.
 
 ---
 
-# Testing & Development
+# Testing & Quality Engineering
 
-The application is developed with a focus on security, reliability and maintainability.
+ChronoCraft uses a multi-level testing strategy covering different system layers, failure scenarios, security boundaries and concurrency-related behavior.
 
-- End-to-end testing
-- Security-focused validation
+## Test Levels
+
+- Unit tests
+- Integration tests
+- End-to-end (E2E) tests
+
+## Specialized Testing
+
+- Race condition testing
+- Idempotency testing
+- Edge case testing
+- False positive and false negative testing
+- State recovery testing
+- Authentication and authorization testing
+
+## Security Validation
+
 - Trust-boundary validation with Zod
-- Automated security checks
+- Authorization boundary validation
+- Architectural prevention of IDOR vulnerabilities
+- Testing of authenticated and authorization-protected endpoints
+- Security-focused automated checks
+
+## Development & Quality
+
 - Dependency management
 - CI/CD
 - Error and state recovery
-- Testing of authenticated and authorization-protected endpoints
 
 ---
 
