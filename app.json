@@ -11,6 +11,7 @@
       "bundleIdentifier": "dev.appsecforge.chronocraft"
     },
     "android": {
+      "versionCode": 8,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#000000"
@@ -27,6 +28,18 @@
         "projectId": "481d68c9-3b59-4eac-8ee4-d89d19ea9ea8"
       }
     },
-    "owner": "john-cfo"
+    "owner": "john-cfo",
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 36,
+            "targetSdkVersion": 36,
+            "buildToolsVersion": "36.0.0"
+          }
+        }
+      ]
+    ]
   }
 }

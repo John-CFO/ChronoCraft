@@ -8,6 +8,10 @@ ChronoCraft.git/
 dist/
 web-build/
 
+# EAS credentials
+credentials.json
+credentials/
+
 # Native
 *.orig.*
 *.jks
