@@ -2,7 +2,7 @@
   "expo": {
     "name": "ChronoCraft",
     "slug": "ChronoCraft",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -11,7 +11,7 @@
       "bundleIdentifier": "dev.appsecforge.chronocraft"
     },
     "android": {
-      "versionCode": 8,
+      "versionCode": 10,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#000000"
