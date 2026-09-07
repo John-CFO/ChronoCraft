@@ -35,6 +35,9 @@ export class AuthService {
     if (action === "register") {
       await this.userRepo.createUserIfNotExists(uid, {
         createdVia: "auth",
+        ...(request.data?.payload?.pushToken
+          ? { pushToken: request.data.payload.pushToken }
+          : {}),
       });
     }
 

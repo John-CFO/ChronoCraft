@@ -26,6 +26,7 @@ export class UserRepo {
       if (!snap.exists) {
         tx.set(ref, {
           ...data,
+          ...(data.pushToken ? { pushToken: data.pushToken } : {}),
           createdAt: FieldValue.serverTimestamp(),
           hasSeenHomeTour: false,
           hasSeenDetailsTour: false,

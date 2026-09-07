@@ -60,6 +60,7 @@ const VacationForm = () => {
     setIsSaving(true);
 
     try {
+      console.log("VACATION: serviceId =", serviceId);
       if (!serviceId) return;
       // check if user is logged in
       const user = FIREBASE_AUTH.currentUser;
@@ -136,6 +137,8 @@ const VacationForm = () => {
 
   // save function with error handling for the button
   const handleSave = async () => {
+    console.log("VACATION: SAVE PRESSED");
+    console.log("VACATION: markedDates =", markedDates);
     if (!markedDates || Object.keys(markedDates).length === 0) {
       useAlertStore
         .getState()

@@ -150,29 +150,21 @@ const LoginScreen: React.FC = () => {
         email,
         password,
       );
+      console.log("REGISTER: before push registration");
+      // initialize push notifications
+      const token = await NotificationManager.registerForPushNotifications();
+      console.log("REGISTER PUSH TOKEN:", token);
       const result = await authValidator({
         action: "register",
         language: i18n.language,
+        payload: {
+          pushToken: token,
+        },
       });
       const { nextStage } = result.data as { nextStage: AuthStage };
       // Navigation
       setUser(response.user);
       setStage(nextStage);
-
-      // initialize push notifications
-      const token = await NotificationManager.registerForPushNotifications();
-      // optional side effect AFTER state transition
-      if (token) {
-        try {
-          const registerPushToken = httpsCallable(
-            functions,
-            "registerPushTokenFunction",
-          );
-          await registerPushToken({ token, language: i18n.language });
-        } catch (error) {
-          logError("LoginScreen/registerPushToken", error);
-        }
-      }
 
       if (nextStage === "pendingMfa") {
         navigation.navigate("MfaScreen" as never);

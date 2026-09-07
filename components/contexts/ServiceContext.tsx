@@ -53,9 +53,9 @@ export const ServiceProvider: React.FC<{ children: React.ReactNode }> = ({
           user.uid,
           "Services",
         );
-
+        console.log("SERVICE: loading", user.uid);
         const snapshot = await getDocs(servicesRef);
-
+        console.log("SERVICE: documents found", snapshot.size);
         if (!active) return;
 
         if (snapshot.empty) {
