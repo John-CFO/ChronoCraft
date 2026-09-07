@@ -329,7 +329,8 @@ const App = () => {
   // statusbar content color
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      StatusBar.setBarStyle("light-content");
+      StatusBar.setBarStyle("dark-content");
+      StatusBar.setBackgroundColor("black");
     }, 100); // delay in ms
 
     return () => clearTimeout(timeoutId); // prevent memory leak
