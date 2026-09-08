@@ -53,9 +53,7 @@ export const ServiceProvider: React.FC<{ children: React.ReactNode }> = ({
           user.uid,
           "Services",
         );
-
         const snapshot = await getDocs(servicesRef);
-
         if (!active) return;
 
         if (snapshot.empty) {
