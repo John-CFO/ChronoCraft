@@ -5,17 +5,25 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 // mocking
-jest.mock("../../../src/utils/rateLimitInstance");
 jest.mock("../../../src/repos/userRepo");
 jest.mock("../../../src/utils/logger");
 jest.mock("../../../src/security/totpCore", () => ({
   verifyTotp: jest.fn(),
 }));
 
-jest.mock("firebase-admin", () => ({
-  firestore: jest.fn(),
-  initializeApp: jest.fn(),
-  apps: [],
+jest.mock("firebase-admin/firestore", () => ({
+  getFirestore: jest.fn(),
+  FieldValue: {
+    serverTimestamp: jest.fn(),
+  },
+}));
+
+jest.mock("../../../src/utils/rateLimitInstance", () => ({
+  rateLimit: {
+    check: jest.fn(),
+    getRemainingAttempts: jest.fn(),
+  },
+  getRateLimit: jest.fn(),
 }));
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -80,11 +88,19 @@ describe("AuthService Unit Tests", () => {
       expect(result).toEqual({ nextStage: "authenticated" });
     });
     it("should log event and return success for register", async () => {
+      (
+        UserRepo.prototype.createUserIfNotExists as jest.Mock
+      ).mockResolvedValueOnce({
+        success: true,
+        created: true,
+      });
+
       const result = await authService.loginOrRegister(
         "register",
         request,
         "user123",
       );
+
       expect(mockLogEvent).toHaveBeenCalledWith("auth register", "info");
       expect(result).toEqual({ nextStage: "authenticated" });
     });

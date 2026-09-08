@@ -19,6 +19,7 @@ export class UserRepo {
   // createUser method to create a new user
   async createUserIfNotExists(uid: string, data: Record<string, unknown>) {
     const ref = this.usersRef.doc(uid);
+    let created = false;
 
     await this.db.runTransaction(async (tx) => {
       const snap = await tx.get(ref);
@@ -26,6 +27,7 @@ export class UserRepo {
       if (!snap.exists) {
         tx.set(ref, {
           ...data,
+          ...(data.pushToken ? { pushToken: data.pushToken } : {}),
           createdAt: FieldValue.serverTimestamp(),
           hasSeenHomeTour: false,
           hasSeenDetailsTour: false,
@@ -37,10 +39,12 @@ export class UserRepo {
         tx.set(serviceRef, {
           createdAt: FieldValue.serverTimestamp(),
         });
+
+        created = true;
       }
     });
 
-    return { success: true };
+    return { success: true, created };
   }
 
   // getUser method to retrieve a user
