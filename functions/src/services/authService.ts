@@ -11,6 +11,7 @@ import { verifyTotp } from "../security/totpCore";
 import { logEvent } from "../utils/logger";
 import { BusinessRuleError, ValidationError } from "../errors/domain.errors";
 import { getTranslation } from "../services/localization/i18n";
+import { sendWelcomeNotification } from "../functions/registerPushToken.function";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -33,12 +34,19 @@ export class AuthService {
     }
 
     if (action === "register") {
-      await this.userRepo.createUserIfNotExists(uid, {
+      const result = await this.userRepo.createUserIfNotExists(uid, {
         createdVia: "auth",
         ...(request.data?.payload?.pushToken
           ? { pushToken: request.data.payload.pushToken }
           : {}),
       });
+
+      if (result.created && request.data?.payload?.pushToken) {
+        await sendWelcomeNotification(
+          request.data.payload.pushToken,
+          request.data?.language,
+        );
+      }
     }
 
     logEvent(`auth ${action}`, "info");

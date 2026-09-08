@@ -150,10 +150,8 @@ const LoginScreen: React.FC = () => {
         email,
         password,
       );
-      console.log("REGISTER: before push registration");
       // initialize push notifications
       const token = await NotificationManager.registerForPushNotifications();
-      console.log("REGISTER PUSH TOKEN:", token);
       const result = await authValidator({
         action: "register",
         language: i18n.language,
