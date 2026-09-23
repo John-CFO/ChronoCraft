@@ -36,6 +36,7 @@ import { useTranslation } from "react-i18next";
 import { NotificationManager } from "../components/services/PushNotifications";
 import { FIREBASE_APP } from "../firebaseConfig";
 import { AuthContext, AuthStage } from "../components/contexts/AuthContext";
+import { useService } from "../components/contexts/ServiceContext";
 import { RootStackParamList } from "../navigation/RootStackParams";
 import AppLogo from "../components/AppLogo";
 import AnimatedText from "../components/AnimatedText";
@@ -90,6 +91,9 @@ const LoginScreen: React.FC = () => {
   const auth: Auth = getAuth(FIREBASE_APP);
   // declaire the user context
   const { setUser, setStage } = useContext(AuthContext);
+
+  // declaire the service context from the service provider
+  const { reloadService } = useService();
 
   // function to validate the inputs
   const validateLoginInputs = () => {
@@ -162,6 +166,7 @@ const LoginScreen: React.FC = () => {
       const { nextStage } = result.data as { nextStage: AuthStage };
       // Navigation
       setUser(response.user);
+      await reloadService();
       setStage(nextStage);
 
       if (nextStage === "pendingMfa") {

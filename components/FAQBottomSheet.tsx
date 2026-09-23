@@ -191,6 +191,8 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
 
   // define the dot animation with a delay
   const dots = useDotAnimation(loading, 700);
+  // define the width of the deleting text inside the button
+  const [deletingTextWidth, setDeletingTextWidth] = useState(0);
 
   return (
     <View
@@ -586,31 +588,37 @@ const FAQBottomSheet: React.FC<FAQBottomSheetProps> = ({ closeModal }) => {
                       {loading ? (
                         <View
                           style={{
-                            flexDirection: "row",
-                            alignItems: "center",
+                            width: 200,
+                            height: 50,
                             justifyContent: "center",
+                            alignItems: "center",
+                            position: "relative",
                           }}
                         >
                           <Text
+                            onLayout={(event) => {
+                              setDeletingTextWidth(
+                                event.nativeEvent.layout.width,
+                              );
+                            }}
                             style={{
                               transform: [{ translateY: -3 }],
                               fontFamily: "MPLUSLatin_Bold",
                               fontSize: 22,
                               color: "white",
-                              width: 160,
-                              textAlign: "right",
+                              textAlign: "center",
                             }}
                           >
                             {t("faq.deleteAccount.deleting")}
                           </Text>
                           <Text
                             style={{
+                              position: "absolute",
+                              left: 100 + deletingTextWidth / 2,
                               transform: [{ translateY: -3 }],
                               fontFamily: "MPLUSLatin_Bold",
                               fontSize: 22,
                               color: "white",
-                              width: 40,
-                              textAlign: "left",
                             }}
                           >
                             {dots}
