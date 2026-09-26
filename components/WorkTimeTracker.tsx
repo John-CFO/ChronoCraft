@@ -733,7 +733,7 @@ const WorkTimeTracker = () => {
                     fontFamily: "MPLUSLatin_Bold",
                     fontSize: 22,
                     textAlign: "center",
-                    transform: [{ translateY: -6 }],
+                    transform: [{ translateY: -3 }],
                     color: docExists ? "white" : accessMode ? "#222" : "#AAA",
                   }}
                 >
@@ -792,7 +792,7 @@ const WorkTimeTracker = () => {
                     fontSize: 22,
                     color: "white",
                     textAlign: "center",
-                    transform: [{ translateY: -6 }],
+                    transform: [{ translateY: -3 }],
                   }}
                 >
                   {t("workTimeTracker.buttons.stop")}
