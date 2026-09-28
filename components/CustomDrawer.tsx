@@ -22,7 +22,7 @@ import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { Feather } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
 import Modal from "react-native-modal";
-import { getDoc, doc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import { useTranslation } from "react-i18next";
 
 import { AuthContext } from "../components/contexts/AuthContext";
@@ -61,9 +61,6 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
   // declare state for user data
   const [user, setLocalUser] = useState<MergedUser | null>(null);
 
-  //declare state for user profile image
-  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
-
   // declare the auth context
   const { setUser, setStage } = useContext(AuthContext);
 
@@ -92,100 +89,52 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
     bottomSheetModalRef.current?.present();
   }, []);
   // callback to handle changes in the bottom sheet modal
-  const handleSheetChanges = useCallback((index: number) => {
-    // console.log("handleSheetChanges", index);
-  }, []);
+  const handleSheetChanges = useCallback((index: number) => {}, []);
 
-  // function to fetch user profile data from Firestore
-  const fetchUserProfile = async () => {
-    try {
-      const currentUser = FIREBASE_AUTH.currentUser;
-      if (!currentUser?.uid) return;
-
-      const userRef = doc(FIREBASE_FIRESTORE, "Users", currentUser.uid);
-      const userDoc = await getDoc(userRef);
-
-      if (!userDoc.exists()) {
-        return;
-      }
-
-      const data = userDoc.data() || {};
-
-      // light validation / defaults
-      const mergedUser: MergedUser = {
-        ...currentUser,
-        uid: currentUser.uid,
-        displayName: data.displayName ?? undefined,
-        personalNumber: data.personalNumber ?? undefined,
-        totpEnabled: data.totp?.enabled ?? false,
-        hasSeenHomeTour: data.hasSeenHomeTour ?? false,
-        hasSeenVacationTour: data.hasSeenVacationTour ?? false,
-        hasSeenWorkHoursTour: data.hasSeenWorkHoursTour ?? false,
-        hasSeenDetailsTour: data.hasSeenDetailsTour ?? false,
-        totpSecret: data.totpSecret ?? undefined,
-        firstLogin: data.firstLogin ?? false,
-        createdAt: data.createdAt?.toDate?.() ?? undefined,
-      };
-
-      setLocalUser(mergedUser);
-      setIsEnrolled(!!mergedUser.totpEnabled);
-    } catch (error) {
-      logError("CustomDrawer/fetchUserProfile", error);
-    }
+  // function to close edit profile modal and update user profile
+  const closeProfileModal = () => {
+    setProfileModalVisible(false);
   };
 
-  // hook to fetch user profile data when component mounts
-  useEffect(() => {
-    fetchUserProfile();
-  }, []);
-
-  // hook to fetch user profile image
   useEffect(() => {
     const currentUser = FIREBASE_AUTH.currentUser;
     if (!currentUser?.uid) return;
 
     const userRef = doc(FIREBASE_FIRESTORE, "Users", currentUser.uid);
 
-    const unsubscribe = onSnapshot(userRef, (snap) => {
-      const data = snap.data();
+    const unsubscribe = onSnapshot(
+      userRef,
+      (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data() || {};
+        console.log("[CustomDrawer] snapshot", {
+          photoURL: data.photoURL,
+          displayName: data.displayName,
+        });
+        const mergedUser: MergedUser = {
+          ...currentUser,
+          uid: currentUser.uid,
+          displayName: data.displayName ?? undefined,
+          personalNumber: data.personalNumber ?? undefined,
+          photoURL: data.photoURL ?? undefined,
+          totpEnabled: data.totp?.enabled ?? false,
+          hasSeenHomeTour: data.hasSeenHomeTour ?? false,
+          hasSeenVacationTour: data.hasSeenVacationTour ?? false,
+          hasSeenWorkHoursTour: data.hasSeenWorkHoursTour ?? false,
+          hasSeenDetailsTour: data.hasSeenDetailsTour ?? false,
+          totpSecret: data.totpSecret ?? undefined,
+          firstLogin: data.firstLogin ?? false,
+          createdAt: data.createdAt?.toDate?.() ?? undefined,
+        };
 
-      setProfileImageUrl(data?.photoURL ?? null);
-    });
+        setLocalUser(mergedUser);
+        setIsEnrolled(!!mergedUser.totpEnabled);
+      },
+      (err) => logError("CustomDrawer/userListener", err),
+    );
 
     return () => unsubscribe();
   }, []);
-
-  // Hook to check if user is enrolled
-  useEffect(() => {
-    const loadEnrollment = async () => {
-      const user = FIREBASE_AUTH.currentUser;
-      if (!user) {
-        setIsEnrolled(false);
-        return;
-      }
-
-      try {
-        const userRef = doc(FIREBASE_FIRESTORE, "Users", user.uid);
-        const snap = await getDoc(userRef);
-
-        if (snap.exists()) {
-          setIsEnrolled(snap.exists() ? !!snap.data()?.totp?.enabled : false);
-        }
-      } catch (err) {
-        logError("CustomDrawer/loadTotpEnrollment", err);
-        setIsEnrolled(false);
-      }
-    };
-
-    loadEnrollment();
-  }, [FIREBASE_AUTH.currentUser?.uid]);
-
-  // function to close edit profile modal and update user profile
-  const closeProfileModal = () => {
-    //console.log("Edit modal closed");
-    setProfileModalVisible(false);
-    fetchUserProfile();
-  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -195,7 +144,6 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
         accessibilityLabel={t("drawer.profile.edit")}
         onPress={() => {
           setProfileModalVisible(true);
-          // console.log("EditProfileModal opened");
         }}
       >
         <View
@@ -275,9 +223,9 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
               : t("drawer.profile.defaultPicture")
           }
           source={
-            profileImageUrl // render user image or default image
-              ? { uri: profileImageUrl }
-              : require("../assets/profile_avatar.png")
+            user?.photoURL
+              ? { uri: user.photoURL }
+              : require("../assets//profile_avatar.png")
           }
           style={{
             height: 85,

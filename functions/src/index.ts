@@ -6,6 +6,8 @@
 
 import { setGlobalOptions } from "firebase-functions/v2";
 import { onCall } from "firebase-functions/v2/https";
+import { onObjectFinalized } from "firebase-functions/v2/storage";
+import { validateProfileImageHandler } from "./functions/validateProfileImage.function";
 import * as admin from "firebase-admin";
 
 //////////////////////////////////////////////////////////////////////
@@ -88,4 +90,8 @@ export const requestPasswordResetFunction = onCall(
 export const registerPushTokenFunction = onCall(
   { cors: true },
   registerPushToken,
+);
+
+export const validateProfileImage = onObjectFinalized(
+  validateProfileImageHandler,
 );

@@ -25,6 +25,7 @@ import "react-native-gesture-handler";
 import "react-native-reanimated";
 import * as SplashScreen from "expo-splash-screen";
 import "text-encoding-polyfill"; //bugfix: for delete project with notes
+import { decode } from "base-64";
 import { CopilotProvider } from "react-native-copilot";
 import { AccessibilityInfo } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -326,6 +327,11 @@ const AppNavigator = () => {
 
 // App - provites all providers
 const App = () => {
+  // condition to check if atob is undefined
+  if (typeof atob === "undefined") {
+    global.atob = decode;
+  }
+
   // statusbar content color
   useEffect(() => {
     const timeoutId = setTimeout(() => {
