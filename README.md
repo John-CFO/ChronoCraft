@@ -114,6 +114,7 @@ Security and privacy are treated as core parts of the application architecture.
 - Secure logout
 - Complete account deletion
 - Immediate deletion of all associated user data
+- Server-side validation of user-uploaded profile pictures before public exposure
 - Privacy by Design
 
 ## Access Control
@@ -146,7 +147,7 @@ ChronoCraft uses Firebase as its backend infrastructure.
 - Cloud Firestore
 - Firebase Cloud Functions
 - Firebase Security Rules
-- Firebase App Check
+- Firebase Cloud Storage
 - Server-side authorization
 - Server-side validation
 - Rate limiting
@@ -243,23 +244,23 @@ ChronoCraft is designed to support different users and usage environments.
 
 # Technology Stack
 
-| Area | Technology |
-| --- | --- |
-| Mobile | React Native |
-| Framework | Expo |
-| Language | TypeScript |
-| Backend | Firebase |
-| Database | Cloud Firestore |
-| Authentication | Firebase Authentication |
-| Backend Logic | Firebase Cloud Functions |
-| Validation | Zod |
-| Localization | i18next |
-| Android Build | Gradle |
-| Android Gradle Plugin | 8.1.1 |
-| Android SDK | 36 |
-| Testing | E2E Testing |
-| CI/CD | GitHub Actions |
-| Distribution | Google Play |
+| Area                  | Technology               |
+| --------------------- | ------------------------ |
+| Mobile                | React Native             |
+| Framework             | Expo                     |
+| Language              | TypeScript               |
+| Backend               | Firebase                 |
+| Database              | Cloud Firestore          |
+| Authentication        | Firebase Authentication  |
+| Backend Logic         | Firebase Cloud Functions |
+| Validation            | Zod                      |
+| Localization          | i18next                  |
+| Android Build         | Gradle                   |
+| Android Gradle Plugin | 8.1.1                    |
+| Android SDK           | 36                       |
+| Testing               | E2E Testing              |
+| CI/CD                 | GitHub Actions           |
+| Distribution          | Google Play              |
 
 ---
 
@@ -285,3 +286,4 @@ Release Signing
 AAB Generation
         ↓
 Google Play Distribution
+```
