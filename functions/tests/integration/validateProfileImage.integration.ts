@@ -169,4 +169,74 @@ describe("validateProfileImage Integration Tests", () => {
     const userSnap = await firestore.collection("Users").doc(testUid).get();
     expect(userSnap.data()?.photoURL).toBeUndefined();
   });
+
+  // Path-Traversal-Test
+  it.each([
+    {
+      name: "pdf",
+      bytes: Buffer.concat([
+        Buffer.from("%PDF-1.7\n"),
+        Buffer.alloc(2000, 0x00),
+      ]),
+    },
+    {
+      name: "html",
+      bytes: Buffer.concat([
+        Buffer.from("<!doctype html><html>"),
+        Buffer.alloc(2000, 0x00),
+      ]),
+    },
+    {
+      name: "gif",
+      bytes: Buffer.concat([Buffer.from("GIF89a"), Buffer.alloc(2000, 0x00)]),
+    },
+    {
+      name: "zip",
+      bytes: Buffer.concat([
+        Buffer.from([0x50, 0x4b, 0x03, 0x04]),
+        Buffer.alloc(2000, 0x00),
+      ]),
+    },
+    {
+      name: "plaintext",
+      bytes: Buffer.concat([
+        Buffer.from("not an image at all"),
+        Buffer.alloc(2000, 0x00),
+      ]),
+    },
+  ])(
+    "should reject $name even with image/jpeg content type",
+    async ({ name, bytes }) => {
+      const firestore = admin.firestore();
+      await firestore.collection("Users").doc(testUid).set({
+        displayName: "Test",
+      });
+
+      const quarantinePath = `profilePictures/quarantine/${testUid}/${name}`;
+      await bucket.file(quarantinePath).save(bytes);
+
+      await validateProfileImageHandler({
+        data: {
+          name: quarantinePath,
+          bucket: BUCKET,
+          size: String(bytes.length),
+          contentType: "image/jpeg", // ←  a lie
+        } as any,
+      });
+
+      // Quarantine files is deleted
+      const [quarantineExists] = await bucket.file(quarantinePath).exists();
+      expect(quarantineExists).toBe(false);
+
+      // No final file created
+      const [finalExists] = await bucket
+        .file(`profilePictures/${testUid}/current.jpg`)
+        .exists();
+      expect(finalExists).toBe(false);
+
+      // No Firestore-Update
+      const userSnap = await firestore.collection("Users").doc(testUid).get();
+      expect(userSnap.data()?.photoURL).toBeUndefined();
+    },
+  );
 });
