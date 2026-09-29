@@ -272,4 +272,65 @@ describe("validateProfileImage Integration Tests", () => {
     const [exists] = await bucket.file(path).exists();
     expect(exists).toBe(true);
   });
+
+  // Size-Window (Off-by-One)
+  it.each([
+    { size: 1024, shouldPromote: false, label: "exactly 1024 (min boundary)" },
+    { size: 1025, shouldPromote: true, label: "exactly 1025 (just above min)" },
+    {
+      size: 5 * 1024 * 1024 - 1,
+      shouldPromote: true,
+      label: "5MB - 1 (just below max)",
+    },
+    {
+      size: 5 * 1024 * 1024,
+      shouldPromote: false,
+      label: "exactly 5MB (max boundary)",
+    },
+  ])(
+    "should handle size $label: promote=$shouldPromote",
+    async ({ size, shouldPromote }) => {
+      const firestore = admin.firestore();
+      await firestore.collection("Users").doc(testUid).set({
+        displayName: "Test",
+      });
+
+      // Buffer exact `size` Bytes large, with valid JPEG-Header
+      const header = Buffer.from([0xff, 0xd8, 0xff, 0xe0]);
+      const eoi = Buffer.from([0xff, 0xd9]);
+      const paddingSize = size - header.length - eoi.length;
+      const buf = Buffer.concat([header, Buffer.alloc(paddingSize, 0x00), eoi]);
+      expect(buf.length).toBe(size); // Sanity
+
+      const quarantinePath = `profilePictures/quarantine/${testUid}/size-${size}`;
+      await bucket.file(quarantinePath).save(buf, {
+        metadata: { contentType: "image/jpeg" },
+      });
+
+      await validateProfileImageHandler({
+        data: {
+          name: quarantinePath,
+          bucket: BUCKET,
+          size: String(size),
+          contentType: "image/jpeg",
+        } as any,
+      });
+
+      // Quarantine is deleted in each case
+      const [quarantineExists] = await bucket.file(quarantinePath).exists();
+      expect(quarantineExists).toBe(false);
+
+      const [finalExists] = await bucket
+        .file(`profilePictures/${testUid}/current.jpg`)
+        .exists();
+      expect(finalExists).toBe(shouldPromote);
+
+      const userSnap = await firestore.collection("Users").doc(testUid).get();
+      if (shouldPromote) {
+        expect(userSnap.data()?.photoURL).toBeDefined();
+      } else {
+        expect(userSnap.data()?.photoURL).toBeUndefined();
+      }
+    },
+  );
 });
