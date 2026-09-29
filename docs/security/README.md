@@ -9,6 +9,7 @@ It is designed for reviewers to quickly understand:
 - how authentication works
 - how abuse is prevented
 - how sensitive data is protected
+- how uploaded content is validated
 - how the system behaves under attack or failure
 
 It is not implementation-level documentation.  
@@ -18,9 +19,9 @@ Detailed behavior is split into subsystem documents.
 
 ## Security Request Flow (Runtime Pipeline | Decision Path)
 
-The system implements a server-side security model for authentication and abuse prevention.
+The system implements a server-side security model for authentication, abuse prevention, and content validation.
 
-It consists of three core security layers:
+It consists of four core security layers:
 
 ```mermaid
 flowchart TD
@@ -37,14 +38,16 @@ flowchart TD
 
         Crypto[Cryptographic Operations]
 
+        ImgVal[Image Validation<br/>Magic Bytes]
+
     end
 
     DB[(Firestore)]
+    Storage[(Cloud Storage)]
 
     Client --> Context
 
     Context --> RL
-
     RL -->|Allowed| Auth
     RL -->|Blocked| Denied[RateLimitError]
 
@@ -52,6 +55,12 @@ flowchart TD
     Auth -->|Invalid| Reject[Authentication Failed]
 
     Crypto --> DB
+
+    Client -.quarantine upload.-> Storage
+    Storage -->|Trigger| ImgVal
+    ImgVal -->|Valid| Storage
+    ImgVal -->|Valid| DB
+    ImgVal -->|Invalid| Drop[Delete Quarantine Object]
 ```
 
 ### 1. Authentication Layer (TOTP)
@@ -107,6 +116,27 @@ See: `data-protection.md`
 
 ---
 
+### 4. Content Validation Layer (Profile Image Quarantine)
+
+Responsible for ensuring that user-uploaded files are validated server-side before they become part of the public surface of the system.
+
+Key properties:
+
+- **Quarantine-first upload model.** Clients can only write to `profilePictures/quarantine/{uid}/{uuid}`. This prefix is non-readable (`allow read: if false`), so no upload is ever served before validation.
+- **Server-side byte validation.** A Cloud Function (`validateProfileImage`) inspects the actual magic bytes of each uploaded object. The client-supplied `contentType` header is not treated as a security signal.
+- **Format allowlist.** Only JPEG, PNG, and WebP are accepted. All other payloads (including non-images with a spoofed image content type) are rejected and the quarantine object is deleted.
+- **Size window.** Files must be larger than 1 KB and smaller than 5 MiB. Both boundaries are enforced server-side and verified by integration tests at the exact limits.
+- **UID format validation.** The UID segment of the quarantine path is validated against `^[A-Za-z0-9_-]{1,128}$` before any storage or Firestore access, preventing path traversal and malformed Firestore document references.
+- **Promotion to public path.** Validated images are promoted to `profilePictures/{uid}/current.{ext}`, which is the only publicly readable profile-image location. Writes to this path are disabled for clients; only the Admin SDK (used by the Cloud Function) can write here.
+- **Cache-busting via generation.** The promoted `photoURL` is written to `Users/{uid}` with a `?v=<generation>` query parameter, so the client always reloads the current image after a successful upload.
+- **Cleanup guarantee.** The quarantine object is deleted on every terminal path — success, invalid format, invalid size, invalid UID.
+
+Important design decision:
+
+> `request.resource.contentType` is never trusted as a security signal. Only the actual file bytes determine whether an upload is accepted.
+
+---
+
 ## C4 Container View (Firebase Security System Structure)
 
 ```
@@ -121,8 +151,17 @@ Firebase Functions (Security Layer)
   |
   +--> Data Protection Layer (HMAC / Crypto)
   |
+  +--> Content Validation Layer (Image Quarantine)
+  |
   v
 Firestore (State Storage)
+
+Cloud Storage (Quarantine + Public Profile Path)
+  |
+  +--> validateProfileImage (storage trigger)
+  |
+  v
+Firestore (photoURL update)
 ```
 
 ---
@@ -168,6 +207,7 @@ Client input is never trusted for:
 - authentication decisions
 - rate limiting state
 - security boundaries
+- **file content type or validity** (see Content Validation Layer)
 
 ---
 
@@ -178,6 +218,7 @@ Security behavior is deterministic under concurrency:
 - Firestore transactions ensure atomic updates
 - no race-condition bypass is possible in normal operation
 - state transitions are consistent under load
+- quarantine uploads are validated once, promoted once, and cleaned up once
 
 ---
 
@@ -211,6 +252,7 @@ For security-critical operations:
 
 - unexpected system failures result in denial
 - bypass is not allowed under degraded conditions
+- **uploads that cannot be validated are not promoted** — the quarantine object is either validated and promoted, or rejected and deleted
 
 ---
 
@@ -223,17 +265,22 @@ The system is designed to mitigate:
 - concurrent request exploitation
 - distributed abuse across multiple contexts
 - identifier exposure in persistent storage
+- **upload of non-image payloads with spoofed content types (Stored XSS, polyglot files)**
+- **path traversal via malicious UID segments in storage paths**
+- **oversized or trivial uploads that would consume storage or degrade UX**
+- **pre-validation exposure of unverified content to other users**
 
 ---
 
 ## Subsystem Documentation
 
-| Module               | Responsibility                              |
-| -------------------- | ------------------------------------------- |
-| `totp-core.md`       | RFC-compliant OTP generation and validation |
-| `rate-limiting.md`   | Abuse prevention via token bucket system    |
-| `data-protection.md` | Cryptographic protection of sensitive data  |
-| `threat-model.md`    | Threat analysis and adversary assumptions   |
+| Module                | Responsibility                                     |
+| --------------------- | -------------------------------------------------- |
+| `totp-core.md`        | RFC-compliant OTP generation and validation        |
+| `rate-limiting.md`    | Abuse prevention via token bucket system           |
+| `data-protection.md`  | Cryptographic protection of sensitive data         |
+| `image-quarantine.md` | Quarantine-based profile image validation pipeline |
+| `threat-model.md`     | Threat analysis and adversary assumptions          |
 
 ---
 
@@ -248,6 +295,7 @@ This design choice improves usability (no cross-device lockouts), but requires:
 - strong authentication controls (TOTP)
 - per-context abuse detection
 - atomic server-side enforcement
+- **server-side content validation for all user-uploaded files**
 
 ---
 
@@ -260,7 +308,8 @@ Start in this order:
 1. `totp-core.md` → cryptographic correctness
 2. `rate-limiting.md` → abuse prevention model
 3. `data-protection.md` → storage + crypto boundaries
-4. `threat-model.md` → adversary coverage and residual risk
+4. `image-quarantine.md` → upload validation and promotion pipeline
+5. `threat-model.md` → adversary coverage and residual risk
 
 ---
 
@@ -279,6 +328,7 @@ The system already provides multiple abuse-prevention and security controls:
 - atomic Firestore transaction enforcement
 - strict Firestore security rules and ownership checks
 - fail-closed behavior on security-critical paths
+- **quarantine-based upload validation with server-side byte inspection**
 
 App Check would primarily add an additional attestation layer to verify that requests originate from an authorized application instance.
 
@@ -297,6 +347,7 @@ The system implements a layered security architecture:
 - cryptographic authentication (TOTP)
 - contextual abuse prevention (rate limiting)
 - cryptographic data protection (HMAC / encryption)
+- **server-side content validation (quarantine + magic-byte inspection)**
 - strict server-side enforcement (Firestore transactions)
 
 All layers are designed to work independently but reinforce each other.

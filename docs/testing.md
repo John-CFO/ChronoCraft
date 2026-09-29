@@ -225,7 +225,7 @@ The test suite is structured into:
 
 ---
 
-# Indempotengy
+# Idempotency
 
 ## Idempotency Guarantees
 
@@ -242,7 +242,7 @@ Idempotency is tested across multiple system layers:
   - project updates under repeated writes
   - rate limit repeated consumption safety
 
-  ***
+---
 
 # Integration Tests
 
@@ -251,6 +251,7 @@ Integration tests validate interactions between services and external systems:
 - Firestore Emulator
 - Firebase Auth
 - Cloud Storage
+- Cloud Functions (validateProfileImage)
 
 ---
 
@@ -319,11 +320,53 @@ Integration tests validate interactions between services and external systems:
 
 ---
 
+## Cloud Function: `validateProfileImage`
+
+Integration tests exercise the full handler against the Firestore and Storage emulators. They cover the security guarantees of the quarantine pipeline, not just the happy path.
+
+### Happy path
+
+- Valid JPEG uploaded to `profilePictures/quarantine/{uid}/{uuid}` is promoted to `profilePictures/{uid}/current.jpg`.
+- `photoURL` is written to `Users/{uid}` with a `?v=<generation>` cache-buster.
+- Quarantine object is deleted after successful promotion.
+
+### Path traversal rejection
+
+- UID segment containing `..` is rejected before any Storage or Firestore access.
+- No file is created outside the expected `profilePictures/{uid}/` prefix.
+- No Firestore write occurs; the quarantine object is cleaned up.
+
+### Non-image payloads with spoofed content type
+
+- Payloads that are not images (PDF, HTML, GIF, ZIP, plaintext) are rejected by magic-byte detection, even when the client sends `contentType: "image/jpeg"`.
+- The quarantine object is deleted and no Firestore write occurs.
+- Verifies that `request.resource.contentType` is not trusted as a security signal.
+
+### Path filter enforcement
+
+- Paths outside `profilePictures/quarantine/{uid}/{file}` are ignored without side effects:
+  - missing quarantine prefix
+  - too few segments
+  - too many segments
+  - only the prefix present
+  - wrong prefix (`Quarantine/...`)
+
+### Size boundary enforcement
+
+- Exactly 1024 B → rejected (minimum boundary).
+- Exactly 1025 B → accepted (just above minimum).
+- 5 MiB − 1 → accepted (just below maximum).
+- Exactly 5 MiB → rejected (maximum boundary).
+- Verifies the inclusive/exclusive semantics of `size <= 1024` and `size >= MAX_IMAGE_SIZE`.
+
+---
+
 ## Integration Test Scope
 
 - Firestore Emulator integration
 - Firebase Auth integration
 - Cloud Storage integration
+- Cloud Function integration (`validateProfileImage`)
 - Service ↔ repository communication
 - Cross-system consistency validation
 - Security wrapper enforcement
