@@ -136,4 +136,37 @@ describe("validateProfileImage Integration Tests", () => {
     expect(photoURL).toContain("current.jpg");
     expect(photoURL).toMatch(/v=\d+/);
   });
+
+  it("should reject path traversal in uid segment", async () => {
+    const firestore = admin.firestore();
+    await firestore.collection("Users").doc(testUid).set({
+      displayName: "Test",
+    });
+
+    // Attack-Path: 4 segments, but uid = ".."
+    const maliciousPath = "profilePictures/quarantine/../evil";
+    await bucket.file(maliciousPath).save(VALID_JPEG, {
+      metadata: { contentType: "image/jpeg" },
+    });
+
+    await validateProfileImageHandler({
+      data: {
+        name: maliciousPath,
+        bucket: BUCKET,
+        size: String(VALID_JPEG.length),
+        contentType: "image/jpeg",
+      } as any,
+    });
+
+    // Expect: no file created outside profilePictures/{valid-uid}/,
+    // no Firestore document with uid ".." created.
+    const [rootCurrent] = await bucket
+      .file("profilePictures/current.jpg")
+      .exists();
+    expect(rootCurrent).toBe(false);
+
+    // The test user's user document must not have been modified.
+    const userSnap = await firestore.collection("Users").doc(testUid).get();
+    expect(userSnap.data()?.photoURL).toBeUndefined();
+  });
 });
