@@ -1,7 +1,7 @@
 rules_version = '2';
 
 service firebase.storage {
-  match /b/{bucket}/o {
+  match /b/chrono-craft-worktime-manager.firebasestorage.app/o {
 
     function isSignedIn() {
       return request.auth != null;
@@ -11,7 +11,13 @@ service firebase.storage {
       return isSignedIn() && request.auth.uid == uid;
     }
 
-    function isValidImage() {
+    // NOTE: This is ONLY a rough pre-filter to reject obviously
+    // unsuitable uploads early and reduce the load on the Cloud Function. 
+    // request.resource.contentType is a header that can be freely set
+    // by the client and does NOT prove that the bytes are actually
+    // an image. The definitive content check (magic bytes) is
+    // performed exclusively by the Cloud Function validateProfileImage.
+    function isPlausibleImageUpload() {
       return request.resource.contentType in [
         'image/jpeg',
         'image/png',
@@ -21,13 +27,38 @@ service firebase.storage {
       && request.resource.size < 5 * 1024 * 1024;
     }
 
-    match /profilePictures/{uid}/current.jpg {
+    // Quarantine: Client may only create new files; no one may read them. 
+    // The Cloud Function moves valid images to the final path
+    // and deletes the quarantine file (Admin SDK bypasses these rules).
+    match /profilePictures/quarantine/{uid}/{uploadId} {
+      // Quarantine is not readable by anyone — not even the owner. 
+      // Prevents stored XSS via manipulated files containing
+      // HTML/JS and prevents attackers from intercepting
+      // an intermediate version.
+      allow read: if false;
 
+      // Create only, do not overwrite. Since every quarantine file
+      // has a fresh UUID in its name, "create" is sufficient.
+      allow create: if isOwner(uid) && isPlausibleImageUpload();
+      allow update: if false;
+
+      // Owner may clean up their own failed uploads.
+      allow delete: if isOwner(uid);
+    }
+
+    // Final path: publicly readable; writes only via Admin SDK. 
+    // Client writes are completely prohibited—control lies
+    // exclusively with the Cloud Function.
+    match /profilePictures/{uid}/{fileName} {
       allow read: if true;
+      allow write: if false;
+      allow delete: if false;
+    }
 
-      allow write: if
-        isOwner(uid) &&
-        isValidImage();
+    // Anything not explicitly permitted is prohibited. 
+    // Catches unintended new paths before they become vulnerabilities.
+    match /{allPaths=**} {
+      allow read, write: if false;
     }
   }
 }

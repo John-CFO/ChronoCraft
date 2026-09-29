@@ -81,6 +81,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
   // state declaration for the profile picture
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [imageMimeType, setImageMimeType] = useState<string | null>(null);
   const [currentPhotoUrl, setCurrentPhotoUrl] = useState<string | null>(null);
 
   // screensize for dynamic size calculation
@@ -140,8 +141,10 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       aspect: [4, 3],
       quality: 1,
     });
+
     if (!result.canceled) {
       setImageUri(result.assets[0].uri);
+      setImageMimeType(result.assets[0].mimeType ?? null);
     } else {
       useAlertStore
         .getState()
@@ -160,6 +163,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
   const dots = useDotAnimation(loading, 700);
   const handleSave = async () => {
     const currentUser = getAuth().currentUser ?? FIREBASE_AUTH.currentUser;
+
     if (!currentUser?.uid) {
       logError(
         "EditProfileModal/missingAuthUser",
@@ -174,6 +178,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
       newName,
       newPersonalNumber: newPersonalNumber,
       imageUri,
+      imageMimeType,
       showAlert: useAlertStore.getState().showAlert,
       onClose,
       setSaving,
