@@ -107,10 +107,7 @@ const CustomDrawer: React.FC<CustomDrawerProps> = (props) => {
       (snap) => {
         if (!snap.exists()) return;
         const data = snap.data() || {};
-        console.log("[CustomDrawer] snapshot", {
-          photoURL: data.photoURL,
-          displayName: data.displayName,
-        });
+
         const mergedUser: MergedUser = {
           ...currentUser,
           uid: currentUser.uid,
