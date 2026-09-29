@@ -170,7 +170,7 @@ describe("validateProfileImage Integration Tests", () => {
     expect(userSnap.data()?.photoURL).toBeUndefined();
   });
 
-  // Path-Traversal-Test
+  // Non-Images with Image-Content-Type
   it.each([
     {
       name: "pdf",
@@ -239,4 +239,37 @@ describe("validateProfileImage Integration Tests", () => {
       expect(userSnap.data()?.photoURL).toBeUndefined();
     },
   );
+
+  // Path-Filter (S1)
+  it.each([
+    {
+      label: "no quarantine prefix",
+      path: `profilePictures/${"uid"}/current.jpg`,
+    },
+    { label: "too few segments", path: "profilePictures/quarantine/onlythree" },
+    {
+      label: "too many segments",
+      path: "profilePictures/quarantine/uid/file/extra",
+    },
+    { label: "only prefix", path: "profilePictures/quarantine" },
+    { label: "wrong prefix", path: "Quarantine/uid/file" },
+  ])("should ignore $label: $path", async ({ path }) => {
+    // Create file at the attacker path (in the emulator, to bypass rules)
+    await bucket.file(path).save(VALID_JPEG, {
+      metadata: { contentType: "image/jpeg" },
+    });
+
+    await validateProfileImageHandler({
+      data: {
+        name: path,
+        bucket: BUCKET,
+        size: String(VALID_JPEG.length),
+        contentType: "image/jpeg",
+      } as any,
+    });
+
+    // File remains unchanged — the function did nothing to it
+    const [exists] = await bucket.file(path).exists();
+    expect(exists).toBe(true);
+  });
 });
