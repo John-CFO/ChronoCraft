@@ -5,53 +5,44 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref } from "firebase/storage";
+import * as FileSystem from "expo-file-system";
+import * as Crypto from "expo-crypto";
 
 import { FIREBASE_STORAGE, FIREBASE_AUTH } from "../../firebaseConfig";
 import { logError } from "../../lib/loggerClient";
+import { safeUploadString } from "./safeUpload";
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-export async function uploadImageToProfile(uri: string): Promise<string> {
-  // check if user is authenticated
+export async function uploadImageToProfile(
+  uri: string,
+  mimeType: string,
+): Promise<void> {
   const authUser = FIREBASE_AUTH.currentUser;
+  if (!authUser?.uid) throw new Error("User not authenticated");
 
-  if (!authUser?.uid) {
-    throw new Error("User not authenticated");
+  const allowedImageTypes = ["image/jpeg", "image/png", "image/webp"];
+  if (!allowedImageTypes.includes(mimeType)) {
+    throw new Error("Unsupported image type");
   }
 
-  // get user id
-  const uid = authUser.uid;
+  const base64 = await FileSystem.readAsStringAsync(uri, {
+    encoding: FileSystem.EncodingType.Base64,
+  });
 
-  // upload image
-  const res = await fetch(uri);
-
-  // convert image to blob
-  const blob = await res.blob();
-
-  // get storage reference
+  const uploadId = Crypto.randomUUID();
   const storageRef = ref(
     FIREBASE_STORAGE,
-    `profilePictures/${uid}/current.jpg`,
+    `profilePictures/quarantine/${authUser.uid}/${uploadId}`,
   );
 
   try {
-    const result = await uploadBytes(storageRef, blob);
-    const url = await getDownloadURL(result.ref);
-    return url;
+    await safeUploadString(storageRef, base64, "base64", {
+      contentType: mimeType,
+    });
   } catch (error: any) {
     logError("storage/uploadImageToProfile", error);
     throw error;
   }
-}
-
-export async function debugUpload(uri: string) {
-  const response = await fetch(uri);
-  const arrayBuffer = await response.arrayBuffer();
-
-  const blob = new Blob([arrayBuffer], {
-    type: "image/jpeg",
-  });
-
-  return blob;
 }
