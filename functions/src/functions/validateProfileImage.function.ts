@@ -78,8 +78,17 @@ export async function validateProfileImageHandler(event: {
 
   const uid = pathParts[2];
 
-  if (!uid) {
-    console.error("Missing UID:", objectName);
+  const UID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
+  if (!uid || !UID_PATTERN.test(uid)) {
+    console.error("[validateProfileImage] Invalid UID:", uid);
+    await admin
+      .storage()
+      .bucket(bucketName)
+      .file(objectName)
+      .delete()
+      .catch(() => {
+        /* ignore */
+      });
     return;
   }
 
@@ -87,9 +96,7 @@ export async function validateProfileImageHandler(event: {
 
   if (!Number.isFinite(size) || size <= 1024 || size >= MAX_IMAGE_SIZE) {
     console.error("Invalid image size:", { objectName, size });
-
     await admin.storage().bucket(bucketName).file(objectName).delete();
-
     return;
   }
 
