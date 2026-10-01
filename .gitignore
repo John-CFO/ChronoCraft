@@ -53,6 +53,9 @@ _active.uuser
 android/
 ios/
 
+# Release artifacts (binaries + checksums)
+release/
+
 # Firebase debug logs
 firebase-debug.log
 firebase-debug.*.log
