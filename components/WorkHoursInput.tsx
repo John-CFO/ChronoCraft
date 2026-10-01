@@ -17,6 +17,7 @@ import { getAuth } from "firebase/auth";
 import { setDoc, doc, getDoc } from "firebase/firestore";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
 import { useTranslation } from "react-i18next";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { useService } from "../components/contexts/ServiceContext";
@@ -80,12 +81,31 @@ const WorkHoursInput = () => {
             "WorkHoursInput.handleSaveMinHours",
             new Error("User ID not available"),
           );
-
           return;
         }
 
         const tz = dayjs.tz.guess();
-        const workDay = dayjs().tz(tz).format("YYYY-MM-DD");
+        const today = dayjs().tz(tz).format("YYYY-MM-DD");
+
+        // 1) Determine session status: store first, then AsyncStorage as a fallback.
+        const state = WorkHoursState.getState();
+        let running = state.isWorking;
+        let sessionDocId: string | null = state.currentDocId ?? null;
+
+        if (!running) {
+          const saved = await AsyncStorage.getItem("workTimeTrackerState");
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed?.isWorking && parsed?.currentDocId) {
+              running = true;
+              sessionDocId = parsed.currentDocId;
+            }
+          }
+        }
+
+        // 2) Target day: Session day takes precedence over "today"
+        const targetDay = running && sessionDocId ? sessionDocId : today;
+
         const docRef = doc(
           FIREBASE_FIRESTORE,
           "Users",
@@ -93,7 +113,7 @@ const WorkHoursInput = () => {
           "Services",
           serviceId,
           "WorkHours",
-          workDay,
+          targetDay,
         );
 
         const docSnap = await getDoc(docRef);
@@ -111,7 +131,13 @@ const WorkHoursInput = () => {
           // doc does not exist -> use default values
           setExpectedHours("0");
           setDocExists(false);
-          setGlobalDocId(null);
+
+          // 3) Set the global DocId to null only if NO session is running.
+          //    If a session is running, the session DocId must not be lost;
+          //    otherwise, the stop button will be disabled.
+          if (!running) {
+            setGlobalDocId(null);
+          }
         }
       } catch (error) {
         logError("WorkHoursInput.fetchExpectedHours", error);
@@ -126,7 +152,7 @@ const WorkHoursInput = () => {
     };
 
     fetchExpectedHours();
-  }, []); // empty array enshures that this runs only once by mount
+  }, []); // empty array ensures that this runs only once by mount
 
   // Healper function to recalculate and save the expected hours
   const recalcAndSaveForDay = async (

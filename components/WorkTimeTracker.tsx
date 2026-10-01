@@ -135,9 +135,33 @@ const WorkTimeTracker = () => {
         );
         return;
       }
-      const today = dayjs().format("YYYY-MM-DD"); // current day
-      setWorkDay(today);
+
       try {
+        // 1) Check if a session is running.
+        //    First the store (in case restoreState has already completed),
+        //    otherwise directly AsyncStorage (restore might still be in progress).
+        const storeState = WorkHoursState.getState();
+        let running = storeState.isWorking;
+        let runningDocId: string | null = storeState.currentDocId ?? null;
+
+        if (!running) {
+          const saved = await AsyncStorage.getItem("workTimeTrackerState");
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed?.isWorking && parsed?.currentDocId) {
+              running = true;
+              runningDocId = parsed.currentDocId;
+            }
+          }
+        }
+
+        63;
+        // 2) Determine target day: Session day takes precedence over "today".
+        const today = dayjs().format("YYYY-MM-DD");
+        const targetDay = running && runningDocId ? runningDocId : today;
+
+        setWorkDay(targetDay);
+
         const docRef = doc(
           FIREBASE_FIRESTORE,
           "Users",
@@ -145,18 +169,18 @@ const WorkTimeTracker = () => {
           "Services",
           serviceId,
           "WorkHours",
-          today,
+          targetDay,
         );
         const docSnapshot = await getDoc(docRef);
+
         if (docSnapshot.exists()) {
-          // document for today exists: set expected hours
           setExpectedHours(docSnapshot.data().expectedHours?.toString() || "0");
         } else {
-          // no document for today: set expected hours to 0
           setExpectedHours("0");
         }
-        // set current doc id to the current day
-        setCurrentDocId(today);
+        // 3) Set currentDocId to "today" only if NO session is active.
+        //    If a session is active, the session tag remains set.
+        setCurrentDocId(targetDay);
       } catch (error) {
         logError("WorkTimeTracker.getExpectedHoursForToday", error);
         useAlertStore
@@ -579,6 +603,9 @@ const WorkTimeTracker = () => {
 
         const validatedData = validation.data;
 
+        115;
+        // 1) Always restore the base state — regardless of
+        //    whether the session doc still exists.
         setAccumulatedDuration(validatedData.accumulatedDuration || 0);
         setElapsedTime(validatedData.elapsedTime || 0);
 
@@ -589,8 +616,13 @@ const WorkTimeTracker = () => {
             return;
           }
 
+          177;
+          // 2) The session date takes precedence over "today".
+          //    The session date is read from the stored currentDocId,
+          //    not from the current calendar day.
           const docIdToCheck =
             validatedData.currentDocId || dayjs().format("YYYY-MM-DD");
+
           const workRef = doc(
             FIREBASE_FIRESTORE,
             "Users",
@@ -602,12 +634,28 @@ const WorkTimeTracker = () => {
           );
           const docSnap = await getDoc(workRef);
           const data = docSnap.exists() ? docSnap.data() : null;
+
+          // 3) If the doc is missing, do NOT delete the saved state
+          //    and do NOT abort. The session continues; the tracker
+          //    knows via currentDocId where to write upon stopping.
+          //    Only the target time is unknown in this case -> fallback to "0".
           if (!data) {
-            logWarn("WorkTimeTracker.restoreState", "No data found");
-            await AsyncStorage.removeItem("workTimeTrackerState");
-            return;
+            logWarn(
+              "WorkTimeTracker.restoreState",
+              "Session doc not found — restoring without expectedHours",
+            );
+            setExpectedHours("0");
+          } else {
+            // 4) Restore expectedHours from the session doc.
+            if (data.expectedHours !== undefined) {
+              setExpectedHours(String(data.expectedHours));
+            }
           }
 
+          // 5) startWorkTime is set to "now" so that the active
+          //    timer interval continues counting correctly. The original
+          //    start time is contained in validatedData.startWorkTime
+          //    and was already used above to calculate elapsedSince.
           const startTime = new Date(validatedData.startWorkTime);
           const now = new Date();
           const elapsedSince =
