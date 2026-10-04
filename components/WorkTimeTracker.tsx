@@ -389,7 +389,9 @@ const WorkTimeTracker = () => {
       if (sessionHours < 0 || sessionHours > 24) sessionHours = 0;
 
       const totalHours = currentAccumulated + sessionHours;
-      const roundedDuration = parseFloat(totalHours.toFixed(2));
+      // Round to the nearest second, not to 0.01 h (=36 s).
+      // toFixed(2) loses up to 18 s per session, which accumulate.
+      const roundedDuration = Math.round(totalHours * 3600) / 3600;
       if (roundedDuration < 0 || roundedDuration > 24 * 365) return;
 
       const userId = getAuth().currentUser?.uid;

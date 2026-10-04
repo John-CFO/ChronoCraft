@@ -169,9 +169,8 @@ const WorkHoursInput = () => {
           : undefined;
 
       const newOver = Math.max(duration - newExpected, 0);
-      const roundedOver = parseFloat(newOver.toFixed(2));
-      const roundedDuration = parseFloat(duration.toFixed(2));
-
+      const roundedOver = Math.round(newOver * 3600) / 3600;
+      const roundedDuration = Math.round(duration * 3600) / 3600;
       // build history entry (optional)- only if previousExpected is known
       const historyEntry =
         previousExpected !== undefined
