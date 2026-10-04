@@ -421,6 +421,21 @@ const WorkTimeTracker = () => {
         setCurrentDocId(docIdToUse);
       }
 
+      // Session ended: Set isWorking to false in AsyncStorage.
+      // The entry is NOT deleted so that no data is lost if the app
+      // is accidentally killed during an active session.
+      // Only the stop path toggles the flag; killing the app without stopping leaves it set to true.
+      await AsyncStorage.setItem(
+        "workTimeTrackerState",
+        JSON.stringify({
+          isWorking: false,
+          startWorkTime: null,
+          elapsedTime: roundedDuration,
+          accumulatedDuration: roundedDuration,
+          currentDocId: currentDocId || dayjs().format("YYYY-MM-DD"),
+        }),
+      );
+
       setAccumulatedDuration(roundedDuration);
       setElapsedTime(roundedDuration);
       setStartWorkTime(null);
