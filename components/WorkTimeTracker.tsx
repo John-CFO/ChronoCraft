@@ -155,7 +155,6 @@ const WorkTimeTracker = () => {
           }
         }
 
-        63;
         // 2) Determine target day: Session day takes precedence over "today".
         const today = dayjs().format("YYYY-MM-DD");
         const targetDay = running && runningDocId ? runningDocId : today;
@@ -332,6 +331,9 @@ const WorkTimeTracker = () => {
         const prevDuration = validatedDoc.duration || 0;
 
         setAccumulatedDuration(prevDuration);
+        // Synchronize the store with the doc value so that handleStopWork
+        // uses the correct expectedHours value for overHours.
+        setExpectedHours(String(expectedHoursFromFirestore ?? "0"));
         const newStartTime = new Date();
 
         const dataToWrite = {
@@ -369,8 +371,6 @@ const WorkTimeTracker = () => {
       logError("WorkTimeTracker.handleStopWork", "Service ID not available");
       return;
     }
-    setIsWorking(false);
-
     const currentStartTime = startWorkTime;
     const currentAccumulated = accumulatedDuration;
     const currentDoc = currentDocId;
@@ -379,6 +379,8 @@ const WorkTimeTracker = () => {
       logError("WorkTimeTracker.handleStopWork", "No start time or doc found");
       return;
     }
+
+    setIsWorking(false);
 
     try {
       const endTime = new Date();
@@ -603,7 +605,6 @@ const WorkTimeTracker = () => {
 
         const validatedData = validation.data;
 
-        115;
         // 1) Always restore the base state — regardless of
         //    whether the session doc still exists.
         setAccumulatedDuration(validatedData.accumulatedDuration || 0);
@@ -616,7 +617,6 @@ const WorkTimeTracker = () => {
             return;
           }
 
-          177;
           // 2) The session date takes precedence over "today".
           //    The session date is read from the stored currentDocId,
           //    not from the current calendar day.
