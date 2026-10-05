@@ -423,6 +423,11 @@ const WorkTimeTracker = () => {
         setCurrentDocId(docIdToUse);
       }
 
+      // Synchronize the ref immediately so that a concurrently running
+      // saveState call does not set isWorking:true.
+      isWorkingRef.current = false;
+      startWorkTimeRef.current = null;
+
       // Session ended: Set isWorking to false in AsyncStorage.
       // The entry is NOT deleted so that no data is lost if the app
       // is accidentally killed during an active session.
@@ -550,21 +555,15 @@ const WorkTimeTracker = () => {
   const accumulatedDurationRef = useRef(accumulatedDuration);
   const isWorkingRef = useRef(isWorking);
   const startWorkTimeRef = useRef(startWorkTime);
+  const elapsedTimeRef = useRef(elapsedTime);
 
-  // hook to updates refs if state changes
+  // hook to hold refs stable for the saveState-Callback
   useEffect(() => {
+    elapsedTimeRef.current = elapsedTime;
     accumulatedDurationRef.current = accumulatedDuration;
-  }, [accumulatedDuration]);
-
-  // hook to update isWorkingRef
-  useEffect(() => {
     isWorkingRef.current = isWorking;
-  }, [isWorking]);
-
-  // hook to update startWorkTimeRef
-  useEffect(() => {
     startWorkTimeRef.current = startWorkTime;
-  }, [startWorkTime]);
+  }, [elapsedTime, accumulatedDuration, isWorking, startWorkTime]);
 
   // initialize saveIntervalRef
   const saveIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -574,12 +573,12 @@ const WorkTimeTracker = () => {
     const state = {
       isWorking: isWorkingRef.current,
       startWorkTime: startWorkTimeRef.current?.toISOString() ?? null,
-      elapsedTime,
+      elapsedTime: elapsedTimeRef.current,
       accumulatedDuration: accumulatedDurationRef.current,
       currentDocId: currentDocIdRef.current ?? null,
     };
     await AsyncStorage.setItem("workTimeTrackerState", JSON.stringify(state));
-  }, [elapsedTime]);
+  }, []);
 
   // hook to set the save interval every 30 seconds
   useEffect(() => {
@@ -595,7 +594,7 @@ const WorkTimeTracker = () => {
         clearInterval(saveIntervalRef.current);
       }
     };
-  }, [isWorking, saveState]);
+  }, [isWorking]);
 
   // hook to restore the state from AsyncStorage by mounting
   useEffect(() => {
@@ -699,7 +698,8 @@ const WorkTimeTracker = () => {
     return () => {
       saveState();
     };
-  }, [saveState]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
