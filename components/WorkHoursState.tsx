@@ -11,6 +11,7 @@ import { doc, setDoc, getDoc } from "firebase/firestore";
 
 import { FIREBASE_FIRESTORE } from "../firebaseConfig";
 import { logError } from "../lib/loggerClient";
+import dayjs from "../dayjsConfig";
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -71,7 +72,9 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
     }
 
     try {
-      const today = new Date().toISOString().split("T")[0];
+      const current = get();
+      const today = current.currentDocId || dayjs().format("YYYY-MM-DD");
+
       const docRef = doc(
         FIREBASE_FIRESTORE,
         "Users",
@@ -83,18 +86,21 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
       );
 
       const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) return;
 
-      if (!docSnap.exists()) {
+      const data = docSnap.data();
+
+      // If a session is already running (from restoreState),
+      // do NOT overwrite it — just match the DocId.
+      if (current.isWorking) {
+        set({ currentDocId: data.workDay ?? today });
         return;
       }
 
-      const data = docSnap.data();
       set({
-        currentDocId: data.currentDocId ?? today,
-        lastUpdatedDate: data.lastUpdatedDate ?? today,
-        elapsedTime: data.elapsedTime ?? 0,
-        isWorking: data.isWorking ?? false,
-        startWorkTime: data.startWorkTime ?? null,
+        currentDocId: data.workDay ?? today,
+        lastUpdatedDate: data.workDay ?? today,
+        elapsedTime: data.duration ?? data.elapsedTime ?? 0,
       });
     } catch (error) {
       logError("WorkHoursState.loadState", error);
@@ -112,7 +118,7 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
 
     try {
       const state = get();
-      const today = new Date().toISOString().split("T")[0];
+      const today = state.currentDocId || dayjs().format("YYYY-MM-DD");
 
       const stateToSave = {
         elapsedTime: state.elapsedTime,
@@ -146,7 +152,6 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
       currentDocId: null,
       startWorkTime: null,
       lastUpdatedDate: null,
-      // alles andere initiale ebenfalls hier rein
     }),
 
   // actions to update the workhoursstate

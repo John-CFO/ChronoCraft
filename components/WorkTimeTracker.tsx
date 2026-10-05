@@ -155,7 +155,6 @@ const WorkTimeTracker = () => {
           }
         }
 
-        63;
         // 2) Determine target day: Session day takes precedence over "today".
         const today = dayjs().format("YYYY-MM-DD");
         const targetDay = running && runningDocId ? runningDocId : today;
@@ -332,6 +331,9 @@ const WorkTimeTracker = () => {
         const prevDuration = validatedDoc.duration || 0;
 
         setAccumulatedDuration(prevDuration);
+        // Synchronize the store with the doc value so that handleStopWork
+        // uses the correct expectedHours value for overHours.
+        setExpectedHours(String(expectedHoursFromFirestore ?? "0"));
         const newStartTime = new Date();
 
         const dataToWrite = {
@@ -369,8 +371,6 @@ const WorkTimeTracker = () => {
       logError("WorkTimeTracker.handleStopWork", "Service ID not available");
       return;
     }
-    setIsWorking(false);
-
     const currentStartTime = startWorkTime;
     const currentAccumulated = accumulatedDuration;
     const currentDoc = currentDocId;
@@ -380,6 +380,8 @@ const WorkTimeTracker = () => {
       return;
     }
 
+    setIsWorking(false);
+
     try {
       const endTime = new Date();
       let sessionHours =
@@ -387,7 +389,9 @@ const WorkTimeTracker = () => {
       if (sessionHours < 0 || sessionHours > 24) sessionHours = 0;
 
       const totalHours = currentAccumulated + sessionHours;
-      const roundedDuration = parseFloat(totalHours.toFixed(2));
+      // Round to the nearest second, not to 0.01 h (=36 s).
+      // toFixed(2) loses up to 18 s per session, which accumulate.
+      const roundedDuration = Math.round(totalHours * 3600) / 3600;
       if (roundedDuration < 0 || roundedDuration > 24 * 365) return;
 
       const userId = getAuth().currentUser?.uid;
@@ -418,6 +422,26 @@ const WorkTimeTracker = () => {
         await setDoc(workRef, dataToWrite, { merge: true });
         setCurrentDocId(docIdToUse);
       }
+
+      // Synchronize the ref immediately so that a concurrently running
+      // saveState call does not set isWorking:true.
+      isWorkingRef.current = false;
+      startWorkTimeRef.current = null;
+
+      // Session ended: Set isWorking to false in AsyncStorage.
+      // The entry is NOT deleted so that no data is lost if the app
+      // is accidentally killed during an active session.
+      // Only the stop path toggles the flag; killing the app without stopping leaves it set to true.
+      await AsyncStorage.setItem(
+        "workTimeTrackerState",
+        JSON.stringify({
+          isWorking: false,
+          startWorkTime: null,
+          elapsedTime: roundedDuration,
+          accumulatedDuration: roundedDuration,
+          currentDocId: currentDocId || dayjs().format("YYYY-MM-DD"),
+        }),
+      );
 
       setAccumulatedDuration(roundedDuration);
       setElapsedTime(roundedDuration);
@@ -531,21 +555,15 @@ const WorkTimeTracker = () => {
   const accumulatedDurationRef = useRef(accumulatedDuration);
   const isWorkingRef = useRef(isWorking);
   const startWorkTimeRef = useRef(startWorkTime);
+  const elapsedTimeRef = useRef(elapsedTime);
 
-  // hook to updates refs if state changes
+  // hook to hold refs stable for the saveState-Callback
   useEffect(() => {
+    elapsedTimeRef.current = elapsedTime;
     accumulatedDurationRef.current = accumulatedDuration;
-  }, [accumulatedDuration]);
-
-  // hook to update isWorkingRef
-  useEffect(() => {
     isWorkingRef.current = isWorking;
-  }, [isWorking]);
-
-  // hook to update startWorkTimeRef
-  useEffect(() => {
     startWorkTimeRef.current = startWorkTime;
-  }, [startWorkTime]);
+  }, [elapsedTime, accumulatedDuration, isWorking, startWorkTime]);
 
   // initialize saveIntervalRef
   const saveIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -555,12 +573,12 @@ const WorkTimeTracker = () => {
     const state = {
       isWorking: isWorkingRef.current,
       startWorkTime: startWorkTimeRef.current?.toISOString() ?? null,
-      elapsedTime,
+      elapsedTime: elapsedTimeRef.current,
       accumulatedDuration: accumulatedDurationRef.current,
       currentDocId: currentDocIdRef.current ?? null,
     };
     await AsyncStorage.setItem("workTimeTrackerState", JSON.stringify(state));
-  }, [elapsedTime]);
+  }, []);
 
   // hook to set the save interval every 30 seconds
   useEffect(() => {
@@ -576,7 +594,7 @@ const WorkTimeTracker = () => {
         clearInterval(saveIntervalRef.current);
       }
     };
-  }, [isWorking, saveState]);
+  }, [isWorking]);
 
   // hook to restore the state from AsyncStorage by mounting
   useEffect(() => {
@@ -603,7 +621,6 @@ const WorkTimeTracker = () => {
 
         const validatedData = validation.data;
 
-        115;
         // 1) Always restore the base state — regardless of
         //    whether the session doc still exists.
         setAccumulatedDuration(validatedData.accumulatedDuration || 0);
@@ -616,7 +633,6 @@ const WorkTimeTracker = () => {
             return;
           }
 
-          177;
           // 2) The session date takes precedence over "today".
           //    The session date is read from the stored currentDocId,
           //    not from the current calendar day.
@@ -682,7 +698,8 @@ const WorkTimeTracker = () => {
     return () => {
       saveState();
     };
-  }, [saveState]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
