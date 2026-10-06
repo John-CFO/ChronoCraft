@@ -32,6 +32,7 @@ const isoDateStringSchema = z.string().refine((dateString) => {
 export const AsyncStorageWorkTrackerSchema = z
   .object({
     isWorking: z.boolean(),
+    isPaused: z.boolean().optional().default(false),
     startWorkTime: isoDateStringSchema.nullable().optional(),
     elapsedTime: z.number().min(0).max(864000), // Max 1 Day in seconds
     accumulatedDuration: z.number().min(0).max(31536000), // Max 10 Years in seconds

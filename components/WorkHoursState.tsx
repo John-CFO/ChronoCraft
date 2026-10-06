@@ -24,6 +24,7 @@ interface WorkHoursStateProps {
   docExists: boolean;
   startWorkTime: Date | null;
   isWorking: boolean;
+  isPaused: boolean;
   elapsedTime: number;
   currentDocId: string | null;
   workHours: any[];
@@ -39,6 +40,7 @@ interface WorkHoursStateProps {
   setExpectedHours: (hours: string) => void;
   setStartWorkTime: (time: Date | null) => void;
   setIsWorking: (working: boolean) => void;
+  setIsPaused: (paused: boolean) => void;
   setElapsedTime: (time: number) => void;
   setCurrentDocId: (docId: string | null) => void;
   setWorkHours: (hours: any[]) => void;
@@ -56,6 +58,7 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
   docExists: false,
   startWorkTime: null,
   isWorking: false,
+  isPaused: false,
   elapsedTime: 0,
   currentDocId: null,
   workHours: [],
@@ -123,6 +126,7 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
       const stateToSave = {
         elapsedTime: state.elapsedTime,
         isWorking: state.isWorking,
+        isPaused: state.isPaused,
         startWorkTime: state.startWorkTime,
         currentDocId: state.currentDocId,
         lastUpdatedDate: today,
@@ -149,6 +153,7 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
     set({
       elapsedTime: 0,
       isWorking: false,
+      isPaused: false,
       currentDocId: null,
       startWorkTime: null,
       lastUpdatedDate: null,
@@ -161,6 +166,7 @@ const WorkHoursState = create<WorkHoursStateProps>((set, get) => ({
   setDocExists: (value) => set({ docExists: value }),
   setStartWorkTime: (time) => set({ startWorkTime: time }),
   setIsWorking: (working) => set({ isWorking: working }),
+  setIsPaused: (paused) => set({ isPaused: paused }),
   setElapsedTime: (time) => set({ elapsedTime: time }),
   setCurrentDocId: (docId) => set({ currentDocId: docId }),
   setWorkHours: (hours) => set({ workHours: hours }),
