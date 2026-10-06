@@ -260,6 +260,9 @@
     "noServiceId": "No serviceId found",
     "userIdUnavailable": "User ID not available",
     "fetchDataError": "An error occurred while fetching the data. Please try again.",
+    "pauseTrackingError": "Failed to pause tracking",
+    "resumeTrackingError": "Failed to resume tracking",
+    "pausedIndicator": "Paused",
     "expectedHoursRequired": "First add your expected hours.",
     "startTrackingError": "Failed to start tracking",
     "serviceIdUnavailable": "Service ID not available",
@@ -274,6 +277,9 @@
       "trackerHint": "Start or stop tracking your work time",
       "startWorking": "Start working",
       "startWorkingHint": "Starts tracking your work time",
+      "pauseWorking": "Pause working",
+      "resumeWorking": "Resume working",
+      "paused": "Work tracking is paused",
       "expectedHoursRequiredHint": "You must first enter expected hours",
       "stopWorking": "Stop working",
       "stopWorkingHint": "Stops tracking your work time",
@@ -282,7 +288,9 @@
     },
     "buttons": {
       "start": "Start",
-      "stop": "Stop"
+      "stop": "Stop",
+      "pause": "Pause",
+      "resume": "Resume"
     }
   },
 

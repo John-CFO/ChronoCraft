@@ -260,6 +260,9 @@
     "noServiceId": "Aucun serviceId trouvé",
     "userIdUnavailable": "ID utilisateur non disponible",
     "fetchDataError": "Une erreur s'est produite lors de la récupération des données. Veuillez réessayer.",
+    "pauseTrackingError": "Échec de la mise en pause du suivi",
+    "resumeTrackingError": "Échec de la reprise du suivi",
+    "pausedIndicator": "En pause",
     "expectedHoursRequired": "Ajoutez d'abord vos heures prévues.",
     "startTrackingError": "Échec du démarrage du suivi",
     "serviceIdUnavailable": "Service ID non disponible",
@@ -274,6 +277,9 @@
       "trackerHint": "Démarrez ou arrêtez le suivi de votre temps de travail",
       "startWorking": "Commencer à travailler",
       "startWorkingHint": "Démarre le suivi de votre temps de travail",
+      "pauseWorking": "Mettre le travail en pause",
+      "resumeWorking": "Reprendre le travail",
+      "paused": "Le suivi du travail est en pause",
       "expectedHoursRequiredHint": "Vous devez d'abord entrer les heures prévues",
       "stopWorking": "Arrêter de travailler",
       "stopWorkingHint": "Arrête le suivi de votre temps de travail",
@@ -282,7 +288,9 @@
     },
     "buttons": {
       "start": "Démarrer",
-      "stop": "Arrêter"
+      "stop": "Arrêter",
+      "pause": "Pause",
+      "resume": "Reprendre"
     }
   },
 

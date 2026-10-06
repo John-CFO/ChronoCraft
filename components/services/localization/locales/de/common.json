@@ -262,6 +262,9 @@
     "noServiceId": "Keine Service-ID gefunden",
     "userIdUnavailable": "Benutzer-ID nicht verfügbar",
     "fetchDataError": "Beim Abrufen der Daten ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+    "pauseTrackingError": "Die Zeiterfassung konnte nicht pausiert werden.",
+    "resumeTrackingError": "Die Zeiterfassung konnte nicht fortgesetzt werden.",
+    "pausedIndicator": "Pausiert",
     "expectedHoursRequired": "Bitte fügen Sie zuerst Ihre Sollstunden hinzu.",
     "startTrackingError": "Die Zeiterfassung konnte nicht gestartet werden.",
     "serviceIdUnavailable": "Service-ID nicht verfügbar",
@@ -276,6 +279,9 @@
       "trackerHint": "Starten oder stoppen Sie die Zeiterfassung",
       "startWorking": "Arbeit starten",
       "startWorkingHint": "Startet die Zeiterfassung",
+      "pauseWorking": "Arbeit pausieren",
+      "resumeWorking": "Arbeit fortsetzen",
+      "paused": "Die Zeiterfassung ist pausiert",
       "expectedHoursRequiredHint": "Sie müssen zuerst Ihre Sollstunden eingeben",
       "stopWorking": "Arbeit stoppen",
       "stopWorkingHint": "Stoppt die Zeiterfassung",
@@ -284,7 +290,9 @@
     },
     "buttons": {
       "start": "Start",
-      "stop": "Stop"
+      "stop": "Stop",
+      "pause": "Pause",
+      "resume": "Weiter"
     }
   },
 

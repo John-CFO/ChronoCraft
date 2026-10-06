@@ -260,6 +260,9 @@
     "noServiceId": "serviceId non trovato",
     "userIdUnavailable": "ID utente non disponibile",
     "fetchDataError": "Si è verificato un errore durante il recupero dei dati. Riprova.",
+    "pauseTrackingError": "Impossibile mettere in pausa il monitoraggio",
+    "resumeTrackingError": "Impossibile riprendere il monitoraggio",
+    "pausedIndicator": "In pausa",
     "expectedHoursRequired": "Aggiungi prima le ore previste.",
     "startTrackingError": "Impossibile avviare il monitoraggio",
     "serviceIdUnavailable": "Service ID non disponibile",
@@ -274,6 +277,9 @@
       "trackerHint": "Avvia o interrompi il monitoraggio delle tue ore di lavoro",
       "startWorking": "Inizia a lavorare",
       "startWorkingHint": "Avvia il monitoraggio delle tue ore di lavoro",
+      "pauseWorking": "Metti in pausa il lavoro",
+      "resumeWorking": "Riprendi il lavoro",
+      "paused": "Il monitoraggio del lavoro è in pausa",
       "expectedHoursRequiredHint": "Devi prima inserire le ore previste",
       "stopWorking": "Termina lavoro",
       "stopWorkingHint": "Interrompe il monitoraggio delle tue ore di lavoro",
@@ -282,7 +288,9 @@
     },
     "buttons": {
       "start": "Avvia",
-      "stop": "Ferma"
+      "stop": "Ferma",
+      "pause": "Pausa",
+      "resume": "Riprendi"
     }
   },
 
