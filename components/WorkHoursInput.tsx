@@ -46,8 +46,7 @@ const WorkHoursInput = () => {
 
   // state to store the expected hours
   const [expectedHours, setExpectedHours] = useState("");
-  // state to store the current document ID
-  const [currentDocId, setCurrentDocId] = useState<string | null>(null);
+
   // state to store the user's time zone
   const [userTimeZone, setUserTimeZone] = useState<string>(dayjs.tz.guess());
   // state to store the temporary expected hours
@@ -56,7 +55,9 @@ const WorkHoursInput = () => {
   const {
     setDocExists,
     setCurrentDocId: setGlobalDocId,
+    setExpectedHours: setGlobalExpectedHours,
     isWorking,
+    elapsedTime,
   } = WorkHoursState();
 
   // initialize the accessibility store
@@ -168,9 +169,8 @@ const WorkHoursInput = () => {
           : undefined;
 
       const newOver = Math.max(duration - newExpected, 0);
-      const roundedOver = parseFloat(newOver.toFixed(2));
-      const roundedDuration = parseFloat(duration.toFixed(2));
-
+      const roundedOver = Math.round(newOver * 3600) / 3600;
+      const roundedDuration = Math.round(duration * 3600) / 3600;
       // build history entry (optional)- only if previousExpected is known
       const historyEntry =
         previousExpected !== undefined
@@ -243,7 +243,28 @@ const WorkHoursInput = () => {
         return;
       }
 
-      const workDay = dayjs().tz(userTimeZone).format("YYYY-MM-DD");
+      // Session tag takes precedence: if a session is active,
+      // a target time change belongs to the session document, not to "today".
+      const state = WorkHoursState.getState();
+      let running = state.isWorking;
+      let sessionDocId: string | null = state.currentDocId ?? null;
+
+      if (!running) {
+        const saved = await AsyncStorage.getItem("workTimeTrackerState");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed?.isWorking && parsed?.currentDocId) {
+            running = true;
+            sessionDocId = parsed.currentDocId;
+          }
+        }
+      }
+
+      const workDay =
+        running && sessionDocId
+          ? sessionDocId
+          : dayjs().tz(userTimeZone).format("YYYY-MM-DD");
+
       const docRef = doc(
         FIREBASE_FIRESTORE,
         "Users",
@@ -259,25 +280,18 @@ const WorkHoursInput = () => {
       const prevExpected = Number(existingData.expectedHours) || 0;
       const duration = Number(existingData.duration) || 0;
 
-      const displayDuration = formatHoursToHHMM(duration);
-
-      if (prevExpected !== hours && duration > 0) {
-        if (isWorking) {
-          useAlertStore.getState().showAlert(
-            t("workHoursInput.trackerRunning"),
-            t("workHoursInput.expectedHoursChangeWhileTracking", {
-              duration: displayDuration,
-            }),
-            [{ text: t("workHoursInput.ok"), style: "default" }],
-          );
-          setSaving(false);
-          return;
-        }
-
-        // Confirmation when user needs to change expected hours
+      // If time has already been tracked (doc duration or active session),
+      // ask for confirmation first. The target doc is always the session tag.
+      const liveElapsed = isWorking ? elapsedTime : 0;
+      const totalTracked = duration + liveElapsed;
+      const displayDuration = formatHoursToHHMM(totalTracked);
+      // Only show the dialog after ~1 minute of tracked time; otherwise,
+      // a newly started session would immediately save a dialog.
+      const MIN_TRACKED_FOR_DIALOG = 1 / 60; // 1 Minute in Hours
+      if (prevExpected !== hours && totalTracked >= MIN_TRACKED_FOR_DIALOG) {
         useAlertStore.getState().showAlert(
           t("workHoursInput.changeExpectedHours"),
-          t("workHoursInput.changeExpectedHoursDescription", {
+          t("workHoursInput.expectedHoursChangeRecalculates", {
             duration: displayDuration,
           }),
           [
@@ -291,17 +305,18 @@ const WorkHoursInput = () => {
               style: "destructive",
               onPress: async () => {
                 try {
-                  await recalcAndSaveForDay(docRef, duration, hours, {
-                    ...existingData,
-                    expectedHours: hours,
-                    workDay,
-                    userId,
-                  });
-                  setCurrentDocId(docRef.id);
+                  await recalcAndSaveForDay(
+                    docRef,
+                    duration,
+                    hours,
+                    existingData,
+                  );
+
                   setExpectedHours(hours.toString());
                   setTempExpectedHours("");
                   setDocExists(true);
                   setGlobalDocId(docRef.id);
+                  setGlobalExpectedHours(hours.toString());
                 } catch (err) {
                   console.error(err);
                   useAlertStore
@@ -318,7 +333,7 @@ const WorkHoursInput = () => {
             },
           ],
         );
-        return; // Important: exit here because onPress is async
+        return;
       }
 
       // Save normally (no conflict)
@@ -327,11 +342,12 @@ const WorkHoursInput = () => {
         { ...existingData, expectedHours: hours, workDay, userId },
         { merge: true },
       );
-      setCurrentDocId(docRef.id);
+
       setExpectedHours(hours.toString());
       setTempExpectedHours("");
       setDocExists(true);
       setGlobalDocId(docRef.id);
+      setGlobalExpectedHours(hours.toString());
     } catch (error) {
       logError("WorkHoursInput.handleSaveMinHours", error);
       useAlertStore
