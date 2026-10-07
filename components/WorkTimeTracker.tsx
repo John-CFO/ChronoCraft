@@ -477,6 +477,44 @@ const WorkTimeTracker = () => {
     }
   };
 
+  // Wrapper: asks before the session is actually ended
+  const handleStopPress = () => {
+    const expectedNum = parseFloat(expectedHours || "0");
+    const worked = formatTime(elapsedTime);
+
+    // dynamic button rendering
+    const buttons = [
+      ...(isPaused
+        ? []
+        : [
+            {
+              text: t("workTimeTracker.stopConfirmPause"),
+              style: "default" as const,
+              onPress: () => handlePauseWork(),
+            },
+          ]),
+      {
+        text: t("workTimeTracker.stopConfirmStop"),
+        style: "destructive" as const,
+        onPress: () => handleStopWork(),
+      },
+      {
+        text: t("workTimeTracker.stopConfirmCancel"),
+        style: "cancel" as const,
+        onPress: () => {},
+      },
+    ];
+
+    useAlertStore.getState().showAlert(
+      t("workTimeTracker.stopConfirmTitle"),
+      t("workTimeTracker.stopConfirmMessage", {
+        duration: worked,
+        expected: expectedNum > 0 ? formatTime(expectedNum) : "—",
+      }),
+      buttons,
+    );
+  };
+
   // function to stop work
   const handleStopWork = async () => {
     if (!serviceId) {
@@ -719,6 +757,13 @@ const WorkTimeTracker = () => {
   useEffect(() => {
     const restoreState = async () => {
       try {
+        // DEV ONLY: AsyncStorage-Session removal for testing
+        if (__DEV__) {
+          await AsyncStorage.removeItem("workTimeTrackerState");
+          console.log("[DEV] Cleared workTimeTrackerState on start");
+          return;
+        }
+
         if (!serviceId) {
           logError("WorkTimeTracker.restoreState", "No serviceId found");
           return;
@@ -1029,7 +1074,7 @@ const WorkTimeTracker = () => {
                 accessibilityHint={t(
                   "workTimeTracker.accessibility.stopWorkingHint",
                 )}
-                onPress={handleStopWork}
+                onPress={handleStopPress}
                 activeOpacity={0.7}
                 style={{
                   flex: 1,
