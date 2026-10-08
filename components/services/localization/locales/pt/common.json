@@ -287,7 +287,7 @@
       "paused": "O rastreamento de trabalho está em pausa",
       "expectedHoursRequiredHint": "Você deve primeiro inserir as horas previstas",
       "stopWorking": "Parar de trabalhar",
-      "stopWorkingHint": "Para o rastreamento do seu tempo de trabalho",
+      "stopWorkingHint": "Abre uma caixa de diálogo para encerrar ou pausar a sessão de trabalho",
       "expectedWorkingHoursRequired": "Por favor, insira primeiro suas horas de trabalho previstas",
       "elapsedWorkTime": "Tempo de trabalho decorrido: {{time}}"
     },

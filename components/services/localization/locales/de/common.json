@@ -289,7 +289,7 @@
       "paused": "Die Zeiterfassung ist pausiert",
       "expectedHoursRequiredHint": "Sie müssen zuerst Ihre Sollstunden eingeben",
       "stopWorking": "Arbeit stoppen",
-      "stopWorkingHint": "Stoppt die Zeiterfassung",
+      "stopWorkingHint": "Öffnet einen Dialog zum Beenden oder Pausieren der Zeiterfassung",
       "expectedWorkingHoursRequired": "Bitte geben Sie zuerst Ihre Sollarbeitszeit ein",
       "elapsedWorkTime": "Bisher erfasste Arbeitszeit: {{time}}"
     },

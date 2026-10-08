@@ -758,11 +758,11 @@ const WorkTimeTracker = () => {
     const restoreState = async () => {
       try {
         // DEV ONLY: AsyncStorage-Session removal for testing
-        if (__DEV__) {
-          await AsyncStorage.removeItem("workTimeTrackerState");
-          console.log("[DEV] Cleared workTimeTrackerState on start");
-          return;
-        }
+        // if (__DEV__) {
+        //   await AsyncStorage.removeItem("workTimeTrackerState");
+        //   console.log("[DEV] Cleared workTimeTrackerState on start");
+        //   return;
+        // }
 
         if (!serviceId) {
           logError("WorkTimeTracker.restoreState", "No serviceId found");
@@ -955,7 +955,9 @@ const WorkTimeTracker = () => {
               accessibilityHint={
                 docExists
                   ? t("workTimeTracker.accessibility.startWorkingHint")
-                  : t("workTimeTracker.accessibility.expectedHoursRequired")
+                  : t(
+                      "workTimeTracker.accessibility.expectedWorkingHoursRequired",
+                    )
               }
               onPress={docExists ? handleStartWork : undefined}
               disabled={!docExists}

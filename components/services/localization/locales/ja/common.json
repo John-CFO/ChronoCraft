@@ -287,7 +287,7 @@
       "paused": "労働時間の追跡は一時停止中です",
       "expectedHoursRequiredHint": "最初に予定労働時間を入力する必要があります",
       "stopWorking": "作業を停止",
-      "stopWorkingHint": "労働時間の追跡を停止します",
+      "stopWorkingHint": "セッションを終了または一時停止するダイアログを開きます",
       "expectedWorkingHoursRequired": "最初に予定労働時間を入力してください",
       "elapsedWorkTime": "経過労働時間：{{time}}"
     },

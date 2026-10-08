@@ -287,7 +287,7 @@
       "paused": "Le suivi du travail est en pause",
       "expectedHoursRequiredHint": "Vous devez d'abord entrer les heures prévues",
       "stopWorking": "Arrêter de travailler",
-      "stopWorkingHint": "Arrête le suivi de votre temps de travail",
+      "stopWorkingHint": "Ouvre une boîte de dialogue pour terminer ou mettre en pause la session",
       "expectedWorkingHoursRequired": "Veuillez d'abord entrer vos heures de travail prévues",
       "elapsedWorkTime": "Temps de travail écoulé : {{time}}"
     },
