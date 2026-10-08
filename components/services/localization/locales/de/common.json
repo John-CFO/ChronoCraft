@@ -262,6 +262,14 @@
     "noServiceId": "Keine Service-ID gefunden",
     "userIdUnavailable": "Benutzer-ID nicht verfügbar",
     "fetchDataError": "Beim Abrufen der Daten ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+    "pauseTrackingError": "Die Zeiterfassung konnte nicht pausiert werden.",
+    "resumeTrackingError": "Die Zeiterfassung konnte nicht fortgesetzt werden.",
+    "pausedIndicator": "Pausiert",
+    "stopConfirmTitle": "Session beenden?",
+    "stopConfirmMessage": "Du hast bisher {{duration}} getrackt. Sollzeit: {{expected}}.\nWillst du die Session wirklich beenden, oder nur pausieren?",
+    "stopConfirmPause": "Pause",
+    "stopConfirmStop": "Beenden",
+    "stopConfirmCancel": "Abbrechen",
     "expectedHoursRequired": "Bitte fügen Sie zuerst Ihre Sollstunden hinzu.",
     "startTrackingError": "Die Zeiterfassung konnte nicht gestartet werden.",
     "serviceIdUnavailable": "Service-ID nicht verfügbar",
@@ -276,15 +284,20 @@
       "trackerHint": "Starten oder stoppen Sie die Zeiterfassung",
       "startWorking": "Arbeit starten",
       "startWorkingHint": "Startet die Zeiterfassung",
+      "pauseWorking": "Arbeit pausieren",
+      "resumeWorking": "Arbeit fortsetzen",
+      "paused": "Die Zeiterfassung ist pausiert",
       "expectedHoursRequiredHint": "Sie müssen zuerst Ihre Sollstunden eingeben",
       "stopWorking": "Arbeit stoppen",
-      "stopWorkingHint": "Stoppt die Zeiterfassung",
+      "stopWorkingHint": "Öffnet einen Dialog zum Beenden oder Pausieren der Zeiterfassung",
       "expectedWorkingHoursRequired": "Bitte geben Sie zuerst Ihre Sollarbeitszeit ein",
       "elapsedWorkTime": "Bisher erfasste Arbeitszeit: {{time}}"
     },
     "buttons": {
       "start": "Start",
-      "stop": "Stop"
+      "stop": "Stop",
+      "pause": "Pause",
+      "resume": "Weiter"
     }
   },
 

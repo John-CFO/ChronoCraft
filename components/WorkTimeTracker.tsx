@@ -83,11 +83,13 @@ const WorkTimeTracker = () => {
   // global WorkHoursState
   const {
     isWorking,
+    isPaused,
     startWorkTime,
     elapsedTime,
     expectedHours,
     currentDocId,
     setIsWorking,
+    setIsPaused,
     setExpectedHours,
     setStartWorkTime,
     setElapsedTime,
@@ -195,7 +197,7 @@ const WorkTimeTracker = () => {
 
   // hook to update elapsed time
   useEffect(() => {
-    if (!isWorking || !startWorkTime) {
+    if (!isWorking || isPaused || !startWorkTime) {
       return;
     }
 
@@ -250,7 +252,8 @@ const WorkTimeTracker = () => {
       if (
         prevAppStateRef.current !== "active" &&
         nextAppState === "active" &&
-        isWorking
+        isWorking &&
+        !isPaused
       ) {
         // prevent multiple state changes when app goes from inactive to active
         if (handledActive) {
@@ -299,7 +302,7 @@ const WorkTimeTracker = () => {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [elapsedTime, isWorking]);
+  }, [elapsedTime, isWorking, isPaused]);
 
   // function to start work
   const handleStartWork = async () => {
@@ -341,11 +344,13 @@ const WorkTimeTracker = () => {
           expectedHours: expectedHoursFromFirestore,
           workDay,
           userId,
+          isPaused: false,
         };
 
         await setDoc(workRef, dataToWrite, { merge: true });
         setStartWorkTime(newStartTime);
         setIsWorking(true);
+        setIsPaused(false);
       } else {
         useAlertStore
           .getState()
@@ -365,6 +370,151 @@ const WorkTimeTracker = () => {
     }
   };
 
+  // function to pause work
+  const handlePauseWork = async () => {
+    if (!serviceId || !startWorkTime) return;
+
+    try {
+      // freeze current time
+      const now = Date.now();
+      const currentSession = (now - startWorkTime.getTime()) / (1000 * 60 * 60);
+      const totalElapsed = accumulatedDuration + currentSession;
+      const rounded = Math.round(totalElapsed * 3600) / 3600;
+
+      setAccumulatedDuration(rounded);
+      setElapsedTime(rounded);
+      setStartWorkTime(null);
+      setIsPaused(true);
+
+      // update AsyncStorage
+      await AsyncStorage.setItem(
+        "workTimeTrackerState",
+        JSON.stringify({
+          isWorking: true,
+          isPaused: true,
+          startWorkTime: null,
+          elapsedTime: rounded,
+          accumulatedDuration: rounded,
+          currentDocId: currentDocIdRef.current,
+        }),
+      );
+
+      // update Firestore (to keep the data up to date)
+      const userId = getAuth().currentUser?.uid;
+      if (userId && currentDocIdRef.current) {
+        const workRef = doc(
+          FIREBASE_FIRESTORE,
+          "Users",
+          userId,
+          "Services",
+          serviceId,
+          "WorkHours",
+          currentDocIdRef.current,
+        );
+        await setDoc(
+          workRef,
+          {
+            duration: rounded,
+            elapsedTime: rounded,
+            isPaused: true,
+          },
+          { merge: true },
+        );
+      }
+    } catch (error) {
+      logError("WorkTimeTracker.handlePauseWork", error);
+      useAlertStore
+        .getState()
+        .showAlert(
+          t("workTimeTracker.error"),
+          t("workTimeTracker.pauseTrackingError"),
+        );
+    }
+  };
+
+  // function to resume work
+  const handleResumeWork = async () => {
+    if (!serviceId) return;
+
+    try {
+      const newStartTime = new Date();
+      setStartWorkTime(newStartTime);
+      setIsPaused(false);
+
+      await AsyncStorage.setItem(
+        "workTimeTrackerState",
+        JSON.stringify({
+          isWorking: true,
+          isPaused: false,
+          startWorkTime: newStartTime.toISOString(),
+          elapsedTime: elapsedTimeRef.current,
+          accumulatedDuration: accumulatedDurationRef.current,
+          currentDocId: currentDocIdRef.current,
+        }),
+      );
+
+      const userId = getAuth().currentUser?.uid;
+      if (userId && currentDocIdRef.current) {
+        const workRef = doc(
+          FIREBASE_FIRESTORE,
+          "Users",
+          userId,
+          "Services",
+          serviceId,
+          "WorkHours",
+          currentDocIdRef.current,
+        );
+        await setDoc(workRef, { isPaused: false }, { merge: true });
+      }
+    } catch (error) {
+      logError("WorkTimeTracker.handleResumeWork", error);
+      useAlertStore
+        .getState()
+        .showAlert(
+          t("workTimeTracker.error"),
+          t("workTimeTracker.resumeTrackingError"),
+        );
+    }
+  };
+
+  // Wrapper: asks before the session is actually ended
+  const handleStopPress = () => {
+    const expectedNum = parseFloat(expectedHours || "0");
+    const worked = formatTime(elapsedTime);
+
+    // dynamic button rendering
+    const buttons = [
+      ...(isPaused
+        ? []
+        : [
+            {
+              text: t("workTimeTracker.stopConfirmPause"),
+              style: "default" as const,
+              onPress: () => handlePauseWork(),
+            },
+          ]),
+      {
+        text: t("workTimeTracker.stopConfirmStop"),
+        style: "destructive" as const,
+        onPress: () => handleStopWork(),
+      },
+      {
+        text: t("workTimeTracker.stopConfirmCancel"),
+        style: "cancel" as const,
+        onPress: () => {},
+      },
+    ];
+
+    useAlertStore.getState().showAlert(
+      t("workTimeTracker.stopConfirmTitle"),
+      t("workTimeTracker.stopConfirmMessage", {
+        duration: worked,
+        expected: expectedNum > 0 ? formatTime(expectedNum) : "—",
+      }),
+      buttons,
+    );
+  };
+
   // function to stop work
   const handleStopWork = async () => {
     if (!serviceId) {
@@ -375,18 +525,22 @@ const WorkTimeTracker = () => {
     const currentAccumulated = accumulatedDuration;
     const currentDoc = currentDocId;
 
-    if (!currentStartTime || !currentDoc) {
+    if (!currentDoc || (!currentStartTime && !isPaused)) {
       logError("WorkTimeTracker.handleStopWork", "No start time or doc found");
       return;
     }
 
     setIsWorking(false);
+    setIsPaused(false);
 
     try {
       const endTime = new Date();
-      let sessionHours =
-        (endTime.getTime() - currentStartTime.getTime()) / (1000 * 60 * 60);
-      if (sessionHours < 0 || sessionHours > 24) sessionHours = 0;
+      let sessionHours = 0;
+      if (currentStartTime) {
+        sessionHours =
+          (endTime.getTime() - currentStartTime.getTime()) / (1000 * 60 * 60);
+        if (sessionHours < 0 || sessionHours > 24) sessionHours = 0;
+      }
 
       const totalHours = currentAccumulated + sessionHours;
       // Round to the nearest second, not to 0.01 h (=36 s).
@@ -417,6 +571,7 @@ const WorkTimeTracker = () => {
           ),
           userId,
           workDay: docIdToUse,
+          isPaused: false,
         };
 
         await setDoc(workRef, dataToWrite, { merge: true });
@@ -437,6 +592,7 @@ const WorkTimeTracker = () => {
         JSON.stringify({
           isWorking: false,
           startWorkTime: null,
+          isPaused: false,
           elapsedTime: roundedDuration,
           accumulatedDuration: roundedDuration,
           currentDocId: currentDocId || dayjs().format("YYYY-MM-DD"),
@@ -572,6 +728,7 @@ const WorkTimeTracker = () => {
   const saveState = useCallback(async () => {
     const state = {
       isWorking: isWorkingRef.current,
+      isPaused: WorkHoursState.getState().isPaused,
       startWorkTime: startWorkTimeRef.current?.toISOString() ?? null,
       elapsedTime: elapsedTimeRef.current,
       accumulatedDuration: accumulatedDurationRef.current,
@@ -600,6 +757,13 @@ const WorkTimeTracker = () => {
   useEffect(() => {
     const restoreState = async () => {
       try {
+        // DEV ONLY: AsyncStorage-Session removal for testing
+        // if (__DEV__) {
+        //   await AsyncStorage.removeItem("workTimeTrackerState");
+        //   console.log("[DEV] Cleared workTimeTrackerState on start");
+        //   return;
+        // }
+
         if (!serviceId) {
           logError("WorkTimeTracker.restoreState", "No serviceId found");
           return;
@@ -625,6 +789,40 @@ const WorkTimeTracker = () => {
         //    whether the session doc still exists.
         setAccumulatedDuration(validatedData.accumulatedDuration || 0);
         setElapsedTime(validatedData.elapsedTime || 0);
+
+        if (validatedData.isWorking && validatedData.isPaused) {
+          const docIdToCheck =
+            validatedData.currentDocId || dayjs().format("YYYY-MM-DD");
+
+          setIsWorking(true);
+          setIsPaused(true);
+          setStartWorkTime(null);
+          setCurrentDocId(docIdToCheck);
+
+          // expectedHours aus Firestore nachladen
+          const userId = getAuth().currentUser?.uid;
+          if (userId) {
+            const workRef = doc(
+              FIREBASE_FIRESTORE,
+              "Users",
+              userId,
+              "Services",
+              serviceId,
+              "WorkHours",
+              docIdToCheck,
+            );
+            const docSnap = await getDoc(workRef);
+            if (
+              docSnap.exists() &&
+              docSnap.data().expectedHours !== undefined
+            ) {
+              setExpectedHours(String(docSnap.data().expectedHours));
+            } else {
+              setExpectedHours("0");
+            }
+          }
+          return;
+        }
 
         if (validatedData.isWorking && validatedData.startWorkTime) {
           const userId = getAuth().currentUser?.uid;
@@ -683,6 +881,7 @@ const WorkTimeTracker = () => {
           setElapsedTime(newAccumulated);
           setStartWorkTime(new Date());
           setIsWorking(true);
+          setIsPaused(false);
           setCurrentDocId(docIdToCheck);
         }
       } catch (err) {
@@ -756,13 +955,15 @@ const WorkTimeTracker = () => {
               accessibilityHint={
                 docExists
                   ? t("workTimeTracker.accessibility.startWorkingHint")
-                  : t("workTimeTracker.accessibility.expectedHoursRequired")
+                  : t(
+                      "workTimeTracker.accessibility.expectedWorkingHoursRequired",
+                    )
               }
               onPress={docExists ? handleStartWork : undefined}
               disabled={!docExists}
               activeOpacity={0.7}
               style={{
-                width: screenWidth * 0.7, // use 70% of the screen width
+                width: screenWidth * 0.7,
                 maxWidth: 400,
                 borderRadius: 12,
                 overflow: "hidden",
@@ -772,7 +973,6 @@ const WorkTimeTracker = () => {
                     ? "aqua"
                     : "#999"
                   : "aqua",
-
                 marginBottom: 25,
                 opacity: accessMode ? 1 : docExists ? 1 : 0.5,
               }}
@@ -807,63 +1007,111 @@ const WorkTimeTracker = () => {
               </LinearGradient>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity
-              accessible={true}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: !docExists }}
-              accessibilityLabel={t(
-                "workTimeTracker.accessibility.stopWorking",
-              )}
-              accessibilityHint={
-                docExists
-                  ? t("workTimeTracker.accessibility.stopWorkingHint")
-                  : t(
-                      "workTimeTracker.accessibility.expectedWorkingHoursRequired",
-                    )
-              }
-              onPress={handleStopWork}
-              activeOpacity={0.7}
+            // NEU: Zwei-Button-Layout (Pause/Resume + Stop)
+            <View
               style={{
+                flexDirection: "row",
                 width: screenWidth * 0.7,
                 maxWidth: 400,
-                borderRadius: 12,
-                borderWidth: 2,
-                borderColor: "aqua",
-                backgroundColor: "transparent",
-                shadowColor: "black",
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.3,
-                shadowRadius: 3,
-                elevation: 5,
+                gap: 10,
                 marginBottom: 25,
-                opacity: 1,
-                overflow: "hidden",
               }}
             >
-              <LinearGradient
-                colors={["#00f7f7", "#005757"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
+              {/* Pause/Resume Button */}
+              <TouchableOpacity
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel={t(
+                  isPaused
+                    ? "workTimeTracker.accessibility.resumeWorking"
+                    : "workTimeTracker.accessibility.pauseWorking",
+                )}
+                onPress={isPaused ? handleResumeWork : handlePauseWork}
+                activeOpacity={0.7}
                 style={{
-                  height: 45,
-                  paddingVertical: 6,
-                  justifyContent: "center",
-                  alignItems: "center",
+                  flex: 1,
+                  borderRadius: 12,
+                  overflow: "hidden",
+                  borderWidth: 2,
+                  borderColor: isPaused ? "lime" : "orange",
                 }}
               >
-                <Text
+                <LinearGradient
+                  colors={
+                    isPaused ? ["#00ff88", "#005522"] : ["#ffb347", "#7a4400"]
+                  }
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
                   style={{
-                    fontFamily: "MPLUSLatin_Bold",
-                    fontSize: 22,
-                    color: "white",
-                    textAlign: "center",
-                    transform: [{ translateY: -3 }],
+                    height: 45,
+                    justifyContent: "center",
+                    alignItems: "center",
                   }}
                 >
-                  {t("workTimeTracker.buttons.stop")}
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
+                  <Text
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    style={{
+                      fontFamily: "MPLUSLatin_Bold",
+                      fontSize: 20,
+                      textAlign: "center",
+                      color: "white",
+                      transform: [{ translateY: -3 }],
+                    }}
+                  >
+                    {isPaused
+                      ? t("workTimeTracker.buttons.resume")
+                      : t("workTimeTracker.buttons.pause")}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+
+              {/* Stop Button */}
+              <TouchableOpacity
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel={t(
+                  "workTimeTracker.accessibility.stopWorking",
+                )}
+                accessibilityHint={t(
+                  "workTimeTracker.accessibility.stopWorkingHint",
+                )}
+                onPress={handleStopPress}
+                activeOpacity={0.7}
+                style={{
+                  flex: 1,
+                  borderRadius: 12,
+                  borderWidth: 2,
+                  borderColor: "red",
+                  overflow: "hidden",
+                }}
+              >
+                <LinearGradient
+                  colors={["#ff4d4d", "#7a0000"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{
+                    height: 45,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    style={{
+                      fontFamily: "MPLUSLatin_Bold",
+                      fontSize: 20,
+                      textAlign: "center",
+                      color: "white",
+                      transform: [{ translateY: -3 }],
+                    }}
+                  >
+                    {t("workTimeTracker.buttons.stop")}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
           )}
           {/* Tracking Animation */}
           <View accessible={false} style={{ position: "relative", height: 20 }}>

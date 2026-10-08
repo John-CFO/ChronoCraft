@@ -260,6 +260,14 @@
     "noServiceId": "serviceId не найден",
     "userIdUnavailable": "ID пользователя недоступен",
     "fetchDataError": "Произошла ошибка при получении данных. Пожалуйста, попробуйте снова.",
+    "pauseTrackingError": "Не удалось приостановить отслеживание",
+    "resumeTrackingError": "Не удалось возобновить отслеживание",
+    "pausedIndicator": "Приостановлено",
+    "stopConfirmTitle": "Завершить сессию?",
+    "stopConfirmMessage": "Вы отработали {{duration}}. План: {{expected}}.\nВы действительно хотите завершить сессию или просто приостановить её?",
+    "stopConfirmPause": "Пауза",
+    "stopConfirmStop": "Готово",
+    "stopConfirmCancel": "Отмена",
     "expectedHoursRequired": "Сначала добавьте ваши планируемые часы.",
     "startTrackingError": "Не удалось начать отслеживание",
     "serviceIdUnavailable": "Service ID недоступен",
@@ -274,15 +282,20 @@
       "trackerHint": "Запустите или остановите отслеживание вашего рабочего времени",
       "startWorking": "Начать работу",
       "startWorkingHint": "Запускает отслеживание вашего рабочего времени",
+      "pauseWorking": "Приостановить работу",
+      "resumeWorking": "Возобновить работу",
+      "paused": "Отслеживание рабочего времени приостановлено",
       "expectedHoursRequiredHint": "Вы должны сначала ввести планируемые часы",
       "stopWorking": "Остановить работу",
-      "stopWorkingHint": "Останавливает отслеживание вашего рабочего времени",
+      "stopWorkingHint": "Открывает диалог для завершения или приостановки сессии",
       "expectedWorkingHoursRequired": "Пожалуйста, сначала введите ваши планируемые рабочие часы",
       "elapsedWorkTime": "Прошедшее рабочее время: {{time}}"
     },
     "buttons": {
       "start": "Запустить",
-      "stop": "Остановить"
+      "stop": "Остановить",
+      "pause": "Пауза",
+      "resume": "Продолжить"
     }
   },
 

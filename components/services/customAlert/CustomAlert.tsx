@@ -160,7 +160,16 @@ const CustomAlert = () => {
             {message}
           </Text>
           {/* conditionally render buttons */}
-          <View style={{ flexDirection: "row", gap: 12, marginTop: 12 }}>
+          <View
+            style={{
+              flexDirection: buttons && buttons.length > 2 ? "column" : "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 12,
+              marginTop: 12,
+              width: "100%",
+            }}
+          >
             {(buttons || [{ text: t("alerts.ok"), onPress: hideAlert }]).map(
               (button, index) => (
                 <TouchableOpacity
@@ -176,7 +185,7 @@ const CustomAlert = () => {
                   }}
                   activeOpacity={0.7}
                   style={{
-                    width: 120,
+                    width: buttons && buttons.length > 2 ? "100%" : 120,
                     height: 50,
                     borderRadius: 14,
                     elevation: 5,
