@@ -10,7 +10,7 @@
 
 **Source:**
 
-Transitive dependency introduced by React Native CLI tooling.
+Transitive dependency used by React Native development/build tooling.
 
 Dependency chain:
 
@@ -40,6 +40,39 @@ Upgrading this dependency requires a React Native framework upgrade outside the 
 - Dependency upgrade will be evaluated during future React Native maintenance updates.
 
 **Review status:** Accepted  
+**Review trigger:** Next React Native upgrade
+
+---
+
+### Additional shell-quote advisories
+
+**Package:** shell-quote@1.8.4
+
+**Severity:** Critical
+
+**Advisories:**
+
+- 1123944
+- 1241332
+
+**Risk assessment:**
+
+See the existing [shell-quote vulnerability](#shell-quote-vulnerability) section above for the dependency chain, runtime exposure assessment, and accepted-risk rationale.
+
+These advisories are explicitly allowlisted in the production dependency security CI check because the affected package belongs to the React Native CLI tooling dependency tree and is not used by the application's runtime business logic.
+
+**Decision:**
+
+Risk accepted temporarily under the existing shell-quote risk assessment.
+
+**Mitigation:**
+
+- Both advisory IDs are explicitly allowlisted for `shell-quote` in the production dependency security CI check.
+- Other unapproved critical vulnerabilities continue to fail the CI check.
+- The exception will be reevaluated during the next planned React Native upgrade.
+
+**Review status:** Accepted
+
 **Review trigger:** Next React Native upgrade
 
 ---

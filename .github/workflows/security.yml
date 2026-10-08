@@ -205,6 +205,11 @@ jobs:
           "1145647"
           ]);
 
+          const acceptedShellQuoteAdvisories = new Set([
+          "1123944",
+          "1241332",
+          ]);
+
           const critical = [];
 
           for (const [packageName, vulnerability] of Object.entries(
@@ -221,7 +226,12 @@ jobs:
               advisories.length > 0 &&
               advisories.every(id => acceptedTarAdvisories.has(id));
 
-            if (!onlyAcceptedTar) {
+            const onlyAcceptedShellQuote =
+              packageName === "shell-quote" &&
+              advisories.length > 0 &&
+              advisories.every((id) => acceptedShellQuoteAdvisories.has(id));
+
+            if (!onlyAcceptedTar && !onlyAcceptedShellQuote) {
               critical.push({
                 packageName,
                 advisories

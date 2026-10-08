@@ -260,6 +260,14 @@
     "noServiceId": "Nenhum serviceId encontrado",
     "userIdUnavailable": "ID do usuário indisponível",
     "fetchDataError": "Ocorreu um erro ao buscar os dados. Por favor, tente novamente.",
+    "pauseTrackingError": "Falha ao pausar o rastreamento",
+    "resumeTrackingError": "Falha ao retomar o rastreamento",
+    "pausedIndicator": "Em pausa",
+    "stopConfirmTitle": "Encerrar sessão?",
+    "stopConfirmMessage": "Você registrou {{duration}} até agora. Previsto: {{expected}}.\nDeseja realmente encerrar a sessão ou apenas pausá-la?",
+    "stopConfirmPause": "Pausar",
+    "stopConfirmStop": "Encerrar",
+    "stopConfirmCancel": "Cancelar",
     "expectedHoursRequired": "Adicione primeiro suas horas previstas.",
     "startTrackingError": "Falha ao iniciar o rastreamento",
     "serviceIdUnavailable": "Service ID indisponível",
@@ -274,15 +282,20 @@
       "trackerHint": "Inicie ou pare o rastreamento do seu tempo de trabalho",
       "startWorking": "Começar a trabalhar",
       "startWorkingHint": "Inicia o rastreamento do seu tempo de trabalho",
+      "pauseWorking": "Pausar o trabalho",
+      "resumeWorking": "Retomar o trabalho",
+      "paused": "O rastreamento de trabalho está em pausa",
       "expectedHoursRequiredHint": "Você deve primeiro inserir as horas previstas",
       "stopWorking": "Parar de trabalhar",
-      "stopWorkingHint": "Para o rastreamento do seu tempo de trabalho",
+      "stopWorkingHint": "Abre uma caixa de diálogo para encerrar ou pausar a sessão de trabalho",
       "expectedWorkingHoursRequired": "Por favor, insira primeiro suas horas de trabalho previstas",
       "elapsedWorkTime": "Tempo de trabalho decorrido: {{time}}"
     },
     "buttons": {
       "start": "Iniciar",
-      "stop": "Parar"
+      "stop": "Parar",
+      "pause": "Pausar",
+      "resume": "Retomar"
     }
   },
 

@@ -260,6 +260,14 @@
     "noServiceId": "No se encontró serviceId",
     "userIdUnavailable": "ID de usuario no disponible",
     "fetchDataError": "Se produjo un error al recuperar los datos. Inténtalo de nuevo.",
+    "pauseTrackingError": "No se pudo pausar el seguimiento",
+    "resumeTrackingError": "No se pudo reanudar el seguimiento",
+    "pausedIndicator": "En pausa",
+    "stopConfirmTitle": "¿Finalizar sesión?",
+    "stopConfirmMessage": "Has registrado {{duration}} hasta ahora. Previsto: {{expected}}.\n¿Quieres finalizar la sesión o solo pausarla?",
+    "stopConfirmPause": "Pausar",
+    "stopConfirmStop": "Finalizar",
+    "stopConfirmCancel": "Cancelar",
     "expectedHoursRequired": "Añade primero tus horas previstas.",
     "startTrackingError": "No se pudo iniciar el seguimiento",
     "serviceIdUnavailable": "Service ID no disponible",
@@ -274,15 +282,20 @@
       "trackerHint": "Inicia o detén el seguimiento de tu tiempo de trabajo",
       "startWorking": "Comenzar a trabajar",
       "startWorkingHint": "Inicia el seguimiento de tu tiempo de trabajo",
+      "pauseWorking": "Pausar trabajo",
+      "resumeWorking": "Reanudar trabajo",
+      "paused": "El seguimiento del trabajo está en pausa",
       "expectedHoursRequiredHint": "Primero debes introducir las horas previstas",
       "stopWorking": "Detener trabajo",
-      "stopWorkingHint": "Detiene el seguimiento de tu tiempo de trabajo",
+      "stopWorkingHint": "Abre un diálogo para finalizar o pausar la sesión de trabajo",
       "expectedWorkingHoursRequired": "Introduce primero tus horas de trabajo previstas",
       "elapsedWorkTime": "Tiempo de trabajo transcurrido: {{time}}"
     },
     "buttons": {
       "start": "Iniciar",
-      "stop": "Detener"
+      "stop": "Detener",
+      "pause": "Pausa",
+      "resume": "Reanudar"
     }
   },
 

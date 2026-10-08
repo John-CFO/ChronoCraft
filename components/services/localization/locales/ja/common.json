@@ -260,6 +260,14 @@
     "noServiceId": "serviceIdが見つかりません",
     "userIdUnavailable": "ユーザーIDが利用できません",
     "fetchDataError": "データの取得中にエラーが発生しました。もう一度お試しください。",
+    "pauseTrackingError": "追跡の一時停止に失敗しました",
+    "resumeTrackingError": "追跡の再開に失敗しました",
+    "pausedIndicator": "一時停止中",
+    "stopConfirmTitle": "セッションを終了しますか？",
+    "stopConfirmMessage": "これまでに {{duration}} を記録しました。予定：{{expected}}。\nセッションを本当に終了しますか、それとも一時停止しますか？",
+    "stopConfirmPause": "一時停止",
+    "stopConfirmStop": "終了",
+    "stopConfirmCancel": "キャンセル",
     "expectedHoursRequired": "最初に予定労働時間を追加してください。",
     "startTrackingError": "追跡の開始に失敗しました",
     "serviceIdUnavailable": "Service IDが利用できません",
@@ -274,15 +282,20 @@
       "trackerHint": "労働時間の追跡を開始または停止します",
       "startWorking": "作業を開始",
       "startWorkingHint": "労働時間の追跡を開始します",
+      "pauseWorking": "作業を一時停止",
+      "resumeWorking": "作業を再開",
+      "paused": "労働時間の追跡は一時停止中です",
       "expectedHoursRequiredHint": "最初に予定労働時間を入力する必要があります",
       "stopWorking": "作業を停止",
-      "stopWorkingHint": "労働時間の追跡を停止します",
+      "stopWorkingHint": "セッションを終了または一時停止するダイアログを開きます",
       "expectedWorkingHoursRequired": "最初に予定労働時間を入力してください",
       "elapsedWorkTime": "経過労働時間：{{time}}"
     },
     "buttons": {
       "start": "開始",
-      "stop": "停止"
+      "stop": "停止",
+      "pause": "一時停止",
+      "resume": "再開"
     }
   },
 

@@ -32,6 +32,9 @@ npm-debug.*
 yarn-debug.*
 yarn-error.*
 
+# npm audit
+audit.json
+
 # macOS
 .DS_Store
 *.pem
