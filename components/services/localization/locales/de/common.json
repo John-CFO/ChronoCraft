@@ -412,26 +412,31 @@
       "name": "Zeiterfassung",
       "text": "Mit der Zeiterfassung kannst du deine Arbeitszeit für dieses Projekt erfassen und den Sitzungsstatus anzeigen."
     },
-    "trackingTime": "Erfasste Zeit",
-    "startTracking": "Zeiterfassung starten",
-    "stopTracking": "Zeiterfassung stoppen",
-    "startHint": "Drücken, um die Erfassung deiner Arbeitszeit zu starten",
-    "stopHint": "Drücken, um die Erfassung deiner Arbeitszeit zu stoppen",
     "reset": "Daten löschen",
     "resetting": "Wird gelöscht",
-    "resetHint": "Drücken, um das Projekt zurückzusetzen",
     "attention": "Achtung!",
     "resetStopFirst": "Bitte stoppe das Projekt zuerst, bevor du es zurücksetzt.",
     "resetConfirmation": "Möchtest du das Projekt wirklich zurücksetzen? Beim Zurücksetzen werden alle Daten gelöscht.",
     "lastSessionText": "Letzte Sitzung:",
-    "lastSessionEnded": "Letzte Sitzung beendet am {{date}}",
-    "noLastSession": "Keine letzte Sitzung vorhanden",
     "lastTrackingStartedText": "Letzte Zeiterfassung gestartet:",
-    "lastTrackingStarted": "Letzte Zeiterfassung gestartet am {{date}}",
-    "noTrackingStartTime": "Keine Startzeit der Zeiterfassung vorhanden",
     "originalTrackingStartedText": "Ursprüngliche Zeiterfassung gestartet:",
-    "originalTrackingStarted": "Ursprüngliche Zeiterfassung gestartet am {{date}}",
-    "noOriginalTrackingStartTime": "Keine ursprüngliche Startzeit der Zeiterfassung vorhanden"
+    "accessibility": {
+      "trackingTime": "Erfasste Zeit",
+      "trackingTimeValue": "Erfasste Zeit: {{time}}",
+      "startTracking": "Zeiterfassung starten",
+      "stopTracking": "Zeiterfassung stoppen",
+      "startHint": "Drücken, um die Erfassung deiner Arbeitszeit zu starten",
+      "stopHint": "Drücken, um die Erfassung deiner Arbeitszeit zu stoppen",
+      "resetHint": "Drücken, um das Projekt zurückzusetzen",
+      "startedAnnouncement": "Zeiterfassung gestartet",
+      "stoppedAnnouncement": "Zeiterfassung gestoppt bei {{time}}",
+      "lastSessionEnded": "Letzte Sitzung beendet am {{date}}",
+      "noLastSession": "Keine letzte Sitzung vorhanden",
+      "lastTrackingStarted": "Letzte Zeiterfassung gestartet am {{date}}",
+      "noTrackingStartTime": "Keine Startzeit der Zeiterfassung vorhanden",
+      "originalTrackingStarted": "Ursprüngliche Zeiterfassung gestartet am {{date}}",
+      "noOriginalTrackingStartTime": "Keine ursprüngliche Startzeit der Zeiterfassung vorhanden"
+    }
   },
 
   "projectListItem": {

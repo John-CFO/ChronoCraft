@@ -410,26 +410,31 @@
       "name": "Suivi du temps",
       "text": "La carte de suivi du temps vous permet de suivre votre temps de travail sur ce projet et affiche l'état de la session."
     },
-    "trackingTime": "Temps suivi",
-    "startTracking": "Démarrer le suivi",
-    "stopTracking": "Arrêter le suivi",
-    "startHint": "Appuyez pour démarrer le suivi de votre temps de travail",
-    "stopHint": "Appuyez pour arrêter le suivi de votre temps de travail",
     "reset": "Réinitialiser",
     "resetting": "Réinitialisation",
-    "resetHint": "Appuyez pour réinitialiser le projet",
     "attention": "Attention !",
     "resetStopFirst": "Veuillez d'abord arrêter le projet avant de le réinitialiser.",
     "resetConfirmation": "Voulez-vous vraiment réinitialiser le projet ? Si vous réinitialisez le projet, toutes les données seront supprimées.",
     "lastSessionText": "Dernière session :",
-    "lastSessionEnded": "Dernière session terminée le {{date}}",
-    "noLastSession": "Aucune dernière session disponible",
     "lastTrackingStartedText": "Dernier suivi démarré :",
-    "lastTrackingStarted": "Dernier suivi démarré le {{date}}",
-    "noTrackingStartTime": "Aucune heure de début de suivi disponible",
     "originalTrackingStartedText": "Suivi original démarré :",
-    "originalTrackingStarted": "Suivi original démarré le {{date}}",
-    "noOriginalTrackingStartTime": "Aucune heure de début de suivi original disponible"
+    "accessibility": {
+      "trackingTime": "Temps suivi",
+      "trackingTimeValue": "Temps suivi : {{time}}",
+      "startTracking": "Démarrer le suivi",
+      "stopTracking": "Arrêter le suivi",
+      "startHint": "Appuyez pour démarrer le suivi de votre temps de travail",
+      "stopHint": "Appuyez pour arrêter le suivi de votre temps de travail",
+      "resetHint": "Appuyez pour réinitialiser le projet",
+      "startedAnnouncement": "Suivi démarré",
+      "stoppedAnnouncement": "Suivi arrêté à {{time}}",
+      "lastSessionEnded": "Dernière session terminée le {{date}}",
+      "noLastSession": "Aucune dernière session disponible",
+      "lastTrackingStarted": "Dernier suivi démarré le {{date}}",
+      "noTrackingStartTime": "Aucune heure de début de suivi disponible",
+      "originalTrackingStarted": "Suivi original démarré le {{date}}",
+      "noOriginalTrackingStartTime": "Aucune heure de début de suivi original disponible"
+    }
   },
 
   "projectListItem": {
