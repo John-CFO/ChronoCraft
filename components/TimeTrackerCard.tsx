@@ -15,6 +15,7 @@ import {
   AppState,
   AppStateStatus,
   Dimensions,
+  AccessibilityInfo,
 } from "react-native";
 import React, {
   useState,
@@ -118,6 +119,9 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
   // state to handle the dot animation
   const [loading, setLoading] = useState(true);
+
+  // state to prevent double-tap while start/stop is in flight
+  const [toggling, setToggling] = useState(false);
 
   // define the dot animation with a delay
   const dots = useDotAnimation(loading, 700);
@@ -575,14 +579,22 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
     if (currentlyTracking || isTrackingRef.current) {
       return;
     }
-
+    setToggling(true);
     try {
       await startTimer(projectId, serviceId);
 
       isTrackingRef.current = true;
       startAnimation();
+
+      if (accessMode) {
+        AccessibilityInfo.announceForAccessibility(
+          t("timeTracker.startedAnnouncement"),
+        );
+      }
     } catch (err) {
       logError("TimeTrackerCard.startTimer", err);
+    } finally {
+      setToggling(false);
     }
   };
 
@@ -594,7 +606,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
       logError("TimeTrackerCard.stopTimer", "Missing serviceId");
       return;
     }
-
+    setToggling(true);
     try {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
@@ -603,8 +615,18 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
 
       await stopTimer(projectId, serviceId);
       isTrackingRef.current = false;
+
+      if (accessMode) {
+        AccessibilityInfo.announceForAccessibility(
+          t("timeTracker.stoppedAnnouncement", {
+            time: formattedTime,
+          }),
+        );
+      }
     } catch (err) {
       logError("TimeTrackerCard.stopTimer", err);
+    } finally {
+      setToggling(false);
     }
   };
 
@@ -702,7 +724,6 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
           <Text
             accessible={true}
             accessibilityRole="header"
-            accessibilityLabel={t("timeTracker.title")}
             style={{
               fontFamily: "MPLUSLatin_Bold",
               fontSize: accessMode ? 28 : 25,
@@ -725,7 +746,13 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
             {/* Timer */}
             <Text
               accessible={true}
-              accessibilityLabel={t("timeTracker.trackingTime")}
+              accessibilityLiveRegion="none"
+              accessibilityLabel={t(
+                "timeTracker.accessibility.trackingTimeValue",
+                {
+                  time: formattedTime || "00:00:00",
+                },
+              )}
               style={{
                 fontWeight: "bold",
                 fontSize: 55,
@@ -753,11 +780,19 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
           >
             {/* Start Button | Stop Button */}
             <TouchableOpacity
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityState={{ busy: toggling }}
               onPress={isRunning ? handleStop : handleStart}
               accessibilityLabel={
                 isRunning
-                  ? t("timeTracker.stopTracking")
-                  : t("timeTracker.startTracking")
+                  ? t("timeTracker.accessibility.stopTracking")
+                  : t("timeTracker.accessibility.startTracking")
+              }
+              accessibilityHint={
+                isRunning
+                  ? t("timeTracker.accessibility.stopHint")
+                  : t("timeTracker.accessibility.startHint")
               }
               activeOpacity={0.8}
               style={{
@@ -835,7 +870,7 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
               accessibilityLabel={
                 resetting ? t("timeTracker.resetting") : t("timeTracker.reset")
               }
-              accessibilityHint={t("timeTracker.resetHint")}
+              accessibilityHint={t("timeTracker.accessibility.resetHint")}
               accessibilityState={{ disabled: resetting, busy: resetting }}
               disabled={resetting}
               onPress={handleReset}
@@ -946,10 +981,10 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
               accessible={true}
               accessibilityLabel={
                 endTime instanceof Date
-                  ? t("timeTracker.lastSessionEnded", {
+                  ? t("timeTracker.accessibility.lastSessionEnded", {
                       date: endTime.toLocaleString(),
                     })
-                  : t("timeTracker.noLastSession")
+                  : t("timeTracker.accessibility.noLastSession")
               }
             >
               <Text
@@ -976,10 +1011,10 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
               accessible={true}
               accessibilityLabel={
                 lastStartTime instanceof Date
-                  ? t("timeTracker.lastTrackingStarted", {
+                  ? t("timeTracker.accessibility.lastTrackingStarted", {
                       date: lastStartTime.toLocaleString(),
                     })
-                  : t("timeTracker.noTrackingStartTime")
+                  : t("timeTracker.accessibility.noTrackingStartTime")
               }
             >
               <Text
@@ -1008,10 +1043,10 @@ const TimeTrackerCard: React.FC<TimeTrackingCardsProps> = () => {
               accessible={true}
               accessibilityLabel={
                 originalStartTime instanceof Date
-                  ? t("timeTracker.originalTrackingStarted", {
+                  ? t("timeTracker.accessibility.originalTrackingStarted", {
                       date: originalStartTime.toLocaleString(),
                     })
-                  : t("timeTracker.noOriginalTrackingStartTime")
+                  : t("timeTracker.accessibility.noOriginalTrackingStartTime")
               }
             >
               <Text

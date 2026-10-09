@@ -410,26 +410,31 @@
       "name": "Rastreamento de tempo",
       "text": "O cartão de Rastreamento de tempo permite que você rastreie seu tempo de trabalho neste projeto e mostra o estado da sessão."
     },
-    "trackingTime": "Tempo em rastreamento",
-    "startTracking": "Iniciar rastreamento",
-    "stopTracking": "Parar rastreamento",
-    "startHint": "Pressione para iniciar o rastreamento do seu tempo de trabalho",
-    "stopHint": "Pressione para parar o rastreamento do seu tempo de trabalho",
     "reset": "Redefinir",
     "resetting": "Redefinindo",
-    "resetHint": "Pressione para redefinir o projeto",
     "attention": "Atenção!",
     "resetStopFirst": "Por favor, pare primeiro o projeto antes de redefini-lo.",
     "resetConfirmation": "Você realmente quer redefinir o projeto? Se você redefinir o projeto, todos os dados serão excluídos.",
     "lastSessionText": "Última sessão:",
-    "lastSessionEnded": "Última sessão encerrada em {{date}}",
-    "noLastSession": "Nenhuma última sessão disponível",
     "lastTrackingStartedText": "Último rastreamento iniciado:",
-    "lastTrackingStarted": "Último rastreamento iniciado em {{date}}",
-    "noTrackingStartTime": "Nenhum horário de início de rastreamento disponível",
     "originalTrackingStartedText": "Rastreamento original iniciado:",
-    "originalTrackingStarted": "Rastreamento original iniciado em {{date}}",
-    "noOriginalTrackingStartTime": "Nenhum horário de início de rastreamento original disponível"
+    "accessibility": {
+      "trackingTime": "Tempo em rastreamento",
+      "trackingTimeValue": "Tempo em rastreamento: {{time}}",
+      "startTracking": "Iniciar rastreamento",
+      "stopTracking": "Parar rastreamento",
+      "startHint": "Pressione para iniciar o rastreamento do seu tempo de trabalho",
+      "stopHint": "Pressione para parar o rastreamento do seu tempo de trabalho",
+      "resetHint": "Pressione para redefinir o projeto",
+      "startedAnnouncement": "Rastreamento iniciado",
+      "stoppedAnnouncement": "Rastreamento parado em {{time}}",
+      "lastSessionEnded": "Última sessão encerrada em {{date}}",
+      "noLastSession": "Nenhuma última sessão disponível",
+      "lastTrackingStarted": "Último rastreamento iniciado em {{date}}",
+      "noTrackingStartTime": "Nenhum horário de início de rastreamento disponível",
+      "originalTrackingStarted": "Rastreamento original iniciado em {{date}}",
+      "noOriginalTrackingStartTime": "Nenhum horário de início de rastreamento original disponível"
+    }
   },
 
   "projectListItem": {
