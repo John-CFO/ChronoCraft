@@ -410,26 +410,31 @@
       "name": "Seguimiento de tiempo",
       "text": "La tarjeta de Seguimiento de tiempo te permite rastrear tu tiempo de trabajo en este proyecto y muestra el estado de la sesión."
     },
-    "trackingTime": "Tiempo en seguimiento",
-    "startTracking": "Iniciar seguimiento",
-    "stopTracking": "Detener seguimiento",
-    "startHint": "Presiona para iniciar el seguimiento de tu tiempo de trabajo",
-    "stopHint": "Presiona para detener el seguimiento de tu tiempo de trabajo",
     "reset": "Restablecer",
     "resetting": "Restableciendo",
-    "resetHint": "Presiona para restablecer el proyecto",
     "attention": "¡Atención!",
     "resetStopFirst": "Detén primero el proyecto antes de restablecerlo.",
     "resetConfirmation": "¿Realmente quieres restablecer el proyecto? Si restableces el proyecto, se eliminarán todos los datos.",
     "lastSessionText": "Última sesión:",
-    "lastSessionEnded": "Última sesión finalizada el {{date}}",
-    "noLastSession": "No hay última sesión disponible",
     "lastTrackingStartedText": "Último seguimiento iniciado:",
-    "lastTrackingStarted": "Último seguimiento iniciado el {{date}}",
-    "noTrackingStartTime": "No hay hora de inicio de seguimiento disponible",
     "originalTrackingStartedText": "Seguimiento original iniciado:",
-    "originalTrackingStarted": "Seguimiento original iniciado el {{date}}",
-    "noOriginalTrackingStartTime": "No hay hora de inicio de seguimiento original disponible"
+    "accessibility": {
+      "trackingTime": "Tiempo en seguimiento",
+      "trackingTimeValue": "Tiempo en seguimiento: {{time}}",
+      "startTracking": "Iniciar seguimiento",
+      "stopTracking": "Detener seguimiento",
+      "startHint": "Presiona para iniciar el seguimiento de tu tiempo de trabajo",
+      "stopHint": "Presiona para detener el seguimiento de tu tiempo de trabajo",
+      "resetHint": "Presiona para restablecer el proyecto",
+      "startedAnnouncement": "Seguimiento iniciado",
+      "stoppedAnnouncement": "Seguimiento detenido en {{time}}",
+      "lastSessionEnded": "Última sesión finalizada el {{date}}",
+      "noLastSession": "No hay última sesión disponible",
+      "lastTrackingStarted": "Último seguimiento iniciado el {{date}}",
+      "noTrackingStartTime": "No hay hora de inicio de seguimiento disponible",
+      "originalTrackingStarted": "Seguimiento original iniciado el {{date}}",
+      "noOriginalTrackingStartTime": "No hay hora de inicio de seguimiento original disponible"
+    }
   },
 
   "projectListItem": {

@@ -410,26 +410,31 @@
       "name": "Time-Tracker",
       "text": "The Time Tracker Card lets you track your working time on this project and shows the session state."
     },
-    "trackingTime": "Tracking time",
-    "startTracking": "Start tracking",
-    "stopTracking": "Stop tracking",
-    "startHint": "Press to start tracking your working time",
-    "stopHint": "Press to stop tracking your working time",
     "reset": "Reset",
     "resetting": "Resetting",
-    "resetHint": "Press to reset the project",
     "attention": "Attention!",
     "resetStopFirst": "Please stop the project first before resetting it.",
     "resetConfirmation": "Do you really want to reset the project? If you reset the project, all data will be deleted.",
     "lastSessionText": "Last Session:",
-    "lastSessionEnded": "Last session ended on {{date}}",
-    "noLastSession": "No last session available",
     "lastTrackingStartedText": "Last Tracking Started:",
-    "lastTrackingStarted": "Last tracking started on {{date}}",
-    "noTrackingStartTime": "No tracking start time available",
     "originalTrackingStartedText": "Original Tracking Started:",
-    "originalTrackingStarted": "Original tracking started on {{date}}",
-    "noOriginalTrackingStartTime": "No original tracking start time available"
+    "accessibility": {
+      "trackingTime": "Tracking time",
+      "trackingTimeValue": "Tracking time: {{time}}",
+      "startTracking": "Start tracking",
+      "stopTracking": "Stop tracking",
+      "startHint": "Press to start tracking your working time",
+      "stopHint": "Press to stop tracking your working time",
+      "resetHint": "Press to reset the project",
+      "startedAnnouncement": "Tracking started",
+      "stoppedAnnouncement": "Tracking stopped at {{time}}",
+      "lastSessionEnded": "Last session ended on {{date}}",
+      "noLastSession": "No last session available",
+      "lastTrackingStarted": "Last tracking started on {{date}}",
+      "noTrackingStartTime": "No tracking start time available",
+      "originalTrackingStarted": "Original tracking started on {{date}}",
+      "noOriginalTrackingStartTime": "No original tracking start time available"
+    }
   },
 
   "projectListItem": {

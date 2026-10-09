@@ -410,26 +410,31 @@
       "name": "時間追跡",
       "text": "時間追跡カードを使用すると、このプロジェクトでの作業時間を追跡でき、セッションの状態が表示されます。"
     },
-    "trackingTime": "追跡時間",
-    "startTracking": "追跡を開始",
-    "stopTracking": "追跡を停止",
-    "startHint": "押して作業時間の追跡を開始します",
-    "stopHint": "押して作業時間の追跡を停止します",
     "reset": "リセット",
     "resetting": "リセット中",
-    "resetHint": "押してプロジェクトをリセットします",
     "attention": "注意！",
     "resetStopFirst": "リセットする前に、最初にプロジェクトを停止してください。",
     "resetConfirmation": "本当にプロジェクトをリセットしますか？プロジェクトをリセットすると、すべてのデータが削除されます。",
     "lastSessionText": "最終セッション：",
-    "lastSessionEnded": "最終セッション終了日：{{date}}",
-    "noLastSession": "最終セッションはありません",
     "lastTrackingStartedText": "最終追跡開始：",
-    "lastTrackingStarted": "最終追跡開始日：{{date}}",
-    "noTrackingStartTime": "追跡開始時間はありません",
     "originalTrackingStartedText": "最初の追跡開始：",
-    "originalTrackingStarted": "最初の追跡開始日：{{date}}",
-    "noOriginalTrackingStartTime": "最初の追跡開始時間はありません"
+    "accessibility": {
+      "trackingTime": "追跡時間",
+      "trackingTimeValue": "追跡時間：{{time}}",
+      "startTracking": "追跡を開始",
+      "stopTracking": "追跡を停止",
+      "startHint": "押して作業時間の追跡を開始します",
+      "stopHint": "押して作業時間の追跡を停止します",
+      "resetHint": "押してプロジェクトをリセットします",
+      "startedAnnouncement": "追跡を開始しました",
+      "stoppedAnnouncement": "{{time}} で追跡を停止しました",
+      "lastSessionEnded": "最終セッション終了日：{{date}}",
+      "noLastSession": "最終セッションはありません",
+      "lastTrackingStarted": "最終追跡開始日：{{date}}",
+      "noTrackingStartTime": "追跡開始時間はありません",
+      "originalTrackingStarted": "最初の追跡開始日：{{date}}",
+      "noOriginalTrackingStartTime": "最初の追跡開始時間はありません"
+    }
   },
 
   "projectListItem": {
