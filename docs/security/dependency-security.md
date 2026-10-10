@@ -345,7 +345,7 @@ The vulnerable version is not accepted as a residual risk. The dependency is pin
 
 - Added `"handlebars": "4.7.10"` to the overrides in `functions/package.json`.
 - Updated `functions/package-lock.json` to resolve Handlebars to `4.7.10`.
-- Verified the installed dependency tree using `npm ls handlebars protobufjs minimist`.
+- Verified the installed dependency tree using `npm ls handlebars`.
 - Unit tests passed: 16 test suites and 79 tests.
 - The dependency will be monitored through Dependabot and dependency security checks.
 
