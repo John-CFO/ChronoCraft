@@ -341,8 +341,6 @@ No evidence of such a data flow has been identified in the application. Exploita
 
 The vulnerable version is not accepted as a residual risk. The dependency is pinned to the patched version `4.7.10` using an npm override.
 
-The existing `protobufjs@7.6.5` override remains unchanged. No unrelated package versions were changed in the reviewed lockfile diff.
-
 **Mitigation:**
 
 - Added `"handlebars": "4.7.10"` to the overrides in `functions/package.json`.
