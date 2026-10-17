@@ -311,3 +311,44 @@ The production dependency security CI check explicitly allows the currently iden
 **Review status:** Accepted
 
 **Review trigger:** Next Expo upgrade
+
+---
+
+### handlebars vulnerability
+
+**Package:** handlebars@4.7.9 → 4.7.10
+
+**CVE/Advisory:** CVE-2026-33937 (AST validation bypass); Dependabot Alert #144
+
+**Source:**
+
+Transitive development dependency introduced by `ts-jest`.
+
+Dependency chain:
+
+    ts-jest@29.4.11
+    └── handlebars@4.7.9
+
+**Risk assessment:**
+
+The vulnerable package is introduced indirectly through `ts-jest` and is not directly used by application code.
+
+The vulnerability allows JavaScript injection when untrusted objects are passed to `Handlebars.compile()` or `Handlebars.precompile()` as AST input instead of template strings.
+
+No evidence of such a data flow has been identified in the application. Exploitability of ChronoCraft through this vulnerability has therefore not been established.
+
+**Decision:**
+
+The vulnerable version is not accepted as a residual risk. The dependency is pinned to the patched version `4.7.10` using an npm override.
+
+**Mitigation:**
+
+- Added `"handlebars": "4.7.10"` to the overrides in `functions/package.json`.
+- Updated `functions/package-lock.json` to resolve Handlebars to `4.7.10`.
+- Verified the installed dependency tree using `npm ls handlebars`.
+- Unit tests passed: 16 test suites and 79 tests.
+- The dependency will be monitored through Dependabot and dependency security checks.
+
+**Review Status:** Resolved
+
+**Review Trigger:** When updating `ts-jest`, Handlebars or the npm overrides, verify the resolved version and dependency tree again.
