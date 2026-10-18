@@ -4,7 +4,8 @@ ChronoCraft is a native Android worktime and project management application buil
 
 The application combines time tracking, project management, vacation planning, user management, localization and accessibility with a security-focused Firebase backend.
 
-![ChronoCraft app running in a smartphone mockup: worktime tracking, project tracking and analytics](docs/ChronoCraft_Demo_video.gif)
+![ChronoCraft app running in a smartphone mockup(1.5× speed): worktime tracking, project tracking and analytics](docs/ChronoCraft_Demo_video.gif)
+_Demo shown at 1.5× speed._
 
 ## Google Play Internal Testing
 
