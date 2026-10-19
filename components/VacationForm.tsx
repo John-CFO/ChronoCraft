@@ -160,24 +160,7 @@ const VacationForm = () => {
     setEndDate("");
   };
 
-  // hook to render the selected dates and clear the form after selection
-  // useEffect(() => {
-  //   if (startDate && endDate) {
-  //     handleSelect(startDate, endDate);
-  //     // setStartDate("");
-  //     // setEndDate("");
-  //   }
-  // }, [startDate, endDate]);
-
-  // hook to clear the form after leaving the VacationScreen
-  // useEffect(() => {
-  //   return () => {
-  //     //console.log("Cleaning up VacationForm state...");
-  //     setTempStartDate(null);
-  //     setTempEndDate(null);
-  //   };
-  // }, []);
-
+  // initialize todayMidnight for the date pickers
   const todayMidnight = new Date();
   todayMidnight.setHours(0, 0, 0, 0);
 
