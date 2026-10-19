@@ -52,9 +52,6 @@ const VacationScreen: React.FC<VacationScreenRouteProps> = () => {
   // initialize Firebase Auth
   const auth: Auth = getAuth(FIREBASE_APP);
 
-  // initialize routing
-  const route = useRoute<VacationScreenRouteProps>();
-
   // ref for the Scrollview to navigate to the copilot tour
   const scrollViewRef = useRef<ScrollView>(null);
   const [scrollViewReady, setScrollViewReady] = useState(false);

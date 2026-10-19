@@ -22,7 +22,11 @@ import { CopilotStep, walkthroughable } from "react-native-copilot";
 import { useTranslation } from "react-i18next";
 
 import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
-import { useCalendarStore } from "../components/CalendarState";
+import {
+  useCalendarStore,
+  fromLocalISODate,
+  toLocalISODate,
+} from "../components/CalendarState";
 import { useService } from "../components/contexts/ServiceContext";
 import { useAlertStore } from "./services/customAlert/alertStore";
 import { VacationInputSchema } from "../validation/vacationSchemas";
@@ -157,22 +161,25 @@ const VacationForm = () => {
   };
 
   // hook to render the selected dates and clear the form after selection
-  useEffect(() => {
-    if (startDate && endDate) {
-      handleSelect(startDate, endDate);
-      // setStartDate("");
-      // setEndDate("");
-    }
-  }, [startDate, endDate]);
+  // useEffect(() => {
+  //   if (startDate && endDate) {
+  //     handleSelect(startDate, endDate);
+  //     // setStartDate("");
+  //     // setEndDate("");
+  //   }
+  // }, [startDate, endDate]);
 
   // hook to clear the form after leaving the VacationScreen
-  useEffect(() => {
-    return () => {
-      //console.log("Cleaning up VacationForm state...");
-      setTempStartDate(null);
-      setTempEndDate(null);
-    };
-  }, []);
+  // useEffect(() => {
+  //   return () => {
+  //     //console.log("Cleaning up VacationForm state...");
+  //     setTempStartDate(null);
+  //     setTempEndDate(null);
+  //   };
+  // }, []);
+
+  const todayMidnight = new Date();
+  todayMidnight.setHours(0, 0, 0, 0);
 
   return (
     <ScrollView>
@@ -215,7 +222,7 @@ const VacationForm = () => {
                   // validate start date
                   onPress={() => {
                     if (!tempStartDate) {
-                      setTempStartDate(new Date().toISOString().split("T")[0]);
+                      setTempStartDate(toLocalISODate(new Date()));
                     }
                   }}
                   style={{
@@ -282,7 +289,7 @@ const VacationForm = () => {
                       return;
                     }
 
-                    setTempEndDate(new Date().toISOString().split("T")[0]);
+                    setTempEndDate(startDate);
                   }}
                   style={{
                     margin: 5,
@@ -324,10 +331,15 @@ const VacationForm = () => {
               </View>
             </View>
             {/* Date Picker Modals */}
+
             {tempStartDate !== null && (
               <DateTimePicker
-                value={tempStartDate ? new Date(tempStartDate) : new Date()}
-                minimumDate={new Date()}
+                value={
+                  tempStartDate
+                    ? fromLocalISODate(tempStartDate)
+                    : todayMidnight
+                }
+                minimumDate={todayMidnight}
                 mode="date"
                 display="spinner"
                 themeVariant="dark" // IOS only
@@ -342,15 +354,21 @@ const VacationForm = () => {
                   //condition to add the selected date
                   if (selectedDate) {
                     setTempStartDate(null); // delete the temporary display
-                    setStartDate(selectedDate.toISOString().split("T")[0]);
+                    setStartDate(toLocalISODate(selectedDate));
+                    setEndDate("");
+                    resetMarkedDates();
                   }
                 }}
               />
             )}
             {tempEndDate !== null && (
               <DateTimePicker
-                value={tempEndDate ? new Date(tempEndDate) : new Date()}
-                minimumDate={new Date()}
+                value={
+                  tempEndDate ? fromLocalISODate(tempEndDate) : todayMidnight
+                }
+                minimumDate={
+                  startDate ? fromLocalISODate(startDate) : todayMidnight
+                }
                 mode="date"
                 display="spinner"
                 themeVariant="dark" // IOS only
@@ -364,9 +382,11 @@ const VacationForm = () => {
                     return;
                   }
                   //condition to add the selected date
-                  if (selectedDate) {
+                  if (selectedDate && startDate) {
                     setTempEndDate(null); // delete the temporary display
-                    setEndDate(selectedDate.toISOString().split("T")[0]);
+                    const end = toLocalISODate(selectedDate);
+                    setEndDate(end);
+                    handleSelect(startDate, end);
                   }
                 }}
               />
