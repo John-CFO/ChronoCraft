@@ -41,6 +41,20 @@ type MarkedDates = {
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
+// Date -> local "YYYY-MM-DD"-String (NO UTC!)
+export const toLocalISODate = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+// "YYYY-MM-DD" -> local Midnight (NO UTC!)
+export const fromLocalISODate = (s: string) => {
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(y, m - 1, d);
+};
+
 // create CalendarStore
 export const useCalendarStore = create<CalendarState>((set) => ({
   // initial state
@@ -54,19 +68,14 @@ export const useCalendarStore = create<CalendarState>((set) => ({
 
   // function to handle date selection to the CustomCalendar
   handleSelect: (startDate, endDate) => {
-    if (!startDate || !endDate) {
-      return;
-    }
+    if (!startDate || !endDate) return;
 
-    const dates: MarkedDates = { ...useCalendarStore.getState().markedDates };
+    const dates: MarkedDates = {};
+    const current = fromLocalISODate(startDate);
+    const end = fromLocalISODate(endDate);
 
-    let currentDate = new Date(startDate);
-    const end = new Date(endDate);
-
-    while (currentDate <= end) {
-      const formattedDate = currentDate.toISOString().split("T")[0];
-
-      dates[formattedDate] = {
+    while (current <= end) {
+      dates[toLocalISODate(current)] = {
         customStyles: {
           container: {
             borderWidth: 1,
@@ -76,9 +85,7 @@ export const useCalendarStore = create<CalendarState>((set) => ({
           text: { color: "white", fontWeight: "bold" },
         },
       };
-
-      // go to the next day
-      currentDate.setDate(currentDate.getDate() + 1);
+      current.setDate(current.getDate() + 1);
     }
 
     useCalendarStore.getState().setMarkedDates(dates); // update store
