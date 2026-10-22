@@ -19,7 +19,7 @@
     "create:test-user": "ts-node scripts/createTestUser.ts"
   },
   "engines": {
-    "node": "22.22.2",
+    "node": "22.23.4",
     "npm": "9.8.1"
   },
   "dependencies": {
