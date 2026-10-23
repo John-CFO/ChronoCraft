@@ -3,16 +3,22 @@
     "appVersionSource": "local"
   },
   "build": {
+    "base": {
+      "node": "22.23.4"
+    },
     "development": {
+      "extends": "base",
       "developmentClient": true,
       "distribution": "internal"
     },
     "android-apk": {
+      "extends": "base",
       "android": {
         "buildType": "apk"
       }
     },
     "production": {
+      "extends": "base",
       "android": {
         "buildType": "app-bundle"
       }
