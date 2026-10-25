@@ -189,6 +189,192 @@ The dependency will be reviewed during the next ESLint/Jest tooling upgrade cycl
 
 ---
 
+### @grpc/grpc-js vulnerability
+
+**Package:** @grpc/grpc-js@<resolved version from `npm ls @grpc/grpc-js`>  
+**Severity:** High  
+**CVE/Advisories:**
+
+- GHSA-m9gg-hp2v-232j
+- GHSA-f596-whhp-79r4
+
+**Source:**
+
+Transitive dependency introduced by Firebase test tooling.
+
+Dependency chain:
+
+```text
+@firebase/rules-unit-testing
+└── firebase
+    └── @firebase/firestore-compat
+        └── @firebase/firestore
+            └── @grpc/grpc-js
+```
+
+**Risk assessment:**
+
+The vulnerable package is reachable only through `@firebase/rules-unit-testing`, which is used exclusively for emulator-based Firestore rules testing. It is not part of the application runtime bundle and is not imported by production code.
+
+Both advisories concern gRPC server/client behaviour: unauthorized certificate acceptance in specific auth-context configurations, and leakage of handler error messages to clients. Neither code path is exercised by the test setup, which runs against the local Firebase emulator suite without TLS or custom auth contexts.
+
+The available automatic remediation downgrades `firebase` to 9.14.0, which is a breaking change and would regress the currently pinned Firebase SDK.
+
+**Decision:**
+
+Risk accepted temporarily.
+
+The dependency tree remains pinned to avoid a Firebase downgrade solely to resolve a test-only transitive dependency.
+
+**Mitigation:**
+
+- The package is confined to the test dependency tree and does not appear in `npm audit --omit=dev`.
+- Dependency is monitored through `npm audit`.
+- The dependency will be reevaluated during the next Firebase SDK upgrade cycle.
+
+**Review status:** Accepted  
+**Review trigger:** Next Firebase / @firebase/rules-unit-testing upgrade
+
+---
+
+### ajv vulnerability
+
+**Package:** ajv@<resolved version from `npm ls ajv`>  
+**Severity:** Moderate  
+**CVE/Advisory:** GHSA-2g4f-4pwh-qvx6
+
+**Source:**
+
+Transitive development dependency introduced by the Expo development client.
+
+Dependency chain:
+
+```text
+expo-dev-client
+└── expo-dev-launcher
+    └── ajv
+```
+
+**Risk assessment:**
+
+The vulnerable package is part of the Expo development client tooling and is not included in production application builds.
+
+The advisory concerns ReDoS when the `$data` option is enabled and attacker-controlled schema references are processed. The `$data` option is not enabled anywhere in this dependency tree, and no untrusted input reaches the schema validation performed by the Expo tooling.
+
+The available automatic remediation upgrades `expo-dev-client` to a new major version, which is a breaking framework change.
+
+**Decision:**
+
+Risk accepted temporarily.
+
+The dependency will be reviewed during the next Expo upgrade cycle rather than through an isolated `expo-dev-client` upgrade.
+
+**Mitigation:**
+
+- Dependency is confined to development tooling and does not appear in `npm audit --omit=dev`.
+- Dependency is monitored through `npm audit`.
+- The dependency will be reevaluated during the next planned Expo upgrade.
+
+**Review status:** Accepted  
+**Review trigger:** Next Expo upgrade
+
+---
+
+### decode-uri-component vulnerability
+
+**Package:** decode-uri-component@<resolved version from `npm ls decode-uri-component`>  
+**Severity:** Moderate  
+**CVE/Advisory:** GHSA-vcc3-ghjq-m6fr
+
+**Source:**
+
+Transitive runtime dependency introduced by React Navigation.
+
+Dependency chain:
+
+```text
+@react-navigation/native
+└── @react-navigation/core
+    └── query-string
+        └── decode-uri-component
+```
+
+**Risk assessment:**
+
+This is the only finding in this group that is reachable at application runtime, so it is assessed separately from the build- and test-tooling findings.
+
+The advisory concerns denial of service through exponential decoding of crafted, malformed percent-encoded input.
+
+Exploitability requires an attacker to supply a maliciously percent-encoded string that is passed to `query-string` for parsing. In ChronoCraft, deep-link URL parsing is limited to app-internal navigation state produced by React Navigation itself. No user-supplied query string is parsed through this dependency, and no externally reachable input path to `query-string` has been identified.
+
+Impact is limited to a client-side DoS of the affected user's own session, with no data exposure and no server-side effect.
+
+The available automatic remediation upgrades `@react-navigation/native` to 7.5.1, which is a breaking change affecting the navigation setup.
+
+**Decision:**
+
+Risk accepted temporarily.
+
+The navigation stack remains pinned to avoid a framework migration outside the planned upgrade cycle. The assessment is revisited if deep-link handling or external URL parsing is added to the application.
+
+**Mitigation:**
+
+- No untrusted query strings are passed to `query-string`.
+- Dependency is monitored through `npm audit`.
+- The upgrade will be bundled with the next React Navigation upgrade.
+- The assessment is re-triggered if deep-link or external URL parsing is introduced.
+
+**Review status:** Accepted  
+**Review trigger:** Next React Navigation upgrade, or introduction of external URL / deep-link parsing
+
+---
+
+### node-forge vulnerability
+
+**Package:** node-forge@<resolved version from `npm ls node-forge`>  
+**Severity:** High  
+**CVE/Advisory:** GHSA-86w9-cpqp-85rv
+
+**Source:**
+
+Transitive dependency introduced by the Expo CLI dependency tree.
+
+Dependency chain:
+
+```text
+expo
+└── @expo/cli
+    └── @expo/code-signing-certificates
+        └── node-forge
+```
+
+**Risk assessment:**
+
+The vulnerable package is used by Expo CLI code-signing tooling during the build process and is not included in the application runtime bundle.
+
+The advisory concerns RSA PKCS#1 v1.5 signature verification accepting extra nested `DigestAlgorithm` elements, i.e. a certificate or signature validation bypass in a parsing path.
+
+No application code performs RSA signature verification through `node-forge`. The affected functionality is only exercised by Expo build tooling when generating and verifying code-signing certificates for development builds.
+
+The available automatic remediation upgrades Expo to 58.x, which is a breaking framework upgrade and outside the scope of the current dependency maintenance change.
+
+**Decision:**
+
+Risk accepted temporarily.
+
+The Expo 50 dependency tree remains pinned, consistent with the existing `tar` exception, to avoid an unplanned framework migration solely for a transitive build-tooling dependency.
+
+**Mitigation:**
+
+- Dependency is confined to Expo CLI build tooling and does not appear in `npm audit --omit=dev`.
+- Dependency is monitored through `npm audit`.
+- The dependency will be reevaluated as part of the next planned Expo upgrade, together with the existing `tar` exception.
+
+**Review status:** Accepted  
+**Review trigger:** Next Expo upgrade (same cycle as the `tar` exception)
+
+---
+
 ## Resolved Issues
 
 ### protobufjs vulnerability
@@ -281,6 +467,13 @@ Dependency chain:
     expo@50.0.21
     └── @expo/cli@0.17.13
         └── tar@6.2.1
+
+Additional affected path:
+
+    expo
+    └── @expo/cli
+        └── cacache (14.0.0 - 18.0.4)
+            └── tar
 
 **Risk assessment:**
 
