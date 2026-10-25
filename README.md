@@ -24,8 +24,8 @@ Access is provided manually. If you want to test ChronoCraft, contact me with th
 
 ### Current Release
 
-- Version: `1.1.0`
-- Version Code: `14`
+- Version: `1.1.2`
+- Version Code: `16`
 - Target SDK: `36`
 - Minimum API Level: `23`
 - Distribution: Google Play Internal Testing
