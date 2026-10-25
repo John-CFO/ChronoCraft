@@ -31,6 +31,16 @@ import { logWarn } from "../lib/loggerClient";
 // modified walkthroughable for copilot tour
 const CopilotWalkthroughView = walkthroughable(View);
 
+// "round" Steps – will try to round to the nearest step
+const NICE_STEPS = [0.5, 1, 2, 5, 10, 20, 25, 50, 100, 200, 500, 1000];
+// chart dimensions
+const TOOLTIP_WIDTH = 150;
+const TOOLTIP_HEIGHT = 105;
+// define fix values for bars and spacing
+const BAR_WIDTH = 30;
+const BAR_SPACING = 8;
+const INITIAL_SPACING = 5;
+
 const WorkHoursChart = () => {
   // useTranslation hook to access translations
   const { t, i18n } = useTranslation();
@@ -49,7 +59,6 @@ const WorkHoursChart = () => {
   // state and types for the tooltip
   const [tooltipData, setTooltipData] = useState<{
     date: string;
-    expectedHours?: number;
     baseValue: number;
     overHours: number;
     plannedHours: number;
@@ -62,6 +71,9 @@ const WorkHoursChart = () => {
 
   // state for the card width
   const [cardWidth, setCardWidth] = useState<number>(0);
+
+  // state for the chartHight
+  const [chartHeight, setChartHeight] = useState<number>(200);
 
   // screensize for dynamic size calculation
   const screenWidth = Dimensions.get("window").width;
@@ -90,10 +102,9 @@ const WorkHoursChart = () => {
 
       const barWidth = 22;
       const spacing = 24;
-      const chartHeight = 400;
-      const scaleFactor = chartType === "year" ? 2 : 15; // skale factor if chart type is year 2 else 15
-      const tooltipHeight = 80;
-      const tooltipWidth = 115;
+      const tooltipHeight = TOOLTIP_HEIGHT;
+      const tooltipWidth = TOOLTIP_WIDTH;
+      const max = yAxisConfig.maxValue || 1;
 
       // calculate the absolute X-Position of the bar relative to the chart content container
       const absoluteX = index * (barWidth + spacing) + barWidth / 2;
@@ -115,8 +126,13 @@ const WorkHoursChart = () => {
       }
 
       // calculate the Y position of the tooltip whit the skale factor
-      const y =
-        chartHeight - (baseValue + overHours) * scaleFactor - tooltipHeight;
+      const rawY =
+        chartHeight -
+        ((baseValue + overHours) / max) * chartHeight -
+        tooltipHeight;
+
+      // keep the tooltip within the inner frame
+      const y = Math.max(0, rawY);
 
       setTooltipData({
         date: item.originalDate,
@@ -124,7 +140,7 @@ const WorkHoursChart = () => {
         overHours,
         plannedHours, // planed value from Firestore
         x: adjustedX,
-        y,
+        y, // <- the clamped y position
       });
     }
   };
@@ -298,24 +314,30 @@ const WorkHoursChart = () => {
       .filter((item: any) => item !== null);
   }
 
-  // define fix values for bars and spacing
-  const barWidth = 30;
-  const spacing = 8;
-  const initialSpacing = 5;
-
   // use the width of the screen to calculate the width of the chart
   const computedChartWidth =
     innerWidth > 0
       ? Math.max(
           innerWidth,
-          initialSpacing + stackData.length * (barWidth + spacing) + spacing,
+          INITIAL_SPACING +
+            stackData.length * (BAR_WIDTH + BAR_SPACING) +
+            BAR_SPACING,
         )
-      : initialSpacing + stackData.length * (barWidth + spacing) + spacing;
+      : INITIAL_SPACING +
+        stackData.length * (BAR_WIDTH + BAR_SPACING) +
+        BAR_SPACING;
 
-  // function to calculate the dynamic maxValue for Week- and Month-views
-  const getDynamicMaxValue = () => {
-    // Compute max stacked value across stackData (works for week, month and year)
+  // function to calculate the available years
+  const availableYears = [
+    ...new Set(data.map((item) => new Date(item.workDay).getFullYear())),
+  ].sort((a, b) => b - a);
+
+  // function to calculate the yAxisConfig
+  const getYAxisConfig = () => {
+    // 1) determine the maximum stacked value across stackData
     let maxSum = 0;
+    let maxPlanned = 0;
+
     stackData.forEach((item) => {
       const sum =
         (item.stacks || []).reduce(
@@ -323,39 +345,49 @@ const WorkHoursChart = () => {
           0,
         ) || 0;
       if (sum > maxSum) maxSum = sum;
+
+      const planned = Number(item.plannedHours) || 0;
+      if (planned > maxPlanned) maxPlanned = planned;
     });
 
-    if (maxSum === 0) return undefined; // let chart auto-scale for empty data
+    // empty data -> Chart should scale automatically
+    if (maxSum === 0) {
+      return { maxValue: undefined, noOfSections: 4 };
+    }
 
-    // Add a small buffer
-    const raw = maxSum * 1.1;
+    // 2) conditional scaling if the chart type is "year"
+    let raw: number;
+    if (chartType === "year") {
+      // Year-Chart: skale with monthly capacity
+      // so that the bars are proportional to the "utilization" for the month
+      const reference = Math.max(maxSum, maxPlanned);
+      raw = reference * 1.05;
+    } else {
+      // little buffer, so that the highest bar doesn't stick to the edge
+      raw = maxSum * 1.1;
+    }
 
-    // Decide tick step:
-    // - if raw is small, use 1h steps so 1h is visible
-    // - if raw is large, pick a step to get ~4-6 sections
-    let step;
-    if (raw <= 2) step = 1;
-    else if (raw <= 6) step = 1;
-    else step = Math.ceil(raw / 5); // ~5 sections for large values
+    // 3) Initial step size & maximum number of sections per chart type
+    // Year = Monthly totals -> coarse steps, few lines
+    // Week/Month = Hourly values ​​-> fine steps
+    let step = chartType === "year" ? 5 : 1;
+    const maxSections = chartType === "year" ? 6 : 10;
 
-    // Round up to nearest step
-    const rounded = Math.ceil(raw / step) * step;
+    // 4) Increase the step size until the lines are no longer too close together
+    let noOfSections = Math.ceil(raw / step);
+    while (noOfSections > maxSections) {
+      const next = NICE_STEPS.find((s) => s > step);
+      if (!next) break;
+      step = next;
+      noOfSections = Math.ceil(raw / step);
+    }
 
-    // also ensure minimum of 1 (so a 1h line exists for small values)
-    return Math.max(1, rounded);
+    // 5) maxValue = step * noOfSections -> smooth section values
+    return { maxValue: step * noOfSections, noOfSections };
   };
 
-  // function to calculate the available years
-  const availableYears = [
-    ...new Set(data.map((item) => new Date(item.workDay).getFullYear())),
-  ].sort((a, b) => b - a);
-
-  // use the getDynamicMaxValue function
-  const dynamicMaxValue = getDynamicMaxValue();
-  // calculate the number of sections for the Y-Axis
-  const computedNoOfSections = dynamicMaxValue
-    ? Math.max(2, Math.round(dynamicMaxValue)) // one section per hour
-    : 4;
+  // calculate the Y-Axis config
+  const yAxisConfig = getYAxisConfig();
 
   // function to calculate the accessibility entry label
   const getAccessibilityEntryLabel = (item: any) => {
@@ -441,30 +473,85 @@ const WorkHoursChart = () => {
                   onScroll={(e) => setScrollX(e.nativeEvent.contentOffset.x)}
                   scrollEventThrottle={16}
                   contentContainerStyle={{
-                    paddingRight: spacing + barWidth / 2,
+                    paddingRight: BAR_SPACING + BAR_WIDTH / 2,
                   }}
                 >
-                  <BarChart
-                    width={computedChartWidth}
-                    yAxisLabelSuffix="h"
-                    stackData={stackData}
-                    maxValue={dynamicMaxValue} // regulate the size of the Y-Axis
-                    noOfSections={computedNoOfSections}
-                    barWidth={barWidth}
-                    initialSpacing={initialSpacing}
-                    spacing={spacing}
-                    barBorderRadius={2.5}
-                    isAnimated
-                    yAxisColor={"white"}
-                    xAxisColor={"white"}
-                    rulesColor={"dimgray"} // color for the horizontal break lines
-                    xAxisLabelTextStyle={{ color: "white" }}
-                    yAxisTextStyle={{ color: "white" }}
-                    onPress={(item: any, index: number) =>
-                      handleBarPress(item, index)
+                  <View
+                    onLayout={(e) =>
+                      setChartHeight(e.nativeEvent.layout.height)
                     }
-                  />
+                  >
+                    <BarChart
+                      key={`${chartType}-${selectedYear}-${stackData.length}`}
+                      width={computedChartWidth}
+                      yAxisLabelSuffix="h"
+                      stackData={stackData}
+                      maxValue={yAxisConfig.maxValue} // regulate the size of the Y-Axis
+                      noOfSections={yAxisConfig.noOfSections}
+                      barWidth={BAR_WIDTH}
+                      initialSpacing={INITIAL_SPACING}
+                      spacing={BAR_SPACING}
+                      barBorderRadius={2.5}
+                      isAnimated
+                      yAxisColor={"white"}
+                      xAxisColor={"white"}
+                      rulesColor={"dimgray"} // color for the horizontal break lines
+                      xAxisLabelTextStyle={{ color: "white" }}
+                      yAxisTextStyle={{ color: "white" }}
+                      onPress={(item: any, index: number) =>
+                        handleBarPress(item, index)
+                      }
+                    />
+                  </View>
                 </ScrollView>
+
+                {/* Tooltip */}
+                {tooltipData && (
+                  <View
+                    style={{
+                      position: "absolute",
+                      width: 150,
+                      height: 105,
+                      justifyContent: "space-around",
+                      top: tooltipData.y,
+                      left: tooltipData.x,
+                      backgroundColor: "#333",
+                      padding: 8,
+                      borderRadius: 8,
+                      elevation: 5,
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.5,
+                      shadowRadius: 4,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        color: "white",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {`📅 ${formatTooltipDate(tooltipData.date, chartType, i18n.language)}`}
+                    </Text>
+
+                    <Text style={{ fontSize: 11, color: "white" }}>
+                      {tooltipData.baseValue < tooltipData.plannedHours
+                        ? t("workHoursChart.tooltipWorked", {
+                            hours: formatTime(tooltipData.baseValue),
+                          })
+                        : t("workHoursChart.tooltipExpected", {
+                            hours: formatTime(tooltipData.baseValue),
+                          })}
+                    </Text>
+
+                    <Text style={{ fontSize: 11, color: "aqua" }}>
+                      {t("workHoursChart.tooltipOver", {
+                        hours: formatTime(tooltipData.overHours || 0),
+                      })}
+                    </Text>
+                  </View>
+                )}
               </View>
               {/* Legend */}
               <View
@@ -708,49 +795,6 @@ const WorkHoursChart = () => {
                   })}
                 </View>
               </View>
-              {/* Tooltip */}
-              {tooltipData && (
-                <View
-                  style={{
-                    position: "absolute",
-                    width: 150,
-                    height: 105,
-                    justifyContent: "space-around",
-                    top: tooltipData.y,
-                    left: tooltipData.x,
-                    backgroundColor: "#333",
-                    padding: 8,
-                    borderRadius: 8,
-                    elevation: 5,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.5,
-                    shadowRadius: 4,
-                  }}
-                >
-                  <Text
-                    style={{ fontSize: 14, color: "white", fontWeight: "bold" }}
-                  >
-                    {`📅 ${formatTooltipDate(tooltipData.date, chartType, i18n.language)}`}
-                  </Text>
-
-                  <Text style={{ fontSize: 11, color: "white" }}>
-                    {tooltipData.baseValue < tooltipData.plannedHours
-                      ? t("workHoursChart.tooltipWorked", {
-                          hours: formatTime(tooltipData.baseValue),
-                        })
-                      : t("workHoursChart.tooltipExpected", {
-                          hours: formatTime(tooltipData.baseValue),
-                        })}
-                  </Text>
-
-                  <Text style={{ fontSize: 11, color: "aqua" }}>
-                    {t("workHoursChart.tooltipOver", {
-                      hours: formatTime(tooltipData.overHours || 0),
-                    })}
-                  </Text>
-                </View>
-              )}
             </View>
           </TouchableWithoutFeedback>
         </CopilotWalkthroughView>
