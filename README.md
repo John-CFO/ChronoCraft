@@ -188,6 +188,10 @@ ChronoCraft uses a multi-level testing strategy covering different system layers
 - Testing of authenticated and authorization-protected endpoints
 - Security-focused automated checks
 
+Dependency audit findings are tracked in
+[`docs/dependency-security.md`](docs/dependency-security.md).
+Accepted risks are documented with rationale and review triggers.
+
 ## Development & Quality
 
 - Dependency management
