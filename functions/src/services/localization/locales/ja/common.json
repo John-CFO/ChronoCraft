@@ -54,6 +54,7 @@
     "fieldMustBeNumber": "フィールド '{{field}}' は数値である必要があります",
     "fieldMinValue": "フィールド '{{field}}' は少なくとも {{min}} である必要があります",
     "fieldMaxValue": "フィールド '{{field}}' は最大 {{max}} までです",
+    "maxWorkHoursOutOfRange": "勤務時間は{{min}}以上{{max}}以下である必要があります。",
     "invalidInput": "無効な入力",
     "invalidUid": "無効なUID",
     "invalidPayload": "無効なペイロード",

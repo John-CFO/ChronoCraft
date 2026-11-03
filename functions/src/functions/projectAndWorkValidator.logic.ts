@@ -182,6 +182,49 @@ export async function projectsAndWorkValidatorLogic(
       );
     }
 
+    if (action === "setMaxWorkHours") {
+      if (
+        typeof payload !== "object" ||
+        payload === null ||
+        Array.isArray(payload)
+      ) {
+        throw new ValidationError(t("validation.payloadMustBeObject"));
+      }
+
+      if (
+        typeof payload.serviceId !== "string" ||
+        payload.serviceId.trim().length === 0
+      ) {
+        throw new ValidationError(t("validation.serviceIdRequired"));
+      }
+
+      if (
+        typeof payload.projectId !== "string" ||
+        payload.projectId.trim().length === 0
+      ) {
+        throw new ValidationError(t("validation.projectIdRequired"));
+      }
+
+      if (
+        typeof payload.maxWorkHours !== "number" ||
+        Number.isNaN(payload.maxWorkHours) ||
+        payload.maxWorkHours < 1 ||
+        payload.maxWorkHours > 10000
+      ) {
+        throw new ValidationError(
+          t("validation.maxWorkHoursOutOfRange", { min: 1, max: 10000 }),
+        );
+      }
+
+      return await projectService.setMaxWorkHours(
+        uid,
+        payload.serviceId,
+        payload.projectId,
+        payload.maxWorkHours,
+        request,
+      );
+    }
+
     throw new HttpsError("invalid-argument", t("errors.unknownAction"));
   } catch (error) {
     throw await handleFunctionError(error, "projectsAndWorkValidator");
