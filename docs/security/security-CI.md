@@ -65,6 +65,8 @@ Checks:
 
 The validation uses Firebase CLI dry-run deployment to detect invalid or unsafe rule changes before production deployment.
 
+**Known limitation:** `firebase deploy --dry-run` validates rule syntax and compilation only. It does not execute rules against test documents. A rule that compiles but rejects all legitimate client writes (e.g. because it requires fields the client does not send) passes the dry-run without error.
+
 ---
 
 ### Dependency Security
