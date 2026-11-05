@@ -54,3 +54,18 @@ export async function deleteProject(serviceId: string, projectId: string) {
     },
   });
 }
+
+export async function setMaxWorkHours(
+  serviceId: string,
+  projectId: string,
+  maxWorkHours: number,
+) {
+  await projectsAndWorkValidatorCallable({
+    action: "setMaxWorkHours",
+    payload: {
+      serviceId,
+      projectId,
+      maxWorkHours,
+    },
+  });
+}

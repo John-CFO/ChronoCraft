@@ -54,6 +54,7 @@
     "fieldMustBeNumber": "Il campo '{{field}}' deve essere un numero",
     "fieldMinValue": "Il campo '{{field}}' deve essere almeno {{min}}",
     "fieldMaxValue": "Il campo '{{field}}' deve essere al massimo {{max}}",
+    "maxWorkHoursOutOfRange": "Le ore di lavoro devono essere almeno {{min}} e al massimo {{max}}.",
     "invalidInput": "Input non valido",
     "invalidUid": "UID non valido",
     "invalidPayload": "Payload non valido.",

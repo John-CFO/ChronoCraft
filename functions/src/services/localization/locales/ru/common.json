@@ -54,6 +54,7 @@
     "fieldMustBeNumber": "Поле '{{field}}' должно быть числом",
     "fieldMinValue": "Поле '{{field}}' должно быть не менее {{min}}",
     "fieldMaxValue": "Поле '{{field}}' должно быть не более {{max}}",
+    "maxWorkHoursOutOfRange": "Рабочие часы должны быть не менее {{min}} и не более {{max}}.",
     "invalidInput": "Неверный ввод",
     "invalidUid": "Неверный UID",
     "invalidPayload": "Неверная полезная нагрузка",

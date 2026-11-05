@@ -223,4 +223,31 @@ export class ProjectRepo {
       tx.set(earningsRef, input, { merge: true });
     });
   }
+
+  async setProjectMaxWorkHours(
+    ownerId: string,
+    serviceId: string,
+    projectId: string,
+    input: { maxWorkHours: number; updatedAt: Timestamp },
+  ) {
+    const ref = this.projectDoc(ownerId, serviceId, projectId);
+    const lockRef = this.lockDoc(projectId);
+
+    await this.db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      const lockSnap = await tx.get(lockRef);
+
+      if (!snap.exists) throw new ProjectNotFoundError(projectId);
+
+      if (lockSnap.exists) {
+        throw new HttpsError("failed-precondition", "Locked");
+      }
+
+      if (snap.data()?.userId !== ownerId) {
+        throw new AuthorizationError("Not your project");
+      }
+
+      tx.set(ref, input, { merge: true });
+    });
+  }
 }
