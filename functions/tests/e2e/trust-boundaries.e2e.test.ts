@@ -428,6 +428,87 @@ describe("Authorization Boundaries", () => {
 
     expectSuccess(res);
   });
+
+  it("should allow authenticated user to set maxWorkHours on their own project", async () => {
+    const user = TEST_USERS[0];
+    const token = await getIdTokenForUser(user.uid);
+
+    const createRes = await callFunction({
+      functionName: "projectsAndWorkValidatorFunction",
+      idToken: token,
+      body: {
+        action: "createProject",
+        payload: { name: "MaxWorkHours Test", serviceId: "test-service" },
+      },
+      isCallable: true,
+    });
+
+    const created = unwrapBody(createRes.body);
+    const projectId = created.projectId;
+
+    const res = await callFunction({
+      functionName: "projectsAndWorkValidatorFunction",
+      idToken: token,
+      body: {
+        action: "setMaxWorkHours",
+        payload: { projectId, serviceId: "test-service", maxWorkHours: 40 },
+      },
+      isCallable: true,
+    });
+
+    expectSuccess(res);
+  });
+
+  it("should reject out-of-range maxWorkHours", async () => {
+    const user = TEST_USERS[0];
+    const token = await getIdTokenForUser(user.uid);
+
+    const createRes = await callFunction({
+      functionName: "projectsAndWorkValidatorFunction",
+      idToken: token,
+      body: {
+        action: "createProject",
+        payload: { name: "Range Test", serviceId: "test-service" },
+      },
+      isCallable: true,
+    });
+
+    const created = unwrapBody(createRes.body);
+    const projectId = created.projectId;
+
+    const tooLow = await callFunction({
+      functionName: "projectsAndWorkValidatorFunction",
+      idToken: token,
+      body: {
+        action: "setMaxWorkHours",
+        payload: { projectId, serviceId: "test-service", maxWorkHours: 0 },
+      },
+      isCallable: true,
+    });
+    expectValidationError(tooLow);
+
+    const tooHigh = await callFunction({
+      functionName: "projectsAndWorkValidatorFunction",
+      idToken: token,
+      body: {
+        action: "setMaxWorkHours",
+        payload: { projectId, serviceId: "test-service", maxWorkHours: 10001 },
+      },
+      isCallable: true,
+    });
+    expectValidationError(tooHigh);
+
+    const notNumber = await callFunction({
+      functionName: "projectsAndWorkValidatorFunction",
+      idToken: token,
+      body: {
+        action: "setMaxWorkHours",
+        payload: { projectId, serviceId: "test-service", maxWorkHours: "40" },
+      },
+      isCallable: true,
+    });
+    expectValidationError(notNumber);
+  });
 });
 
 describe("Push Token Boundaries", () => {

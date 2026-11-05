@@ -149,4 +149,78 @@ describe("ProjectService Unit Tests", () => {
       ).rejects.toThrow("Invalid input");
     });
   });
+
+  describe("setMaxWorkHours", () => {
+    it("should set max work hours", async () => {
+      repo.setProjectMaxWorkHours.mockResolvedValue(undefined);
+
+      const result = await service.setMaxWorkHours(
+        "user123",
+        "service1",
+        "project1",
+        40,
+        request,
+      );
+
+      expect(repo.setProjectMaxWorkHours).toHaveBeenCalledWith(
+        "user123",
+        "service1",
+        "project1",
+        expect.objectContaining({
+          maxWorkHours: 40,
+          updatedAt: expect.anything(),
+        }),
+      );
+
+      expect(result).toBeUndefined();
+    });
+
+    it("propagates repo error on setMaxWorkHours", async () => {
+      repo.setProjectMaxWorkHours.mockRejectedValue(new Error("DB error"));
+
+      await expect(
+        service.setMaxWorkHours("user123", "service1", "project1", 40, request),
+      ).rejects.toThrow("DB error");
+    });
+
+    it("should throw on invalid input (missing ids)", async () => {
+      await expect(
+        service.setMaxWorkHours("", "service1", "project1", 40, request),
+      ).rejects.toThrow("Invalid input");
+
+      await expect(
+        service.setMaxWorkHours("user123", "", "project1", 40, request),
+      ).rejects.toThrow("Invalid input");
+
+      await expect(
+        service.setMaxWorkHours("user123", "service1", "", 40, request),
+      ).rejects.toThrow("Invalid input");
+    });
+
+    it("should throw on out-of-range maxWorkHours", async () => {
+      await expect(
+        service.setMaxWorkHours("user123", "service1", "project1", 0, request),
+      ).rejects.toThrow("Invalid input");
+
+      await expect(
+        service.setMaxWorkHours(
+          "user123",
+          "service1",
+          "project1",
+          10001,
+          request,
+        ),
+      ).rejects.toThrow("Invalid input");
+
+      await expect(
+        service.setMaxWorkHours(
+          "user123",
+          "service1",
+          "project1",
+          NaN,
+          request,
+        ),
+      ).rejects.toThrow("Invalid input");
+    });
+  });
 });

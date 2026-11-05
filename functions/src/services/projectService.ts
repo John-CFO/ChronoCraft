@@ -98,4 +98,46 @@ export class ProjectService {
       updatedAt: Timestamp.now(),
     });
   }
+
+  async setMaxWorkHours(
+    userId: string,
+    serviceId: string,
+    projectId: string,
+    maxWorkHours: number,
+    request: any,
+  ) {
+    const t = await getTranslation(request.data?.language);
+
+    if (
+      !userId ||
+      !serviceId ||
+      !projectId ||
+      typeof maxWorkHours !== "number" ||
+      Number.isNaN(maxWorkHours) ||
+      maxWorkHours < 1 ||
+      maxWorkHours > 10000
+    ) {
+      throw new ValidationError(t("validation.invalidInput"));
+    }
+
+    const lockRef = admin
+      .firestore()
+      .collection("deletionLocks")
+      .doc(projectId);
+    const lockSnap = await lockRef.get();
+
+    if (lockSnap.exists) {
+      throw new ValidationError(t("validation.projectDeletionInProgress"));
+    }
+
+    return this.projectRepo.setProjectMaxWorkHours(
+      userId,
+      serviceId,
+      projectId,
+      {
+        maxWorkHours,
+        updatedAt: Timestamp.now(),
+      },
+    );
+  }
 }

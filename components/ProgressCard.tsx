@@ -17,11 +17,10 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import CircularProgress from "react-native-circular-progress-indicator";
-import { doc, updateDoc, getDoc } from "firebase/firestore";
 import { CopilotStep, walkthroughable } from "react-native-copilot";
 import { useTranslation } from "react-i18next";
 
-import { FIREBASE_AUTH, FIREBASE_FIRESTORE } from "../firebaseConfig";
+import { FIREBASE_AUTH } from "../firebaseConfig";
 import { useService } from "../components/contexts/ServiceContext";
 import { useStore } from "./TimeTrackingState";
 import { sanitizeMaxWorkHours } from "./InputSanitizers";
@@ -31,6 +30,7 @@ import { NotificationManager } from "./services/PushNotifications";
 import { useAccessibilityStore } from "../components/services/accessibility/accessibilityStore";
 import { MaxWorkHoursSchema } from "../validation/progressSchemas";
 import { useAlertStore } from "../components/services/customAlert/alertStore";
+import { setMaxWorkHours } from "../services/projects.api";
 import { logError } from "../lib/loggerClient";
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -135,53 +135,11 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
         }
 
         try {
-          // check authorization
-          const projectRef = doc(
-            FIREBASE_FIRESTORE,
-            "Users",
-            user.uid,
-            "Services",
-            serviceId,
-            "Projects",
-            projectId,
-          );
-
-          const projectSnap = await getDoc(projectRef);
-          if (!projectSnap.exists()) {
-            useAlertStore
-              .getState()
-              .showAlert(
-                t("progress.alerts.error"),
-                t("progress.alerts.notAuthorized"),
-              );
-
-            logError("ProgressCard:updateMaxWorkHours", "Project not found");
-            return;
-          }
-
-          const projectData = projectSnap.data();
-          if (projectData.userId !== user.uid) {
-            useAlertStore
-              .getState()
-              .showAlert(
-                t("progress.alerts.error"),
-                t("progress.alerts.notAuthorized"),
-              );
-
-            logError(
-              "ProgressCard:updateMaxWorkHours",
-              "Unauthorized access attempt",
-            );
-            return;
-          }
-
-          await updateDoc(projectRef, { maxWorkHours: hours });
+          await setMaxWorkHours(serviceId, projectId, hours);
           setProjectData(projectId, { maxWorkHours: hours });
-
           if (onSaveSuccess) onSaveSuccess();
         } catch (error) {
           logError("ProgressCard:saveMaxWorkHours", error);
-
           useAlertStore
             .getState()
             .showAlert(
@@ -190,7 +148,7 @@ const ProgressCard: React.FC<ProgressCardProps> = memo(
             );
         }
       }, 500),
-      [projectId, setProjectData, onSaveSuccess, serviceId],
+      [projectId, setProjectData, onSaveSuccess, serviceId, t],
     );
 
     // function to save the maxWorkHours

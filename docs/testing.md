@@ -61,6 +61,7 @@ The test suite is structured into:
 - Input validation
 - Hourly rate updates
 - Repository failure handling
+- Max work hours updates
 
 ---
 
@@ -94,6 +95,7 @@ The test suite is structured into:
 - Action routing:
   - updateProject
   - setHourlyRate
+  - setMaxWorkHours
 - Handling of missing or unknown actions
 
 ---
