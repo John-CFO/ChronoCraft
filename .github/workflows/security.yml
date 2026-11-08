@@ -133,7 +133,7 @@ jobs:
   # FIREBASE RULES (no Node build)
   # ---------------------------
   rules-tests:
-    name: Firestore Rules Tests
+    name: Firestore & Storage Rules Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
