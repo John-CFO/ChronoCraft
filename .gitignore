@@ -68,6 +68,7 @@ firestore-debug.*.log
 
 #rules-generator
 rules.config.json
+rules.config.json.suggested
 .zod-mapping.json
 
 

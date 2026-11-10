@@ -12,6 +12,7 @@ import i18n from "../components/services/localization/i18n";
 
 /**
  * @AppSec // only for CLI-Purpose, kno real Security-Enforcement
+ * @Collection Users
  */
 export const FirestoreUserUpdateSchema = z
   .object({

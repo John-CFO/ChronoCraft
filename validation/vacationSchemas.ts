@@ -43,6 +43,7 @@ export const MarkedDatesSchema = z.record(
  */
 /**
  * @AppSec // only for CLI-Purpose, kno real Security-Enforcement
+ * @Collection Vacations
  */
 export const VacationInputSchema = z.object({
   uid: z.string(),

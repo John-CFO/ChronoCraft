@@ -26,6 +26,7 @@ export const isValidProjectId = (projectId: unknown): projectId is string => {
 
 /**
  * @AppSec // only for CLI-Purpose, kno real Security-Enforcement
+ * @Collection Projects
  */
 export const ProjectStateSchema = z.object({
   id: z.string().min(1).max(100),
