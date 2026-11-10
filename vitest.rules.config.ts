@@ -5,5 +5,6 @@ export default defineConfig({
     include: ["firebase-rules/**/*.test.ts"],
     environment: "node",
     testTimeout: 15000,
+    fileParallelism: false,
   },
 });

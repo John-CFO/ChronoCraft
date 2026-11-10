@@ -49,7 +49,7 @@ test("owner can access own deep subcollection", async () => {
 
 test("owner can create own user document", async () => {
   const db = user("userA").firestore();
-  await assertSucceeds(setDoc(doc(db, "Users/userA"), { name: "A" }));
+  await assertSucceeds(setDoc(doc(db, "Users/userA"), { displayName: "A" }));
 });
 
 test("owner can read own user document", async () => {
@@ -76,6 +76,28 @@ test("deny update of another user's document", async () => {
   const db = user("userA").firestore();
   await assertFails(
     setDoc(doc(db, "Users/userB"), { name: "hacked" }, { merge: true }),
+  );
+});
+
+test("deny update with unexpected field", async () => {
+  const db = user("userA").firestore();
+  await assertFails(
+    setDoc(
+      doc(db, "Users/userA"),
+      { displayName: "x", isAdmin: true },
+      { merge: true },
+    ),
+  );
+});
+
+test("deny client write to photoURL", async () => {
+  const db = user("userA").firestore();
+  await assertFails(
+    setDoc(
+      doc(db, "Users/userA"),
+      { photoURL: "https://evil.example/x.png" },
+      { merge: true },
+    ),
   );
 });
 
