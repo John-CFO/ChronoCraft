@@ -1,7 +1,7 @@
 rules_version = '2';
 
 service firebase.storage {
-  match /b/chrono-craft-worktime-manager.firebasestorage.app/o {
+   match /b/{bucket}/o {
 
     function isSignedIn() {
       return request.auth != null;

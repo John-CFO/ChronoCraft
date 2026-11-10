@@ -16,6 +16,9 @@ const isValidLocalDocId = (id: unknown): id is string => {
   return true;
 };
 
+/**
+ * @AppSec
+ */
 // validate note input (from client)
 export const NoteInputSchema = z.object({
   comment: z
