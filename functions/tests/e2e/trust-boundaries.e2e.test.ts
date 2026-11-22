@@ -163,10 +163,12 @@ const expectValidationError = (res: CallResult) => {
 
 describe("Trust Boundaries E2E", () => {
   it("should allow owner to read their document", async () => {
+    await firestore.collection("Users").doc("test-user").set({
+      name: "John",
+    });
+
     const db = testEnv.authenticatedContext("test-user").firestore();
     const ref = db.collection("Users").doc("test-user");
-
-    await ref.set({ name: "John" });
 
     const snap = await ref.get();
     expect(snap.exists).toBe(true);
