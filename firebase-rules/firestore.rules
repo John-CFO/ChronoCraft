@@ -16,12 +16,10 @@ service cloud.firestore {
         return request.resource.data.keys().hasOnly([
           "displayName",
           "personalNumber",
-          "photoURL"
         ])
         && (
           (!("displayName" in request.resource.data) || request.resource.data.displayName is string)
           && (!("personalNumber" in request.resource.data) || request.resource.data.personalNumber is string)
-          && (!("photoURL" in request.resource.data) || request.resource.data.photoURL is string)
         );
       }
 
