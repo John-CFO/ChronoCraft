@@ -104,7 +104,7 @@
     "eslint": "^8.57.0",
     "expo-module-scripts": "3.4.2",
     "firebase-tools": "^15.34.1",
-    "firestore-rules-cli": "file:../../firestore-rules-cli",
+    "firestore-rules-generator-cli": "file:../../firestore-rules-generator-cli",
     "jest": "^29.7.0",
     "jest-expo": "^50.0.4",
     "patch-package": "^8.0.1",
